@@ -8,12 +8,24 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// NodeContext to store common properties for nodes like sample rate
+class NodeContext {
+public:
+    float sampleRate;  // Sample rate for the node
+
+    NodeContext(float sampleRate) : sampleRate(sampleRate) {}
+};
+
 // Abstract AudioNode class
 class AudioNode {
 protected:
     std::vector<AudioNode*> dependencies;  // Store dependencies (input nodes)
     float* processedBuffer;  // Store processed output
+    NodeContext* context;    // Context for the node
+
 public:
+    AudioNode(NodeContext* context) : context(context), processedBuffer(nullptr) {}
+
     virtual ~AudioNode() {
         delete[] processedBuffer;
     }
@@ -48,10 +60,9 @@ public:
 class SineWaveNode : public AudioNode {
     float phase = 0.0f;
     AudioNode* frequencyNode;
-    float sampleRate;
 
 public:
-    SineWaveNode(float sampleRate) : frequencyNode(nullptr), sampleRate(sampleRate) {}
+    SineWaveNode(NodeContext* context) : AudioNode(context), frequencyNode(nullptr) {}
 
     void setFrequencyNode(AudioNode* freqNode) {
         frequencyNode = freqNode;
@@ -63,7 +74,7 @@ public:
             for (unsigned long i = 0; i < frameCount; i++) {
                 float frequency = freqBuffer[i];
                 buffer[i] = 0.5f * std::sin(phase);
-                phase += 2.0f * M_PI * frequency / sampleRate;
+                phase += 2.0f * M_PI * frequency / context->sampleRate;
                 if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
             }
             setProcessedBuffer(buffer, frameCount);
@@ -78,7 +89,7 @@ class ValueNode : public AudioNode {
     float value;
 
 public:
-    ValueNode(float value) : value(value) {}
+    ValueNode(NodeContext* context, float value) : AudioNode(context), value(value) {}
 
     void process(float* buffer, unsigned long frameCount) override {
         std::fill(buffer, buffer + frameCount, value);
@@ -91,16 +102,15 @@ public:
 // LFO Node that modulates a value (e.g., frequency modulation)
 class LFONode : public AudioNode {
     float frequency;
-    float sampleRate;
     float phase = 0.0f;
 
 public:
-    LFONode(float frequency, float sampleRate) : frequency(frequency), sampleRate(sampleRate) {}
+    LFONode(NodeContext* context, float frequency) : AudioNode(context), frequency(frequency) {}
 
     void process(float* buffer, unsigned long frameCount) override {
         for (unsigned long i = 0; i < frameCount; i++) {
             buffer[i] = 0.5f * std::sin(phase);
-            phase += 2.0f * M_PI * frequency / sampleRate;
+            phase += 2.0f * M_PI * frequency / context->sampleRate;
             if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
         setProcessedBuffer(buffer, frameCount);
@@ -112,6 +122,8 @@ public:
 // VolumeNode that multiplies the outputs of two input nodes
 class VolumeNode : public AudioNode {
 public:
+    VolumeNode(NodeContext* context) : AudioNode(context) {}
+
     void connectInputs(AudioNode* input1, AudioNode* input2) {
         addDependency(input1);
         addDependency(input2);
@@ -135,6 +147,8 @@ public:
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioOutNode : public AudioNode {
 public:
+    AudioOutNode(NodeContext* context) : AudioNode(context) {}
+
     void process(float* buffer, unsigned long frameCount) override {
         // The buffer is directly sent to the PortAudio stream
         setProcessedBuffer(buffer, frameCount);
@@ -225,24 +239,27 @@ int main() {
         return 1;
     }
 
+    // Create node context with sample rate (NodeContext is now a pointer)
+    auto context = std::make_unique<NodeContext>(sampleRate);
+
     // Create nodes independently (without connecting them immediately)
-    auto* valueNode = new ValueNode(440.0f);  // Set a constant frequency of 440 Hz
-    auto* lfoNode = new LFONode(0.2f, sampleRate);  // LFO node (for modulation)
-    auto* sineNode = new SineWaveNode(sampleRate);  // Sine wave node
-    auto* volumeNode = new VolumeNode();  // Volume node to multiply two inputs
-    auto* audioOutNode = new AudioOutNode();  // AudioOutNode to send output to PortAudio
+    auto valueNode = std::make_unique<ValueNode>(context.get(), 440.0f);
+    auto lfoNode = std::make_unique<LFONode>(context.get(), 0.2f);
+    auto sineNode = std::make_unique<SineWaveNode>(context.get());
+    auto volumeNode = std::make_unique<VolumeNode>(context.get());
+    auto audioOutNode = std::make_unique<AudioOutNode>(context.get());
 
     // Create the graph and add nodes
     AudioGraph graph;
-    graph.addNode(valueNode);
-    graph.addNode(lfoNode);
-    graph.addNode(sineNode);
-    graph.addNode(volumeNode);
-    graph.addNode(audioOutNode);
+    graph.addNode(valueNode.get());
+    graph.addNode(lfoNode.get());
+    graph.addNode(sineNode.get());
+    graph.addNode(volumeNode.get());
+    graph.addNode(audioOutNode.get());
 
     // Connect the nodes later (after creation)
-    sineNode->setFrequencyNode(valueNode);  // Set the value node as frequency input for sine node
-    volumeNode->connectInputs(sineNode, lfoNode);  // Connect sine and LFO to volume node
+    sineNode->setFrequencyNode(valueNode.get());  // Set the value node as frequency input for sine node
+    volumeNode->connectInputs(sineNode.get(), lfoNode.get());  // Connect sine and LFO to volume node
 
     // Set up PortAudio stream
     PaStream* stream;
@@ -275,13 +292,6 @@ int main() {
     }
 
     Pa_Terminate();
-
-    // Clean up nodes
-    delete valueNode;
-    delete lfoNode;
-    delete sineNode;
-    delete volumeNode;
-    delete audioOutNode;
 
     return 0;
 }
