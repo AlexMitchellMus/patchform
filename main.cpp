@@ -2,7 +2,11 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <stack>
 #include <PortAudio.h>
+#include <functional>
+
+#include "AudioPort.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -19,195 +23,233 @@ public:
 // Abstract AudioNode class
 class AudioNode {
 protected:
-    std::vector<AudioNode*> dependencies;  // Store dependencies (input nodes)
-    float* processedBuffer;  // Store processed output
-    NodeContext* context;    // Context for the node
+    std::vector<AudioPort*> inputPorts;
+    AudioPort outputBuffer;
+    NodeContext* context;
+    std::string name;
 
 public:
-    AudioNode(NodeContext* context) : context(context), processedBuffer(nullptr) {}
+    AudioNode(NodeContext* context, std::string nodeName)
+        : context(context)
+        , name(nodeName)
+        , outputBuffer(this)
+    {}
 
-    virtual ~AudioNode() {
-        delete[] processedBuffer;
+    virtual ~AudioNode() {}
+
+    std::string getName() { return name; }
+
+    // Add an input port (for dependency)
+    void addInputPort(AudioNode* node, int index) {
+        inputPorts.push_back(&node->outputBuffer);
     }
 
     // Virtual method for processing the audio buffer
     virtual void process(float* buffer, unsigned long frameCount) = 0;
 
-    // Method to get the processed buffer after processing
-    float* getProcessedBuffer() { return processedBuffer; }
+    // Get the output buffer
+    AudioPort getProcessedBuffer() { return outputBuffer; }
 
-    // Method to store the processed data in the buffer
-    void setProcessedBuffer(float* buffer, unsigned long frameCount) {
-        processedBuffer = new float[frameCount];
-        std::copy(buffer, buffer + frameCount, processedBuffer);
+    // Method to set the output buffer size
+    void allocateOutputBuffer(unsigned long frameCount) {
+        outputBuffer = AudioPort(this, frameCount);
     }
 
-    // Add a dependency (input node)
-    void addDependency(AudioNode* node) {
-        dependencies.push_back(node);
+    // Method to get input ports for sorting
+    const std::vector<AudioPort*>& getInputPorts() const {
+        return inputPorts;
     }
-
-    // Method to get node dependencies
-    virtual std::vector<AudioNode*> getDependencies() {
-        return dependencies;
-    }
-
-    // Method to check if a node has been processed
-    virtual bool isProcessed() = 0;
 };
 
 // SineWaveNode that generates sine wave audio
 class SineWaveNode : public AudioNode {
     float phase = 0.0f;
-    AudioNode* frequencyNode;
 
 public:
-    SineWaveNode(NodeContext* context) : AudioNode(context), frequencyNode(nullptr) {}
+    SineWaveNode(NodeContext* context) : AudioNode(context, "SineWaveNode") {}
 
-    void setFrequencyNode(AudioNode* freqNode) {
-        frequencyNode = freqNode;
-    }
+    void process(float* out, unsigned long frameCount) override {
+        allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
 
-    void process(float* buffer, unsigned long frameCount) override {
-        if (frequencyNode) {
-            float* freqBuffer = frequencyNode->getProcessedBuffer();
-            for (unsigned long i = 0; i < frameCount; i++) {
-                float frequency = freqBuffer[i];
-                buffer[i] = 0.5f * std::sin(phase);
-                phase += 2.0f * M_PI * frequency / context->sampleRate;
-                if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
-            }
-            setProcessedBuffer(buffer, frameCount);
+        for (unsigned long i = 0; i < frameCount; i++) {
+            outputBuffer.getAudioBuffer()[i] = 0.5f * std::sin(phase);  // Directly assign to outputBuffer
+            phase += 2.0f * M_PI * inputPorts[0]->getAudioBuffer()[i] / context->sampleRate;
+            if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
     }
+};
 
-    bool isProcessed() override { return processedBuffer != nullptr; }
+// AddNode that sums two signals
+class AddNode : public AudioNode {
+
+public:
+    AddNode(NodeContext* context) : AudioNode(context, "AddNode") {}
+
+    void process(float* out, unsigned long frameCount) override {
+        if (inputPorts.size() >= 2) {
+            const float* buffer1 = inputPorts[0]->getAudioBuffer();
+            const float* buffer2 = inputPorts[1]->getAudioBuffer();
+
+            allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
+
+            for (unsigned long i = 0; i < frameCount; i++) {
+                outputBuffer.getAudioBuffer()[i] = buffer1[i] + buffer2[i];  // Directly write to output buffer
+            }
+        }
+    }
 };
 
 // ValueNode that provides a constant value (e.g., for frequency modulation)
-class ValueNode : public AudioNode {
+class ValueNode : public AudioNode
+{
     float value;
 
 public:
-    ValueNode(NodeContext* context, float value) : AudioNode(context), value(value) {}
+    ValueNode(NodeContext* context, float value) : AudioNode(context, "ValueNode"), value(value) {}
 
-    void process(float* buffer, unsigned long frameCount) override {
-        std::fill(buffer, buffer + frameCount, value);
-        setProcessedBuffer(buffer, frameCount);
+    void process(float* out, unsigned long frameCount) override {
+        allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
+
+        for (unsigned long i = 0; i < frameCount; i++) {
+            outputBuffer.getAudioBuffer()[i] = value;  // Directly assign the value to outputBuffer
+        }
     }
-
-    bool isProcessed() override { return processedBuffer != nullptr; }
 };
 
-// LFO Node that modulates a value (e.g., frequency modulation)
+// LFONode that modulates a value (e.g., frequency modulation)
 class LFONode : public AudioNode {
     float frequency;
     float phase = 0.0f;
 
 public:
-    LFONode(NodeContext* context, float frequency) : AudioNode(context), frequency(frequency) {}
+    LFONode(NodeContext* context, float frequency) : AudioNode(context, "LFONode"), frequency(frequency) {}
 
-    void process(float* buffer, unsigned long frameCount) override {
+    void process(float* out, unsigned long frameCount) override {
+        allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
+
         for (unsigned long i = 0; i < frameCount; i++) {
-            buffer[i] = 0.5f * std::sin(phase);
+            outputBuffer.getAudioBuffer()[i] = 0.5f * std::sin(phase);
             phase += 2.0f * M_PI * frequency / context->sampleRate;
             if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
-        setProcessedBuffer(buffer, frameCount);
     }
-
-    bool isProcessed() override { return processedBuffer != nullptr; }
 };
 
 // VolumeNode that multiplies the outputs of two input nodes
 class VolumeNode : public AudioNode {
 public:
-    VolumeNode(NodeContext* context) : AudioNode(context) {}
-
-    void connectInputs(AudioNode* input1, AudioNode* input2) {
-        addDependency(input1);
-        addDependency(input2);
-    }
+    VolumeNode(NodeContext* context) : AudioNode(context, "VolumeNode") {}
 
     void process(float* buffer, unsigned long frameCount) override {
-        if (dependencies.size() >= 2) {
-            float* buffer1 = dependencies[0]->getProcessedBuffer();
-            float* buffer2 = dependencies[1]->getProcessedBuffer();
+        if (inputPorts.size() >= 2) {
+            const float* buffer1 = inputPorts[0]->getAudioBuffer();
+            const float* buffer2 = inputPorts[1]->getAudioBuffer();
 
             for (unsigned long i = 0; i < frameCount; i++) {
-                buffer[i] = buffer1[i] * buffer2[i];
+                buffer[i] = buffer1[i] * buffer2[i];  // Multiply the two input signals
             }
-            setProcessedBuffer(buffer, frameCount);
+            allocateOutputBuffer(frameCount);
+            std::copy(buffer, buffer + frameCount, outputBuffer.getAudioBuffer());
         }
     }
-
-    bool isProcessed() override { return processedBuffer != nullptr; }
 };
 
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioOutNode : public AudioNode {
 public:
-    AudioOutNode(NodeContext* context) : AudioNode(context) {}
+    AudioOutNode(NodeContext* context) : AudioNode(context, "AudioOutNode") {}
 
     void process(float* buffer, unsigned long frameCount) override {
         // The buffer is directly sent to the PortAudio stream
-        setProcessedBuffer(buffer, frameCount);
+        std::copy(inputPorts[0]->getAudioBuffer(), inputPorts[0]->getAudioBuffer() + frameCount, buffer);
     }
-
-    bool isProcessed() override { return true; }  // Always "processed" since it just outputs the audio
 };
 
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
+private:
     std::vector<AudioNode*> nodes;
-
-    // Topological sort
-    void topologicalSort(std::vector<AudioNode*>& sortedNodes) {
-        std::vector<AudioNode*> toProcess = nodes;
-        std::vector<AudioNode*> processed;
-
-        while (!toProcess.empty()) {
-            bool progress = false;
-
-            for (auto it = toProcess.begin(); it != toProcess.end(); ) {
-                AudioNode* node = *it;
-                bool ready = true;
-
-                // Check if all dependencies are processed
-                for (auto dep : node->getDependencies()) {
-                    if (!dep->isProcessed()) {
-                        ready = false;
-                        break;
-                    }
-                }
-
-                if (ready) {
-                    sortedNodes.push_back(node);
-                    processed.push_back(node);
-                    it = toProcess.erase(it);  // Remove the node from processing list
-                    progress = true;
-                } else {
-                    ++it;
-                }
-            }
-
-            if (!progress) {
-                std::cerr << "Circular dependency detected!" << std::endl;
-                break;
-            }
-        }
-    }
+    std::vector<AudioNode*> sortedNodes;
 
 public:
     void addNode(AudioNode* node) {
         nodes.push_back(node);
     }
 
-    void process(float* buffer, unsigned long frameCount) {
-        std::vector<AudioNode*> sortedNodes;
+    // Connect nodes dynamically by addressing them by order of addition
+    void connect(int oNode, int oPort, int iNode, int iPort) {
+        nodes.at(iNode)->addInputPort(nodes.at(oNode), oPort);
+    }
+
+    void topologicalSort(std::vector<AudioNode*>& sortedNodes) {
+        std::stack<AudioNode*> stack;
+        std::unordered_map<AudioNode*, bool> visited;
+        std::unordered_map<AudioNode*, bool> inStack; // Track nodes in current DFS stack
+
+        // Helper function to perform DFS
+        std::function<void(AudioNode*)> dfs = [&](AudioNode* node) {
+            if (inStack[node]) {
+                std::cerr << "Cycle detected at node: " << node->getName() << std::endl;
+                return; // If we encounter a cycle, we return immediately
+            }
+
+            if (visited[node]) return;
+
+            // Mark the node as visited and part of the current DFS stack
+            visited[node] = true;
+            inStack[node] = true;
+
+            // Traverse input ports
+            for (auto& inputPort : node->getInputPorts()) {
+                AudioNode* inputAudioNode = inputPort->getParentNode();
+                if (inputAudioNode && !visited[inputAudioNode]) {
+                    dfs(inputAudioNode);
+                }
+            }
+
+            inStack[node] = false; // Remove from current stack after processing
+
+            // After processing all dependencies, push the node to the stack
+            stack.push(node);
+        };
+
+        // Perform DFS on all nodes to ensure proper order
+        for (auto& node : nodes) {
+            if (!visited[node]) {
+                dfs(node);
+            }
+        }
+
+        // Pop nodes from stack and push them to sortedNodes
+        while (!stack.empty()) {
+            sortedNodes.push_back(stack.top());
+            stack.pop();
+        }
+
+        // If you want to reverse the order so that it is in the correct "sorted" order:
+        std::reverse(sortedNodes.begin(), sortedNodes.end());
+    }
+
+
+    void sortNodes()
+    {
         topologicalSort(sortedNodes);
 
-        // Process nodes in topological order
+        std::cout << "======== presort =======" << std::endl;
+        for (auto& node : nodes)
+        {
+            std::cout << "node: " << node->getName() << std::endl;
+        }
+
+        std::cout << "======== sorted =======" << std::endl;
+        for (auto node : sortedNodes)
+            std::cout << "node graph: " << node->getName() << std::endl;
+    }
+
+    // Process nodes in sorted order
+    void process(float* buffer, unsigned long frameCount) {
+
+        // Process nodes in sorted order
         for (auto& node : sortedNodes) {
             node->process(buffer, frameCount);
         }
@@ -239,27 +281,44 @@ int main() {
         return 1;
     }
 
-    // Create node context with sample rate (NodeContext is now a pointer)
     auto context = std::make_unique<NodeContext>(sampleRate);
 
-    // Create nodes independently (without connecting them immediately)
-    auto valueNode = std::make_unique<ValueNode>(context.get(), 440.0f);
-    auto lfoNode = std::make_unique<LFONode>(context.get(), 0.2f);
+    // Create nodes independently
     auto sineNode = std::make_unique<SineWaveNode>(context.get());
+    auto sineNode2 = std::make_unique<SineWaveNode>(context.get());
+    auto valueNode = std::make_unique<ValueNode>(context.get(), 440.0f);
+    auto valueNode2 = std::make_unique<ValueNode>(context.get(), 666.0f);
+    auto lfoNode = std::make_unique<LFONode>(context.get(), 20.0f);
     auto volumeNode = std::make_unique<VolumeNode>(context.get());
     auto audioOutNode = std::make_unique<AudioOutNode>(context.get());
+    auto sumNode = std::make_unique<AddNode>(context.get());
+    auto sumNode2 = std::make_unique<AddNode>(context.get());
 
     // Create the graph and add nodes
     AudioGraph graph;
-    graph.addNode(valueNode.get());
-    graph.addNode(lfoNode.get());
-    graph.addNode(sineNode.get());
-    graph.addNode(volumeNode.get());
-    graph.addNode(audioOutNode.get());
+    graph.addNode(valueNode.get());     // 0
+    graph.addNode(sineNode.get());      // 1
+    graph.addNode(valueNode2.get());    // 2
+    graph.addNode(sineNode2.get());     // 3
+    graph.addNode(sumNode.get());       // 4
+    graph.addNode(audioOutNode.get());  // 5
+    graph.addNode(volumeNode.get());    // 6
+    graph.addNode(lfoNode.get());       // 7
+    graph.addNode(sumNode2.get());      // 8
 
-    // Connect the nodes later (after creation)
-    sineNode->setFrequencyNode(valueNode.get());  // Set the value node as frequency input for sine node
-    volumeNode->connectInputs(sineNode.get(), lfoNode.get());  // Connect sine and LFO to volume node
+    // Connect nodes
+    graph.connect(0, 0, 1, 0);
+    graph.connect(2, 0, 3, 0);
+    graph.connect(3, 0, 3, 0);
+    graph.connect(1, 0, 4, 0);
+    graph.connect(3, 0, 4, 1);
+    graph.connect(3, 0, 6, 0);
+    graph.connect(7, 0, 6, 1);
+    graph.connect(6, 0, 8, 0);
+    graph.connect(4, 0, 8, 1);
+    graph.connect(8, 0, 5, 0);
+
+    graph.sortNodes();
 
     // Set up PortAudio stream
     PaStream* stream;
