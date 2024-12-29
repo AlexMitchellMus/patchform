@@ -14,6 +14,9 @@ class AudioPort
 protected:
     std::vector<float> audioBuffer;
     AudioNode* node;
+
+    bool event = false;
+
     std::string name;
 public:
 

@@ -25,8 +25,9 @@ using json = nlohmann::json;
 class NodeContext {
 public:
     float sampleRate;  // Sample rate for the node
+    int frameCount;
 
-    NodeContext(float sampleRate) : sampleRate(sampleRate) {}
+    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount) {}
 };
 
 // Abstract AudioNode class
@@ -36,7 +37,7 @@ protected:
     AudioPort* outputPort;
     NodeContext* context;
     std::string name;
-    bool hasOutputPort = false;
+    bool hasNoOutputPort = false;
 
 public:
     AudioNode(NodeContext* context, std::string nodeName)
@@ -50,7 +51,7 @@ public:
 
     void setHasNoOutputPort()
     {
-        hasOutputPort = true;
+        hasNoOutputPort = true;
     }
 
     std::string getName() { return name; }
@@ -70,7 +71,7 @@ public:
     {
         // check if the node has an output port to write to
         // output nodes (currently only AudioOutput) don't have an output port
-        if (outputPort || hasOutputPort)
+        if (outputPort || hasNoOutputPort)
             processAudio(buffer, frameCount);
     }
 
@@ -368,15 +369,15 @@ public:
     Graphs(NodeContext* context)
         : ctx(context)
     {
-        // Resize fade buffers to match the sample rate (1-second fade duration for simplicity)
-        fadeOutBuffer.resize(ctx->sampleRate);
-        fadeInBuffer.resize(ctx->sampleRate);
+        // Resize fade buffers to match the frane count, one frame xfade for now
+        fadeOutBuffer.resize(ctx->frameCount);
+        fadeInBuffer.resize(ctx->frameCount);
 
         // Fill the fade buffers with linear fade values
-        for (unsigned long i = 0; i < ctx->sampleRate; ++i)
+        for (unsigned long i = 0; i < ctx->frameCount; ++i)
         {
-            fadeOutBuffer[i] = 1.0f - (static_cast<float>(i) / ctx->sampleRate);
-            fadeInBuffer[i] = static_cast<float>(i) / ctx->sampleRate;
+            fadeOutBuffer[i] = 1.0f - (static_cast<float>(i) / ctx->frameCount);
+            fadeInBuffer[i] = static_cast<float>(i) / ctx->frameCount;
         }
     }
 
@@ -420,7 +421,7 @@ public:
                 float fadeFactor = i / static_cast<float>(frameCount);
 
                 // Mix the faded buffers into the output buffer
-                buffer[i] = (activeBuffer[i] * (1 - fadeFactor) + (transitionBuffer[i] * fadeFactor));
+                buffer[i] = (activeBuffer[i] * (1 - fadeFactor)) + (transitionBuffer[i] * fadeFactor);
             }
 
             activeGraph = std::move(transitioningGraph);
@@ -476,7 +477,7 @@ void commandListener(std::function<void(std::string& patchToLoad)> callback) {
                     std::cout << "\nLoading graph from file: " << filename << "..." << std::endl;
                     callback(filename);
                     Sleep(500);
-                    std::cout << "Graph loaded successfully!" << std::endl;
+                    std::cout << filename + ".json loaded successfully!" << std::endl;
                 } else {
                     std::cout << "\nInvalid command!" << std::endl;
                 }
@@ -492,7 +493,7 @@ void commandListener(std::function<void(std::string& patchToLoad)> callback) {
 }
 int main() {
     PaError err;
-    unsigned long frameCount = 64;
+    unsigned long frameCount = 256;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio
@@ -502,7 +503,7 @@ int main() {
         return 1;
     }
 
-    auto context = std::make_unique<NodeContext>(sampleRate);
+    auto context = std::make_unique<NodeContext>(sampleRate, frameCount);
 
     Graphs graphs(context.get());
 
@@ -539,7 +540,7 @@ int main() {
         std::ifstream file(patchToLoad + ".json");
         if (!file.is_open()) {
             std::cerr << "Could not open the file!" << std::endl;
-            return 1;
+            return;
         }
 
         json patch;

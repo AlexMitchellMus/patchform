@@ -1,7 +1,7 @@
 {
     "nodes": [
         { "id": 0, "type": "ValueNode", "value": 440.0 },
-        { "id": 1, "type": "LFONode", "rate": 200.0 },
+        { "id": 1, "type": "LFONode", "rate": 0.1 },
         { "id": 2, "type": "VolumeNode" },
         { "id": 3, "type": "SineNode" },
         { "id": 4, "type": "AudioOutNode" }
