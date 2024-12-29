@@ -15,7 +15,14 @@ protected:
     std::vector<float> audioBuffer;
     AudioNode* node;
 
-    bool event = false;
+    struct Event
+    {
+        uint64_t timeStamp = 0;
+
+        Event(uint64_t timeStamp) : timeStamp(timeStamp) {}
+    };
+
+    std::vector<Event> events;
 
     std::string name;
 public:
@@ -26,6 +33,16 @@ public:
 
     float* getAudioBuffer() {
         return audioBuffer.data();
+    }
+
+    std::vector<Event>* getEvents()
+    {
+        return &events;
+    }
+
+    void addEvent(uint64_t timeStamp)
+    {
+        events.emplace_back(Event(timeStamp));
     }
 
     void clear(size_t size)

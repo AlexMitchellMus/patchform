@@ -34,7 +34,7 @@ public:
 class AudioNode {
 protected:
     std::vector<AudioPort> inputPorts;
-    AudioPort* outputPort;
+    AudioPort* outputPort = nullptr;
     NodeContext* context;
     std::string name;
     bool hasNoOutputPort = false;
@@ -153,6 +153,43 @@ public:
     }
 };
 
+class Metro : public AudioNode
+{
+    uint64_t sampleCounter = 0;
+    uint64_t tickInterval;
+
+public:
+    Metro(NodeContext* context) : AudioNode(context, "Metro")
+    {
+        tickInterval = static_cast<uint64_t>(context->sampleRate);
+    }
+
+    void processAudio(float* out, unsigned long frameCount) override
+    {
+        std::cout << "======" << std::endl;
+        unsigned long samplesProcessed = 0;
+
+        while (samplesProcessed < frameCount)
+        {
+            unsigned long samplesUntilNextTick = static_cast<unsigned long>(tickInterval - sampleCounter);
+
+            if (samplesUntilNextTick >= (frameCount - samplesProcessed))
+            {
+                sampleCounter += frameCount - samplesProcessed;
+                break;
+            }
+
+            unsigned long tickPosition = samplesProcessed + samplesUntilNextTick;
+            outputPort->addEvent(tickPosition);
+
+            std::cout << "triggering tick" << std::endl;
+
+            sampleCounter = 0;
+            samplesProcessed = tickPosition + 1;
+        }
+    }
+};
+
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFONode : public AudioNode {
     float frequency;
@@ -224,8 +261,15 @@ public:
         {
             auto const object = node["type"].get<std::string>();
 
+            std::cout << "type: " << object << std::endl;
+
             switch (hash(object))
             {
+            case hash("Metro"):
+                {
+                    nodes.push_back(std::make_unique<Metro>(context));
+                }
+                break;
             case hash("ValueNode"):
                 {
                     auto const value = node["value"].get<float>();
@@ -329,7 +373,7 @@ public:
     void sortNodes()
     {
         topologicalSort(sortedNodes);
-
+#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : nodes)

@@ -4,7 +4,8 @@
         { "id": 1, "type": "LFONode", "rate": 0.1 },
         { "id": 2, "type": "VolumeNode" },
         { "id": 3, "type": "SineNode" },
-        { "id": 4, "type": "AudioOutNode" }
+        { "id": 4, "type": "AudioOutNode" },
+        { "id": 5, "type": "Metro" }
     ],
     "connections": [
         { "sourceNode": 0, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
