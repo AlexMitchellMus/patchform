@@ -27,3 +27,10 @@ set(DEST_DIR ${CMAKE_BINARY_DIR}/$<CONFIG>/graph.json)
 add_custom_command(TARGET audiograph POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_FILE} ${DEST_DIR}
 )
+
+set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/graph2.json)
+set(DEST_DIR_2 ${CMAKE_BINARY_DIR}/$<CONFIG>/graph2.json)
+
+add_custom_command(TARGET audiograph POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_FILE_2} ${DEST_DIR_2}
+)

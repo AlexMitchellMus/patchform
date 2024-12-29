@@ -6,6 +6,9 @@
 #include <functional>
 #include <fstream>
 #include <windows.h>
+#include <thread>
+#include <atomic>
+#include <conio.h>
 
 #include <PortAudio.h>
 #include "external/json/single_include/nlohmann/json.hpp"
@@ -351,24 +354,142 @@ public:
     }
 };
 
+class Graphs
+{
+protected:
+    std::unique_ptr<AudioGraph> activeGraph;
+    std::unique_ptr<AudioGraph> transitioningGraph;
+    NodeContext* ctx;
+    std::vector<float> fadeOutBuffer;
+    std::vector<float> fadeInBuffer;
+    bool isTransitioning = false;
+
+public:
+    Graphs(NodeContext* context)
+        : ctx(context)
+    {
+        // Resize fade buffers to match the sample rate (1-second fade duration for simplicity)
+        fadeOutBuffer.resize(ctx->sampleRate);
+        fadeInBuffer.resize(ctx->sampleRate);
+
+        // Fill the fade buffers with linear fade values
+        for (unsigned long i = 0; i < ctx->sampleRate; ++i)
+        {
+            fadeOutBuffer[i] = 1.0f - (static_cast<float>(i) / ctx->sampleRate);
+            fadeInBuffer[i] = static_cast<float>(i) / ctx->sampleRate;
+        }
+    }
+
+    void setActiveGraph(json patch)
+    {
+        auto newGraph = std::make_unique<AudioGraph>(ctx);
+        newGraph->loadPatch(patch);
+
+        if (activeGraph)
+        {
+            std::cout << "transition to new graph" << std::endl;
+            // Start transition if there's an active graph
+            transitioningGraph = std::move(newGraph);
+            isTransitioning = true;
+        }
+        else
+        {
+            // If no active graph, directly assign
+            activeGraph = std::move(newGraph);
+        }
+    }
+
+    void process(float* buffer, unsigned long frameCount)
+    {
+        if (isTransitioning)
+        {
+            // Temporary buffers for processing
+            std::vector<float> activeBuffer(frameCount, 0.0f);
+            std::vector<float> transitionBuffer(frameCount, 0.0f);
+
+            // Process each graph into its temporary buffer
+            if (activeGraph)
+                activeGraph->process(activeBuffer.data(), frameCount);
+
+            if (transitioningGraph)
+                transitioningGraph->process(transitionBuffer.data(), frameCount);
+
+            // Apply the fade to the buffers
+            for (unsigned long i = 0; i < frameCount; ++i)
+            {
+                float fadeFactor = i / static_cast<float>(frameCount);
+
+                // Mix the faded buffers into the output buffer
+                buffer[i] = (activeBuffer[i] * (1 - fadeFactor) + (transitionBuffer[i] * fadeFactor));
+            }
+
+            activeGraph = std::move(transitioningGraph);
+            isTransitioning = false;
+        }
+        else if (activeGraph)
+        {
+            // Only process the active graph if no transition is occurring
+            activeGraph->process(buffer, frameCount);
+        }
+    }
+};
+
+
 // PortAudio Callback
 static int audioCallback(const void* input, void* output,
                          unsigned long frameCount,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags,
                          void* userData) {
-    auto* graph = static_cast<AudioGraph*>(userData);
+    auto* graphs = static_cast<Graphs*>(userData);
     float* out = (float*)output;
 
-    graph->process(out, frameCount);  // Process the audio graph
+    graphs->process(out, frameCount);  // Process the audio graph
 
     if ((statusFlags & paOutputUnderflow) || (statusFlags & paInputOverflow)) {
-        std::cout << "issue" << std::endl;
+        std::cout << "under of over flow" << std::endl;
     }
 
     return paContinue;
 }
 
+std::atomic<bool> running(true); // Flag to control the loop
+
+// Function to handle user input for commands and Escape key detection
+void commandListener(std::function<void(std::string& patchToLoad)> callback) {
+    std::string input;
+    std::cout << "Press Escape to close app, type \"load file\" to load graph" << std::endl;
+    while (running) {
+        // Check if Escape key (VK_ESCAPE) is pressed
+        if (GetAsyncKeyState(VK_ESCAPE)) {
+            std::cout << "Escape key pressed. Exiting..." << std::endl;
+            running = false;
+            break;
+        }
+
+        // Non-blocking check for keyboard input
+        if (_kbhit()) {
+            char ch = _getch();
+            if (ch == '\r') {
+                if (input.rfind("load ", 0) == 0) { // Check if the command starts with "load "
+                    std::string filename = input.substr(5); // Get the file name after "load "
+                    std::cout << "\nLoading graph from file: " << filename << "..." << std::endl;
+                    callback(filename);
+                    Sleep(500);
+                    std::cout << "Graph loaded successfully!" << std::endl;
+                } else {
+                    std::cout << "\nInvalid command!" << std::endl;
+                }
+                input.clear();
+            } else {
+                input += ch;
+                std::cout << ch;
+            }
+        }
+
+        Sleep(10);
+    }
+}
 int main() {
     PaError err;
     unsigned long frameCount = 64;
@@ -383,30 +504,11 @@ int main() {
 
     auto context = std::make_unique<NodeContext>(sampleRate);
 
-    char buffer[MAX_PATH];
-    DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
-    if (length == 0) {
-        std::cerr << "Error getting current directory." << std::endl;
-    } else {
-        std::cout << "Current working directory: " << buffer << std::endl;
-    }
-
-    std::ifstream file("graph.json");
-    if (!file.is_open()) {
-        std::cerr << "Could not open the file!" << std::endl;
-        return 1;
-    }
-
-    json patch;
-    file >> patch;
-    file.close();
-
-    AudioGraph graph(context.get());
-    graph.loadPatch(patch);
+    Graphs graphs(context.get());
 
     // Set up PortAudio stream
     PaStream* stream;
-    err = Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, sampleRate, frameCount, audioCallback, &graph);
+    err = Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, sampleRate, frameCount, audioCallback, &graphs);
     if (err != paNoError) {
         std::cerr << "PortAudio stream setup failed: " << Pa_GetErrorText(err) << std::endl;
         return 1;
@@ -425,8 +527,35 @@ int main() {
         std::cout << "input latency: " << streamInfo->inputLatency << " output latency: " << streamInfo->outputLatency << std::endl;
     }
 
-    std::cout << "Press Enter to stop..." << std::endl;
-    std::cin.get();
+    auto callback = [&graphs](std::string& patchToLoad) {
+        char buffer[MAX_PATH];
+        DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
+        if (length == 0) {
+            std::cerr << "Error getting current directory." << std::endl;
+        } else {
+            std::cout << "Current working directory: " << buffer << std::endl;
+        }
+
+        std::ifstream file(patchToLoad + ".json");
+        if (!file.is_open()) {
+            std::cerr << "Could not open the file!" << std::endl;
+            return 1;
+        }
+
+        json patch;
+        file >> patch;
+        file.close();
+
+        graphs.setActiveGraph(patch);
+    };
+
+    // Start a thread for command input and pass a callback using std::bind
+    std::thread commandThread(std::bind(commandListener, callback));
+
+    // Wait for the command thread to finish
+    if (commandThread.joinable()) {
+        commandThread.join();
+    }
 
     // Stop and clean up
     err = Pa_StopStream(stream);
