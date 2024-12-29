@@ -23,8 +23,8 @@ public:
 // Abstract AudioNode class
 class AudioNode {
 protected:
-    std::vector<AudioPort*> inputPorts;
-    AudioPort outputBuffer;
+    std::vector<AudioPort> inputPorts;
+    AudioPort* outputPort;
     NodeContext* context;
     std::string name;
 
@@ -32,7 +32,6 @@ public:
     AudioNode(NodeContext* context, std::string nodeName)
         : context(context)
         , name(nodeName)
-        , outputBuffer(this)
     {}
 
     virtual ~AudioNode() {}
@@ -40,25 +39,40 @@ public:
     std::string getName() { return name; }
 
     // Add an input port (for dependency)
-    void addInputPort(AudioNode* node, int index) {
-        inputPorts.push_back(&node->outputBuffer);
+    void addInputPort(std::string portName)
+    {
+        inputPorts.emplace_back(this, portName);
+    }
+
+    void linkOutputPort(AudioPort* inputPort)
+    {
+        outputPort = inputPort;
+    }
+
+    void process(float* buffer, unsigned long frameCount)
+    {
+        if (outputPort)
+            processAudio(buffer, frameCount);
+    }
+
+    void clearBuffers(int frameCount)
+    {
+        for (auto& port : inputPorts)
+        {
+            port.clear(frameCount);
+        }
     }
 
     // Virtual method for processing the audio buffer
-    virtual void process(float* buffer, unsigned long frameCount) = 0;
-
-    // Get the output buffer
-    AudioPort getProcessedBuffer() { return outputBuffer; }
-
-    // Method to set the output buffer size
-    void allocateOutputBuffer(unsigned long frameCount) {
-        outputBuffer = AudioPort(this, frameCount);
-    }
+    virtual void processAudio(float* buffer, unsigned long frameCount) = 0;
 
     // Method to get input ports for sorting
-    const std::vector<AudioPort*>& getInputPorts() const {
-        return inputPorts;
+    AudioPort* getInputPort(int index)
+    {
+        return &inputPorts.at(index);
     }
+
+    const std::vector<AudioPort>& getInputPorts() const { return inputPorts; }
 };
 
 // SineWaveNode that generates sine wave audio
@@ -66,14 +80,16 @@ class SineWaveNode : public AudioNode {
     float phase = 0.0f;
 
 public:
-    SineWaveNode(NodeContext* context) : AudioNode(context, "SineWaveNode") {}
+    SineWaveNode(NodeContext* context) : AudioNode(context, "SineWaveNode")
+    {
+        addInputPort("frequency");
+    }
 
-    void process(float* out, unsigned long frameCount) override {
-        allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
-
+    void processAudio(float* out, unsigned long frameCount) override {
+        auto output = outputPort->getAudioBuffer();
         for (unsigned long i = 0; i < frameCount; i++) {
-            outputBuffer.getAudioBuffer()[i] = 0.5f * std::sin(phase);  // Directly assign to outputBuffer
-            phase += 2.0f * M_PI * inputPorts[0]->getAudioBuffer()[i] / context->sampleRate;
+            output[i] += (0.5f * std::sin(phase));
+            phase += 2.0f * M_PI * inputPorts[0].getAudioBuffer()[i] / context->sampleRate;
             if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
     }
@@ -83,17 +99,19 @@ public:
 class AddNode : public AudioNode {
 
 public:
-    AddNode(NodeContext* context) : AudioNode(context, "AddNode") {}
+    AddNode(NodeContext* context) : AudioNode(context, "AddNode")
+    {
+        addInputPort("A");
+        addInputPort("B");
+    }
 
-    void process(float* out, unsigned long frameCount) override {
+    void processAudio(float* out, unsigned long frameCount) override {
         if (inputPorts.size() >= 2) {
-            const float* buffer1 = inputPorts[0]->getAudioBuffer();
-            const float* buffer2 = inputPorts[1]->getAudioBuffer();
-
-            allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
+            const float* buffer1 = inputPorts[0].getAudioBuffer();
+            const float* buffer2 = inputPorts[1].getAudioBuffer();
 
             for (unsigned long i = 0; i < frameCount; i++) {
-                outputBuffer.getAudioBuffer()[i] = buffer1[i] + buffer2[i];  // Directly write to output buffer
+                outputPort->getAudioBuffer()[i] += buffer1[i] + buffer2[i];  // Directly write to output buffer
             }
         }
     }
@@ -107,11 +125,10 @@ class ValueNode : public AudioNode
 public:
     ValueNode(NodeContext* context, float value) : AudioNode(context, "ValueNode"), value(value) {}
 
-    void process(float* out, unsigned long frameCount) override {
-        allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
-
+    void processAudio(float* out, unsigned long frameCount) override {
+        auto output = outputPort->getAudioBuffer();
         for (unsigned long i = 0; i < frameCount; i++) {
-            outputBuffer.getAudioBuffer()[i] = value;  // Directly assign the value to outputBuffer
+            output[i] += value;  // Directly assign the value to outputBuffer
         }
     }
 };
@@ -124,11 +141,10 @@ class LFONode : public AudioNode {
 public:
     LFONode(NodeContext* context, float frequency) : AudioNode(context, "LFONode"), frequency(frequency) {}
 
-    void process(float* out, unsigned long frameCount) override {
-        allocateOutputBuffer(frameCount);  // Allocate memory for the output buffer
-
+    void processAudio(float* out, unsigned long frameCount) override {
+        auto output = outputPort->getAudioBuffer();
         for (unsigned long i = 0; i < frameCount; i++) {
-            outputBuffer.getAudioBuffer()[i] = 0.5f * std::sin(phase);
+            output[i] = 0.5f * std::sin(phase);
             phase += 2.0f * M_PI * frequency / context->sampleRate;
             if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
@@ -138,18 +154,21 @@ public:
 // VolumeNode that multiplies the outputs of two input nodes
 class VolumeNode : public AudioNode {
 public:
-    VolumeNode(NodeContext* context) : AudioNode(context, "VolumeNode") {}
+    VolumeNode(NodeContext* context) : AudioNode(context, "VolumeNode")
+    {
+        addInputPort("A");
+        addInputPort("B");
+    }
 
-    void process(float* buffer, unsigned long frameCount) override {
+    void processAudio(float* buffer, unsigned long frameCount) override {
         if (inputPorts.size() >= 2) {
-            const float* buffer1 = inputPorts[0]->getAudioBuffer();
-            const float* buffer2 = inputPorts[1]->getAudioBuffer();
+            const float* buffer1 = inputPorts[0].getAudioBuffer();
+            const float* buffer2 = inputPorts[1].getAudioBuffer();
 
             for (unsigned long i = 0; i < frameCount; i++) {
                 buffer[i] = buffer1[i] * buffer2[i];  // Multiply the two input signals
             }
-            allocateOutputBuffer(frameCount);
-            std::copy(buffer, buffer + frameCount, outputBuffer.getAudioBuffer());
+            std::copy(buffer, buffer + frameCount, outputPort->getAudioBuffer());
         }
     }
 };
@@ -157,11 +176,14 @@ public:
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioOutNode : public AudioNode {
 public:
-    AudioOutNode(NodeContext* context) : AudioNode(context, "AudioOutNode") {}
+    AudioOutNode(NodeContext* context) : AudioNode(context, "AudioOutNode")
+    {
+        addInputPort("Signal");
+    }
 
-    void process(float* buffer, unsigned long frameCount) override {
-        // The buffer is directly sent to the PortAudio stream
-        std::copy(inputPorts[0]->getAudioBuffer(), inputPorts[0]->getAudioBuffer() + frameCount, buffer);
+    void processAudio(float* buffer, unsigned long frameCount) override {
+        // The input port audio is directly sent to the PortAudio stream
+        std::copy(inputPorts[0].getAudioBuffer(), inputPorts[0].getAudioBuffer() + frameCount, buffer);
     }
 };
 
@@ -178,7 +200,7 @@ public:
 
     // Connect nodes dynamically by addressing them by order of addition
     void connect(int oNode, int oPort, int iNode, int iPort) {
-        nodes.at(iNode)->addInputPort(nodes.at(oNode), oPort);
+        nodes.at(oNode)->linkOutputPort(nodes.at(iNode)->getInputPort(iPort));
     }
 
     void topologicalSort(std::vector<AudioNode*>& sortedNodes) {
@@ -201,7 +223,7 @@ public:
 
             // Traverse input ports
             for (auto& inputPort : node->getInputPorts()) {
-                AudioNode* inputAudioNode = inputPort->getParentNode();
+                AudioNode* inputAudioNode = inputPort.getParentNode();
                 if (inputAudioNode && !visited[inputAudioNode]) {
                     dfs(inputAudioNode);
                 }
@@ -246,10 +268,12 @@ public:
             std::cout << "node graph: " << node->getName() << std::endl;
     }
 
-    // Process nodes in sorted order
-    void process(float* buffer, unsigned long frameCount) {
+    void process(float* buffer, unsigned long frameCount)
+    {
+        for (auto& node : sortedNodes) {
+            node->clearBuffers(frameCount);
+        }
 
-        // Process nodes in sorted order
         for (auto& node : sortedNodes) {
             node->process(buffer, frameCount);
         }
@@ -264,6 +288,8 @@ static int audioCallback(const void* input, void* output,
                          void* userData) {
     auto* graph = static_cast<AudioGraph*>(userData);
     float* out = (float*)output;
+
+    std::fill(out, out + frameCount, 0.0f);
 
     graph->process(out, frameCount);  // Process the audio graph
     return paContinue;
@@ -284,11 +310,19 @@ int main() {
     auto context = std::make_unique<NodeContext>(sampleRate);
 
     // Create nodes independently
-    auto sineNode = std::make_unique<SineWaveNode>(context.get());
-    auto sineNode2 = std::make_unique<SineWaveNode>(context.get());
     auto valueNode = std::make_unique<ValueNode>(context.get(), 440.0f);
+    auto sineNode = std::make_unique<SineWaveNode>(context.get());
+
     auto valueNode2 = std::make_unique<ValueNode>(context.get(), 666.0f);
-    auto lfoNode = std::make_unique<LFONode>(context.get(), 20.0f);
+    auto sineNode2 = std::make_unique<SineWaveNode>(context.get());
+
+    auto valueNode3 = std::make_unique<ValueNode>(context.get(), 320.0f);
+    auto sineNode3 = std::make_unique<SineWaveNode>(context.get());
+
+    auto valueNode4 = std::make_unique<ValueNode>(context.get(), 720.0f);
+    auto sineNode4 = std::make_unique<SineWaveNode>(context.get());
+
+    auto lfoNode = std::make_unique<LFONode>(context.get(), 1.0f);
     auto volumeNode = std::make_unique<VolumeNode>(context.get());
     auto audioOutNode = std::make_unique<AudioOutNode>(context.get());
     auto sumNode = std::make_unique<AddNode>(context.get());
@@ -297,26 +331,16 @@ int main() {
     // Create the graph and add nodes
     AudioGraph graph;
     graph.addNode(valueNode.get());     // 0
-    graph.addNode(sineNode.get());      // 1
-    graph.addNode(valueNode2.get());    // 2
-    graph.addNode(sineNode2.get());     // 3
-    graph.addNode(sumNode.get());       // 4
-    graph.addNode(audioOutNode.get());  // 5
-    graph.addNode(volumeNode.get());    // 6
-    graph.addNode(lfoNode.get());       // 7
-    graph.addNode(sumNode2.get());      // 8
+    graph.addNode(lfoNode.get());       // 1
+    graph.addNode(volumeNode.get());    // 2
+    graph.addNode(sineNode.get());      // 3
+    graph.addNode(audioOutNode.get());  // 4
 
     // Connect nodes
-    graph.connect(0, 0, 1, 0);
+    graph.connect(0, 0, 2, 0);
+    graph.connect(1, 0, 2, 1);
     graph.connect(2, 0, 3, 0);
-    graph.connect(3, 0, 3, 0);
-    graph.connect(1, 0, 4, 0);
-    graph.connect(3, 0, 4, 1);
-    graph.connect(3, 0, 6, 0);
-    graph.connect(7, 0, 6, 1);
-    graph.connect(6, 0, 8, 0);
-    graph.connect(4, 0, 8, 1);
-    graph.connect(8, 0, 5, 0);
+    graph.connect(3, 0, 4, 0);
 
     graph.sortNodes();
 

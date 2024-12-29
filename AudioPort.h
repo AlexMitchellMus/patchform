@@ -2,7 +2,8 @@
 // Created by alexw on 28/12/2024.
 //
 #include <vector>
-
+#include <string>
+#include <iostream>
 
 #pragma once
 
@@ -13,16 +14,21 @@ class AudioPort
 protected:
     std::vector<float> audioBuffer;
     AudioNode* node;
+    std::string name;
 public:
 
-    AudioPort(AudioNode* parent, size_t size = 0);
-
-    void resize(size_t size) {
-        audioBuffer.resize(size);
+    AudioPort(AudioNode* parent, std::string& portName) : node(parent), name(portName)
+    {
     }
 
     float* getAudioBuffer() {
         return audioBuffer.data();
+    }
+
+    void clear(size_t size)
+    {
+        audioBuffer.resize(size, 0.0f);
+        std::fill(audioBuffer.begin(), audioBuffer.end(), 0);
     }
 
     size_t size() const {
