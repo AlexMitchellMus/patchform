@@ -3,10 +3,16 @@
 #include <vector>
 #include <algorithm>
 #include <stack>
-#include <PortAudio.h>
 #include <functional>
+#include <fstream>
+#include <windows.h>
+
+#include <PortAudio.h>
+#include "external/json/single_include/nlohmann/json.hpp"
+using json = nlohmann::json;
 
 #include "AudioPort.h"
+#include "Utility/Hash.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -27,6 +33,7 @@ protected:
     AudioPort* outputPort;
     NodeContext* context;
     std::string name;
+    bool hasOutputPort = false;
 
 public:
     AudioNode(NodeContext* context, std::string nodeName)
@@ -34,7 +41,14 @@ public:
         , name(nodeName)
     {}
 
-    virtual ~AudioNode() {}
+    virtual ~AudioNode()
+    {
+    }
+
+    void setHasNoOutputPort()
+    {
+        hasOutputPort = true;
+    }
 
     std::string getName() { return name; }
 
@@ -51,7 +65,9 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
-        if (outputPort)
+        // check if the node has an output port to write to
+        // output nodes (currently only AudioOutput) don't have an output port
+        if (outputPort || hasOutputPort)
             processAudio(buffer, frameCount);
     }
 
@@ -128,7 +144,7 @@ public:
     void processAudio(float* out, unsigned long frameCount) override {
         auto output = outputPort->getAudioBuffer();
         for (unsigned long i = 0; i < frameCount; i++) {
-            output[i] += value;  // Directly assign the value to outputBuffer
+            output[i] += value;
         }
     }
 };
@@ -179,6 +195,7 @@ public:
     AudioOutNode(NodeContext* context) : AudioNode(context, "AudioOutNode")
     {
         addInputPort("Signal");
+        setHasNoOutputPort();
     }
 
     void processAudio(float* buffer, unsigned long frameCount) override {
@@ -190,12 +207,64 @@ public:
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
 private:
-    std::vector<AudioNode*> nodes;
+    std::vector<std::unique_ptr<AudioNode>> nodes;
     std::vector<AudioNode*> sortedNodes;
 
+    NodeContext* context;
+
 public:
-    void addNode(AudioNode* node) {
-        nodes.push_back(node);
+    AudioGraph(NodeContext* context) : context(context){}
+
+    void loadPatch(json patch) {
+        auto createObject = [this](json node)
+        {
+            auto const object = node["type"].get<std::string>();
+
+            switch (hash(object))
+            {
+            case hash("ValueNode"):
+                {
+                    auto const value = node["value"].get<float>();
+                    nodes.push_back(std::make_unique<ValueNode>(context, value));
+                }
+                break;
+            case hash("LFONode"):
+                {
+                    auto const rate = node["rate"].get<float>();
+                    nodes.push_back(std::make_unique<LFONode>(context, rate));
+                }
+                break;
+            case hash("VolumeNode"):
+                {
+                    nodes.push_back(std::make_unique<VolumeNode>(context));
+                }
+                break;
+            case hash("SineNode"):
+                {
+                    nodes.push_back(std::make_unique<SineWaveNode>(context));
+                }
+                break;
+            case hash("AudioOutNode"):
+                {
+                    nodes.push_back(std::make_unique<AudioOutNode>(context));
+                }
+                break;
+            default:
+                break;
+            }
+        };
+
+        // Create nodes
+        for (const auto& node : patch["nodes"]) {
+            createObject(node);
+        }
+
+        // Create connections
+        for (const auto& connection : patch["connections"]) {
+            connect(connection["sourceNode"], connection["sourcePort"], connection["targetNode"], connection["targetPort"]);
+        }
+
+        sortNodes();
     }
 
     // Connect nodes dynamically by addressing them by order of addition
@@ -237,8 +306,8 @@ public:
 
         // Perform DFS on all nodes to ensure proper order
         for (auto& node : nodes) {
-            if (!visited[node]) {
-                dfs(node);
+            if (!visited[node.get()]) {
+                dfs(node.get());
             }
         }
 
@@ -257,6 +326,7 @@ public:
     {
         topologicalSort(sortedNodes);
 
+#ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : nodes)
         {
@@ -266,6 +336,7 @@ public:
         std::cout << "======== sorted =======" << std::endl;
         for (auto node : sortedNodes)
             std::cout << "node graph: " << node->getName() << std::endl;
+#endif
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -289,15 +360,18 @@ static int audioCallback(const void* input, void* output,
     auto* graph = static_cast<AudioGraph*>(userData);
     float* out = (float*)output;
 
-    std::fill(out, out + frameCount, 0.0f);
-
     graph->process(out, frameCount);  // Process the audio graph
+
+    if ((statusFlags & paOutputUnderflow) || (statusFlags & paInputOverflow)) {
+        std::cout << "issue" << std::endl;
+    }
+
     return paContinue;
 }
 
 int main() {
     PaError err;
-    unsigned long frameCount = 256;
+    unsigned long frameCount = 64;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio
@@ -309,40 +383,26 @@ int main() {
 
     auto context = std::make_unique<NodeContext>(sampleRate);
 
-    // Create nodes independently
-    auto valueNode = std::make_unique<ValueNode>(context.get(), 440.0f);
-    auto sineNode = std::make_unique<SineWaveNode>(context.get());
+    char buffer[MAX_PATH];
+    DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
+    if (length == 0) {
+        std::cerr << "Error getting current directory." << std::endl;
+    } else {
+        std::cout << "Current working directory: " << buffer << std::endl;
+    }
 
-    auto valueNode2 = std::make_unique<ValueNode>(context.get(), 666.0f);
-    auto sineNode2 = std::make_unique<SineWaveNode>(context.get());
+    std::ifstream file("graph.json");
+    if (!file.is_open()) {
+        std::cerr << "Could not open the file!" << std::endl;
+        return 1;
+    }
 
-    auto valueNode3 = std::make_unique<ValueNode>(context.get(), 320.0f);
-    auto sineNode3 = std::make_unique<SineWaveNode>(context.get());
+    json patch;
+    file >> patch;
+    file.close();
 
-    auto valueNode4 = std::make_unique<ValueNode>(context.get(), 720.0f);
-    auto sineNode4 = std::make_unique<SineWaveNode>(context.get());
-
-    auto lfoNode = std::make_unique<LFONode>(context.get(), 1.0f);
-    auto volumeNode = std::make_unique<VolumeNode>(context.get());
-    auto audioOutNode = std::make_unique<AudioOutNode>(context.get());
-    auto sumNode = std::make_unique<AddNode>(context.get());
-    auto sumNode2 = std::make_unique<AddNode>(context.get());
-
-    // Create the graph and add nodes
-    AudioGraph graph;
-    graph.addNode(valueNode.get());     // 0
-    graph.addNode(lfoNode.get());       // 1
-    graph.addNode(volumeNode.get());    // 2
-    graph.addNode(sineNode.get());      // 3
-    graph.addNode(audioOutNode.get());  // 4
-
-    // Connect nodes
-    graph.connect(0, 0, 2, 0);
-    graph.connect(1, 0, 2, 1);
-    graph.connect(2, 0, 3, 0);
-    graph.connect(3, 0, 4, 0);
-
-    graph.sortNodes();
+    AudioGraph graph(context.get());
+    graph.loadPatch(patch);
 
     // Set up PortAudio stream
     PaStream* stream;
@@ -359,7 +419,12 @@ int main() {
         return 1;
     }
 
-    // Run for 5 seconds
+    auto streamInfo = Pa_GetStreamInfo(stream);
+    if (streamInfo != nullptr) {
+        std::cout << "Sample Rate: " << streamInfo->sampleRate << std::endl;
+        std::cout << "input latency: " << streamInfo->inputLatency << " output latency: " << streamInfo->outputLatency << std::endl;
+    }
+
     std::cout << "Press Enter to stop..." << std::endl;
     std::cin.get();
 

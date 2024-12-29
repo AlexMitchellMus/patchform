@@ -4,6 +4,7 @@ project(audiograph)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(external/portaudio)
+add_subdirectory(external/json)
 
 file(GLOB SOURCES "*.cpp")
 add_executable(audiograph ${SOURCES})
@@ -19,3 +20,10 @@ if(MSVC)
     # You can also add other flags like /GL for whole program optimization if necessary
     target_compile_options(audiograph PRIVATE /GL)
 endif()
+
+set(SOURCE_FILE ${CMAKE_SOURCE_DIR}/graph.json)
+set(DEST_DIR ${CMAKE_BINARY_DIR}/$<CONFIG>/graph.json)
+
+add_custom_command(TARGET audiograph POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_FILE} ${DEST_DIR}
+)

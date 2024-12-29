@@ -28,7 +28,7 @@ public:
     void clear(size_t size)
     {
         audioBuffer.resize(size, 0.0f);
-        std::fill(audioBuffer.begin(), audioBuffer.end(), 0);
+        std::fill(audioBuffer.begin(), audioBuffer.end(), 0.0f);
     }
 
     size_t size() const {
