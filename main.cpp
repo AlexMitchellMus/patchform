@@ -1,3 +1,9 @@
+/*
+// Copyright (c) 2024 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -129,9 +135,10 @@ public:
         if (inputPorts.size() >= 2) {
             const float* buffer1 = inputPorts[0].getAudioBuffer();
             const float* buffer2 = inputPorts[1].getAudioBuffer();
+            auto outputBuffer = outputPort->getAudioBuffer();
 
             for (unsigned long i = 0; i < frameCount; i++) {
-                outputPort->getAudioBuffer()[i] += buffer1[i] + buffer2[i];  // Directly write to output buffer
+                outputBuffer[i] += buffer1[i] + buffer2[i];  // Directly write to output buffer
             }
         }
     }
@@ -159,14 +166,13 @@ class Metro : public AudioNode
     uint64_t tickInterval;
 
 public:
-    Metro(NodeContext* context) : AudioNode(context, "Metro")
+    Metro(NodeContext* context, float hz) : AudioNode(context, "Metro")
     {
-        tickInterval = static_cast<uint64_t>(context->sampleRate);
+        tickInterval = static_cast<uint64_t>(context->sampleRate / hz);
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        std::cout << "======" << std::endl;
         unsigned long samplesProcessed = 0;
 
         while (samplesProcessed < frameCount)
@@ -182,10 +188,63 @@ public:
             unsigned long tickPosition = samplesProcessed + samplesUntilNextTick;
             outputPort->addEvent(tickPosition);
 
-            std::cout << "triggering tick" << std::endl;
-
             sampleCounter = 0;
             samplesProcessed = tickPosition + 1;
+        }
+    }
+};
+
+class Envelope : public AudioNode
+{
+    float attackVal;
+    float decayVal;
+    float envValue = 0.0f;
+    bool isAttack = true;  // Track whether the envelope is in attack phase
+
+public:
+    Envelope(NodeContext* context, float attackVal, float decayVal)
+        : AudioNode(context, "Envelope")
+        , attackVal(attackVal * (context->sampleRate / 1000))
+        , decayVal(decayVal * (context->sampleRate / 1000))
+    {
+        addInputPort("Events");
+        addInputPort("Signal");
+    }
+
+    void processAudio(float* out, unsigned long frameCount) override
+    {
+        auto output = outputPort->getAudioBuffer();
+        auto events = inputPorts[0].getEvents();
+        auto signal = inputPorts[1].getAudioBuffer();
+
+        for (unsigned long i = 0; i < frameCount; i++)
+        {
+            if (!events->empty() && events->back().timeStamp == i) {
+                envValue = 0.0f;  // Reset envelope at the start of the event
+                isAttack = true;  // Start attack phase
+                events->pop_back();
+            }
+
+            if (isAttack)
+            {
+                // Attack phase: Ramp up from 0 to 1
+                envValue += (1.0f / attackVal);
+                if (envValue >= 1.0f) {
+                    envValue = 1.0f;
+                    isAttack = false;  // Switch to decay phase after reaching 1
+                }
+            }
+            else
+            {
+                // Decay phase: Ramp down from 1 towards 0
+                envValue -= (1.0f / decayVal);
+                if (envValue <= 0.0f) {
+                    envValue = 0.0f;
+                }
+            }
+
+            // Apply envelope to the signal
+            output[i] += signal[i] * envValue;
         }
     }
 };
@@ -201,7 +260,7 @@ public:
     void processAudio(float* out, unsigned long frameCount) override {
         auto output = outputPort->getAudioBuffer();
         for (unsigned long i = 0; i < frameCount; i++) {
-            output[i] = 0.5f * std::sin(phase);
+            output[i] += 0.5f * std::sin(phase);
             phase += 2.0f * M_PI * frequency / context->sampleRate;
             if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
@@ -221,11 +280,11 @@ public:
         if (inputPorts.size() >= 2) {
             const float* buffer1 = inputPorts[0].getAudioBuffer();
             const float* buffer2 = inputPorts[1].getAudioBuffer();
+            auto output = outputPort->getAudioBuffer();
 
             for (unsigned long i = 0; i < frameCount; i++) {
-                buffer[i] = buffer1[i] * buffer2[i];  // Multiply the two input signals
+                output[i] += buffer1[i] * buffer2[i];  // Multiply the two input signals
             }
-            std::copy(buffer, buffer + frameCount, outputPort->getAudioBuffer());
         }
     }
 };
@@ -261,38 +320,45 @@ public:
         {
             auto const object = node["type"].get<std::string>();
 
-            std::cout << "type: " << object << std::endl;
-
             switch (hash(object))
             {
-            case hash("Metro"):
+            case hash("Envelope"):
                 {
-                    nodes.push_back(std::make_unique<Metro>(context));
+                    // TODO: Check the value exists, otherwise will crash
+                    auto const attackVal = node["attack"].get<float>();
+                    auto const decayVal = node["decay"].get<float>();
+                    nodes.push_back(std::make_unique<Envelope>(context, attackVal, decayVal));
                 }
                 break;
-            case hash("ValueNode"):
+            case hash("Metro"):
+                {
+                    auto const value = node["hz"].get<float>();
+                    nodes.push_back(std::make_unique<Metro>(context, value));
+                }
+                break;
+            case hash("Value"):
                 {
                     auto const value = node["value"].get<float>();
                     nodes.push_back(std::make_unique<ValueNode>(context, value));
                 }
                 break;
-            case hash("LFONode"):
+            case hash("LFO"):
                 {
                     auto const rate = node["rate"].get<float>();
                     nodes.push_back(std::make_unique<LFONode>(context, rate));
                 }
                 break;
-            case hash("VolumeNode"):
+            case hash("Volume"):
                 {
                     nodes.push_back(std::make_unique<VolumeNode>(context));
                 }
                 break;
-            case hash("SineNode"):
+            case hash("Sine"):
                 {
                     nodes.push_back(std::make_unique<SineWaveNode>(context));
                 }
                 break;
-            case hash("AudioOutNode"):
+            case hash("AudioOut"):
                 {
                     nodes.push_back(std::make_unique<AudioOutNode>(context));
                 }
@@ -373,7 +439,7 @@ public:
     void sortNodes()
     {
         topologicalSort(sortedNodes);
-#define DEBUG_SORT
+//#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : nodes)

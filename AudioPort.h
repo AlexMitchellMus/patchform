@@ -1,6 +1,9 @@
-//
-// Created by alexw on 28/12/2024.
-//
+/*
+// Copyright (c) 2024 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #include <vector>
 #include <string>
 #include <iostream>

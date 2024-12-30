@@ -1,10 +1,10 @@
 {
     "nodes": [
-        { "id": 0, "type": "ValueNode", "value": 660.0 },
-        { "id": 1, "type": "LFONode", "rate": 3 },
-        { "id": 2, "type": "VolumeNode" },
-        { "id": 3, "type": "SineNode" },
-        { "id": 4, "type": "AudioOutNode" }
+        { "id": 0, "type": "Value", "value": 660.0 },
+        { "id": 1, "type": "LFO", "rate": 3 },
+        { "id": 2, "type": "Volume" },
+        { "id": 3, "type": "Sine" },
+        { "id": 4, "type": "AudioOut" }
     ],
     "connections": [
         { "sourceNode": 0, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
