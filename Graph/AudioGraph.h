@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <stack>
+#include <chrono>
 
 #include "../external/json/single_include/nlohmann/json.hpp"
 using json = nlohmann::json;
@@ -20,7 +21,9 @@ private:
     NodeContext* context;
 
 public:
-    AudioGraph(NodeContext* context) : context(context){}
+    AudioGraph(NodeContext* context) : context(context)
+    {
+    }
 
     void loadPatch(json patch) {
         auto createObject = [this](json node)
@@ -179,8 +182,22 @@ public:
 
     void sortNodes()
     {
+#define GRAPH_STATS
+#ifdef GRAPH_STATS
+        auto start = std::chrono::high_resolution_clock::now();
+#endif
+
         topologicalSort(sortedNodes);
-#define DEBUG_SORT
+
+#ifdef GRAPH_STATS
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+        std::cout << "objects in graph: " << sortedNodes.size() << " sort took " << elapsedMs << " ms.\n";
+#endif
+
+
+//#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : nodes)
@@ -249,6 +266,18 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
+#ifdef DSP_TIMING
+        //=====================
+        // 1) Timing the DSP
+        //=====================
+        static auto lastPrintTime = std::chrono::high_resolution_clock::now();
+
+        static double accumulatedCallbackTimeMs = 0.0;  // Sum of times in ms
+        static int    callCount                 = 0;    // Number of callbacks since last print
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+#endif
+
         if (isTransitioning)
         {
             // Temporary buffers for processing
@@ -279,5 +308,45 @@ public:
             // Only process the active graph if no transition is occurring
             activeGraph->process(buffer, frameCount);
         }
+
+#ifdef DSP_TIMING
+        auto endTime = std::chrono::high_resolution_clock::now();
+
+        // Calculate how long (in ms) the callback took
+        double callbackTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
+
+        // Accumulate for averaging
+        accumulatedCallbackTimeMs += callbackTimeMs;
+        callCount++;
+
+        //=====================
+        // 2) Check if 1 second has passed
+        //=====================
+        auto now = std::chrono::high_resolution_clock::now();
+        double elapsedSec = std::chrono::duration<double>(now - lastPrintTime).count();
+
+        if (elapsedSec >= 1.0)  // Once a second
+        {
+            // 2a) Compute average callback duration in ms
+            double averageMs = accumulatedCallbackTimeMs / callCount;
+
+            // 2b) Compute percentage of available time used
+            //     - Time available per callback (in ms)
+            //       = (frameCount / sampleRate) * 1000
+            double periodMs   = 1000.0 * (static_cast<double>(frameCount) / ctx->sampleRate);
+            double usagePct   = (averageMs / periodMs) * 100.0;
+
+            // 2c) Print results
+            std::cout
+                << "Average callback time over last second: "
+                << averageMs << " ms, which is "
+                << usagePct << "% of available time.\n";
+
+            // 2d) Reset counters for next 1-second interval
+            lastPrintTime             = now;
+            accumulatedCallbackTimeMs = 0.0;
+            callCount                 = 0;
+        }
+#endif
     }
 };

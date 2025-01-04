@@ -27,10 +27,11 @@ public:
 
         for (unsigned long i = 0; i < frameCount; i++)
         {
-            while (!events.empty() && events.front().timeStamp == i) {
+            while (!events.empty() && events.front()->getTimeStamp() == i) {
                 envValue = 0.0f;
                 isAttack = true;
-                events.erase(events.begin());  // remove the front event
+                context->eventPool.returnFreeEvent(events.front());
+                events.erase(events.begin());
             }
 
             if (isAttack)

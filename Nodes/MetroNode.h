@@ -28,7 +28,19 @@ public:
             }
 
             unsigned long tickPosition = samplesProcessed + samplesUntilNextTick;
-            outputPort.addEvent(tickPosition);
+
+            Event* e = context->eventPool.getFreeEvent();
+
+            if (e) {
+                e->setTimeStamp(tickPosition);
+
+                // Now add it to the output port’s event list
+                outputPort.addEvent(e);
+            }
+            else {
+                // If you get nullptr, you ran out of free events.
+                // handle it (grow pool outside RT or skip event, etc.)
+            }
 
             sampleCounter = 0;
             samplesProcessed = tickPosition + 1;

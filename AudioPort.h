@@ -10,11 +10,24 @@
 
 #pragma once
 
-struct Event
+class Event
 {
     uint64_t timeStamp = 0;
+public:
+    Event(){};
 
     Event(uint64_t timeStamp) : timeStamp(timeStamp) {}
+
+    uint64_t getTimeStamp() const
+    {
+        return timeStamp;
+    }
+
+    Event& setTimeStamp(const uint64_t timestamp)
+    {
+        timeStamp = timestamp;
+        return *this;
+    }
 };
 
 class AudioNode;
@@ -25,7 +38,7 @@ protected:
     std::vector<float> audioBuffer;
     AudioNode* node;
 
-    std::vector<Event> events;
+    std::vector<Event*> events;
 
     std::string name;
 public:
@@ -43,14 +56,16 @@ public:
         return audioBuffer.size();
     }
 
-    std::vector<Event> getEvents()
+    std::vector<Event*> getEvents()
     {
-        return std::move(events);
+        //return events;
+        std::vector<Event*> tmp = std::move(events);
+        return tmp;
     }
 
-    void addEvent(uint64_t timeStamp)
+    void addEvent(Event* event)
     {
-        events.emplace_back(Event(timeStamp));
+        events.push_back(event);
     }
 
     void clear(size_t size)
@@ -109,10 +124,10 @@ struct AudioInputPort {
         return summed;
     }
 
-    std::vector<Event> combineEvents()
+    std::vector<Event*> combineEvents()
     {
         // 1) Gather events from each connected port
-        std::vector<Event> combined;
+        std::vector<Event*> combined;
 
         // 1) Gather all events from each connected port
         for (auto* port : connectedPorts) {
@@ -127,8 +142,8 @@ struct AudioInputPort {
         }
 
         // 3) Sort combined by timestamp
-        std::sort(combined.begin(), combined.end(), [](const Event& a, const Event& b) {
-            return a.timeStamp < b.timeStamp;
+        std::sort(combined.begin(), combined.end(), [](const Event* a, const Event* b) {
+            return a->getTimeStamp() < b->getTimeStamp();
         });
 
         // Return all events in a single sorted vector
