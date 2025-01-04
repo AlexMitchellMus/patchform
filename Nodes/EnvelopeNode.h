@@ -1,0 +1,58 @@
+#include "AudioNodes.h"
+
+#pragma once
+
+class Envelope : public AudioNode
+{
+    float attackVal;
+    float decayVal;
+    float envValue = 0.0f;
+    bool isAttack = true;  // Track whether the envelope is in attack phase
+
+public:
+    Envelope(NodeContext* context, float attackVal, float decayVal)
+        : AudioNode(context, "Envelope")
+        , attackVal(attackVal * (context->sampleRate / 1000))
+        , decayVal(decayVal * (context->sampleRate / 1000))
+    {
+        addInputPort("Events");
+        addInputPort("Signal");
+    }
+
+    void processAudio(float* out, unsigned long frameCount) override
+    {
+        auto output = outputPort.getAudioBuffer();
+        auto events = inputPorts[0].combineEvents();
+        auto signal = inputPorts[1].sumPort().data();
+
+        for (unsigned long i = 0; i < frameCount; i++)
+        {
+            while (!events.empty() && events.front().timeStamp == i) {
+                envValue = 0.0f;
+                isAttack = true;
+                events.erase(events.begin());  // remove the front event
+            }
+
+            if (isAttack)
+            {
+                // Attack phase: Ramp up from 0 to 1
+                envValue += (1.0f / attackVal);
+                if (envValue >= 1.0f) {
+                    envValue = 1.0f;
+                    isAttack = false;  // Switch to decay phase after reaching 1
+                }
+            }
+            else
+            {
+                // Decay phase: Ramp down from 1 towards 0
+                envValue -= (1.0f / decayVal);
+                if (envValue <= 0.0f) {
+                    envValue = 0.0f;
+                }
+            }
+
+            // Apply envelope to the signal
+            output[i] = signal[i] * envValue;
+        }
+    }
+};
