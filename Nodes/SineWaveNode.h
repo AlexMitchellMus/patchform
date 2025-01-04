@@ -18,7 +18,16 @@ public:
         static bool initialized = false;
         if (!initialized) {
             for (int i = 0; i < TABLE_SIZE; i++) {
-                sineTable[i] = std::sin(2.0f * M_PI * (float)i / (float)TABLE_SIZE);
+#define SINE
+#ifdef SINE
+                    sineTable[i] = std::sin(2.0f * M_PI * (float)i / (float)TABLE_SIZE);
+#else
+                    // Fraction of the way through the table
+                    float fraction = static_cast<float>(i) / static_cast<float>(TABLE_SIZE);
+
+                    // Map fraction from [0, 1) to [-1, 1)
+                    sineTable[i] = 2.0f * fraction - 1.0f;
+#endif
             }
             initialized = true;
         }
