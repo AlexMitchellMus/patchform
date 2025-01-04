@@ -26,6 +26,7 @@ set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/graph.json"
         "${CMAKE_SOURCE_DIR}/graph2.json"
         "${CMAKE_SOURCE_DIR}/graph3.json"
+        "${CMAKE_SOURCE_DIR}/graph4.json"
 )
 
 # Loop over them and create a post-build copy command for each
