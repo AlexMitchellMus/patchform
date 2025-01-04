@@ -21,16 +21,25 @@ if(MSVC)
     target_compile_options(audiograph PRIVATE /GL)
 endif()
 
-set(SOURCE_FILE ${CMAKE_SOURCE_DIR}/graph.json)
-set(DEST_DIR ${CMAKE_BINARY_DIR}/$<CONFIG>/graph.json)
-
-add_custom_command(TARGET audiograph POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_FILE} ${DEST_DIR}
+# List all the JSON files you want to copy
+set(SOURCE_FILES
+        "${CMAKE_SOURCE_DIR}/graph.json"
+        "${CMAKE_SOURCE_DIR}/graph2.json"
+        "${CMAKE_SOURCE_DIR}/graph3.json"
 )
 
-set(SOURCE_FILE_2 ${CMAKE_SOURCE_DIR}/graph2.json)
-set(DEST_DIR_2 ${CMAKE_BINARY_DIR}/$<CONFIG>/graph2.json)
+# Loop over them and create a post-build copy command for each
+foreach(source_file IN LISTS SOURCE_FILES)
+    # Extract just the filename so we can construct the destination path
+    get_filename_component(file_name "${source_file}" NAME)
+    set(dest_file "${CMAKE_BINARY_DIR}/$<CONFIG>/${file_name}")
 
-add_custom_command(TARGET audiograph POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_FILE_2} ${DEST_DIR_2}
-)
+    add_custom_command(
+            TARGET audiograph
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${source_file}"
+            "${dest_file}"
+            COMMENT "Copying ${file_name} to ${dest_file}"
+    )
+endforeach()

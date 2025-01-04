@@ -1,0 +1,15 @@
+{
+    "nodes": [
+        { "id": 0, "type": "AudioOut" },
+        { "id": 1, "type": "Value", "value": 220.0 },
+        { "id": 2, "type": "Sine" },
+        { "id": 3, "type": "Value", "value": 550.0 },
+        { "id": 4, "type": "Sine" }
+    ],
+    "connections": [
+        { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
+        { "sourceNode": 3, "sourcePort": 0, "targetNode": 4, "targetPort": 0 },
+        { "sourceNode": 2, "sourcePort": 0, "targetNode": 0, "targetPort": 0 },
+        { "sourceNode": 4, "sourcePort": 0, "targetNode": 0, "targetPort": 0 }
+    ]
+}

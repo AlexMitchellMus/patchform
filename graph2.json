@@ -7,9 +7,9 @@
         { "id": 4, "type": "AudioOut" }
     ],
     "connections": [
-        { "sourceNode": 0, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
+        { "sourceNode": 0, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
         { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 1 },
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
-        { "sourceNode": 3, "sourcePort": 0, "targetNode": 4, "targetPort": 0 }
+        { "sourceNode": 3, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
+        { "sourceNode": 2, "sourcePort": 0, "targetNode": 4, "targetPort": 0 }
     ]
 }

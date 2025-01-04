@@ -39,25 +39,20 @@ public:
 // Abstract AudioNode class
 class AudioNode {
 protected:
-    std::vector<AudioPort> inputPorts;
-    AudioPort* outputPort = nullptr;
+    std::vector<AudioInputPort> inputPorts;
+    AudioPort outputPort;
     NodeContext* context;
     std::string name;
-    bool hasNoOutputPort = false;
 
 public:
     AudioNode(NodeContext* context, std::string nodeName)
         : context(context)
         , name(nodeName)
+        , outputPort(this, "output")
     {}
 
     virtual ~AudioNode()
     {
-    }
-
-    void setHasNoOutputPort()
-    {
-        hasNoOutputPort = true;
     }
 
     std::string getName() { return name; }
@@ -65,40 +60,31 @@ public:
     // Add an input port (for dependency)
     void addInputPort(std::string portName)
     {
-        inputPorts.emplace_back(this, portName);
+        inputPorts.emplace_back(portName);
     }
 
-    void linkOutputPort(AudioPort* inputPort)
+    void linkInputPort(AudioPort* portToLink, int inputPortIndex)
     {
-        outputPort = inputPort;
+        inputPorts[inputPortIndex].connectedPorts.push_back(portToLink);
     }
 
     void process(float* buffer, unsigned long frameCount)
     {
-        // check if the node has an output port to write to
-        // output nodes (currently only AudioOutput) don't have an output port
-        if (outputPort || hasNoOutputPort)
-            processAudio(buffer, frameCount);
-    }
-
-    void clearBuffers(int frameCount)
-    {
-        for (auto& port : inputPorts)
-        {
-            port.clear(frameCount);
-        }
+        outputPort.clear(frameCount);
+        processAudio(buffer, frameCount);
     }
 
     // Virtual method for processing the audio buffer
     virtual void processAudio(float* buffer, unsigned long frameCount) = 0;
 
     // Method to get input ports for sorting
-    AudioPort* getInputPort(int index)
+    AudioPort* getOutputPort()
     {
-        return &inputPorts.at(index);
+        return &outputPort;
     }
 
-    const std::vector<AudioPort>& getInputPorts() const { return inputPorts; }
+    std::vector<AudioInputPort>& getInputPorts() { return inputPorts; };
+
 };
 
 // SineWaveNode that generates sine wave audio
@@ -112,10 +98,11 @@ public:
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
-        auto output = outputPort->getAudioBuffer();
+        auto input1 = inputPorts[0].sumPort();
+        auto output = outputPort.getAudioBuffer();
         for (unsigned long i = 0; i < frameCount; i++) {
-            output[i] += (0.5f * std::sin(phase));
-            phase += 2.0f * M_PI * inputPorts[0].getAudioBuffer()[i] / context->sampleRate;
+            output[i] = (0.5f * std::sin(phase));
+            phase += 2.0f * M_PI * input1[i] / context->sampleRate;
             if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
     }
@@ -133,12 +120,11 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override {
         if (inputPorts.size() >= 2) {
-            const float* buffer1 = inputPorts[0].getAudioBuffer();
-            const float* buffer2 = inputPorts[1].getAudioBuffer();
-            auto outputBuffer = outputPort->getAudioBuffer();
+            const float* buffer1 = inputPorts[0].sumPort().data();
+            const float* buffer2 = inputPorts[1].sumPort().data();
 
             for (unsigned long i = 0; i < frameCount; i++) {
-                outputBuffer[i] += buffer1[i] + buffer2[i];  // Directly write to output buffer
+                outputPort.getAudioBuffer()[i] = buffer1[i] + buffer2[i];  // Directly write to output buffer
             }
         }
     }
@@ -153,9 +139,9 @@ public:
     ValueNode(NodeContext* context, float value) : AudioNode(context, "ValueNode"), value(value) {}
 
     void processAudio(float* out, unsigned long frameCount) override {
-        auto output = outputPort->getAudioBuffer();
+        auto output = outputPort.getAudioBuffer();
         for (unsigned long i = 0; i < frameCount; i++) {
-            output[i] += value;
+            output[i] = value;
         }
     }
 };
@@ -186,7 +172,7 @@ public:
             }
 
             unsigned long tickPosition = samplesProcessed + samplesUntilNextTick;
-            outputPort->addEvent(tickPosition);
+            outputPort.addEvent(tickPosition);
 
             sampleCounter = 0;
             samplesProcessed = tickPosition + 1;
@@ -213,16 +199,16 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto output = outputPort->getAudioBuffer();
-        auto events = inputPorts[0].getEvents();
-        auto signal = inputPorts[1].getAudioBuffer();
+        auto output = outputPort.getAudioBuffer();
+        auto events = inputPorts[0].combineEvents();
+        auto signal = inputPorts[1].sumPort().data();
 
         for (unsigned long i = 0; i < frameCount; i++)
         {
-            if (!events->empty() && events->back().timeStamp == i) {
-                envValue = 0.0f;  // Reset envelope at the start of the event
-                isAttack = true;  // Start attack phase
-                events->pop_back();
+            while (!events.empty() && events.front().timeStamp == i) {
+                envValue = 0.0f;
+                isAttack = true;
+                events.erase(events.begin());  // remove the front event
             }
 
             if (isAttack)
@@ -244,7 +230,7 @@ public:
             }
 
             // Apply envelope to the signal
-            output[i] += signal[i] * envValue;
+            output[i] = signal[i] * envValue;
         }
     }
 };
@@ -258,9 +244,9 @@ public:
     LFONode(NodeContext* context, float frequency) : AudioNode(context, "LFONode"), frequency(frequency) {}
 
     void processAudio(float* out, unsigned long frameCount) override {
-        auto output = outputPort->getAudioBuffer();
-        for (unsigned long i = 0; i < frameCount; i++) {
-            output[i] += 0.5f * std::sin(phase);
+        auto output = outputPort.getAudioBuffer();
+        for (unsigned int i = 0; i < frameCount; i++) {
+            output[i] = 0.5f * std::sin(phase);
             phase += 2.0f * M_PI * frequency / context->sampleRate;
             if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
         }
@@ -277,14 +263,12 @@ public:
     }
 
     void processAudio(float* buffer, unsigned long frameCount) override {
-        if (inputPorts.size() >= 2) {
-            const float* buffer1 = inputPorts[0].getAudioBuffer();
-            const float* buffer2 = inputPorts[1].getAudioBuffer();
-            auto output = outputPort->getAudioBuffer();
+        const float* buffer1 = inputPorts[0].sumPort().data();
+        const float* buffer2 = inputPorts[1].sumPort().data();
+        auto output = outputPort.getAudioBuffer();
 
-            for (unsigned long i = 0; i < frameCount; i++) {
-                output[i] += buffer1[i] * buffer2[i];  // Multiply the two input signals
-            }
+        for (unsigned long i = 0; i < frameCount; i++) {
+            output[i] = buffer1[i] * buffer2[i];  // Multiply the two input signals
         }
     }
 };
@@ -295,12 +279,12 @@ public:
     AudioOutNode(NodeContext* context) : AudioNode(context, "AudioOutNode")
     {
         addInputPort("Signal");
-        setHasNoOutputPort();
     }
 
     void processAudio(float* buffer, unsigned long frameCount) override {
         // The input port audio is directly sent to the PortAudio stream
-        std::copy(inputPorts[0].getAudioBuffer(), inputPorts[0].getAudioBuffer() + frameCount, buffer);
+        auto inputPort = inputPorts[0].sumPort().data();
+        std::copy(inputPort, inputPort + frameCount, buffer);
     }
 };
 
@@ -383,63 +367,97 @@ public:
 
     // Connect nodes dynamically by addressing them by order of addition
     void connect(int oNode, int oPort, int iNode, int iPort) {
-        nodes.at(oNode)->linkOutputPort(nodes.at(iNode)->getInputPort(iPort));
+        nodes.at(iNode)->linkInputPort(nodes.at(oNode)->getOutputPort(), iPort);
     }
 
-    void topologicalSort(std::vector<AudioNode*>& sortedNodes) {
+    // This helper scans ALL nodes to find which nodes are downstream of `node`.
+    std::vector<AudioNode*> getDownstreamNodes(AudioNode* node, const std::vector<std::unique_ptr<AudioNode>>& allNodes)
+    {
+        std::vector<AudioNode*> result;
+        AudioPort* myOutputPort = node->getOutputPort();
+
+        // Iterate by reference: auto& or const auto&
+        for (auto& otherNode : allNodes)
+        {
+            if (otherNode.get() == node)
+                continue; // skip self
+
+            // Check each named input port
+            for (const auto& inputPort : otherNode->getInputPorts())
+            {
+                // Each inputPort can have multiple connections
+                for (auto* connected : inputPort.connectedPorts)
+                {
+                    // If otherNode’s input is connected to *this* node’s output,
+                    // we have an edge: node -> otherNode
+                    if (connected == myOutputPort)
+                    {
+                        result.push_back(otherNode.get());
+                        goto NextOtherNode;
+                    }
+                }
+            }
+            NextOtherNode:;
+        }
+
+        return result;
+    }
+
+
+    // DFS-based topological sort that builds adjacency from "node -> its downstream nodes".
+    void topologicalSort(std::vector<AudioNode*>& sortedNodes)
+    {
         std::stack<AudioNode*> stack;
         std::unordered_map<AudioNode*, bool> visited;
-        std::unordered_map<AudioNode*, bool> inStack; // Track nodes in current DFS stack
+        std::unordered_map<AudioNode*, bool> inStack; // for cycle detection
 
-        // Helper function to perform DFS
-        std::function<void(AudioNode*)> dfs = [&](AudioNode* node) {
+        // Recursive DFS lambda
+        std::function<void(AudioNode*)> dfs = [&](AudioNode* node)
+        {
             if (inStack[node]) {
                 std::cerr << "Cycle detected at node: " << node->getName() << std::endl;
-                return; // If we encounter a cycle, we return immediately
+                return;
+            }
+            if (visited[node]) {
+                return;
             }
 
-            if (visited[node]) return;
-
-            // Mark the node as visited and part of the current DFS stack
             visited[node] = true;
             inStack[node] = true;
 
-            // Traverse input ports
-            for (auto& inputPort : node->getInputPorts()) {
-                AudioNode* inputAudioNode = inputPort.getParentNode();
-                if (inputAudioNode && !visited[inputAudioNode]) {
-                    dfs(inputAudioNode);
+            // Get all nodes that depend on this node's output
+            auto downstreamNodes = getDownstreamNodes(node, nodes);
+
+            for (auto* downstream : downstreamNodes) {
+                if (!visited[downstream]) {
+                    dfs(downstream);
                 }
             }
 
-            inStack[node] = false; // Remove from current stack after processing
-
-            // After processing all dependencies, push the node to the stack
+            inStack[node] = false;
             stack.push(node);
         };
 
-        // Perform DFS on all nodes to ensure proper order
+        // Initiate DFS from every node that isn’t visited yet
         for (auto& node : nodes) {
-            if (!visited[node.get()]) {
+            if (node && !visited[node.get()]) {
                 dfs(node.get());
             }
         }
 
-        // Pop nodes from stack and push them to sortedNodes
+        // Pop from the stack to sortedNodes, then reverse for final topological order
         while (!stack.empty()) {
             sortedNodes.push_back(stack.top());
             stack.pop();
         }
-
-        // If you want to reverse the order so that it is in the correct "sorted" order:
-        std::reverse(sortedNodes.begin(), sortedNodes.end());
+        //std::reverse(sortedNodes.begin(), sortedNodes.end());
     }
 
 
     void sortNodes()
     {
         topologicalSort(sortedNodes);
-//#define DEBUG_SORT
+#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : nodes)
@@ -455,10 +473,6 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
-        for (auto& node : sortedNodes) {
-            node->clearBuffers(frameCount);
-        }
-
         for (auto& node : sortedNodes) {
             node->process(buffer, frameCount);
         }
