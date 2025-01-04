@@ -1,15 +1,26 @@
 {
     "nodes": [
-        { "id": 0, "type": "AudioOut" },
-        { "id": 1, "type": "Value", "value": 220.0 },
-        { "id": 2, "type": "Sine" },
-        { "id": 3, "type": "Value", "value": 550.0 },
-        { "id": 4, "type": "Sine" }
+        { "id": 0, "type": "Value", "value": 770.0 },
+        { "id": 1, "type": "Sine" },
+        { "id": 2, "type": "Metro", "hz": 5 },
+        { "id": 3, "type": "Envelope", "attack": 0, "decay": 200 },
+
+        { "id": 4, "type": "Value", "value": 600.0 },
+        { "id": 5, "type": "Sine" },
+        { "id": 6, "type": "Metro", "hz": 2.2 },
+        { "id": 7, "type": "Envelope", "attack": 100, "decay": 100 },
+
+        { "id": 8, "type": "AudioOut" }
     ],
     "connections": [
-        { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
-        { "sourceNode": 3, "sourcePort": 0, "targetNode": 4, "targetPort": 0 },
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 0, "targetPort": 0 },
-        { "sourceNode": 4, "sourcePort": 0, "targetNode": 0, "targetPort": 0 }
+        { "sourceNode": 0, "sourcePort": 0, "targetNode": 1, "targetPort": 0 },
+        { "sourceNode": 1, "sourcePort": 0, "targetNode": 3, "targetPort": 1 },
+        { "sourceNode": 2, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
+        { "sourceNode": 3, "sourcePort": 0, "targetNode": 8, "targetPort": 0 },
+
+        { "sourceNode": 4, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
+        { "sourceNode": 5, "sourcePort": 0, "targetNode": 7, "targetPort": 1 },
+        { "sourceNode": 6, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },
+        { "sourceNode": 7, "sourcePort": 0, "targetNode": 8, "targetPort": 0 }
     ]
 }
