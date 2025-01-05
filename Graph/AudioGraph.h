@@ -236,7 +236,7 @@ public:
     Graphs(NodeContext* context)
         : ctx(context)
     {
-        // Resize fade buffers to match the frane count, one frame xfade for now
+        // Resize fade buffers to match the frame count, one frame xfade for now
         fadeOutBuffer.resize(ctx->frameCount);
         fadeInBuffer.resize(ctx->frameCount);
 
