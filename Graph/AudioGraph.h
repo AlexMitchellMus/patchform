@@ -65,7 +65,7 @@ public:
                     nodes.push_back(std::make_unique<VolumeNode>(context));
                 }
                 break;
-            case hash("Sine"):
+            case hash("Oscillator"):
                 {
                     auto const waveform = node.value("waveform", "sine");
                     nodes.push_back(std::make_unique<Oscillator>(context, waveform));

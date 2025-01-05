@@ -2,9 +2,9 @@
     "nodes": [
         { "id": 0, "type": "AudioOut" },
         { "id": 1, "type": "Value", "value": 220.0 },
-        { "id": 2, "type": "Sine" },
+        { "id": 2, "type": "Oscillator" },
         { "id": 3, "type": "Value", "value": 550.0 },
-        { "id": 4, "type": "Sine" }
+        { "id": 4, "type": "Oscillator" }
     ],
     "connections": [
         { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },

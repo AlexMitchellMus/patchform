@@ -1,12 +1,12 @@
 {
     "nodes": [
         { "id": 0, "type": "Value", "value": 770.0 },
-        { "id": 1, "type": "Sine" },
+        { "id": 1, "type": "Oscillator" },
         { "id": 2, "type": "Metro", "hz": 5 },
         { "id": 3, "type": "Envelope", "attack": 0, "decay": 200 },
 
         { "id": 4, "type": "Value", "value": 600.0 },
-        { "id": 5, "type": "Sine" },
+        { "id": 5, "type": "Oscillator" },
         { "id": 6, "type": "Metro", "hz": 2.2 },
         { "id": 7, "type": "Envelope", "attack": 100, "decay": 100 },
 

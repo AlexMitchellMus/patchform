@@ -3,7 +3,7 @@
         { "id": 0, "type": "Value", "value": 660.0 },
         { "id": 1, "type": "LFO", "rate": 3 },
         { "id": 2, "type": "Volume" },
-        { "id": 3, "type": "Sine" },
+        { "id": 3, "type": "Oscillator" },
         { "id": 4, "type": "AudioOut" }
     ],
     "connections": [
