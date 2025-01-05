@@ -63,7 +63,6 @@ void commandListener(std::function<void(std::string& patchToLoad)> callback) {
                     std::cout << "\nLoading graph from file: " << filename << "..." << std::endl;
                     callback(filename);
                     Sleep(500);
-                    std::cout << filename + ".json loaded successfully!" << std::endl;
                 } else {
                     std::cout << "\nInvalid command!" << std::endl;
                 }
@@ -123,17 +122,31 @@ int main() {
             std::cout << "Current working directory: " << buffer << std::endl;
         }
 
-        std::ifstream file(patchToLoad + ".json");
+        std::string filename = patchToLoad + ".json";
+        std::ifstream file(filename);
+
         if (!file.is_open()) {
-            std::cerr << "Could not open the file!" << std::endl;
-            return;
+            // First try json5 alternative
+            filename = patchToLoad + ".json5";
+            file.open(filename);
+            if (!file.is_open()) {
+                std::cerr << "Could not open the file!" << std::endl;
+                return;
+            }
         }
 
-        json patch;
-        file >> patch;
+        std::cout << filename << " loaded successfully!" << std::endl;
+
+        std::string input((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         file.close();
 
-        graphs.setActiveGraph(patch);
+        // Parse the cleaned JSON string
+        try {
+            nlohmann::json patch = nlohmann::json::parse(input, nullptr, false, true); // Allow comments in JSONlo
+            graphs.setActiveGraph(patch);
+        } catch (const nlohmann::json::parse_error& ex) {
+            std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
+        }
     };
 
     // Start a thread for command input and pass a callback using std::bind

@@ -219,6 +219,11 @@ public:
         for (auto& node : sortedNodes) {
             node->process(buffer, frameCount);
         }
+
+        for (auto& node : sortedNodes) {
+            if (auto outPort = node->getOutputPort())
+                outPort->clearEvents();
+        }
     }
 };
 

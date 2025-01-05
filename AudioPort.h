@@ -58,9 +58,12 @@ public:
 
     std::vector<Event*> getEvents()
     {
-        //return events;
-        std::vector<Event*> tmp = std::move(events);
-        return tmp;
+        return events;
+    }
+
+    void clearEvents()
+    {
+        events.clear();
     }
 
     void addEvent(Event* event)

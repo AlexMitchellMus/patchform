@@ -11,7 +11,7 @@
         { "id": 7,  "type": "Envelope", "attack": 5000, "decay": 5000 },
 
         { "id": 8,  "type": "Value",    "value": 770.0 },
-        { "id": 9,  "type": "Oscillator" },
+        { "id": 9,  "type": "Oscillator", "waveform": "triangle" },
         { "id": 10, "type": "Metro",    "hz": 0.045 },
         { "id": 11, "type": "Envelope", "attack": 6000, "decay": 6000 },
 
