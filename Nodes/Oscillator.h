@@ -21,7 +21,9 @@ protected:
     float phase = 0.0f;
     std::string waveform;
 
-    static void initializeWaveformTable(const std::string& waveform) {
+    bool useTable = true;
+
+    static void initializeWaveformTable(const std::string& waveform, bool& useTable) {
         if (waveformTables.find(waveform) != waveformTables.end()) {
             return; // Table already initialized
         }
@@ -59,12 +61,7 @@ protected:
                 break;
             }
             case hash("noise"): {
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-                for (int i = 0; i < TABLE_SIZE; i++) {
-                    table[i] = dist(gen);
-                }
+                    useTable = false;
                 break;
             }
             default: {
@@ -78,33 +75,44 @@ protected:
 public:
     Oscillator(NodeContext* context, std::string waveform) : AudioNode(context, "Oscillator"), waveform(std::move(waveform)) {
         addInputPort("frequency");
-        initializeWaveformTable(this->waveform);
+        initializeWaveformTable(this->waveform, this->useTable);
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
         auto freqIn = inputPorts[0].sumPort();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 
-        const auto& table = waveformTables[waveform];
+        if (useTable) {
+            const auto& table = waveformTables[waveform];
 
-        for (unsigned long i = 0; i < frameCount; i++) {
-            // Convert current phase to an integer index
-            int idx = static_cast<int>(phase);
+            for (unsigned long i = 0; i < frameCount; i++) {
+                // Convert current phase to an integer index
+                int idx = static_cast<int>(phase);
 
-            // Clamp index in case of any floating error
-            if (idx < 0) idx = 0;
-            if (idx >= TABLE_SIZE) idx = TABLE_SIZE - 1;
+                // Clamp index in case of any floating error
+                if (idx < 0) idx = 0;
+                if (idx >= TABLE_SIZE) idx = TABLE_SIZE - 1;
 
-            // Write the waveform value
-            output[i] = 0.5f * table[idx];
+                // Write the waveform value
+                output[i] = 0.5f * table[idx];
 
-            // Increment phase based on frequency and sample rate
-            float phaseInc = (TABLE_SIZE * freqIn[i]) / context->sampleRate;
-            phase += phaseInc;
+                // Increment phase based on frequency and sample rate
+                float phaseInc = (TABLE_SIZE * freqIn[i]) / context->sampleRate;
+                phase += phaseInc;
 
-            // Wrap phase within [0, TABLE_SIZE)
-            while (phase >= TABLE_SIZE) phase -= TABLE_SIZE;
-            while (phase < 0.0f) phase += TABLE_SIZE;
+                // Wrap phase within [0, TABLE_SIZE)
+                while (phase >= TABLE_SIZE) phase -= TABLE_SIZE;
+                while (phase < 0.0f) phase += TABLE_SIZE;
+            }
+        } else {
+            // Generate noise on-the-fly
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+
+            for (unsigned long i = 0; i < frameCount; i++) {
+                output[i] = dist(gen); // Random value in range [-1.0, 1.0]
+            }
         }
     }
 };
