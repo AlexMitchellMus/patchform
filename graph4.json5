@@ -27,6 +27,5 @@
         // envelope -> audio out
         { "sourceNode": 3, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },
         { "sourceNode": 6, "sourcePort": 0, "targetNode": 7, "targetPort": 0 }
-
     ]
 }
