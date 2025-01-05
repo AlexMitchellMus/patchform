@@ -194,9 +194,9 @@ public:
 
 #ifdef GRAPH_STATS
         auto end = std::chrono::high_resolution_clock::now();
-        auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout << "objects in graph: " << sortedNodes.size() << " sort took " << elapsedMs << " ms.\n";
+        std::cout << sortedNodes.size() << " objects in graph, sort took " << elapsedNs << " ns.\n";
 #endif
 
 
