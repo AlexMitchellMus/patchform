@@ -11,11 +11,15 @@ public:
     Metro(NodeContext* context, float hz) : AudioNode(context, "Metro")
     {
         tickInterval = static_cast<uint64_t>(context->sampleRate / hz);
+
+        addInputPort("ControlInput");
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
         unsigned long samplesProcessed = 0;
+
+        auto events = inputPorts[0].combineEvents();
 
         while (samplesProcessed < frameCount)
         {
