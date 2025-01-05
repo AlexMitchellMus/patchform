@@ -85,12 +85,12 @@
         { "id": 64, "type": "Envelope", "attack": 1000, "decay": 1000 },
 
         { "id": 65, "type": "Value",    "value": 342.71 },
-        { "id": 66, "type": "Sine" },
+        { "id": 66, "type": "Sine", "waveform": "noise" },
         { "id": 67, "type": "Metro",    "hz": 0.05 },
         { "id": 68, "type": "Envelope", "attack": 5000, "decay": 5000 },
 
         { "id": 69, "type": "Value",    "value": 777.25 },
-        { "id": 70, "type": "Sine" },
+        { "id": 70, "type": "Sine", "waveform": "saw" },
         { "id": 71, "type": "Metro",    "hz": 0.11 },
         { "id": 72, "type": "Envelope", "attack": 1000, "decay": 5000 },
 

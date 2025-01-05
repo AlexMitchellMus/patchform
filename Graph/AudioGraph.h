@@ -34,27 +34,29 @@ public:
             {
             case hash("Envelope"):
                 {
-                    // TODO: Check the value exists, otherwise will crash
-                    auto const attackVal = node["attack"].get<float>();
-                    auto const decayVal = node["decay"].get<float>();
+                    auto const attackVal = node.value("attack", 0.0f);
+                    auto const decayVal = node.value("decay", 0.0f);
+
+                    //auto const attackCurve = node.value("attackCurve", 1.5f);
+                    //auto const decayCurve = node.value("decayCurve", 2.0f);
                     nodes.push_back(std::make_unique<Envelope>(context, attackVal, decayVal));
                 }
                 break;
             case hash("Metro"):
                 {
-                    auto const value = node["hz"].get<float>();
+                    auto const value = node.value("hz", 1.0f);
                     nodes.push_back(std::make_unique<Metro>(context, value));
                 }
                 break;
             case hash("Value"):
                 {
-                    auto const value = node["value"].get<float>();
+                    auto const value = node.value("value", 0.0f);
                     nodes.push_back(std::make_unique<ValueNode>(context, value));
                 }
                 break;
             case hash("LFO"):
                 {
-                    auto const rate = node["rate"].get<float>();
+                    auto const rate = node.value("rate", 1.0f);
                     nodes.push_back(std::make_unique<LFONode>(context, rate));
                 }
                 break;
@@ -65,7 +67,8 @@ public:
                 break;
             case hash("Sine"):
                 {
-                    nodes.push_back(std::make_unique<SineWaveNode>(context));
+                    auto const waveform = node.value("waveform", "sine");
+                    nodes.push_back(std::make_unique<Oscillator>(context, waveform));
                 }
                 break;
             case hash("AudioOut"):

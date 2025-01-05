@@ -4,7 +4,7 @@
 
 #include "../Nodes/AudioNodes.h"
 
-#include "../Nodes/SineWaveNode.h"
+#include "../Nodes/Oscillator.h"
 #include "../Nodes/AddNode.h"
 #include "../Nodes/ValueNode.h"
 #include "../Nodes/MetroNode.h"
