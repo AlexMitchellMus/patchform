@@ -93,6 +93,9 @@ public:
     {
     }
 
+    enum class State { Unvisited, Visiting, Visited };
+    State state = State::Unvisited;
+
     std::string getName() { return name; }
 
     // Add an input port (for dependency)

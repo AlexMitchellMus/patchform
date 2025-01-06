@@ -136,52 +136,42 @@ public:
     // DFS-based topological sort that builds adjacency from "node -> its downstream nodes".
     void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     {
-        std::stack<AudioNode*> stack;
-        std::unordered_map<AudioNode*, bool> visited;
-        std::unordered_map<AudioNode*, bool> inStack; // for cycle detection
+        std::vector<AudioNode*> stack;
 
         // Recursive DFS lambda
         std::function<void(AudioNode*)> dfs = [&](AudioNode* node)
         {
-            if (inStack[node]) {
+            if (node->state == AudioNode::State::Visiting) {
                 std::cerr << "Cycle detected at node: " << node->getName() << std::endl;
                 return;
             }
-            if (visited[node]) {
+            if (node->state == AudioNode::State::Visited) {
                 return;
             }
 
-            visited[node] = true;
-            inStack[node] = true;
+            node->state = AudioNode::State::Visiting;
 
             // Get all nodes that depend on this node's output
             auto downstreamNodes = getDownstreamNodes(node, nodes);
 
-            for (auto* downstream : downstreamNodes) {
-                if (!visited[downstream]) {
-                    dfs(downstream);
-                }
+            for (AudioNode* downstream : downstreamNodes) {
+                dfs(downstream);
             }
 
-            inStack[node] = false;
-            stack.push(node);
+            node->state = AudioNode::State::Visited;
+            stack.push_back(node);
         };
 
-        // Initiate DFS from every node that isn’t visited yet
+        // Perform DFS for each unvisited node
         for (auto& node : nodes) {
-            if (node && !visited[node.get()]) {
+            if (node && node->state == AudioNode::State::Unvisited) {
                 dfs(node.get());
             }
         }
 
-        // Pop from the stack to sortedNodes, then reverse for final topological order
-        while (!stack.empty()) {
-            sortedNodes.push_back(stack.top());
-            stack.pop();
-        }
-        //std::reverse(sortedNodes.begin(), sortedNodes.end());
+        // Reverse the stack for topological order
+        sortedNodes.assign(stack.rbegin(), stack.rend());
     }
-
 
     void sortNodes()
     {
