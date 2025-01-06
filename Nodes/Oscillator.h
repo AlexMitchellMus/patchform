@@ -62,7 +62,7 @@ protected:
             }
             case hash("noise"): {
                     useTable = false;
-                break;
+                return;
             }
             default: {
                 throw std::runtime_error("Unsupported waveform: " + waveform);
