@@ -45,24 +45,24 @@ public:
             case hash("Metro"):
                 {
                     auto const value = node.value("hz", 1.0f);
-                    nodes.push_back(std::make_unique<Metro>(context, value));
+                    nodes.push_back(std::make_unique<Metronome>(context, value));
                 }
                 break;
             case hash("Value"):
                 {
                     auto const value = node.value("value", 0.0f);
-                    nodes.push_back(std::make_unique<ValueNode>(context, value));
+                    nodes.push_back(std::make_unique<Value>(context, value));
                 }
                 break;
             case hash("LFO"):
                 {
                     auto const rate = node.value("rate", 1.0f);
-                    nodes.push_back(std::make_unique<LFONode>(context, rate));
+                    nodes.push_back(std::make_unique<LFO>(context, rate));
                 }
                 break;
             case hash("Volume"):
                 {
-                    nodes.push_back(std::make_unique<VolumeNode>(context));
+                    nodes.push_back(std::make_unique<Volume>(context));
                 }
                 break;
             case hash("Oscillator"):
@@ -73,7 +73,7 @@ public:
                 break;
             case hash("AudioOut"):
                 {
-                    nodes.push_back(std::make_unique<AudioOutNode>(context));
+                    nodes.push_back(std::make_unique<AudioOut>(context));
                 }
                 break;
             default:

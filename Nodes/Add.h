@@ -3,10 +3,10 @@
 #pragma once
 
 // AddNode that sums two signals
-class AddNode : public AudioNode {
+class Add : public AudioNode {
 
 public:
-    AddNode(NodeContext* context) : AudioNode(context, "AddNode")
+    Add(NodeContext* context) : AudioNode(context, "AddNode")
     {
         addInputPort("A");
         addInputPort("B");

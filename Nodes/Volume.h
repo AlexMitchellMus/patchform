@@ -3,9 +3,9 @@
 #pragma once
 
 // VolumeNode that multiplies the outputs of two input nodes
-class VolumeNode : public AudioNode {
+class Volume : public AudioNode {
 public:
-    VolumeNode(NodeContext* context) : AudioNode(context, "VolumeNode")
+    Volume(NodeContext* context) : AudioNode(context, "VolumeNode")
     {
         addInputPort("A");
         addInputPort("B");

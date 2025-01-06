@@ -3,12 +3,12 @@
 #pragma once
 
 // ValueNode that provides a constant value (e.g., for frequency modulation)
-class ValueNode : public AudioNode
+class Value : public AudioNode
 {
     float value;
 
 public:
-    ValueNode(NodeContext* context, float value) : AudioNode(context, "ValueNode"), value(value) {}
+    Value(NodeContext* context, float value) : AudioNode(context, "ValueNode"), value(value) {}
 
     void processAudio(float* out, unsigned long frameCount) override {
         auto output = outputPort.getAudioBuffer();

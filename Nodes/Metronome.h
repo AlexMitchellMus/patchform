@@ -2,13 +2,13 @@
 
 #pragma once
 
-class Metro : public AudioNode
+class Metronome : public AudioNode
 {
     uint64_t sampleCounter = 0;
     uint64_t tickInterval;
 
 public:
-    Metro(NodeContext* context, float hz) : AudioNode(context, "Metro")
+    Metronome(NodeContext* context, float hz) : AudioNode(context, "Metro")
     {
         tickInterval = static_cast<uint64_t>(context->sampleRate / hz);
 

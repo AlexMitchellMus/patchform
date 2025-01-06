@@ -3,9 +3,9 @@
 #pragma once
 
 // AudioOutNode that outputs audio to the PortAudio stream
-class AudioOutNode : public AudioNode {
+class AudioOut : public AudioNode {
 public:
-    AudioOutNode(NodeContext* context) : AudioNode(context, "AudioOutNode")
+    AudioOut(NodeContext* context) : AudioNode(context, "AudioOutNode")
     {
         addInputPort("Signal");
     }

@@ -3,12 +3,12 @@
 #pragma once
 
 // LFONode that modulates a value (e.g., frequency modulation)
-class LFONode : public AudioNode {
+class LFO : public AudioNode {
     float frequency;
     float phase = 0.0f;
 
 public:
-    LFONode(NodeContext* context, float frequency) : AudioNode(context, "LFONode"), frequency(frequency) {}
+    LFO(NodeContext* context, float frequency) : AudioNode(context, "LFONode"), frequency(frequency) {}
 
     void processAudio(float* out, unsigned long frameCount) override {
         auto output = outputPort.getAudioBuffer();
