@@ -4,6 +4,8 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
+#pragma once
+
 #include <vector>
 #include <iostream>
 #include <stack>
@@ -14,8 +16,6 @@ using json = nlohmann::json;
 
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
-
-#pragma once
 
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {

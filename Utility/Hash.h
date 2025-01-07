@@ -4,10 +4,10 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
+#pragma once
+
 #include <cstdint>
 #include <string>
-
-#pragma once
 
 using hash32 = uint32_t;
 #define EMPTY_HASH ((hash32)0x811c9dc5)

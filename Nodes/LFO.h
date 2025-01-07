@@ -4,9 +4,9 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
-#include "AudioNodes.h"
-
 #pragma once
+
+#include "AudioNodes.h"
 
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFO : public AudioNode {

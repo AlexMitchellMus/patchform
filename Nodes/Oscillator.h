@@ -4,6 +4,8 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
+#pragma once
+
 #include "AudioNodes.h"
 
 #include <cmath>
@@ -13,8 +15,6 @@
 #include <functional>
 #include <stdexcept>
 #include <random>
-
-#pragma once
 
 // SineWaveNode that generates sine wave audio
 

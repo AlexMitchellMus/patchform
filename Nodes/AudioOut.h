@@ -4,9 +4,9 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
-#include "AudioNodes.h"
-
 #pragma once
+
+#include "AudioNodes.h"
 
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioOut : public AudioNode {

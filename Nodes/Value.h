@@ -4,9 +4,9 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
-#include "AudioNodes.h"
-
 #pragma once
+
+#include "AudioNodes.h"
 
 // ValueNode that provides a constant value (e.g., for frequency modulation)
 class Value : public AudioNode

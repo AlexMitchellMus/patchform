@@ -4,6 +4,8 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
+#pragma once
+
 #include "../Nodes/AudioNodes.h"
 
 #include "../Nodes/Oscillator.h"
