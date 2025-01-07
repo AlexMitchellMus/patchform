@@ -3,9 +3,7 @@
 class EventPool {
 public:
     EventPool(std::size_t initialSize = 1024) {
-        // Pre-allocate the event vector
         events.reserve(initialSize);
-        // Create that many events initially
         growPool(initialSize);
     }
 
