@@ -30,7 +30,7 @@ public:
     {
     }
 
-    void loadPatch(json patch) {
+    void loadPatch(const json& patch) {
         auto createObject = [this](json node)
         {
             auto const object = node["type"].get<std::string>();
@@ -248,7 +248,7 @@ public:
         }
     }
 
-    void setActiveGraph(json patch)
+    void setActiveGraph(const json& patch)
     {
         auto newGraph = std::make_unique<AudioGraph>(ctx);
         newGraph->loadPatch(patch);

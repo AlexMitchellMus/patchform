@@ -23,9 +23,9 @@ protected:
     std::string name;
 
 public:
-    AudioNode(NodeContext* context, std::string nodeName)
+    AudioNode(NodeContext* context, const std::string& nodeName)
         : context(context)
-        , name(nodeName)
+        , name(std::move(nodeName))
         , outputPort(this, "output")
     {}
 
