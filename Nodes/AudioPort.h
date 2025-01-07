@@ -27,6 +27,7 @@ public:
 
     AudioPort(AudioNode* parent, std::string portName) : node(parent), name(portName)
     {
+        events.reserve(1024);
     }
 
     float* getAudioBuffer() {
@@ -78,12 +79,13 @@ struct AudioInputPort {
     std::string name;
     std::vector<AudioPort*> connectedPorts;
     std::vector<float> summed;
-    std::vector<Event> summedEvents;
+    std::vector<Event*> summedEvents;
 
 
     explicit AudioInputPort(const std::string& portName)
         : name(portName)
     {
+        summedEvents.reserve(1024);
     }
 
     std::vector<float>& sumPort()
@@ -109,11 +111,9 @@ struct AudioInputPort {
         return summed;
     }
 
-    std::vector<Event*> combineEvents()
+    std::vector<Event*>& combineEvents()
     {
-        // 1) Gather events from each connected port
-        std::vector<Event*> combined;
-
+        summedEvents.clear();
         // 1) Gather all events from each connected port
         for (auto* port : connectedPorts) {
             if (!port) continue;
@@ -123,15 +123,15 @@ struct AudioInputPort {
             // or something like: auto events = port->takeEvents();
 
             // 2) Insert them into 'combined'
-            combined.insert(combined.end(), events.begin(), events.end());
+            summedEvents.insert(summedEvents.end(), events.begin(), events.end());
         }
 
         // 3) Sort combined by timestamp
-        std::sort(combined.begin(), combined.end(), [](const Event* a, const Event* b) {
+        std::sort(summedEvents.begin(), summedEvents.end(), [](const Event* a, const Event* b) {
             return a->getTimeStamp() < b->getTimeStamp();
         });
 
         // Return all events in a single sorted vector
-        return combined;
+        return summedEvents;
     }
 };
