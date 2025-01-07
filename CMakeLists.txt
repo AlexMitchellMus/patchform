@@ -24,6 +24,7 @@ endif()
 # List all the JSON files you want to copy
 set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/graph.json"
+        "${CMAKE_SOURCE_DIR}/graph1.json"
         "${CMAKE_SOURCE_DIR}/graph2.json"
         "${CMAKE_SOURCE_DIR}/graph3.json"
         "${CMAKE_SOURCE_DIR}/graph4.json5"

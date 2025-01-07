@@ -78,7 +78,7 @@ void commandListener(std::function<void(std::string& patchToLoad)> callback) {
 }
 int main() {
     PaError err;
-    unsigned long frameCount = 256;
+    unsigned long frameCount = 512;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio

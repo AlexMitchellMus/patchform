@@ -39,7 +39,7 @@ public:
         return audioBuffer.size();
     }
 
-    std::vector<Event*> getEvents()
+    std::vector<Event*>& getEvents()
     {
         return events;
     }

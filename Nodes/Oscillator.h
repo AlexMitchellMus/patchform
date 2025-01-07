@@ -20,7 +20,7 @@
 
 class Oscillator : public AudioNode {
 protected:
-    static constexpr int TABLE_SIZE = 4096;
+    static constexpr int TABLE_SIZE = 8192;
     static std::unordered_map<std::string, std::vector<float>> waveformTables;
     static bool initialized;
 
@@ -90,25 +90,29 @@ public:
 
         if (useTable) {
             const auto& table = waveformTables[waveform];
+            const float tableSizeF = static_cast<float>(TABLE_SIZE);
 
             for (unsigned long i = 0; i < frameCount; i++) {
-                // Convert current phase to an integer index
+                // Convert current phase to an integer index and calculate next index
                 int idx = static_cast<int>(phase);
+                int nextIdx = idx + 1;
 
-                // Clamp index in case of any floating error
-                if (idx < 0) idx = 0;
-                if (idx >= TABLE_SIZE) idx = TABLE_SIZE - 1;
+                // Wrap the next index within TABLE_SIZE without conditionals
+                if (nextIdx >= TABLE_SIZE) nextIdx -= TABLE_SIZE;
+
+                // Calculate fractional part for interpolation
+                float fraction = phase - static_cast<float>(idx);
+
+                // Linearly interpolate between current and next table values
+                float value = table[idx] + fraction * (table[nextIdx] - table[idx]);
 
                 // Write the waveform value
-                output[i] = 0.5f * table[idx];
+                output[i] = 0.5f * value;
 
-                // Increment phase based on frequency and sample rate
-                float phaseInc = (TABLE_SIZE * freqIn[i]) / context->sampleRate;
-                phase += phaseInc;
-
-                // Wrap phase within [0, TABLE_SIZE)
-                while (phase >= TABLE_SIZE) phase -= TABLE_SIZE;
-                while (phase < 0.0f) phase += TABLE_SIZE;
+                // Increment and wrap phase efficiently
+                phase += (tableSizeF * freqIn[i]) / context->sampleRate;
+                if (phase >= tableSizeF) phase -= tableSizeF;
+                else if (phase < 0.0f) phase += tableSizeF;
             }
         } else {
             // Generate noise on-the-fly
