@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
-project(audiograph)
+project(PlugPatch)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -7,18 +7,18 @@ add_subdirectory(external/portaudio)
 add_subdirectory(external/json)
 
 file(GLOB SOURCES "*.cpp")
-add_executable(audiograph ${SOURCES})
+add_executable(PlugPatch ${SOURCES})
 
-target_link_libraries(audiograph PRIVATE portaudio)
+target_link_libraries(PlugPatch PRIVATE portaudio)
 
 # Apply optimizations for MSVC
 if(MSVC)
     # Use /O2 for high optimization in MSVC
-    target_compile_options(audiograph PRIVATE /O3)
+    target_compile_options(PlugPatch PRIVATE /O3)
     # Optionally enable other MSVC-specific optimizations
-    target_compile_options(audiograph PRIVATE /arch:AVX2)  # For AVX2 if supported by your CPU
+    target_compile_options(PlugPatch PRIVATE /arch:AVX2)  # For AVX2 if supported by your CPU
     # You can also add other flags like /GL for whole program optimization if necessary
-    target_compile_options(audiograph PRIVATE /GL)
+    target_compile_options(PlugPatch PRIVATE /GL)
 endif()
 
 # List all the JSON files you want to copy
@@ -36,7 +36,7 @@ foreach(source_file IN LISTS SOURCE_FILES)
     set(dest_file "${CMAKE_BINARY_DIR}/$<CONFIG>/${file_name}")
 
     add_custom_command(
-            TARGET audiograph
+            TARGET PlugPatch
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${source_file}"
