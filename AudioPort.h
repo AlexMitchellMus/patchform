@@ -114,13 +114,13 @@ struct AudioInputPort {
 
         std::fill(summed.begin(), summed.end(), 0.0f);
 
-        // Sum each port’s data
+        // Sum each port’s audio
         for (auto* port : connectedPorts) {
-            const auto& data = port->getAudioBuffer();
+            const auto& audio = port->getAudioBuffer();
 
             // (Optional) confirm data.size() == dataSize. If not, handle mismatch.
             for (std::size_t i = 0; i < dataSize; i++) {
-                summed[i] += data[i];
+                summed[i] += audio[i];
             }
         }
 
