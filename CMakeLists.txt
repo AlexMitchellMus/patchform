@@ -14,7 +14,7 @@ target_link_libraries(PlugPatch PRIVATE portaudio)
 # Apply optimizations for MSVC
 if(MSVC)
     # Use /O2 for high optimization in MSVC
-    target_compile_options(PlugPatch PRIVATE /O3)
+    target_compile_options(PlugPatch PRIVATE /Ox)
     # Optionally enable other MSVC-specific optimizations
     target_compile_options(PlugPatch PRIVATE /arch:AVX2)  # For AVX2 if supported by your CPU
     # You can also add other flags like /GL for whole program optimization if necessary
