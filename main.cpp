@@ -124,7 +124,7 @@ void repl(Graphs& graphs) {
         } else if (command == "h" || command == "help") {
             std::string text =
                 "\n"
-                "PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.\n\n"
+                "PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.\n"
                 "Commands:\n"
                 "exit, quit, q   Exit the application.\n"
                 "load            Load a graph file. Example: load graph\n"
@@ -132,7 +132,7 @@ void repl(Graphs& graphs) {
                 "list sort       List the currently loaded sorted graph.\n"
                 "list nodes      List available nodes that can be added.\n"
                 "add             Add a node to the graph. Example: add metro\n"
-                "connect         Connect nodes together. Example: connect 0.0 1.0\n"h
+                "connect         Connect nodes together. Example: connect 0.0 1.0\n"
                 "credits         List credits / OSS libraries\n";
 
             std::cout << text << std::endl;
