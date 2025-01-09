@@ -4,3 +4,6 @@
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
+[submodule "external/linenoise-ng"]
+	path = external/linenoise-ng
+	url = https://github.com/qingqibing/linenoise-ng.git

@@ -5,11 +5,18 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(external/portaudio)
 add_subdirectory(external/json)
+add_subdirectory(external/linenoise-ng)
 
 file(GLOB SOURCES "*.cpp")
 add_executable(PlugPatch ${SOURCES})
 
-target_link_libraries(PlugPatch PRIVATE portaudio)
+# fix for linenoise not being updated to C++20
+set_property(TARGET linenoise APPEND_STRING PROPERTY COMPILE_FLAGS " /Zc:char8_t-")
+
+target_link_libraries(PlugPatch PRIVATE portaudio linenoise)
+
+# Ensure linenoise is built before PlugPatch
+add_dependencies(PlugPatch linenoise)
 
 # Apply optimizations for MSVC
 if(MSVC)

@@ -5,10 +5,6 @@
 */
 
 #include <iostream>
-#include <cmath>
-#include <vector>
-#include <algorithm>
-#include <stack>
 #include <functional>
 #include <fstream>
 #include <windows.h>
@@ -19,6 +15,8 @@
 #include <PortAudio.h>
 #include "external/json/single_include/nlohmann/json.hpp"
 using json = nlohmann::json;
+
+#include "external/linenoise-ng/include/linenoise.h"
 
 #include "Graph/AudioGraph.h"
 
@@ -42,40 +40,66 @@ static int audioCallback(const void* input, void* output,
 
 std::atomic<bool> running(true); // Flag to control the loop
 
-// Function to handle user input for commands and Escape key detection
-void commandListener(std::function<void(std::string& patchToLoad)> callback) {
-    std::string input;
-    std::cout << "Press Escape to close app, type \"load file\" to load graph" << std::endl;
+// Function to process commands
+void repl(Graphs& graphs) {
     while (running) {
-        // Check if Escape key (VK_ESCAPE) is pressed
-        if (GetAsyncKeyState(VK_ESCAPE)) {
-            std::cout << "Escape key pressed. Exiting..." << std::endl;
+        // Display REPL prompt
+        char* line = linenoise(">> ");
+        if (line == nullptr) {
+            continue; // Skip if no input
+        }
+
+        std::string input(line);
+        linenoiseHistoryAdd(line); // Add command to history
+        linenoiseHistoryFree(); // Free memory allocated by linenoise
+
+        if (input == "exit" || input == "quit") {
+            std::cout << "Exiting..." << std::endl;
             running = false;
             break;
-        }
+        } else if (input.rfind("load ", 0) == 0) { // Command starts with "load "
+            std::string filename = input.substr(5); // Get file name
+            std::cout << "Loading graph from file: " << filename << "..." << std::endl;
 
-        // Non-blocking check for keyboard input
-        if (_kbhit()) {
-            char ch = _getch();
-            if (ch == '\r') {
-                if (input.rfind("load ", 0) == 0) { // Check if the command starts with "load "
-                    std::string filename = input.substr(5); // Get the file name after "load "
-                    std::cout << "\nLoading graph from file: " << filename << "..." << std::endl;
-                    callback(filename);
-                    Sleep(500);
-                } else {
-                    std::cout << "\nInvalid command!" << std::endl;
-                }
-                input.clear();
-            } else {
-                input += ch;
-                std::cout << ch;
+            // Handle file loading
+            char buffer[MAX_PATH];
+            DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
+            if (length == 0) {
+                std::cerr << "Error getting current directory." << std::endl;
+                continue;
             }
-        }
 
-        Sleep(10);
+            std::string fullPath = filename + ".json";
+            std::ifstream file(fullPath);
+
+            if (!file.is_open()) {
+                // Try loading JSON5 file
+                fullPath = filename + ".json5";
+                file.open(fullPath);
+                if (!file.is_open()) {
+                    std::cerr << "Could not open file: " << fullPath << std::endl;
+                    continue;
+                }
+            }
+
+            std::cout << fullPath << " loaded successfully!" << std::endl;
+
+            std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            file.close();
+
+            try {
+                nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, false, true);
+                graphs.setActiveGraph(patch);
+            } catch (const nlohmann::json::parse_error& ex) {
+                std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
+            }
+        } else {
+            std::cout << "Invalid command!" << std::endl;
+        }
     }
 }
+
+
 int main() {
     PaError err;
     unsigned long frameCount = 512;
@@ -113,49 +137,7 @@ int main() {
         std::cout << "input latency: " << streamInfo->inputLatency << " output latency: " << streamInfo->outputLatency << std::endl;
     }
 
-    auto callback = [&graphs](std::string& patchToLoad) {
-        char buffer[MAX_PATH];
-        DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
-        if (length == 0) {
-            std::cerr << "Error getting current directory." << std::endl;
-        } else {
-            std::cout << "Current working directory: " << buffer << std::endl;
-        }
-
-        std::string filename = patchToLoad + ".json";
-        std::ifstream file(filename);
-
-        if (!file.is_open()) {
-            // First try json5 alternative
-            filename = patchToLoad + ".json5";
-            file.open(filename);
-            if (!file.is_open()) {
-                std::cerr << "Could not open the file!" << std::endl;
-                return;
-            }
-        }
-
-        std::cout << filename << " loaded successfully!" << std::endl;
-
-        std::string input((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        file.close();
-
-        // Parse the cleaned JSON string
-        try {
-            nlohmann::json patch = nlohmann::json::parse(input, nullptr, false, true); // Allow comments in JSONlo
-            graphs.setActiveGraph(patch);
-        } catch (const nlohmann::json::parse_error& ex) {
-            std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
-        }
-    };
-
-    // Start a thread for command input and pass a callback using std::bind
-    std::thread commandThread(std::bind(commandListener, callback));
-
-    // Wait for the command thread to finish
-    if (commandThread.joinable()) {
-        commandThread.join();
-    }
+    repl(graphs);
 
     // Stop and clean up
     err = Pa_StopStream(stream);
