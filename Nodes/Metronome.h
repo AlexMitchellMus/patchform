@@ -10,6 +10,8 @@
 
 class Metronome : public AudioNode
 {
+    DEFINE_AND_REGISTER_NODE("Metronome");
+
     uint64_t sampleCounter = 0;
     uint64_t tickInterval;
 

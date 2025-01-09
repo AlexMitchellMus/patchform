@@ -9,6 +9,15 @@
 #include <vector>
 #include "AudioPort.h"
 #include "Graph/NodeContext.h"
+#include "NodeRegistry.h"
+
+#define DEFINE_AND_REGISTER_NODE(nodeName)                    \
+public:                                                       \
+    static inline const std::string name = nodeName;          \
+    static inline const bool registered = []() {              \
+        NodeRegistry::getInstance().registerNode(name);       \
+        return true;                                          \
+    }();
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

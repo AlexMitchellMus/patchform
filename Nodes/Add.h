@@ -10,6 +10,7 @@
 
 // AddNode that sums two signals
 class Add : public AudioNode {
+    DEFINE_AND_REGISTER_NODE("Add");
 
 public:
     Add(NodeContext* context) : AudioNode(context, "AddNode")

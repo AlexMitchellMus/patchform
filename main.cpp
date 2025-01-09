@@ -20,6 +20,19 @@ using json = nlohmann::json;
 
 #include "Graph/AudioGraph.h"
 
+std::vector<std::string> tokenize(const std::string& input) {
+    std::istringstream stream(input);
+    std::vector<std::string> tokens;
+    std::string token;
+
+    // Read words, skipping extra spaces
+    while (stream >> token) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
 // PortAudio Callback
 static int audioCallback(const void* input, void* output,
                          unsigned long frameCount,
@@ -40,7 +53,6 @@ static int audioCallback(const void* input, void* output,
 
 std::atomic<bool> running(true); // Flag to control the loop
 
-// Function to process commands
 void repl(Graphs& graphs) {
     while (running) {
         // Display REPL prompt
@@ -49,16 +61,24 @@ void repl(Graphs& graphs) {
             continue; // Skip if no input
         }
 
-        std::string input(line);
+        // Tokenize input
+        auto tokens = tokenize(line);
 
-        if (input == "exit" || input == "quit" || input == "q") {
+        // Handle empty input
+        if (tokens.empty()) {
+            free(line);
+            continue;
+        }
+
+        const std::string& command = tokens[0]; // First token is the command
+
+        if (command == "exit" || command == "quit" || command == "q") {
             std::cout << "Exiting..." << std::endl;
             running = false;
             break;
-        } else if (input.rfind("load ", 0) == 0)
-        {
-            // Command starts with "load "
-            std::string filename = input.substr(5); // Get file name
+        } else if (command == "load" && tokens.size() > 1) {
+            // Command starts with "load" and has a filename
+            std::string filename = tokens[1];
             std::cout << "Loading graph from file: " << filename << "..." << std::endl;
 
             // Handle file loading
@@ -93,9 +113,15 @@ void repl(Graphs& graphs) {
             } catch (const nlohmann::json::parse_error& ex) {
                 std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
             }
-        } else if (input.rfind("list", 0) == 0) {
-            std::cout << "listing graphs..." << std::endl;
-        } else if (input.rfind("h", 0) == 0 || input.rfind("help", 0) == 0) {
+        } else if (command == "list" && tokens.size() > 1) {
+            if (tokens[1] == "nodes") {
+                for (const auto& name : NodeRegistry::getInstance().getNodeNames()) {
+                    std::cout << "- " << name << std::endl;
+                }
+            } else {
+                std::cout << "Unknown list command!" << std::endl;
+            }
+        } else if (command == "h" || command == "help") {
             std::string text =
                 "\n"
                 "PlugPatch is an audio graph library that uses JSON file format to describe an audio graph of nodes and connections.\n\n"
@@ -109,15 +135,15 @@ void repl(Graphs& graphs) {
                 "  \033[1;34mconnect\033[0m         Connect nodes together. Example: connect 0.0 1.0\n";
 
             std::cout << text << std::endl;
-        } else
-        {
+        } else {
             std::cout << "Invalid command!" << std::endl;
         }
+
+        // Add to command history and free memory
         linenoiseHistoryAdd(line);
         free(line);
     }
 }
-
 
 int main() {
     PaError err;

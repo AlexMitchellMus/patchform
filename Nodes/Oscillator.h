@@ -19,6 +19,8 @@
 // SineWaveNode that generates sine wave audio
 
 class Oscillator : public AudioNode {
+    DEFINE_AND_REGISTER_NODE("Oscillator");
+
 protected:
     static constexpr int TABLE_SIZE = 8192;
     static std::unordered_map<std::string, std::vector<float>> waveformTables;

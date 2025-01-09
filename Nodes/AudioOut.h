@@ -10,6 +10,7 @@
 
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioOut : public AudioNode {
+    DEFINE_AND_REGISTER_NODE("AudioOut");
 public:
     AudioOut(NodeContext* context) : AudioNode(context, "AudioOutNode")
     {
