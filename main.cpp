@@ -133,6 +133,13 @@ int main() {
 
     auto streamInfo = Pa_GetStreamInfo(stream);
     if (streamInfo != nullptr) {
+        std::string text = R"( _____ _         _____     _       _
+|  _  | |_ _ ___|  _  |___| |_ ___| |_
+|   __| | | | . |   __| .'|  _|  _|   |
+|__|  |_|___|_  |__|  |__,|_| |___|_|_|
+            |___|
+)";
+        std::cout << text << std::endl;
         std::cout << "Sample Rate: " << streamInfo->sampleRate << std::endl;
         std::cout << "input latency: " << streamInfo->inputLatency << " output latency: " << streamInfo->outputLatency << std::endl;
     }
