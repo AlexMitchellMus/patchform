@@ -44,20 +44,20 @@ std::atomic<bool> running(true); // Flag to control the loop
 void repl(Graphs& graphs) {
     while (running) {
         // Display REPL prompt
-        char* line = linenoise(">> ");
+        char* line = linenoise("\x1b[1;32mPlugPatch\x1b[0m>> ");
         if (line == nullptr) {
             continue; // Skip if no input
         }
 
         std::string input(line);
-        linenoiseHistoryAdd(line); // Add command to history
-        linenoiseHistoryFree(); // Free memory allocated by linenoise
 
-        if (input == "exit" || input == "quit") {
+        if (input == "exit" || input == "quit" || input == "q") {
             std::cout << "Exiting..." << std::endl;
             running = false;
             break;
-        } else if (input.rfind("load ", 0) == 0) { // Command starts with "load "
+        } else if (input.rfind("load ", 0) == 0)
+        {
+            // Command starts with "load "
             std::string filename = input.substr(5); // Get file name
             std::cout << "Loading graph from file: " << filename << "..." << std::endl;
 
@@ -93,9 +93,28 @@ void repl(Graphs& graphs) {
             } catch (const nlohmann::json::parse_error& ex) {
                 std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
             }
-        } else {
+        } else if (input.rfind("list", 0) == 0) {
+            std::cout << "listing graphs..." << std::endl;
+        } else if (input.rfind("h", 0) == 0 || input.rfind("help", 0) == 0) {
+            std::string text =
+                "\n"
+                "PlugPatch is an audio graph library that uses JSON file format to describe an audio graph of nodes and connections.\n\n"
+                "Commands:\n"
+                "  \033[1;34mexit, quit, q\033[0m   Exit the application.\n"
+                "  \033[1;34mload\033[0m            Load a graph file. Example: load graph\n"
+                "  \033[1;34mlist\033[0m            List the currently loaded graph.\n"
+                "  \033[1;34mlist sort\033[0m       List the currently loaded sorted graph.\n"
+                "  \033[1;34mlist nodes\033[0m      List available nodes that can be added.\n"
+                "  \033[1;34madd\033[0m             Add a node to the graph. Example: add metro\n"
+                "  \033[1;34mconnect\033[0m         Connect nodes together. Example: connect 0.0 1.0\n";
+
+            std::cout << text << std::endl;
+        } else
+        {
             std::cout << "Invalid command!" << std::endl;
         }
+        linenoiseHistoryAdd(line);
+        free(line);
     }
 }
 
@@ -133,15 +152,18 @@ int main() {
 
     auto streamInfo = Pa_GetStreamInfo(stream);
     if (streamInfo != nullptr) {
-        std::string text = R"( _____ _         _____     _       _
-|  _  | |_ _ ___|  _  |___| |_ ___| |_
-|   __| | | | . |   __| .'|  _|  _|   |
-|__|  |_|___|_  |__|  |__,|_| |___|_|_|
-            |___|
+        std::string text = R"(    ____  __            ____        __       __
+   / __ \/ /_  ______ _/ __ \____ _/ /______/ /_
+  / /_/ / / / / / __ `/ /_/ / __ `/ __/ ___/ __ \
+ / ____/ / /_/ / /_/ / ____/ /_/ / /_/ /__/ / / /
+/_/   /_/\__,_/\__, /_/    \__,_/\__/\___/_/ /_/
+              /____/
 )";
         std::cout << text << std::endl;
         std::cout << "Sample Rate: " << streamInfo->sampleRate << std::endl;
         std::cout << "input latency: " << streamInfo->inputLatency << " output latency: " << streamInfo->outputLatency << std::endl;
+        std::cout << std::endl;
+        std::cout << "type \"h\" or \"help\" for help" << std::endl;
     }
 
     repl(graphs);
