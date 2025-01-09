@@ -124,15 +124,16 @@ void repl(Graphs& graphs) {
         } else if (command == "h" || command == "help") {
             std::string text =
                 "\n"
-                "PlugPatch is an audio graph library that uses JSON file format to describe an audio graph of nodes and connections.\n\n"
+                "PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.\n\n"
                 "Commands:\n"
-                "  \033[1;34mexit, quit, q\033[0m   Exit the application.\n"
-                "  \033[1;34mload\033[0m            Load a graph file. Example: load graph\n"
-                "  \033[1;34mlist\033[0m            List the currently loaded graph.\n"
-                "  \033[1;34mlist sort\033[0m       List the currently loaded sorted graph.\n"
-                "  \033[1;34mlist nodes\033[0m      List available nodes that can be added.\n"
-                "  \033[1;34madd\033[0m             Add a node to the graph. Example: add metro\n"
-                "  \033[1;34mconnect\033[0m         Connect nodes together. Example: connect 0.0 1.0\n";
+                "exit, quit, q   Exit the application.\n"
+                "load            Load a graph file. Example: load graph\n"
+                "list            List the currently loaded graph.\n"
+                "list sort       List the currently loaded sorted graph.\n"
+                "list nodes      List available nodes that can be added.\n"
+                "add             Add a node to the graph. Example: add metro\n"
+                "connect         Connect nodes together. Example: connect 0.0 1.0\n"h
+                "credits         List credits / OSS libraries\n";
 
             std::cout << text << std::endl;
         } else {
@@ -186,6 +187,8 @@ int main() {
               /____/
 )";
         std::cout << text << std::endl;
+        //std::cout << "(c) 2025 Alexander Mitchell" << std::endl;
+        std::cout << std::endl;
         std::cout << "Sample Rate: " << streamInfo->sampleRate << std::endl;
         std::cout << "input latency: " << streamInfo->inputLatency << " output latency: " << streamInfo->outputLatency << std::endl;
         std::cout << std::endl;

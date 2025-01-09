@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -20,7 +22,10 @@ public:
 private:
     std::vector<std::string> nodeNames;
 
-    NodeRegistry() = default;
+    NodeRegistry()
+    {
+        nodeNames.reserve(100);
+    };
     NodeRegistry(const NodeRegistry&) = delete;
     NodeRegistry& operator=(const NodeRegistry&) = delete;
 };
