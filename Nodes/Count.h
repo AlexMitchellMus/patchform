@@ -35,10 +35,13 @@ public:
             if (e)
             {
                 e->setTimeStamp(event->getTimeStamp());
-                countValue++;
                 if (countValue > maxCount)
                     countValue = minCount;
                 e->data = countValue;
+
+                std::cout << "Count: " << countValue << std::endl;
+
+                countValue++;
 
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);

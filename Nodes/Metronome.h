@@ -29,6 +29,22 @@ public:
 
         auto events = inputPorts[0].sumEvents();
 
+        // Handle first event in metronome
+        if (sampleCounter == 0)
+        {
+            Event* e = context->eventPool.getFreeEvent();
+
+            if (e) {
+                e->setTimeStamp(0); // Set event at time 0
+                outputPort.addEvent(e);
+            }
+            else {
+                // Handle out-of-event-pool condition
+            }
+
+            sampleCounter = 0;
+        }
+
         while (samplesProcessed < frameCount)
         {
             unsigned long samplesUntilNextTick = static_cast<unsigned long>(tickInterval - sampleCounter);
@@ -40,7 +56,6 @@ public:
             }
 
             unsigned long tickPosition = samplesProcessed + samplesUntilNextTick;
-            std::cout << "adding event at: " << tickPosition << std::endl;
 
             Event* e = context->eventPool.getFreeEvent();
 

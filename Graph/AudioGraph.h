@@ -67,6 +67,7 @@ public:
                     nodes.push_back(std::make_unique<If>(context, ifVal, rtnVal));
                 }
                 break;
+            case hash("Env"):
             case hash("Envelope"):
                 {
                     auto const attackVal = node.value("attack", 0.0f);
@@ -78,11 +79,13 @@ public:
                 }
                 break;
             case hash("Metro"):
+            case hash("Metronome"):
                 {
                     auto const value = node.value("hz", 1.0f);
                     nodes.push_back(std::make_unique<Metronome>(context, value));
                 }
                 break;
+            case hash("Val"):
             case hash("Value"):
                 {
                     auto const value = node.value("value", 0.0f);
@@ -100,6 +103,7 @@ public:
                     nodes.push_back(std::make_unique<Volume>(context));
                 }
                 break;
+            case hash("Osc"):
             case hash("Oscillator"):
                 {
                     auto const waveform = node.value("waveform", "sine");
@@ -107,6 +111,7 @@ public:
                     nodes.push_back(std::make_unique<Oscillator>(context, waveform, freq));
                 }
                 break;
+            case hash("AOut"):
             case hash("AudioOut"):
                 {
                     nodes.push_back(std::make_unique<AudioOut>(context));
