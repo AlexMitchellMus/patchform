@@ -1,8 +1,8 @@
 {
   "nodes": [
-    { "id": 0, "type": "Metro", "hz": 500 },
-    { "id": 1, "type": "Count" },
-    { "id": 2, "type": "Add", "value": 12 },
+    { "id": 0, "type": "Metro", "hz": 2 },
+    { "id": 1, "type": "Count", "min": 0, "max": 4 },
+    { "id": 2, "type": "Add", "value": 0 },
     { "id": 3, "type": "Print" }
   ],
   "connections": [

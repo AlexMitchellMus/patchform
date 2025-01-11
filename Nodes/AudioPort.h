@@ -88,7 +88,7 @@ struct AudioInputPort {
         summedEvents.reserve(1024);
     }
 
-    std::vector<float>& sumPort()
+    std::vector<float>& sumAudio()
     {
         // Get size from first port's data
         std::size_t dataSize = connectedPorts[0]->getAudioBufferSize();
@@ -111,26 +111,21 @@ struct AudioInputPort {
         return summed;
     }
 
-    std::vector<Event*>& combineEvents()
+    std::vector<Event*>& sumEvents()
     {
         summedEvents.clear();
-        // 1) Gather all events from each connected port
 
         for (auto* port : connectedPorts) {
             if (!port) continue;
-
-            auto events = port->getEvents();
-
-            // 2) Insert them into 'combined'
+            auto& events = port->getEvents();
             summedEvents.insert(summedEvents.end(), events.begin(), events.end());
         }
 
-        // 3) Sort combined by timestamp
+        // Sort combined by timestamp
         std::sort(summedEvents.begin(), summedEvents.end(), [](const Event* a, const Event* b) {
             return a->getTimeStamp() < b->getTimeStamp();
         });
 
-        // Return all events in a single sorted vector
         return summedEvents;
     }
 };

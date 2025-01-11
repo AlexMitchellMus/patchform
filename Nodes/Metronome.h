@@ -27,7 +27,7 @@ public:
     {
         unsigned long samplesProcessed = 0;
 
-        auto events = inputPorts[0].combineEvents();
+        auto events = inputPorts[0].sumEvents();
 
         while (samplesProcessed < frameCount)
         {

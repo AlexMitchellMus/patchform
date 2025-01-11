@@ -19,7 +19,7 @@ public:
 
     void processAudio(float* buffer, unsigned long frameCount) override {
         // The input port audio is directly sent to the PortAudio stream
-        auto inputPort = inputPorts[0].sumPort().data();
+        auto inputPort = inputPorts[0].sumAudio().data();
         std::copy(inputPort, inputPort + frameCount, buffer);
     }
 };

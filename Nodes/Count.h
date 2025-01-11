@@ -13,17 +13,20 @@ class Count : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Count");
 
     float countValue;
+    int minCount;
+    int maxCount;
 
 public:
-    Count(NodeContext* context) : AudioNode(context, "AddNode")
+    Count(NodeContext* context, int min, int max) : AudioNode(context, "AddNode")
     {
         addInputPort("A"); // hot port
-        countValue = 0.0f;
+        countValue = minCount = min;
+        maxCount = max;
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPorts[0].combineEvents();
+        auto aEvents = inputPorts[0].sumEvents();
 
         for (auto event : aEvents)
         {
@@ -32,7 +35,10 @@ public:
             if (e)
             {
                 e->setTimeStamp(event->getTimeStamp());
-                e->data = countValue++;
+                countValue++;
+                if (countValue > maxCount)
+                    countValue = minCount;
+                e->data = countValue;
 
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);

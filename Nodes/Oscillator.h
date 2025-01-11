@@ -87,7 +87,8 @@ public:
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
-        auto freqIn = inputPorts[0].sumPort();     // Frequency input
+        auto events = inputPorts[0].sumEvents();
+        auto freqIn = inputPorts[0].sumAudio();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 
         if (useTable) {
@@ -95,6 +96,12 @@ public:
             const float tableSizeF = static_cast<float>(TABLE_SIZE);
 
             for (unsigned long i = 0; i < frameCount; i++) {
+                while (!events.empty() && events.front()->getTimeStamp() == i) {
+                    phase = 0.0f;
+                    context->eventPool.returnFreeEvent(events.front());
+                    events.erase(events.begin()); // Remove this event from the combined events to move to the next event
+                }
+
                 // Convert current phase to an integer index and calculate next index
                 int idx = static_cast<int>(phase);
                 int nextIdx = idx + 1;

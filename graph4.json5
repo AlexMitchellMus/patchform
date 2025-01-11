@@ -1,13 +1,13 @@
 {
     "nodes": [
         { "id": 0, "type": "Value", "value": 770.0 },
-        { "id": 1, "type": "Oscillator", "waveform": "triangle" },
+        { "id": 1, "type": "Oscillator", "waveform": "sine" },
         { "id": 2, "type": "Metro", "hz": 5 },
-        { "id": 3, "type": "Envelope", "attack": 10, "decay": 200 },
+        { "id": 3, "type": "Envelope", "attack": 0, "decay": 200 },
 
-        { "id": 4, "type": "Value", "value": 600.0 },
-        { "id": 5, "type": "Oscillator", "waveform": "saw" },
-        { "id": 6, "type": "Envelope", "attack": 100, "decay": 100 },
+        { "id": 4, "type": "Value", "value": 200.0 },
+        { "id": 5, "type": "Oscillator", "waveform": "sine" },
+        { "id": 6, "type": "Envelope", "attack": 0, "decay": 200 },
 
         { "id": 7, "type": "AudioOut" }
     ],
@@ -23,6 +23,10 @@
         // metro -> envelope
         { "sourceNode": 2, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
         { "sourceNode": 2, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
+
+        // metro -> oscillator (phase reset)
+        { "sourceNode": 2, "sourcePort": 0, "targetNode": 1, "targetPort": 0 },
+        { "sourceNode": 2, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
 
         // envelope -> audio out
         { "sourceNode": 3, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },

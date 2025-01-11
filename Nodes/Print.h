@@ -20,10 +20,12 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPorts[0].combineEvents();
+        auto aEvents = inputPorts[0].sumEvents();
 
         for (auto event : aEvents)
         {
+            // TODO: do not print from audio callback, this is for early testing only
+            // Use a lockfree queue
             std::cout << "Print: " << event->data << std::endl;
             context->eventPool.returnFreeEvent(event);
         }

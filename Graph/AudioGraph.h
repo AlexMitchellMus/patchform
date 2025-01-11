@@ -7,6 +7,7 @@
 #pragma once
 
 #include <vector>
+#include <limits>
 #include <iostream>
 #include <stack>
 #include <chrono>
@@ -18,6 +19,8 @@ using json = nlohmann::json;
 
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
+
+#undef max
 
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
@@ -47,7 +50,9 @@ public:
                 break;
             case hash("Count"):
                 {
-                    nodes.push_back(std::make_unique<Count>(context));
+                    auto const min = node.value("min", 0.0f);
+                    auto const max = node.value("max", std::numeric_limits<int>::max());
+                    nodes.push_back(std::make_unique<Count>(context, min, max));
                 }
                 break;
             case hash("Print"):

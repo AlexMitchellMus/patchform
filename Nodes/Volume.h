@@ -19,8 +19,8 @@ public:
     }
 
     void processAudio(float* buffer, unsigned long frameCount) override {
-        const float* buffer1 = inputPorts[0].sumPort().data();
-        const float* buffer2 = inputPorts[1].sumPort().data();
+        const float* buffer1 = inputPorts[0].sumAudio().data();
+        const float* buffer2 = inputPorts[1].sumAudio().data();
         auto output = outputPort.getAudioBuffer();
 
         for (unsigned long i = 0; i < frameCount; i++) {

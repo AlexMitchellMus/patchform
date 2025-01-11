@@ -15,7 +15,7 @@ class Envelope : public AudioNode
     float attackVal;
     float decayVal;
     float envValue = 0.0f;
-    bool isAttack = true;  // Track whether the envelope is in attack phase
+    bool isAttack = false;  // Track whether the envelope is in attack phase
 
 public:
     Envelope(NodeContext* context, float attackVal, float decayVal)
@@ -30,8 +30,8 @@ public:
     void processAudio(float* out, unsigned long frameCount) override
     {
         auto output = outputPort.getAudioBuffer();
-        auto events = inputPorts[0].combineEvents();
-        auto signal = inputPorts[1].sumPort().data();
+        auto events = inputPorts[0].sumEvents();
+        auto signal = inputPorts[1].sumAudio().data();
 
         for (unsigned long i = 0; i < frameCount; i++)
         {
@@ -39,7 +39,7 @@ public:
                 envValue = 0.0f;
                 isAttack = true;
                 context->eventPool.returnFreeEvent(events.front());
-                events.erase(events.begin());
+                events.erase(events.begin()); // Remove this event from the combined events to move to the next event
             }
 
             if (isAttack)
