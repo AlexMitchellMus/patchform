@@ -25,6 +25,7 @@ public:
         for (auto event : aEvents)
         {
             std::cout << "Print: " << event->data << std::endl;
+            context->eventPool.returnFreeEvent(event);
         }
     }
 };

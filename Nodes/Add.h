@@ -41,6 +41,7 @@ public:
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);
             }
+            context->eventPool.returnFreeEvent(event);
         }
     }
 };
