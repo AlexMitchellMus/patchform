@@ -12,10 +12,10 @@
 #include <stack>
 #include <chrono>
 
-#include "../external/json/single_include/nlohmann/json.hpp"
+#include "json.hpp"
 using json = nlohmann::json;
 
-#include "../external/concurrentqueue/concurrentqueue.h"
+#include "concurrentqueue.h"
 
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
@@ -257,8 +257,6 @@ public:
         }
 
         context->eventPool.releaseAllEvents();
-
-        //std::cout << "Free events: " << context->eventPool.eventPoolSize() << std::endl;
     }
 };
 

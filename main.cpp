@@ -13,7 +13,7 @@
 #include <conio.h>
 
 #include <PortAudio.h>
-#include "external/json/single_include/nlohmann/json.hpp"
+#include "json.hpp"
 using json = nlohmann::json;
 
 #include "external/linenoise-ng/include/linenoise.h"
@@ -151,7 +151,7 @@ void repl(Graphs& graphs) {
 
 int main() {
     PaError err;
-    unsigned long frameCount = 64;
+    unsigned long frameCount = 1024;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio

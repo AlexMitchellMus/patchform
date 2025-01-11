@@ -8,15 +8,24 @@ add_subdirectory(external/json)
 add_subdirectory(external/linenoise-ng)
 
 add_library(moodycamel_concurrentqueue INTERFACE)
-target_include_directories(moodycamel_concurrentqueue INTERFACE
-        "${moodycamel_concurrentqueue_SOURCE_DIR}"
-)
+target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/concurrentqueue")
 
 file(GLOB SOURCES "*.cpp")
 add_executable(PlugPatch ${SOURCES})
 
 # fix for linenoise not being updated to C++20
-set_property(TARGET linenoise APPEND_STRING PROPERTY COMPILE_FLAGS " /Zc:char8_t-")
+target_compile_options(linenoise PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/Zc:char8_t->
+        $<$<CXX_COMPILER_ID:GNU>:-fno-char8_t>
+        $<$<CXX_COMPILER_ID:Clang>:-fno-char8_t>
+)
+
+target_include_directories(PlugPatch PRIVATE
+        "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
+        "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
+        "${CMAKE_SOURCE_DIR}/external/linenoise-ng/include"
+        "${CMAKE_SOURCE_DIR}/external/portaudio/include"
+)
 
 target_link_libraries(PlugPatch PRIVATE portaudio linenoise moodycamel_concurrentqueue)
 
@@ -26,14 +35,9 @@ add_dependencies(PlugPatch linenoise)
 # Apply optimizations for MSVC
 if(MSVC)
     target_compile_options(PlugPatch PRIVATE
-            # Debug configuration flags
-            $<$<CONFIG:Debug>:/Od>       # Disable optimizations
-            $<$<CONFIG:Debug>:/Z7>       # Enable debug symbols (classic format)
-
-            # Release configuration flags
-            $<$<CONFIG:Release>:/Ox>     # Optimize for speed
-            $<$<CONFIG:Release>:/arch:AVX2>
-            $<$<CONFIG:Release>:/GL>     # Whole program optimization
+            $<$<CONFIG:Debug>:/Od /Z7>
+            $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL>
+            $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
     )
 endif()
 

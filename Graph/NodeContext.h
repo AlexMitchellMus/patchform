@@ -1,3 +1,9 @@
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #pragma once
 
 class EventPool {
@@ -14,12 +20,8 @@ public:
 
     // Acquire a free Event (returns nullptr if none available)
     Event* getFreeEvent() {
-        //std::cout << "freestack size: " << freeStack.size() << std::endl;
         if (freeStack.empty()) {
-            std::cout << "event exhaustion, size: " << freeStack.size() << std::endl;
-            // No free events left!
-            // Do NOT grow here if you're in the audio callback
-            // Return nullptr or handle logic as you wish
+            std::cout << "No free events left!" << std::endl;
             return nullptr;
         }
         // Pop index from stack
