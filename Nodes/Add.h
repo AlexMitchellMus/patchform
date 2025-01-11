@@ -15,7 +15,7 @@ class Add : public AudioNode {
     float coldValue;
 
 public:
-    Add(NodeContext* context, float initValue) : AudioNode(context, "AddNode"), coldValue(initValue)
+    Add(NodeContext* context, float initValue) : AudioNode(context, "AddNode", AudioPort::PortType::Data), coldValue(initValue)
     {
         addInputPort("A"); // hot port
         addInputPort("B"); // cold port

@@ -29,21 +29,20 @@ protected:
     float phase = 0.0f;
     std::string waveform;
 
+    float freq = 0.0f;
+
     bool useTable = true;
 
-    static void initializeWaveformTable(const std::string& waveform, bool& useTable) {
+    static void initializeWaveformTable(std::string& waveform, bool& useTable) {
         if (waveformTables.find(waveform) != waveformTables.end()) {
             return; // Table already initialized
         }
 
         std::vector<float> table(TABLE_SIZE);
-        switch (hash(waveform)) {
-            case hash("sine"): {
-                for (int i = 0; i < TABLE_SIZE; i++) {
-                    table[i] = std::sin(2.0f * M_PI * i / TABLE_SIZE);
-                }
-                break;
-            }
+
+        auto waveformHash = hash(waveform);
+
+        switch (waveformHash) {
             case hash("saw"): {
                 for (int i = 0; i < TABLE_SIZE; i++) {
                     float fraction = static_cast<float>(i) / TABLE_SIZE;
@@ -57,6 +56,7 @@ protected:
                 }
                 break;
             }
+            case hash("tri"):
             case hash("triangle"): {
                 for (int i = 0; i < TABLE_SIZE; i++) {
                     float fraction = static_cast<float>(i) / TABLE_SIZE;
@@ -69,11 +69,19 @@ protected:
                 break;
             }
             case hash("noise"): {
-                    useTable = false;
+                useTable = false;
                 return;
             }
             default: {
-                throw std::runtime_error("Unsupported waveform: " + waveform);
+                if (waveformHash != hash("sine")) {
+                    std::cout << "Error! Unknown waveform: " << waveform << ", using default sine" << std::endl;
+                    waveform = "sine";
+                }
+                for (int i = 0; i < TABLE_SIZE; i++)
+                {
+                    table[i] = std::sin(2.0f * M_PI * i / TABLE_SIZE);
+                }
+                break;
             }
         }
 
@@ -81,13 +89,14 @@ protected:
     }
 
 public:
-    Oscillator(NodeContext* context, std::string waveform) : AudioNode(context, "Oscillator"), waveform(std::move(waveform)) {
+    Oscillator(NodeContext* context, std::string waveform) : AudioNode(context, "Oscillator", AudioPort::PortType::Signal), waveform(std::move(waveform)) {
         addInputPort("frequency");
         initializeWaveformTable(this->waveform, this->useTable);
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
         auto events = inputPorts[0].sumEvents();
+        bool useSignalFreq = inputPorts[0].isAnyConnectedPortsSignal();
         auto freqIn = inputPorts[0].sumAudio();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 
@@ -98,6 +107,8 @@ public:
             for (unsigned long i = 0; i < frameCount; i++) {
                 while (!events.empty() && events.front()->getTimeStamp() == i) {
                     phase = 0.0f;
+                    if (!useSignalFreq)
+                        freq = events.front()->data;
                     context->eventPool.returnFreeEvent(events.front());
                     events.erase(events.begin()); // Remove this event from the combined events to move to the next event
                 }
@@ -119,7 +130,7 @@ public:
                 output[i] = 0.5f * value;
 
                 // Increment and wrap phase efficiently
-                phase += (tableSizeF * freqIn[i]) / context->sampleRate;
+                phase += (tableSizeF * (useSignalFreq ? freqIn[i] : freq)) / context->sampleRate;
                 if (phase >= tableSizeF) phase -= tableSizeF;
                 else if (phase < 0.0f) phase += tableSizeF;
             }

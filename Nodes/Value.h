@@ -16,7 +16,7 @@ class Value : public AudioNode
     float value;
 
 public:
-    Value(NodeContext* context, float value) : AudioNode(context, "ValueNode"), value(value) {}
+    Value(NodeContext* context, float value) : AudioNode(context, "ValueNode", AudioPort::PortType::Signal), value(value) {}
 
     void processAudio(float* out, unsigned long frameCount) override {
         auto output = outputPort.getAudioBuffer();

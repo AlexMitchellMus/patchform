@@ -25,12 +25,16 @@ add_dependencies(PlugPatch linenoise)
 
 # Apply optimizations for MSVC
 if(MSVC)
-    # Use /O2 for high optimization in MSVC
-    target_compile_options(PlugPatch PRIVATE /Ox)
-    # Optionally enable other MSVC-specific optimizations
-    target_compile_options(PlugPatch PRIVATE /arch:AVX2)  # For AVX2 if supported by your CPU
-    # You can also add other flags like /GL for whole program optimization if necessary
-    target_compile_options(PlugPatch PRIVATE /GL)
+    target_compile_options(PlugPatch PRIVATE
+            # Debug configuration flags
+            $<$<CONFIG:Debug>:/Od>       # Disable optimizations
+            $<$<CONFIG:Debug>:/Z7>       # Enable debug symbols (classic format)
+
+            # Release configuration flags
+            $<$<CONFIG:Release>:/Ox>     # Optimize for speed
+            $<$<CONFIG:Release>:/arch:AVX2>
+            $<$<CONFIG:Release>:/GL>     # Whole program optimization
+    )
 endif()
 
 # List all the JSON files you want to copy

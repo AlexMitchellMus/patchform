@@ -16,16 +16,15 @@ class AudioNode;
 
 class AudioPort
 {
-protected:
-    std::vector<float> audioBuffer;
-    AudioNode* node;
-
-    std::vector<Event*> events;
-
-    std::string name;
 public:
+    enum class PortType
+    {
+        None =   1 << 0,
+        Signal = 1 << 1,
+        Data   = 1 << 2
+    };
 
-    AudioPort(AudioNode* parent, std::string portName) : node(parent), name(portName)
+    AudioPort(AudioNode* parent, std::string portName, PortType type) : node(parent), name(portName), portType(type)
     {
         events.reserve(1024);
     }
@@ -66,13 +65,30 @@ public:
             audioBuffer.resize(size, 0.0f);
     }
 
-    AudioNode* getParentNode() const {return node; }
+    bool isSignal()
+    {
+        return portType == PortType::Signal;
+    }
+
+    AudioNode* getParentNode() const { return node; }
 
     // Define the equality operator for AudioPort
     bool operator==(const AudioPort& other) const {
         // Compare based on unique identifier or content
         return this == &other;  // For simplicity, compare addresses (can be adjusted based on your design)
     }
+
+    PortType getPortType() const { return portType; }
+
+protected:
+    std::vector<float> audioBuffer;
+    AudioNode* node;
+
+    std::vector<Event*> events;
+
+    std::string name;
+
+    PortType portType;
 };
 
 struct AudioInputPort {
@@ -88,9 +104,21 @@ struct AudioInputPort {
         summedEvents.reserve(1024);
     }
 
+    bool isAnyConnectedPortsSignal()
+    {
+        return std::any_of(connectedPorts.begin(), connectedPorts.end(), [](auto const& port) {
+            return port->isSignal();
+        });
+    }
+
     std::vector<float>& sumAudio()
     {
-        // Get size from first port's data
+        if (connectedPorts.size() == 0)
+            return summed;
+
+        if (!isAnyConnectedPortsSignal())
+            return summed;
+
         std::size_t dataSize = connectedPorts[0]->getAudioBufferSize();
 
         if (dataSize != summed.size())
@@ -128,4 +156,5 @@ struct AudioInputPort {
 
         return summedEvents;
     }
+
 };

@@ -1,13 +1,39 @@
 {
   "nodes": [
     { "id": 0, "type": "Metro", "hz": 2 },
-    { "id": 1, "type": "Count", "min": 0, "max": 4 },
-    { "id": 2, "type": "Add", "value": 0 },
-    { "id": 3, "type": "Print" }
+    { "id": 1, "type": "Count", "min": 0, "max": 3 },
+    { "id": 2, "type": "If", "if": 0, "return": 500 },
+    { "id": 3, "type": "If", "if": 2, "return": 660 },
+    { "id": 4, "type": "If", "if": 3, "return": 776 },
+
+    { "id": 5, "type": "Oscillator", "waveform": "tri" },
+    { "id": 6, "type": "Envelope", "attack": 30, "decay": 200 },
+
+    { "id": 7, "type": "AudioOut" }
   ],
   "connections": [
+    // metro -> count
     { "sourceNode": 0, "sourcePort": 0, "targetNode": 1, "targetPort": 0 },
+
+    // count -> if
     { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
-    { "sourceNode": 2, "sourcePort": 0, "targetNode": 3, "targetPort": 0 }
+    { "sourceNode": 1, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
+    { "sourceNode": 1, "sourcePort": 0, "targetNode": 4, "targetPort": 0 },
+
+    // if -> oscillator
+    { "sourceNode": 2, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
+    { "sourceNode": 3, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
+    { "sourceNode": 4, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
+
+    // oscillator -> envelope
+    { "sourceNode": 5, "sourcePort": 0, "targetNode": 6, "targetPort": 1 },
+
+    // if's -> envelope
+    { "sourceNode": 2, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
+    { "sourceNode": 3, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
+    { "sourceNode": 4, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
+
+    // envelope -> output
+    { "sourceNode": 6, "sourcePort": 0, "targetNode": 7, "targetPort": 0 }
   ]
 }

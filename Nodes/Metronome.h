@@ -16,7 +16,7 @@ class Metronome : public AudioNode
     uint64_t tickInterval;
 
 public:
-    Metronome(NodeContext* context, float hz) : AudioNode(context, "Metro")
+    Metronome(NodeContext* context, float hz) : AudioNode(context, "Metro", AudioPort::PortType::Data)
     {
         tickInterval = static_cast<uint64_t>(context->sampleRate / hz);
 

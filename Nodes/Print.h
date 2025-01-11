@@ -13,7 +13,7 @@ class Print : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Print");
 
 public:
-    Print(NodeContext* context) : AudioNode(context, "Print")
+    Print(NodeContext* context) : AudioNode(context, "Print", AudioPort::PortType::None)
     {
         addInputPort("A"); // hot port
     }

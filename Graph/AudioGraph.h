@@ -60,6 +60,13 @@ public:
                     nodes.push_back(std::make_unique<Print>(context));
                 }
                 break;
+            case hash("If"):
+                {
+                    auto const ifVal = node.value("if", 0.0f);
+                    auto const rtnVal = node.value("return", 0.0f);
+                    nodes.push_back(std::make_unique<If>(context, ifVal, rtnVal));
+                }
+                break;
             case hash("Envelope"):
                 {
                     auto const attackVal = node.value("attack", 0.0f);

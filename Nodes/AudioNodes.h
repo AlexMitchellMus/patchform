@@ -32,10 +32,10 @@ protected:
     std::string name;
 
 public:
-    AudioNode(NodeContext* context, const std::string& nodeName)
+    AudioNode(NodeContext* context, const std::string& nodeName, AudioPort::PortType type)
         : context(context)
         , name(std::move(nodeName))
-        , outputPort(this, "output")
+        , outputPort(this, "output", type)
     {}
 
     virtual ~AudioNode()
