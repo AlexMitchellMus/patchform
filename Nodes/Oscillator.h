@@ -89,15 +89,22 @@ protected:
     }
 
 public:
-    Oscillator(NodeContext* context, std::string waveform) : AudioNode(context, "Oscillator", AudioPort::PortType::Signal), waveform(std::move(waveform)) {
+    Oscillator(NodeContext* context, std::string waveform, float freq)
+        : AudioNode(context, "Oscillator"
+        , AudioPort::PortType::Signal)
+        , waveform(std::move(waveform))
+        , freq(freq)
+    {
+        addInputPort("phase");
         addInputPort("frequency");
         initializeWaveformTable(this->waveform, this->useTable);
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
         auto events = inputPorts[0].sumEvents();
-        bool useSignalFreq = inputPorts[0].isAnyConnectedPortsSignal();
-        auto freqIn = inputPorts[0].sumAudio();     // Frequency input
+        auto freqEvents = inputPorts[1].sumEvents();
+        bool useSignalFreq = inputPorts[1].isAnyConnectedPortsSignal();
+        auto freqIn = inputPorts[1].sumAudio();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 
         if (useTable) {
@@ -107,10 +114,14 @@ public:
             for (unsigned long i = 0; i < frameCount; i++) {
                 while (!events.empty() && events.front()->getTimeStamp() == i) {
                     phase = 0.0f;
+                    context->eventPool.returnFreeEvent(events.front());
+                    events.erase(events.begin()); // Remove this event from the combined events to move to the next event
+                }
+                while (!events.empty() && events.front()->getTimeStamp() == i) {
                     if (!useSignalFreq)
                         freq = events.front()->data;
                     context->eventPool.returnFreeEvent(events.front());
-                    events.erase(events.begin()); // Remove this event from the combined events to move to the next event
+                    events.erase(events.begin());
                 }
 
                 // Convert current phase to an integer index and calculate next index

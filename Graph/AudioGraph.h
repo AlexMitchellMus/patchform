@@ -103,7 +103,8 @@ public:
             case hash("Oscillator"):
                 {
                     auto const waveform = node.value("waveform", "sine");
-                    nodes.push_back(std::make_unique<Oscillator>(context, waveform));
+                    auto const freq = node.value("freq", 440);
+                    nodes.push_back(std::make_unique<Oscillator>(context, waveform, freq));
                 }
                 break;
             case hash("AudioOut"):

@@ -55,7 +55,7 @@ public:
             }
 
             sampleCounter = 0;
-            samplesProcessed = tickPosition + 1;
+            samplesProcessed = tickPosition;
         }
     }
 };
