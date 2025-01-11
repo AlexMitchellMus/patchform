@@ -251,6 +251,8 @@ public:
                 outPort->clearEvents();
         }
 
+        context->eventPool.releaseAllEvents();
+
         //std::cout << "Free events: " << context->eventPool.eventPoolSize() << std::endl;
     }
 };

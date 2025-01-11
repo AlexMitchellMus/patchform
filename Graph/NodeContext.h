@@ -22,8 +22,9 @@ public:
             // Return nullptr or handle logic as you wish
             return nullptr;
         }
-        // Pop index from top of stack
-        std::size_t eventIndex = freeStack.back();
+        // Pop index from stack
+        //std::cout << "stack index: " << freeStack.back() << std::endl;
+        auto eventIndex = freeStack.back();
         freeStack.pop_back();
 
         Event* evt = &events[eventIndex];
@@ -31,32 +32,30 @@ public:
         return evt;
     }
 
-    // Return an Event to the pool
-    void returnFreeEvent(Event* evt) {
-        if (!evt) return;
-
-        // Calculate index
-        std::size_t index = static_cast<std::size_t>(evt - &events[0]);
-        freeStack.push_back(index);
+    void releaseAllEvents()
+    {
+        freeStack = templateStack;
     }
 
     // Grow the pool by adding N new events (call this OUTSIDE audio callback)
     void growPool(std::size_t count) {
         // Current size
-        std::size_t oldSize = events.size();
+        auto oldSize = events.size();
 
-        // Increase by 'count'
-        events.resize(oldSize + count);
+        auto newSize = oldSize + count;
+        events.resize(newSize);
 
-        // Push new indices onto freeStack
-        for (std::size_t i = 0; i < count; ++i) {
-            freeStack.push_back(oldSize + i);
-        }
+        freeStack.resize(newSize);
+        std::iota(freeStack.begin(), freeStack.end(), 0);
+
+        templateStack.resize(newSize);
+        std::iota(templateStack.begin(), templateStack.end(), 0);
     }
 
 private:
-    std::vector<Event> events;       // Actual storage
-    std::vector<std::size_t> freeStack;  // Indices of free events
+    std::vector<Event> events;               // Actual storage
+    std::vector<std::size_t> freeStack;      // Indices of free events
+    std::vector<std::size_t> templateStack;  // Template of a full freestack
 };
 
 class NodeContext {

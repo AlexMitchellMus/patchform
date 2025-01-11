@@ -1,40 +1,43 @@
 {
   "nodes": [
-    { "id": 0, "type": "Metro", "hz": 10 },
+    { "id": 0, "type": "Metro", "hz": 20 },
     { "id": 1, "type": "Count", "min": 0, "max": 3 },
     { "id": 2, "type": "If", "if": 0, "return": 500 },
-    { "id": 3, "type": "If", "if": 2, "return": 660 },
-    { "id": 4, "type": "If", "if": 3, "return": 776 },
+    { "id": 3, "type": "If", "if": 1, "return": 660 },
+    { "id": 4, "type": "If", "if": 2, "return": 770 },
+    { "id": 5, "type": "If", "if": 3, "return": 950 },
 
-    { "id": 5, "type": "Oscillator", "waveform": "sine", "freq":  660 },
-    { "id": 6, "type": "Envelope", "attack": 0, "decay": 50 },
+    { "id": 6, "type": "Oscillator", "waveform": "tri", "freq":  660 },
+    { "id": 7, "type": "Envelope", "attack": 0, "decay": 20 },
 
-    { "id": 7, "type": "AudioOut" }
+    { "id": 8, "type": "AudioOut" }
   ],
   "connections": [
     // metro -> count
-    //{ "sourceNode": 0, "sourcePort": 0, "targetNode": 1, "targetPort": 0 },
+    { "sourceNode": 0, "sourcePort": 0, "targetNode": 1, "targetPort": 0 },
 
     // count -> if
-    //{ "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
-    //{ "sourceNode": 1, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
-    //{ "sourceNode": 1, "sourcePort": 0, "targetNode": 4, "targetPort": 0 },
+    { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
+    { "sourceNode": 1, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
+    { "sourceNode": 1, "sourcePort": 0, "targetNode": 4, "targetPort": 0 },
+    { "sourceNode": 1, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
 
     // if -> oscillator
-    //{ "sourceNode": 2, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
-    //{ "sourceNode": 3, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
-    //{ "sourceNode": 4, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
+    { "sourceNode": 2, "sourcePort": 0, "targetNode": 6, "targetPort": 1 },
+    { "sourceNode": 3, "sourcePort": 0, "targetNode": 6, "targetPort": 1 },
+    { "sourceNode": 4, "sourcePort": 0, "targetNode": 6, "targetPort": 1 },
+    { "sourceNode": 5, "sourcePort": 0, "targetNode": 6, "targetPort": 1 },
 
     // oscillator -> envelope
-    { "sourceNode": 0, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
+    { "sourceNode": 6, "sourcePort": 0, "targetNode": 7, "targetPort": 1 },
 
     // if's -> envelope
-    { "sourceNode": 0, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
-    { "sourceNode": 5, "sourcePort": 0, "targetNode": 6, "targetPort": 1 },
-    //{ "sourceNode": 3, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
-    //{ "sourceNode": 4, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
+    { "sourceNode": 2, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },
+    { "sourceNode": 3, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },
+    { "sourceNode": 4, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },
+    { "sourceNode": 5, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },
 
     // envelope -> output
-    { "sourceNode": 6, "sourcePort": 0, "targetNode": 7, "targetPort": 0 }
+    { "sourceNode": 7, "sourcePort": 0, "targetNode": 8, "targetPort": 0 }
   ]
 }

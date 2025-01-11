@@ -151,7 +151,7 @@ void repl(Graphs& graphs) {
 
 int main() {
     PaError err;
-    unsigned long frameCount = 256;
+    unsigned long frameCount = 64;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio
@@ -190,10 +190,11 @@ int main() {
               /____/
 )";
         std::cout << text << std::endl;
-        //std::cout << "(c) 2025 Alexander Mitchell" << std::endl;
+        std::cout << "(c) 2025 Alexander Mitchell" << std::endl;
         std::cout << std::endl;
-        std::cout << "Sample Rate: " << streamInfo->sampleRate << std::endl;
-        std::cout << "input latency: " << streamInfo->inputLatency << " output latency: " << streamInfo->outputLatency << std::endl;
+        std::cout << "Sample rate: " << streamInfo->sampleRate << std::endl;
+        std::cout << "Buffer size: " << frameCount << std::endl;
+        std::cout << "Input latency: " << streamInfo->inputLatency << " Output latency: " << streamInfo->outputLatency << std::endl;
         std::cout << std::endl;
         std::cout << "type \"h\" or \"help\" for help" << std::endl;
     }

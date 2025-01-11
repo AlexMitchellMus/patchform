@@ -27,19 +27,21 @@ public:
         addInputPort("Signal");
     }
 
-    void processAudio(float* out, unsigned long frameCount) override
+    void processAudio(float* out, const unsigned long frameCount) override
     {
         auto output = outputPort.getAudioBuffer();
         auto events = inputPorts[0].sumEvents();
         auto signal = inputPorts[1].sumAudio().data();
 
+        std::vector<Event*> toRelease;
+        unsigned long nextEventIndex = 0;
+
         for (unsigned long i = 0; i < frameCount; i++)
         {
-            while (!events.empty() && events.front()->getTimeStamp() == i) {
+            while (nextEventIndex < events.size() && events[nextEventIndex]->getTimeStamp() == i) {
                 envValue = 0.0f;
                 isAttack = true;
-                context->eventPool.returnFreeEvent(events.front());
-                events.erase(events.begin()); // Remove this event from the combined events to move to the next event
+                nextEventIndex++;
             }
 
             if (isAttack)
@@ -63,5 +65,9 @@ public:
             // Apply envelope to the signal
             output[i] = signal[i] * envValue;
         }
+        //for (auto e : toRelease)
+        //{
+        //    //context->eventPool.releaseEvent(e);
+        //}
     }
 };

@@ -6,8 +6,8 @@
         { "id": 3, "type": "Envelope", "attack": 0, "decay": 200 },
 
         { "id": 4, "type": "Value", "value": 200.0 },
-        { "id": 5, "type": "Oscillator", "waveform": "sine" },
-        { "id": 6, "type": "Envelope", "attack": 0, "decay": 200 },
+        { "id": 5, "type": "Oscillator", "waveform": "tri" },
+        { "id": 6, "type": "Envelope", "attack": 70, "decay": 200 },
 
         { "id": 7, "type": "AudioOut" }
     ],

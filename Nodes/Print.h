@@ -27,7 +27,6 @@ public:
             // TODO: do not print from audio callback, this is for early testing only
             // Use a lockfree queue
             std::cout << "Print: " << event->data << std::endl;
-            context->eventPool.returnFreeEvent(event);
         }
     }
 };

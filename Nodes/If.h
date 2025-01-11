@@ -47,7 +47,7 @@ public:
                     outputPort.addEvent(e);
                 }
             }
-            context->eventPool.returnFreeEvent(event);
+            //context->eventPool.releaseEvent(event);
         }
     }
 };

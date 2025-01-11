@@ -40,6 +40,7 @@ public:
             }
 
             unsigned long tickPosition = samplesProcessed + samplesUntilNextTick;
+            std::cout << "adding event at: " << tickPosition << std::endl;
 
             Event* e = context->eventPool.getFreeEvent();
 

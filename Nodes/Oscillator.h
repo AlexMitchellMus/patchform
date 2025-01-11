@@ -107,21 +107,24 @@ public:
         auto freqIn = inputPorts[1].sumAudio();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 
+        unsigned int nextEventIndex = 0;
+        unsigned int nextFreqEventIndex = 0;
+
         if (useTable) {
             const auto& table = waveformTables[waveform];
             const float tableSizeF = static_cast<float>(TABLE_SIZE);
 
             for (unsigned long i = 0; i < frameCount; i++) {
-                while (!events.empty() && events.front()->getTimeStamp() == i) {
+                while (nextEventIndex < events.size() && events[nextEventIndex]->getTimeStamp() == i) {
                     phase = 0.0f;
-                    context->eventPool.returnFreeEvent(events.front());
-                    events.erase(events.begin()); // Remove this event from the combined events to move to the next event
+                    nextEventIndex++;
                 }
-                while (!events.empty() && events.front()->getTimeStamp() == i) {
-                    if (!useSignalFreq)
-                        freq = events.front()->data;
-                    context->eventPool.returnFreeEvent(events.front());
-                    events.erase(events.begin());
+                if (!useSignalFreq)
+                {
+                    while (nextFreqEventIndex < freqEvents.size() && freqEvents[nextFreqEventIndex]->getTimeStamp() == i) {
+                        freq = freqEvents[nextFreqEventIndex]->data;
+                        nextFreqEventIndex++;
+                    }
                 }
 
                 // Convert current phase to an integer index and calculate next index
