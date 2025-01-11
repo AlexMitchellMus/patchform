@@ -7,13 +7,18 @@ add_subdirectory(external/portaudio)
 add_subdirectory(external/json)
 add_subdirectory(external/linenoise-ng)
 
+add_library(moodycamel_concurrentqueue INTERFACE)
+target_include_directories(moodycamel_concurrentqueue INTERFACE
+        "${moodycamel_concurrentqueue_SOURCE_DIR}"
+)
+
 file(GLOB SOURCES "*.cpp")
 add_executable(PlugPatch ${SOURCES})
 
 # fix for linenoise not being updated to C++20
 set_property(TARGET linenoise APPEND_STRING PROPERTY COMPILE_FLAGS " /Zc:char8_t-")
 
-target_link_libraries(PlugPatch PRIVATE portaudio linenoise)
+target_link_libraries(PlugPatch PRIVATE portaudio linenoise moodycamel_concurrentqueue)
 
 # Ensure linenoise is built before PlugPatch
 add_dependencies(PlugPatch linenoise)
@@ -35,6 +40,7 @@ set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/graph2.json"
         "${CMAKE_SOURCE_DIR}/graph3.json"
         "${CMAKE_SOURCE_DIR}/graph4.json5"
+        "${CMAKE_SOURCE_DIR}/count.json5"
 )
 
 # Loop over them and create a post-build copy command for each

@@ -9,25 +9,21 @@
 #include "AudioNodes.h"
 
 // AddNode that sums two signals
-class Add : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Add");
+class Count : public AudioNode {
+    DEFINE_AND_REGISTER_NODE("Count");
 
-    float coldValue;
+    float countValue;
 
 public:
-    Add(NodeContext* context, float initValue) : AudioNode(context, "AddNode"), coldValue(initValue)
+    Count(NodeContext* context) : AudioNode(context, "AddNode")
     {
         addInputPort("A"); // hot port
-        addInputPort("B"); // cold port
-                            
-        coldValue = initValue;
+        countValue = 0.0f;
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
         auto aEvents = inputPorts[0].combineEvents();
-        if (auto bEvent = inputPorts[1].combineEvents(); bEvent.size())
-            coldValue = bEvent.back()->data;
 
         for (auto event : aEvents)
         {
@@ -36,7 +32,7 @@ public:
             if (e)
             {
                 e->setTimeStamp(event->getTimeStamp());
-                e->data = event->data + coldValue;
+                e->data = countValue++;
 
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);

@@ -14,6 +14,8 @@
 #include "../external/json/single_include/nlohmann/json.hpp"
 using json = nlohmann::json;
 
+#include "../external/concurrentqueue/concurrentqueue.h"
+
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
 
@@ -37,6 +39,22 @@ public:
 
             switch (hash(object))
             {
+            case hash("Add"):
+                {
+                    auto const value = node.value("value", 0.0f);
+                    nodes.push_back(std::make_unique<Add>(context, value));
+                }
+                break;
+            case hash("Count"):
+                {
+                    nodes.push_back(std::make_unique<Count>(context));
+                }
+                break;
+            case hash("Print"):
+                {
+                    nodes.push_back(std::make_unique<Print>(context));
+                }
+                break;
             case hash("Envelope"):
                 {
                     auto const attackVal = node.value("attack", 0.0f);
@@ -219,6 +237,8 @@ public:
             if (auto outPort = node->getOutputPort())
                 outPort->clearEvents();
         }
+
+        //std::cout << "Free events: " << context->eventPool.eventPoolSize() << std::endl;
     }
 };
 

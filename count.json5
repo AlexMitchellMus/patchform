@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    { "id": 0, "type": "Metro", "hz": 5 },
+    { "id": 1, "type": "Count" },
+    { "id": 2, "type": "Add", "value": 12 },
+    { "id": 3, "type": "Print" }
+  ],
+  "connections": [
+    { "sourceNode": 0, "sourcePort": 0, "targetNode": 1, "targetPort": 0 },
+    { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
+    { "sourceNode": 2, "sourcePort": 0, "targetNode": 3, "targetPort": 0 }
+  ]
+}

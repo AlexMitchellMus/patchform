@@ -115,12 +115,11 @@ struct AudioInputPort {
     {
         summedEvents.clear();
         // 1) Gather all events from each connected port
+
         for (auto* port : connectedPorts) {
             if (!port) continue;
 
-            // Assume each port can supply its events (or we have a function to retrieve them)
             auto events = port->getEvents();
-            // or something like: auto events = port->takeEvents();
 
             // 2) Insert them into 'combined'
             summedEvents.insert(summedEvents.end(), events.begin(), events.end());

@@ -10,9 +10,12 @@
 
 #include "../Nodes/Oscillator.h"
 #include "../Nodes/Add.h"
+#include "../Nodes/Add_Audio.h"
 #include "../Nodes/Value.h"
 #include "../Nodes/Metronome.h"
 #include "../Nodes/Envelope.h"
 #include "../Nodes/LFO.h"
 #include "../Nodes/Volume.h"
 #include "../Nodes/AudioOut.h"
+#include "../Nodes/Print.h"
+#include "../Nodes/Count.h"

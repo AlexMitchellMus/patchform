@@ -7,3 +7,6 @@
 [submodule "external/linenoise-ng"]
 	path = external/linenoise-ng
 	url = https://github.com/qingqibing/linenoise-ng.git
+[submodule "external/concurrentqueue"]
+	path = external/concurrentqueue
+	url = https://github.com/cameron314/concurrentqueue.git

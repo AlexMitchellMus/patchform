@@ -42,6 +42,8 @@ static int audioCallback(const void* input, void* output,
     auto* graphs = static_cast<Graphs*>(userData);
     float* out = (float*)output;
 
+    std::fill(out, out+frameCount, 0.0);
+
     graphs->process(out, frameCount);  // Process the audio graph
 
     if ((statusFlags & paOutputUnderflow) || (statusFlags & paInputOverflow)) {
@@ -125,6 +127,7 @@ void repl(Graphs& graphs) {
             std::string text =
                 "\n"
                 "PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.\n"
+                "\n"
                 "Commands:\n"
                 "exit, quit, q   Exit the application.\n"
                 "load            Load a graph file. Example: load graph\n"
@@ -148,7 +151,7 @@ void repl(Graphs& graphs) {
 
 int main() {
     PaError err;
-    unsigned long frameCount = 512;
+    unsigned long frameCount = 256;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio

@@ -7,6 +7,11 @@ public:
         growPool(initialSize);
     }
 
+    int eventPoolSize()
+    {
+        return events.size();
+    }
+
     // Acquire a free Event (returns nullptr if none available)
     Event* getFreeEvent() {
         //std::cout << "freestack size: " << freeStack.size() << std::endl;
