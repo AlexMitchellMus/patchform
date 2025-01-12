@@ -12,7 +12,7 @@
 class AudioOut : public AudioNode {
     DEFINE_AND_REGISTER_NODE("AudioOut");
 public:
-    AudioOut(NodeContext* context) : AudioNode(context, AudioPort::PortType::None)
+    AudioOut(NodeContext* context) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::None)
     {
         addInputPort("Signal");
     }

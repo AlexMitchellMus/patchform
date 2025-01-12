@@ -29,10 +29,18 @@ public:                                                       \
 // Abstract AudioNode class
 class AudioNode {
 public:
-    struct StateBase {
+    struct StateBase
+    {
         virtual ~StateBase() = default;
         virtual std::unique_ptr<StateBase> clone() const = 0;
     };
+    // Default NullState for nodes without state
+    struct NullState : public StateBase {
+        std::unique_ptr<StateBase> clone() const override {
+            return std::make_unique<NullState>();
+        }
+    };
+
 protected:
     std::vector<AudioInputPort> inputPorts;
     AudioPort outputPort;
@@ -44,8 +52,11 @@ protected:
     bool dirty = false;                // Marks if a state swap is needed
 
 public:
-    AudioNode(NodeContext* context, AudioPort::PortType type)
-        : context(context)
+    AudioNode(std::unique_ptr<StateBase> initialState, NodeContext* context, AudioPort::PortType type)
+        : stateA(std::move(initialState))
+        , stateB(stateA->clone())
+        , activeState(stateB.get())
+        , context(context)
         , outputPort(this, "output", type)
     {}
 
@@ -62,6 +73,7 @@ public:
     // Swap the active and inactive states if dirty
     void swapStatesIfDirty() {
         if (dirty) {
+            std::cout << "swapping state" << std::endl;
             stateA.swap(stateB);        // Swap active and inactive states
             activeState = stateB.get(); // Update the pointer to the inactive state
             dirty = false;
@@ -82,12 +94,6 @@ public:
         inputPorts[inputPortIndex].connectedPorts.push_back(portToLink);
     }
 
-    void process(float* buffer, unsigned long frameCount)
-    {
-        outputPort.clear(frameCount);
-        processAudio(buffer, frameCount);
-    }
-
     // Virtual method for processing the audio buffer
     virtual void processAudio(float* buffer, unsigned long frameCount) = 0;
 
@@ -99,4 +105,13 @@ public:
 
     std::vector<AudioInputPort>& getInputPorts() { return inputPorts; };
 
+protected:
+    void process(float* buffer, unsigned long frameCount)
+    {
+        //swapStatesIfDirty();
+        outputPort.clear(frameCount);
+        processAudio(buffer, frameCount);
+    }
+
+    friend class AudioGraph;
 };

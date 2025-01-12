@@ -97,7 +97,7 @@ protected:
 
 public:
     Oscillator(NodeContext* context, std::string waveform, float freq)
-        : AudioNode(context, AudioPort::PortType::Signal)
+        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
         , waveform(std::move(waveform))
         , freq(freq)
     {

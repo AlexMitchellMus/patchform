@@ -13,7 +13,7 @@ class Add_Audio : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Add_Audio");
 
 public:
-    Add_Audio(NodeContext* context) : AudioNode(context, AudioPort::PortType::Signal)
+    Add_Audio(NodeContext* context) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
     {
         addInputPort("A");
         addInputPort("B");

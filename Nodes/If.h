@@ -16,7 +16,7 @@ class If : public AudioNode {
     float coldValueReturn;
 
 public:
-    If(NodeContext* context, int ifValue, float rtnValue) : AudioNode(context, AudioPort::PortType::Data)
+    If(NodeContext* context, int ifValue, float rtnValue) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
     {
         addInputPort("A"); // hot port
         addInputPort("B"); // cold port

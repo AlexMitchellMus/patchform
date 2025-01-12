@@ -17,7 +17,7 @@ class Count : public AudioNode {
     int maxCount;
 
 public:
-    Count(NodeContext* context, int min, int max) : AudioNode(context, AudioPort::PortType::Data)
+    Count(NodeContext* context, int min, int max) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
     {
         addInputPort("A"); // hot port
         countValue = minCount = min;

@@ -15,7 +15,7 @@ class Add : public AudioNode {
     float coldValue;
 
 public:
-    Add(NodeContext* context, float initValue) : AudioNode(context, AudioPort::PortType::Data), coldValue(initValue)
+    Add(NodeContext* context, float initValue) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data), coldValue(initValue)
     {
         addInputPort("A"); // hot port
         addInputPort("B"); // cold port
