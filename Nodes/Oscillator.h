@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "AudioNodes.h"
+#include "AudioNodeBase.h"
 
 #include <cmath>
 #include <string>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "AudioNodes.h"
+#include "AudioNodeBase.h"
 
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioOut : public AudioNode {

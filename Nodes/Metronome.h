@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "AudioNodes.h"
+#include "AudioNodeBase.h"
 
 class Metronome : public AudioNode
 {

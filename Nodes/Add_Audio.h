@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "AudioNodes.h"
+#include "AudioNodeBase.h"
 
 // AddNode that sums two signals
 class Add_Audio : public AudioNode {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "AudioNodes.h"
+#include "AudioNodeBase.h"
 
 // VolumeNode that multiplies the outputs of two input nodes
 class Volume : public AudioNode {

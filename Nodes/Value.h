@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "AudioNodes.h"
+#include "AudioNodeBase.h"
 
 // ValueNode that provides a constant value (e.g., for frequency modulation)
 class Value : public AudioNode

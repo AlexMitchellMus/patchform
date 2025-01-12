@@ -8,7 +8,7 @@
 #include <iostream>
 #include <chrono>
 
-#include "../Nodes/AudioNodes.h"
+#include "../Nodes/AudioNodeBase.h"
 
 // Singleton instance of Logger
 Logger& Logger::getInstance() {

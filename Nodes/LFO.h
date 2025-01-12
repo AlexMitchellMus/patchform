@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "AudioNodes.h"
+#include "AudioNodeBase.h"
 
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFO : public AudioNode {
