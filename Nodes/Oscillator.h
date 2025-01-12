@@ -18,12 +18,14 @@
 
 // SineWaveNode that generates sine wave audio
 
-struct OscillatorState : public AudioNode::StateBase
+class OscillatorState : public AudioNode::StateBase
 {
     float phase = 0.0f;
     std::string waveform;
     float freq = 0.0f;
     bool useTable = true;
+
+    ENABLE_COPY(OscillatorState);
 };
 
 class Oscillator : public AudioNode {

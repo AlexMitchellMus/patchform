@@ -24,8 +24,6 @@ public:
 
         for (auto event : aEvents)
         {
-            // TODO: do not print from audio callback, this is for early testing only
-            // Use a lockfree queue
             Logger::getInstance().logEvent(this, event->getTimeStamp(), event->data);
         }
     }

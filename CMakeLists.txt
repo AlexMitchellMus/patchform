@@ -50,7 +50,7 @@ if(MSVC)
     )
 endif()
 
-# List all the JSON files you want to copy
+# patch assets to copy
 set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/graph.json"
         "${CMAKE_SOURCE_DIR}/graph1.json"
