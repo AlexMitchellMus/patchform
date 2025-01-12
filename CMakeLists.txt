@@ -10,7 +10,16 @@ add_subdirectory(external/linenoise-ng)
 add_library(moodycamel_concurrentqueue INTERFACE)
 target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/concurrentqueue")
 
-file(GLOB SOURCES "*.cpp")
+# Collect .cpp files in the current directory
+file(GLOB ROOT_SOURCES "*.cpp")
+
+# Recursively collect .cpp files from the Graph subdirectory
+file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp")
+
+# Combine all sources
+set(SOURCES ${ROOT_SOURCES} ${GRAPH_SOURCES})
+
+# Add executable target
 add_executable(PlugPatch ${SOURCES})
 
 # fix for linenoise not being updated to C++20

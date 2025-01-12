@@ -8,8 +8,10 @@
 
 #include <vector>
 #include "AudioPort.h"
-#include "Graph/NodeContext.h"
+#include "../Graph/NodeContext.h"
 #include "NodeRegistry.h"
+
+#include "../Graph/Logger.h"
 
 #define DEFINE_AND_REGISTER_NODE(nodeName)                    \
 public:                                                       \

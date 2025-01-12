@@ -15,10 +15,10 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-#include "concurrentqueue.h"
-
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
+
+#include "Logger.h"
 
 #undef max
 
@@ -284,6 +284,13 @@ public:
             fadeOutBuffer[i] = 1.0f - (static_cast<float>(i) / ctx->frameCount);
             fadeInBuffer[i] = static_cast<float>(i) / ctx->frameCount;
         }
+
+        Logger::getInstance().startProcessingThread();
+    }
+
+    ~Graphs()
+    {
+        Logger::getInstance().stopProcessingThread();
     }
 
     void setActiveGraph(const json& patch)

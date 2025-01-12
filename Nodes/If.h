@@ -45,6 +45,7 @@ public:
 
                     // Now add it to the output port’s event list
                     outputPort.addEvent(e);
+                    //Logger::getInstance().logEvent(this, e->getTimeStamp(), e->data);
                 }
             }
             //context->eventPool.releaseEvent(event);

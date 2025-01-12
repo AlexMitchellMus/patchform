@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <iostream>
+#include "../Utility/Hash.h"
 
 class Tag
 {
@@ -49,5 +50,5 @@ public:
         return *this;
     }
 
-    float data;
+    float data = 0.0f;
 };

@@ -10,7 +10,7 @@
 #include <string>
 #include <iostream>
 
-#include "Graph/Event.h"
+#include "../Graph/Event.h"
 
 class AudioNode;
 

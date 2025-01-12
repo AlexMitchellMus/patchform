@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <numeric>
+
 class EventPool {
 public:
     EventPool(std::size_t initialSize = 1024) {

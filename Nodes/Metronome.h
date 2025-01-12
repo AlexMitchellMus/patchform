@@ -37,6 +37,7 @@ public:
             if (e) {
                 e->setTimeStamp(0); // Set event at time 0
                 outputPort.addEvent(e);
+                //Logger::getInstance().logEvent(this, e->getTimeStamp(), e->data);
             }
             else {
                 // Handle out-of-event-pool condition
@@ -64,6 +65,7 @@ public:
 
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);
+                //Logger::getInstance().logEvent(this, e->getTimeStamp(), e->data);
             }
             else {
                 // If you get nullptr, you ran out of free events.
