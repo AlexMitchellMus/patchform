@@ -8,6 +8,11 @@
 
 #include "AudioNodeBase.h"
 
+struct MetroState : AudioNode::StateBase
+{
+
+};
+
 class Metronome : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Metronome");

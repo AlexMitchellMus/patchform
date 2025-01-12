@@ -13,6 +13,7 @@
 
 #include "../Graph/Logger.h"
 
+// Helper macro to name and register node (used in derived node class)
 #define DEFINE_AND_REGISTER_NODE(nodeName)                    \
 public:                                                       \
     static inline const std::string name = nodeName;          \
@@ -22,6 +23,12 @@ public:                                                       \
     }();                                                      \
     std::string getName() { return name; }                    \
 
+// Helper macro to populate state copy for state management (used in derived node's state class)
+#define ENABLE_COPY(Derived)                                  \
+std::unique_ptr<StateBase> copy() const override {            \
+    return std::make_unique<Derived>(*this);                  \
+}
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -29,32 +36,32 @@ public:                                                       \
 // Abstract AudioNode class
 class AudioNode {
 public:
-    struct StateBase
-    {
+    class StateBase {
+    public:
         virtual ~StateBase() = default;
-        virtual std::unique_ptr<StateBase> clone() const = 0;
+
+        virtual std::unique_ptr<StateBase> copy() const = 0;
     };
-    // Default NullState for nodes without state
-    struct NullState : public StateBase {
-        std::unique_ptr<StateBase> clone() const override {
+
+    class NullState : public StateBase {
+    public:
+        std::unique_ptr<StateBase> copy() const override {
             return std::make_unique<NullState>();
         }
     };
 
-protected:
+    std::unique_ptr<StateBase> stateA; // Active state
+    std::unique_ptr<StateBase> stateB; // Inactive state
+    StateBase* activeState;            // Pointer to the inactive state
+    bool dirty = false;                // Marks if a state swap is needed
+
     std::vector<AudioInputPort> inputPorts;
     AudioPort outputPort;
     NodeContext* context;
 
-    std::unique_ptr<StateBase> stateA; // Active state
-    std::unique_ptr<StateBase> stateB; // Inactive state
-    StateBase* activeState;                  // Pointer to the inactive state
-    bool dirty = false;                // Marks if a state swap is needed
-
-public:
     AudioNode(std::unique_ptr<StateBase> initialState, NodeContext* context, AudioPort::PortType type)
         : stateA(std::move(initialState))
-        , stateB(stateA->clone())
+        , stateB(stateA->copy())
         , activeState(stateB.get())
         , context(context)
         , outputPort(this, "output", type)
@@ -105,7 +112,7 @@ public:
 
     std::vector<AudioInputPort>& getInputPorts() { return inputPorts; };
 
-protected:
+private:
     void process(float* buffer, unsigned long frameCount)
     {
         //swapStatesIfDirty();

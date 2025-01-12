@@ -89,8 +89,7 @@ public:
             case hash("Value"):
                 {
                     auto const value = node.value("value", 0.0f);
-                    auto object = std::make_unique<Value>(context);
-                    object->setValue(value);
+                    auto object = std::make_unique<Value>(context, value);
                     nodes.push_back(std::move(object));
                 }
                 break;

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include "../Nodes/Value.h"
 #include "../Nodes/Oscillator.h"
 #include "../Nodes/Add.h"
 #include "../Nodes/Add_Audio.h"
-#include "../Nodes/Value.h"
 #include "../Nodes/Metronome.h"
 #include "../Nodes/Envelope.h"
 #include "../Nodes/LFO.h"

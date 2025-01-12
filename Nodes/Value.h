@@ -8,14 +8,13 @@
 
 #include "AudioNodeBase.h"
 
-struct ValueState : public AudioNode::StateBase
+class ValueState : public AudioNode::StateBase
 {
+public:
+    ValueState(float val) : value(val){};
     float value = 0.0f;
 
-    std::unique_ptr<StateBase> clone() const override
-    {
-        return std::make_unique<ValueState>(*this); // Copy this ValueState
-    };
+    ENABLE_COPY(ValueState);
 };
 
 // ValueNode that provides a constant value (e.g., for frequency modulation)
@@ -24,14 +23,12 @@ class Value : public AudioNode
     DEFINE_AND_REGISTER_NODE("Value");
 
 public:
-    Value(NodeContext* context) : AudioNode(std::make_unique<ValueState>(), context, AudioPort::PortType::Signal){}
+    Value(NodeContext* context, float val) : AudioNode(std::make_unique<ValueState>(val), context, AudioPort::PortType::Signal){}
 
     void setValue(float value)
     {
-        //std::cout << "setting value to : " << value << std::endl;
         auto* currentState = dynamic_cast<ValueState*>(activeState);
         currentState->value = value;
-        //setDirty();
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
