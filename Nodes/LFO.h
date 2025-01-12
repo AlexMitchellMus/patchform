@@ -16,7 +16,7 @@ class LFO : public AudioNode {
     float phase = 0.0f;
 
 public:
-    LFO(NodeContext* context, float frequency) : AudioNode(context, "LFONode", AudioPort::PortType::Signal), frequency(frequency) {}
+    LFO(NodeContext* context, float frequency) : AudioNode(context, AudioPort::PortType::Signal), frequency(frequency) {}
 
     void processAudio(float* out, unsigned long frameCount) override {
         auto output = outputPort.getAudioBuffer();

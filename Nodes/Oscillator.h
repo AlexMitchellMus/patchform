@@ -18,6 +18,14 @@
 
 // SineWaveNode that generates sine wave audio
 
+struct OscillatorState : public AudioNode::StateBase
+{
+    float phase = 0.0f;
+    std::string waveform;
+    float freq = 0.0f;
+    bool useTable = true;
+};
+
 class Oscillator : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Oscillator");
 
@@ -26,11 +34,10 @@ protected:
     static std::unordered_map<std::string, std::vector<float>> waveformTables;
     static bool initialized;
 
+    // TODO: move to state management
     float phase = 0.0f;
     std::string waveform;
-
     float freq = 0.0f;
-
     bool useTable = true;
 
     static void initializeWaveformTable(std::string& waveform, bool& useTable) {
@@ -90,8 +97,7 @@ protected:
 
 public:
     Oscillator(NodeContext* context, std::string waveform, float freq)
-        : AudioNode(context, "Oscillator"
-        , AudioPort::PortType::Signal)
+        : AudioNode(context, AudioPort::PortType::Signal)
         , waveform(std::move(waveform))
         , freq(freq)
     {

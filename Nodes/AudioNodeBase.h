@@ -19,7 +19,8 @@ public:                                                       \
     static inline const bool registered = []() {              \
         NodeRegistry::getInstance().registerNode(name);       \
         return true;                                          \
-    }();
+    }();                                                      \
+    std::string getName() { return name; }                    \
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -27,16 +28,24 @@ public:                                                       \
 
 // Abstract AudioNode class
 class AudioNode {
+public:
+    struct StateBase {
+        virtual ~StateBase() = default;
+        virtual std::unique_ptr<StateBase> clone() const = 0;
+    };
 protected:
     std::vector<AudioInputPort> inputPorts;
     AudioPort outputPort;
     NodeContext* context;
-    std::string name;
+
+    std::unique_ptr<StateBase> stateA; // Active state
+    std::unique_ptr<StateBase> stateB; // Inactive state
+    StateBase* activeState;                  // Pointer to the inactive state
+    bool dirty = false;                // Marks if a state swap is needed
 
 public:
-    AudioNode(NodeContext* context, const std::string& nodeName, AudioPort::PortType type)
+    AudioNode(NodeContext* context, AudioPort::PortType type)
         : context(context)
-        , name(std::move(nodeName))
         , outputPort(this, "output", type)
     {}
 
@@ -44,10 +53,23 @@ public:
     {
     }
 
+    // Defined by the macro for each derived class
+    virtual std::string getName() = 0;
+
+    // Mark the node as dirty to trigger a state swap
+    void setDirty() { dirty = true; }
+
+    // Swap the active and inactive states if dirty
+    void swapStatesIfDirty() {
+        if (dirty) {
+            stateA.swap(stateB);        // Swap active and inactive states
+            activeState = stateB.get(); // Update the pointer to the inactive state
+            dirty = false;
+        }
+    }
+
     enum class State { Unvisited, Visiting, Visited };
     State state = State::Unvisited;
-
-    std::string getName() { return name; }
 
     // Add an input port (for dependency)
     void addInputPort(std::string portName)

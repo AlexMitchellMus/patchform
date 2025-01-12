@@ -19,7 +19,7 @@ class Envelope : public AudioNode
 
 public:
     Envelope(NodeContext* context, float attackVal, float decayVal)
-        : AudioNode(context, "Envelope", AudioPort::PortType::Signal)
+        : AudioNode(context, AudioPort::PortType::Signal)
         , attackVal(attackVal * (context->sampleRate / 1000))
         , decayVal(decayVal * (context->sampleRate / 1000))
     {

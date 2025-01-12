@@ -12,7 +12,7 @@
 class Volume : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Volume");
 public:
-    Volume(NodeContext* context) : AudioNode(context, "VolumeNode", AudioPort::PortType::Signal)
+    Volume(NodeContext* context) : AudioNode(context, AudioPort::PortType::Signal)
     {
         addInputPort("A");
         addInputPort("B");
