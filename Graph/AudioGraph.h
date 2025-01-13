@@ -33,17 +33,6 @@ private:
 
     NodeContext* context;
 
-    // Custom hash function for std::pair<int, int>
-    struct PairHash {
-        std::size_t operator()(const std::pair<int, int>& p) const noexcept {
-            return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
-        }
-    };
-
-    // Custom Adjacency List definition using the custom hash
-    using AdjacencyList = std::unordered_map<std::pair<int, int>, std::vector<std::pair<int, int>>, PairHash>;
-    using InputDependencyMap = std::unordered_map<std::pair<int, int>, int, PairHash>; // Tracks in-degree of (node, inputPort)
-
 public:
     AudioGraph(NodeContext* context) : context(context)
     {
@@ -166,10 +155,10 @@ public:
         nodes.at(iNode)->linkInputPort(nodes.at(oNode)->getOutputPort(), iPort);
 
         // Add connection to adjacency list
-        adjacencyList[{oNode, oPort}].emplace_back(iNode, iPort);
+        context->adjacencyList[{oNode, oPort}].emplace_back(iNode, iPort);
 
         // Increment input dependencies for the target node's input port
-        inputDependencyMap[{iNode, iPort}]++;
+        context->inputDependencyMap[{iNode, iPort}]++;
     }
 
     void printAdjacencyList()
@@ -191,7 +180,7 @@ public:
             {
                 size_t nodeIndex = std::distance(nodes.begin(), it);
 
-                for (const auto& [outputPort, connections] : adjacencyList)
+                for (const auto& [outputPort, connections] : context->adjacencyList)
                 {
                     auto [oNode, oPort] = outputPort;
 
@@ -219,7 +208,7 @@ public:
             {
                 size_t nodeIndex = std::distance(nodes.begin(), it);
 
-                for (const auto& [outputPort, connections] : adjacencyList)
+                for (const auto& [outputPort, connections] : context->adjacencyList)
                 {
                     auto [oNode, oPort] = outputPort;
 
@@ -274,8 +263,8 @@ public:
 
             isVisited[nodeIndex] = true;
 
-            auto adjacencyIt = adjacencyList.find({nodeIndex, 0}); // 0 for inputPort index
-            if (adjacencyIt != adjacencyList.end())
+            auto adjacencyIt = context->adjacencyList.find({nodeIndex, 0}); // 0 for inputPort index
+            if (adjacencyIt != context->adjacencyList.end())
             {
                 for (const auto& downstreamNodePair : adjacencyIt->second)
                 {
@@ -349,12 +338,6 @@ public:
 
         context->eventPool.releaseAllEvents();
     }
-
-protected:
-
-    AdjacencyList adjacencyList;
-    InputDependencyMap inputDependencyMap;
-
 };
 
 class Graphs
