@@ -134,6 +134,7 @@ void repl(Graphs& graphs) {
                 "Commands:\n"
                 "exit, quit, q   Exit the application.\n"
                 "load            Load a graph file. Example: load graph\n"
+                "load -v         Print the adjacency list\n"
                 "list            List the currently loaded graph.\n"
                 "list sort       List the currently loaded sorted graph.\n"
                 "list nodes      List available nodes that can be added.\n"
