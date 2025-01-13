@@ -266,41 +266,27 @@ public:
     // Topological sort using the provided adjacency list and input dependency map.
     void topologicalSort2(std::vector<AudioNode*>& sortedNodes)
     {
-        // Reset all nodes to unvisited
-        for (auto& node : nodes)
-        {
-            node->isVisited = false;
-        }
+        std::vector<bool> isVisited(nodes.size(), false); // Vector for isVisited
 
         // Recursive DFS lambda
-        std::function<void(AudioNode*)> dfs = [&](AudioNode* node)
+        std::function<void(AudioNode*, int)> dfs = [&](AudioNode* node, int nodeIndex)
         {
-            if (node->isVisited)
+            if (isVisited[nodeIndex])
             {
                 return;
             }
 
-            node->isVisited = true;
+            isVisited[nodeIndex] = true;
 
-            // Find the current node's index to lookup its downstream nodes
-            int nodeIndex = std::distance(nodes.begin(),
-                std::find_if(nodes.begin(), nodes.end(), [&](const std::unique_ptr<AudioNode>& n) {
-                    return n.get() == node;
-                })
-            );
-
-            if (nodeIndex >= 0 && nodeIndex < nodes.size())
+            auto adjacencyIt = adjacencyList.find({nodeIndex, 0}); // 0 for inputPort index
+            if (adjacencyIt != adjacencyList.end())
             {
-                auto adjacencyIt = adjacencyList.find({nodeIndex, 0}); // 0 for inputPort index
-                if (adjacencyIt != adjacencyList.end())
+                for (const auto& downstreamNodePair : adjacencyIt->second)
                 {
-                    for (const auto& downstreamNodePair : adjacencyIt->second)
+                    int downstreamNodeIndex = downstreamNodePair.first;
+                    if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodes.size())
                     {
-                        int downstreamNodeIndex = downstreamNodePair.first;
-                        if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodes.size())
-                        {
-                            dfs(nodes[downstreamNodeIndex].get());
-                        }
+                        dfs(nodes[downstreamNodeIndex].get(), downstreamNodeIndex);
                     }
                 }
             }
@@ -310,20 +296,17 @@ public:
         };
 
         // Perform DFS on all unvisited nodes
-        for (auto& node : nodes)
+        for (size_t i = 0; i < nodes.size(); ++i)
         {
-            if (!node->isVisited)
+            if (!isVisited[i])
             {
-                dfs(node.get());
+                dfs(nodes[i].get(), static_cast<int>(i));
             }
         }
 
         // Reverse the sortedNodes vector to get the correct topological order
         std::reverse(sortedNodes.begin(), sortedNodes.end());
     }
-
-
-
 
     void sortNodes()
     {
