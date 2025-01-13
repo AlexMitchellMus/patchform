@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stack>
 #include <chrono>
+#include <queue>
 
 #include "json.hpp"
 using json = nlohmann::json;
@@ -29,6 +30,17 @@ private:
     std::vector<AudioNode*> sortedNodes;
 
     NodeContext* context;
+
+    // Custom hash function for std::pair<int, int>
+    struct PairHash {
+        std::size_t operator()(const std::pair<int, int>& p) const noexcept {
+            return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
+        }
+    };
+
+    // Custom Adjacency List definition using the custom hash
+    using AdjacencyList = std::unordered_map<std::pair<int, int>, std::vector<std::pair<int, int>>, PairHash>;
+    using InputDependencyMap = std::unordered_map<std::pair<int, int>, int, PairHash>; // Tracks in-degree of (node, inputPort)
 
 public:
     AudioGraph(NodeContext* context) : context(context)
@@ -52,28 +64,22 @@ public:
 
     template <typename NodeType, typename... Args>
     void addNode(Args&&... args) {
-        auto newNodeIndex = nodes.size();
-        nodes.push_back(std::make_unique<NodeType>(context, std::forward<Args>(args)...));
+        auto nodeIndex = nodes.size();
+        auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
+
+        // // Retrieve and store ports in the adjacency list
+        for (int portNum = 0; portNum < node->getNumOutputs(); portNum++) {
+            adjacencyList[{nodeIndex, portNum}] = {}; // Initialize input port
+        }
+        for (int portNum = 0; portNum < node->getNumInputs(); portNum++) {
+            inputDependencyMap[{nodeIndex, portNum}] = {}; // Initialize output port
+        }
+
+        nodes.push_back(std::move(node));
     };
 
     bool addObject(json node)
     {
-        /*
-        auto addNode = [this]<typename NodeType>(auto&&... args) {
-            // Construct the node dynamically and store it
-            auto newNodeIndex = nodes.size() + 1;
-            nodes.push_back(std::make_unique<NodeType>(context, std::forward<decltype(args)>(args)...));
-
-            // // Retrieve and store ports in the adjacency list
-            //for (int port : node->getInputPorts()) {
-            //    adjacencyList[{nodeID, port}] = {}; // Initialize input port
-            //}
-            //for (int port : node->getOutputPorts()) {
-            //    adjacencyList[{nodeID, port}] = {}; // Initialize output port
-            //}
-        };
-        */
-
         auto const object = node["type"].get<std::string>();
 
         switch (hash(object))
@@ -163,6 +169,24 @@ public:
     // Connect nodes dynamically by addressing them by order of addition
     void connect(int oNode, int oPort, int iNode, int iPort) {
         nodes.at(iNode)->linkInputPort(nodes.at(oNode)->getOutputPort(), iPort);
+
+        // Add connection to adjacency list
+        adjacencyList[{oNode, oPort}].emplace_back(iNode, iPort);
+
+        // Increment input dependencies for the target node's input port
+        inputDependencyMap[{iNode, iPort}]++;
+    }
+
+    void printAdjacencyList(const AdjacencyList& adjacencyList) {
+        std::cout << "Adjacency List:\n";
+        for (const auto& [outputPort, connections] : adjacencyList) {
+            auto [oNode, oPort] = outputPort; // Decompose the key
+            std::cout << "Output Node " << oNode << ", Port " << oPort << " -> ";
+            for (const auto& [iNode, iPort] : connections) {
+                std::cout << "(Input Node " << iNode << ", Port " << iPort << ") ";
+            }
+            std::cout << "\n";
+        }
     }
 
     // This helper scans ALL nodes to find which nodes are downstream of `node`.
@@ -239,6 +263,68 @@ public:
         sortedNodes.assign(stack.rbegin(), stack.rend());
     }
 
+    // Topological sort using the provided adjacency list and input dependency map.
+    void topologicalSort2(std::vector<AudioNode*>& sortedNodes)
+    {
+        // Reset all nodes to unvisited
+        for (auto& node : nodes)
+        {
+            node->isVisited = false;
+        }
+
+        // Recursive DFS lambda
+        std::function<void(AudioNode*)> dfs = [&](AudioNode* node)
+        {
+            if (node->isVisited)
+            {
+                return;
+            }
+
+            node->isVisited = true;
+
+            // Find the current node's index to lookup its downstream nodes
+            int nodeIndex = std::distance(nodes.begin(),
+                std::find_if(nodes.begin(), nodes.end(), [&](const std::unique_ptr<AudioNode>& n) {
+                    return n.get() == node;
+                })
+            );
+
+            if (nodeIndex >= 0 && nodeIndex < nodes.size())
+            {
+                auto adjacencyIt = adjacencyList.find({nodeIndex, 0}); // 0 for inputPort index
+                if (adjacencyIt != adjacencyList.end())
+                {
+                    for (const auto& downstreamNodePair : adjacencyIt->second)
+                    {
+                        int downstreamNodeIndex = downstreamNodePair.first;
+                        if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodes.size())
+                        {
+                            dfs(nodes[downstreamNodeIndex].get());
+                        }
+                    }
+                }
+            }
+
+            // Add the node to sorted list after processing its downstream nodes
+            sortedNodes.push_back(node);
+        };
+
+        // Perform DFS on all unvisited nodes
+        for (auto& node : nodes)
+        {
+            if (!node->isVisited)
+            {
+                dfs(node.get());
+            }
+        }
+
+        // Reverse the sortedNodes vector to get the correct topological order
+        std::reverse(sortedNodes.begin(), sortedNodes.end());
+    }
+
+
+
+
     void sortNodes()
     {
 #define GRAPH_STATS
@@ -246,13 +332,15 @@ public:
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-        topologicalSort(sortedNodes);
+        topologicalSort2(sortedNodes);
 
 #ifdef GRAPH_STATS
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
         std::cout << sortedNodes.size() << " objects in graph, sort took " << elapsedNs << " ns.\n";
+
+        //printAdjacencyList(adjacencyList);
 #endif
 
 
@@ -283,6 +371,12 @@ public:
 
         context->eventPool.releaseAllEvents();
     }
+
+protected:
+
+    AdjacencyList adjacencyList;
+    InputDependencyMap inputDependencyMap;
+
 };
 
 class Graphs

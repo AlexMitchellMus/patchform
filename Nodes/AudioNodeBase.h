@@ -74,6 +74,10 @@ public:
     // Defined by the macro for each derived class
     virtual std::string getName() = 0;
 
+    int getNumOutputs() { return 1; };
+
+    int getNumInputs() { return inputPorts.size(); };
+
     // Mark the node as dirty to trigger a state swap
     void setDirty() { dirty = true; }
 
@@ -89,6 +93,8 @@ public:
 
     enum class State { Unvisited, Visiting, Visited };
     State state = State::Unvisited;
+
+    bool isVisited = false;
 
     // Add an input port (for dependency)
     void addInputPort(std::string portName)
