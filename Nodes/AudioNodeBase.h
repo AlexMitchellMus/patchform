@@ -14,19 +14,19 @@
 #include "../Graph/Logger.h"
 
 // Helper macro to name and register node (used in derived node class)
-#define DEFINE_AND_REGISTER_NODE(nodeName)                    \
-public:                                                       \
-    static inline const std::string name = nodeName;          \
-    static inline const bool registered = []() {              \
-        NodeRegistry::getInstance().registerNode(name);       \
-        return true;                                          \
-    }();                                                      \
-    std::string getName() { return name; }                    \
+#define DEFINE_AND_REGISTER_NODE(nodeName)                        \
+public:                                                           \
+    static inline const std::string name = nodeName;              \
+    static inline const bool registered = []() {                  \
+        NodeRegistry::getInstance().registerNode(name);           \
+        return true;                                              \
+    }();                                                          \
+    const std::string& getName() const override { return name; }  \
 
 // Helper macro to populate state copy for state management (used in derived node's state class)
-#define ENABLE_COPY(Derived)                                  \
-std::unique_ptr<StateBase> copy() const override {            \
-    return std::make_unique<Derived>(*this);                  \
+#define ENABLE_COPY(Derived)                                      \
+std::unique_ptr<StateBase> copy() const override {                \
+    return std::make_unique<Derived>(*this);                      \
 }
 
 #ifndef M_PI
@@ -72,7 +72,7 @@ public:
     }
 
     // Defined by the macro for each derived class
-    virtual std::string getName() = 0;
+    virtual const std::string& getName() const = 0;
 
     int getNumOutputs() { return 1; };
 

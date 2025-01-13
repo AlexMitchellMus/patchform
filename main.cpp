@@ -111,7 +111,10 @@ void repl(Graphs& graphs) {
 
             try {
                 nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, false, true);
-                graphs.setActiveGraph(patch);
+                if (!patch.empty()) {
+                    bool logVerbose = tokens.size() > 2 && (tokens[2] == "-v" || tokens[2] == "-verbose");
+                    graphs.setActiveGraph(patch, logVerbose);
+                }
             } catch (const nlohmann::json::parse_error& ex) {
                 std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
             }

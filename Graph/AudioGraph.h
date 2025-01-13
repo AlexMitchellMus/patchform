@@ -9,6 +9,7 @@
 #include <vector>
 #include <limits>
 #include <iostream>
+#include <iomanip>
 #include <stack>
 #include <chrono>
 #include <queue>
@@ -47,7 +48,7 @@ public:
     {
     }
 
-    void loadPatch(const json& patch)
+    void loadPatch(const json& patch, bool logVerbose)
     {
         // Create nodes
         for (const auto& node : patch["nodes"]) {
@@ -60,6 +61,10 @@ public:
         }
 
         sortNodes();
+        if (logVerbose)
+        {
+            printAdjacencyList();
+        }
     }
 
     template <typename NodeType, typename... Args>
@@ -177,17 +182,50 @@ public:
         inputDependencyMap[{iNode, iPort}]++;
     }
 
-    void printAdjacencyList(const AdjacencyList& adjacencyList) {
+    void printAdjacencyList() {
         std::cout << "Adjacency List:\n";
+
+        // Calculate maximum widths for `[name]` and the full left-hand side
+        size_t maxNameWidth = 0;
+        size_t maxLeftWidth = 0;
+
         for (const auto& [outputPort, connections] : adjacencyList) {
-            auto [oNode, oPort] = outputPort; // Decompose the key
-            std::cout << "Node " << oNode << ", Port " << oPort << " -> ";
-            for (const auto& [iNode, iPort] : connections) {
-                std::cout << "[Node " << iNode << ", Port " << iPort << "] ";
+            auto [oNode, oPort] = outputPort;
+            std::string namePart = "[" + nodes[oNode]->getName() + "]";
+            std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
+            maxNameWidth = std::max(maxNameWidth, namePart.length());
+            maxLeftWidth = std::max(maxLeftWidth, leftSide.length());
+        }
+
+        // Print the adjacency list with proper alignment
+        for (const auto& [outputPort, connections] : adjacencyList) {
+            auto [oNode, oPort] = outputPort;
+            std::string namePart = "[" + nodes[oNode]->getName() + "]";
+            std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
+
+            // Print the left side (name + node/port info) with alignment
+            std::cout << std::setw(maxNameWidth) << std::left << namePart << " "
+                      << std::setw(maxLeftWidth - maxNameWidth) << (std::to_string(oNode) + ", Port " + std::to_string(oPort))
+                      << " -> ";
+
+            // Print connections
+            if (!connections.empty()) {
+                bool first = true;
+                for (const auto& [iNode, iPort] : connections) {
+                    if (!first) {
+                        // Align continuation lines
+                        std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 6) << std::right;
+                    }
+                    first = false;
+                    std::cout << "[" << nodes[iNode]->getName() << "] " << iNode << ", Port " << iPort << "] ";
+                }
             }
             std::cout << "\n";
         }
     }
+
+
+
 
     // Topological sort using the provided adjacency list and input dependency map.
     void topologicalSort(std::vector<AudioNode*>& sortedNodes)
@@ -248,9 +286,8 @@ public:
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
         std::cout << sortedNodes.size() << " objects in graph, sort took " << elapsedNs << " ns.\n";
-
-        //printAdjacencyList(adjacencyList);
 #endif
+
 
 
 //#define DEBUG_SORT
@@ -321,10 +358,10 @@ public:
         Logger::getInstance().stopProcessingThread();
     }
 
-    void setActiveGraph(const json& patch)
+    void setActiveGraph(const json& patch, bool logVerbose)
     {
         auto newGraph = std::make_unique<AudioGraph>(ctx);
-        newGraph->loadPatch(patch);
+        newGraph->loadPatch(patch, logVerbose);
 
         if (activeGraph)
         {
