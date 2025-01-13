@@ -70,18 +70,7 @@ public:
 
     template <typename NodeType, typename... Args>
     void addNode(Args&&... args) {
-        auto nodeIndex = nodes.size();
-        auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
-
-        // // Retrieve and store ports in the adjacency list
-        for (int portNum = 0; portNum < node->getNumOutputs(); portNum++) {
-            adjacencyList[{nodeIndex, portNum}] = {}; // Initialize input port
-        }
-        for (int portNum = 0; portNum < node->getNumInputs(); portNum++) {
-            inputDependencyMap[{nodeIndex, portNum}] = {}; // Initialize output port
-        }
-
-        nodes.push_back(std::move(node));
+        nodes.push_back(std::make_unique<NodeType>(context, std::forward<Args>(args)...));
     };
 
     bool addObject(json node)
