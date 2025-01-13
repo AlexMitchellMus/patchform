@@ -20,7 +20,7 @@ public:
 // ValueNode that provides a constant value (e.g., for frequency modulation)
 class Value : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Value");
+    DEFINE_AND_REGISTER_NODE("Value", "val");
 
 public:
     Value(NodeContext* context, float val) : AudioNode(std::make_unique<ValueState>(val), context, AudioPort::PortType::Signal){}

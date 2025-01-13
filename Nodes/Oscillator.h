@@ -29,7 +29,7 @@ class OscillatorState : public AudioNode::StateBase
 };
 
 class Oscillator : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Oscillator");
+    DEFINE_AND_REGISTER_NODE("Oscillator", "osc");
 
 protected:
     static constexpr int TABLE_SIZE = 8192;

@@ -10,7 +10,7 @@
 
 // VolumeNode that multiplies the outputs of two input nodes
 class Volume : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Volume");
+    DEFINE_AND_REGISTER_NODE("Volume", "vol");
 public:
     Volume(NodeContext* context) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
     {

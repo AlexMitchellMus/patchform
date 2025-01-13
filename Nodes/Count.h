@@ -10,7 +10,7 @@
 
 // AddNode that sums two signals
 class Count : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Count");
+    DEFINE_AND_REGISTER_NODE("Count", "cnt");
 
     float countValue;
     int minCount;

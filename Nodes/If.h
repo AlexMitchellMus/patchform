@@ -10,7 +10,7 @@
 
 // AddNode that sums two signals
 class If : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("If");
+    DEFINE_AND_REGISTER_NODE("If", "if");
 
     int coldValueIf;
     float coldValueReturn;

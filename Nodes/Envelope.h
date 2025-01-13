@@ -10,7 +10,7 @@
 
 class Envelope : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Envelope");
+    DEFINE_AND_REGISTER_NODE("Envelope", "env");
 
     float attackVal;
     float decayVal;

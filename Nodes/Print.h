@@ -10,7 +10,7 @@
 
 // AddNode that sums two signals
 class Print : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Print");
+    DEFINE_AND_REGISTER_NODE("Print", "pnt");
 
 public:
     Print(NodeContext* context) : AudioNode(std::make_unique<AudioNode::NullState>(), context, AudioPort::PortType::None)

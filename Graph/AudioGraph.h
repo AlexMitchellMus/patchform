@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <stack>
 #include <chrono>
+#include <xutility>
 #include <queue>
 
 #include "json.hpp"
@@ -182,49 +183,91 @@ public:
         inputDependencyMap[{iNode, iPort}]++;
     }
 
-    void printAdjacencyList() {
+    void printAdjacencyList()
+    {
         std::cout << "Adjacency List:\n";
 
         // Calculate maximum widths for `[name]` and the full left-hand side
         size_t maxNameWidth = 0;
         size_t maxLeftWidth = 0;
 
-        for (const auto& [outputPort, connections] : adjacencyList) {
-            auto [oNode, oPort] = outputPort;
-            std::string namePart = "[" + nodes[oNode]->getName() + "]";
-            std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
-            maxNameWidth = std::max(maxNameWidth, namePart.length());
-            maxLeftWidth = std::max(maxLeftWidth, leftSide.length());
-        }
+        // Precompute maximum widths for alignment
+        for (const auto& node : sortedNodes)
+        {
+            auto it = std::find_if(
+                nodes.begin(), nodes.end(),
+                [&node](const std::unique_ptr<AudioNode>& n) { return n.get() == node; });
 
-        // Print the adjacency list with proper alignment
-        for (const auto& [outputPort, connections] : adjacencyList) {
-            auto [oNode, oPort] = outputPort;
-            std::string namePart = "[" + nodes[oNode]->getName() + "]";
-            std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
+            if (it != nodes.end())
+            {
+                size_t nodeIndex = std::distance(nodes.begin(), it);
 
-            // Print the left side (name + node/port info) with alignment
-            std::cout << std::setw(maxNameWidth) << std::left << namePart << " "
-                      << std::setw(maxLeftWidth - maxNameWidth) << (std::to_string(oNode) + ", Port " + std::to_string(oPort))
-                      << " -> ";
+                for (const auto& [outputPort, connections] : adjacencyList)
+                {
+                    auto [oNode, oPort] = outputPort;
 
-            // Print connections
-            if (!connections.empty()) {
-                bool first = true;
-                for (const auto& [iNode, iPort] : connections) {
-                    if (!first) {
-                        // Align continuation lines
-                        std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 6) << std::right;
+                    if (oNode == nodeIndex)
+                    {
+                        std::string namePart = "[" + node->getName() + "]";
+                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(
+                            oPort);
+
+                        maxNameWidth = std::max(maxNameWidth, namePart.length());
+                        maxLeftWidth = std::max(maxLeftWidth, leftSide.length());
                     }
-                    first = false;
-                    std::cout << "[" << nodes[iNode]->getName() << "] " << iNode << ", Port " << iPort << "] ";
                 }
             }
-            std::cout << "\n";
+        }
+
+        // Print the adjacency list in sorted order
+        for (const auto& node : sortedNodes)
+        {
+            auto it = std::find_if(
+                nodes.begin(), nodes.end(),
+                [&node](const std::unique_ptr<AudioNode>& n) { return n.get() == node; });
+
+            if (it != nodes.end())
+            {
+                size_t nodeIndex = std::distance(nodes.begin(), it);
+
+                for (const auto& [outputPort, connections] : adjacencyList)
+                {
+                    auto [oNode, oPort] = outputPort;
+
+                    if (oNode == nodeIndex)
+                    {
+                        std::string namePart = "[" + node->getShortName() + "]";
+                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(
+                            oPort);
+
+                        // Print the left side (name + node/port info) with alignment
+                        std::cout << std::setw(maxNameWidth) << std::left << namePart << " "
+                            << std::setw(maxLeftWidth - maxNameWidth) << (std::to_string(oNode) + ", Port " +
+                                std::to_string(oPort))
+                            << " -> ";
+
+                        // Print connections
+                        if (!connections.empty())
+                        {
+                            bool first = true;
+                            for (const auto& [iNode, iPort] : connections)
+                            {
+                                if (!first)
+                                {
+                                    // Align continuation lines
+                                    std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 6) << std::right;
+                                }
+                                first = false;
+                                std::cout << "[" << nodes[iNode]->getShortName() << "] " << iNode << ", Port " << iPort <<
+                                    "] ";
+                            }
+                        }
+                        std::cout << "\n";
+                    }
+                }
+            }
         }
     }
-
-
 
 
     // Topological sort using the provided adjacency list and input dependency map.

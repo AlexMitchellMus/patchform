@@ -20,7 +20,7 @@ public:
 
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFO : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("LFO");
+    DEFINE_AND_REGISTER_NODE("LFO", "lfo");
 
 public:
     LFO(NodeContext* context, float frequency) : AudioNode(std::make_unique<LFOState>(frequency), context, AudioPort::PortType::Signal) {}
