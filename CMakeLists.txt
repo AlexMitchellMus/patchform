@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.30)
 project(PlugPatch)
 
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(external/portaudio)
 add_subdirectory(external/json)
@@ -44,6 +48,7 @@ add_dependencies(PlugPatch linenoise)
 # Apply optimizations for MSVC
 if(MSVC)
     target_compile_options(PlugPatch PRIVATE
+            /std:c++20 # Enable C++20
             $<$<CONFIG:Debug>:/Od /Z7>
             $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL>
             $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>

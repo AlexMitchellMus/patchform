@@ -35,97 +35,11 @@ public:
     {
     }
 
-    void loadPatch(const json& patch) {
-        auto createObject = [this](json node)
-        {
-            auto const object = node["type"].get<std::string>();
-
-            switch (hash(object))
-            {
-            case hash("Add"):
-                {
-                    auto const value = node.value("value", 0.0f);
-                    nodes.push_back(std::make_unique<Add>(context, value));
-                }
-                break;
-            case hash("Count"):
-                {
-                    auto const min = node.value("min", 0.0f);
-                    auto const max = node.value("max", std::numeric_limits<int>::max());
-                    nodes.push_back(std::make_unique<Count>(context, min, max));
-                }
-                break;
-            case hash("Print"):
-                {
-                    nodes.push_back(std::make_unique<Print>(context));
-                }
-                break;
-            case hash("If"):
-                {
-                    auto const ifVal = node.value("if", 0.0f);
-                    auto const rtnVal = node.value("return", 0.0f);
-                    nodes.push_back(std::make_unique<If>(context, ifVal, rtnVal));
-                }
-                break;
-            case hash("Env"):
-            case hash("Envelope"):
-                {
-                    auto const attackVal = node.value("attack", 0.0f);
-                    auto const decayVal = node.value("decay", 0.0f);
-
-                    //auto const attackCurve = node.value("attackCurve", 1.5f);
-                    //auto const decayCurve = node.value("decayCurve", 2.0f);
-                    nodes.push_back(std::make_unique<Envelope>(context, attackVal, decayVal));
-                }
-                break;
-            case hash("Metro"):
-            case hash("Metronome"):
-                {
-                    auto const value = node.value("hz", 1.0f);
-                    nodes.push_back(std::make_unique<Metronome>(context, value));
-                }
-                break;
-            case hash("Val"):
-            case hash("Value"):
-                {
-                    auto const value = node.value("value", 0.0f);
-                    auto object = std::make_unique<Value>(context, value);
-                    nodes.push_back(std::move(object));
-                }
-                break;
-            case hash("LFO"):
-                {
-                    auto const rate = node.value("rate", 1.0f);
-                    nodes.push_back(std::make_unique<LFO>(context, rate));
-                }
-                break;
-            case hash("Volume"):
-                {
-                    nodes.push_back(std::make_unique<Volume>(context));
-                }
-                break;
-            case hash("Osc"):
-            case hash("Oscillator"):
-                {
-                    auto const waveform = node.value("waveform", "sine");
-                    auto const freq = node.value("freq", 440);
-                    nodes.push_back(std::make_unique<Oscillator>(context, waveform, freq));
-                }
-                break;
-            case hash("AOut"):
-            case hash("AudioOut"):
-                {
-                    nodes.push_back(std::make_unique<AudioOut>(context));
-                }
-                break;
-            default:
-                break;
-            }
-        };
-
+    void loadPatch(const json& patch)
+    {
         // Create nodes
         for (const auto& node : patch["nodes"]) {
-            createObject(node);
+            addObject(node);
         }
 
         // Create connections
@@ -135,6 +49,116 @@ public:
 
         sortNodes();
     }
+
+    template <typename NodeType, typename... Args>
+    void addNode(Args&&... args) {
+        auto newNodeIndex = nodes.size();
+        nodes.push_back(std::make_unique<NodeType>(context, std::forward<Args>(args)...));
+    };
+
+    bool addObject(json node)
+    {
+        /*
+        auto addNode = [this]<typename NodeType>(auto&&... args) {
+            // Construct the node dynamically and store it
+            auto newNodeIndex = nodes.size() + 1;
+            nodes.push_back(std::make_unique<NodeType>(context, std::forward<decltype(args)>(args)...));
+
+            // // Retrieve and store ports in the adjacency list
+            //for (int port : node->getInputPorts()) {
+            //    adjacencyList[{nodeID, port}] = {}; // Initialize input port
+            //}
+            //for (int port : node->getOutputPorts()) {
+            //    adjacencyList[{nodeID, port}] = {}; // Initialize output port
+            //}
+        };
+        */
+
+        auto const object = node["type"].get<std::string>();
+
+        switch (hash(object))
+        {
+        case hash("Add"):
+            {
+                auto const value = node.value("value", 0.0f);
+                addNode<Add>(value);
+            }
+            break;
+        case hash("Count"):
+            {
+                auto const min = node.value("min", 0.0f);
+                auto const max = node.value("max", std::numeric_limits<int>::max());
+                addNode<Count>(min, max);
+            }
+            break;
+        case hash("Print"):
+            {
+                addNode<Print>();
+            }
+            break;
+        case hash("If"):
+            {
+                auto const ifVal = node.value("if", 0.0f);
+                auto const rtnVal = node.value("return", 0.0f);
+                addNode<If>(ifVal, rtnVal);
+            }
+            break;
+        case hash("Env"):
+        case hash("Envelope"):
+            {
+                auto const attackVal = node.value("attack", 0.0f);
+                auto const decayVal = node.value("decay", 0.0f);
+
+                //auto const attackCurve = node.value("attackCurve", 1.5f);
+                //auto const decayCurve = node.value("decayCurve", 2.0f);
+                addNode<Envelope>(attackVal, decayVal);
+            }
+            break;
+        case hash("Metro"):
+        case hash("Metronome"):
+            {
+                auto const value = node.value("hz", 1.0f);
+                addNode<Metronome>(value);
+            }
+            break;
+        case hash("Val"):
+        case hash("Value"):
+            {
+                auto const value = node.value("value", 0.0f);
+                addNode<Value>(value);
+            }
+            break;
+        case hash("LFO"):
+            {
+                auto const rate = node.value("rate", 1.0f);
+                addNode<LFO>(rate);
+            }
+            break;
+        case hash("Volume"):
+            {
+                addNode<Volume>();
+            }
+            break;
+        case hash("Osc"):
+        case hash("Oscillator"):
+            {
+                auto const waveform = node.value("waveform", "sine");
+                auto const freq = node.value("freq", 440);
+                addNode<Oscillator>(waveform, freq);
+            }
+            break;
+        case hash("AOut"):
+        case hash("AudioOut"):
+            {
+                addNode<AudioOut>();
+            }
+            break;
+        default:
+            // Unknown object name, return error
+            return false;
+        }
+        return true;
+    };
 
     // Connect nodes dynamically by addressing them by order of addition
     void connect(int oNode, int oPort, int iNode, int iPort) {

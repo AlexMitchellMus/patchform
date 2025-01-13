@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "../Nodes/AudioNodeBase.h"
+
 #include "../Nodes/Value.h"
 #include "../Nodes/Oscillator.h"
 #include "../Nodes/Add.h"
