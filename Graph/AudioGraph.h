@@ -181,9 +181,9 @@ public:
         std::cout << "Adjacency List:\n";
         for (const auto& [outputPort, connections] : adjacencyList) {
             auto [oNode, oPort] = outputPort; // Decompose the key
-            std::cout << "Output Node " << oNode << ", Port " << oPort << " -> ";
+            std::cout << "Node " << oNode << ", Port " << oPort << " -> ";
             for (const auto& [iNode, iPort] : connections) {
-                std::cout << "(Input Node " << iNode << ", Port " << iPort << ") ";
+                std::cout << "[Node " << iNode << ", Port " << iPort << "] ";
             }
             std::cout << "\n";
         }
