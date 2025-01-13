@@ -1,6 +1,6 @@
 {
   "nodes": [
-    { "id": 0, "type": "Metro", "hz": 40 },
+    { "id": 0, "type": "Metro", "hz": 4 },
     { "id": 1, "type": "Count", "min": 0, "max": 3 },
     { "id": 2, "type": "If", "if": 0, "return": 240 },
     { "id": 3, "type": "If", "if": 1, "return": 660 },

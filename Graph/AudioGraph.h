@@ -189,82 +189,8 @@ public:
         }
     }
 
-    // This helper scans ALL nodes to find which nodes are downstream of `node`.
-    std::vector<AudioNode*> getDownstreamNodes(AudioNode* node, const std::vector<std::unique_ptr<AudioNode>>& allNodes)
-    {
-        std::vector<AudioNode*> result;
-        AudioPort* myOutputPort = node->getOutputPort();
-
-        // Iterate by reference: auto& or const auto&
-        for (auto& otherNode : allNodes)
-        {
-            if (otherNode.get() == node)
-                continue; // skip self
-
-            // Check each named input port
-            for (const auto& inputPort : otherNode->getInputPorts())
-            {
-                // Each inputPort can have multiple connections
-                for (auto* connected : inputPort.connectedPorts)
-                {
-                    // If otherNode’s input is connected to *this* node’s output,
-                    // we have an edge: node -> otherNode
-                    if (connected == myOutputPort)
-                    {
-                        result.push_back(otherNode.get());
-                        goto NextOtherNode;
-                    }
-                }
-            }
-            NextOtherNode:;
-        }
-
-        return result;
-    }
-
-
-    // DFS-based topological sort that builds adjacency from "node -> its downstream nodes".
-    void topologicalSort(std::vector<AudioNode*>& sortedNodes)
-    {
-        std::vector<AudioNode*> stack;
-
-        // Recursive DFS lambda
-        std::function<void(AudioNode*)> dfs = [&](AudioNode* node)
-        {
-            if (node->state == AudioNode::State::Visiting) {
-                std::cerr << "Cycle detected at node: " << node->getName() << std::endl;
-                return;
-            }
-            if (node->state == AudioNode::State::Visited) {
-                return;
-            }
-
-            node->state = AudioNode::State::Visiting;
-
-            // Get all nodes that depend on this node's output
-            auto downstreamNodes = getDownstreamNodes(node, nodes);
-
-            for (AudioNode* downstream : downstreamNodes) {
-                dfs(downstream);
-            }
-
-            node->state = AudioNode::State::Visited;
-            stack.push_back(node);
-        };
-
-        // Perform DFS for each unvisited node
-        for (auto& node : nodes) {
-            if (node && node->state == AudioNode::State::Unvisited) {
-                dfs(node.get());
-            }
-        }
-
-        // Reverse the stack for topological order
-        sortedNodes.assign(stack.rbegin(), stack.rend());
-    }
-
     // Topological sort using the provided adjacency list and input dependency map.
-    void topologicalSort2(std::vector<AudioNode*>& sortedNodes)
+    void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     {
         std::vector<bool> isVisited(nodes.size(), false); // Vector for isVisited
 
@@ -315,7 +241,7 @@ public:
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-        topologicalSort2(sortedNodes);
+        topologicalSort(sortedNodes);
 
 #ifdef GRAPH_STATS
         auto end = std::chrono::high_resolution_clock::now();
