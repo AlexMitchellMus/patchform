@@ -64,16 +64,6 @@ private:
 };
 
 class NodeContext {
-    // Custom hash function for std::pair<int, int>
-    struct PairHash {
-        std::size_t operator()(const std::pair<int, int>& p) const noexcept {
-            return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
-        }
-    };
-
-    // Custom Adjacency List definition using the custom hash
-    using AdjacencyList = std::unordered_map<std::pair<int, int>, std::vector<std::pair<int, int>>, PairHash>;
-    using InputDependencyMap = std::unordered_map<std::pair<int, int>, int, PairHash>; // Tracks in-degree of (node, inputPort)
 
 public:
     float sampleRate;
@@ -81,8 +71,5 @@ public:
 
     EventPool eventPool;
 
-    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount) {}
-
-    AdjacencyList adjacencyList;
-    InputDependencyMap inputDependencyMap;
+    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount) {};
 };

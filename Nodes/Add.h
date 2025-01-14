@@ -7,7 +7,6 @@
 #pragma once
 
 #include "AudioNodeBase.h"
-
 // AddNode that sums two signals
 class Add : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Add", "add");

@@ -21,6 +21,8 @@ using json = nlohmann::json;
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
 
+#include "PortHelpers.h"
+
 #include "Logger.h"
 
 #undef max
@@ -28,6 +30,9 @@ using json = nlohmann::json;
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
 private:
+    // Custom Adjacency List definition using the custom hash
+    using AdjacencyList = std::unordered_map<uint32_t, std::vector<uint32_t>>;
+
     std::vector<std::unique_ptr<AudioNode>> nodes;
     std::vector<AudioNode*> sortedNodes;
 
@@ -59,7 +64,34 @@ public:
 
     template <typename NodeType, typename... Args>
     void addNode(Args&&... args) {
-        nodes.push_back(std::make_unique<NodeType>(context, std::forward<Args>(args)...));
+        auto nodeID = nodes.size();
+        auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
+        node->nodeID = nodeID;
+        node->sumInputBuffers = [this, nodeID](std::vector<std::vector<float>>& buffers) {
+            for (size_t portID = 0; portID < buffers.size(); ++portID) {
+                // Initialize the buffer for the current portID
+                std::vector<float>& buffer = buffers[portID];
+                buffer.assign(context->frameCount, 0.0f);
+
+                // Find connections for the current port
+                auto it = connectionTable.find(PortHelpers::getKey(nodeID, portID));
+                if (it != connectionTable.end()) {
+                    const auto& connections = it->second;
+
+                    // Sum contributions from connected nodes
+                    for (uint32_t connKey : connections) {
+                        // Fetch the output buffer from the connected node
+                        const auto& outputBuffer = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort()->getAudioBuffer();
+
+                        // Accumulate values in the buffer
+                        for (size_t i = 0; i < context->frameCount; ++i) {
+                            buffer[i] += outputBuffer[i];
+                        }
+                    }
+                }
+            }
+        };
+        nodes.push_back(std::move(node));
     };
 
     bool addObject(json node)
@@ -154,11 +186,13 @@ public:
     void connect(int oNode, int oPort, int iNode, int iPort) {
         nodes.at(iNode)->linkInputPort(nodes.at(oNode)->getOutputPort(), iPort);
 
-        // Add connection to adjacency list
-        context->adjacencyList[{oNode, oPort}].emplace_back(iNode, iPort);
+        auto outputKey = PortHelpers::getKey(oNode, oPort);
+        auto inputKey = PortHelpers::getKey(iNode, iPort);
 
-        // Increment input dependencies for the target node's input port
-        context->inputDependencyMap[{iNode, iPort}]++;
+        connectionTable[PortHelpers::getKey(iNode, iPort)].emplace_back(outputKey);
+
+        // Add connection to adjacency list
+        adjacencyList[outputKey].emplace_back(inputKey);
     }
 
     void printAdjacencyList()
@@ -180,15 +214,14 @@ public:
             {
                 size_t nodeIndex = std::distance(nodes.begin(), it);
 
-                for (const auto& [outputPort, connections] : context->adjacencyList)
+                for (const auto& outputPort : adjacencyList | std::views::keys)
                 {
-                    auto [oNode, oPort] = outputPort;
+                    auto [oNode, oPort] = PortHelpers::getNodeAndPortID(outputPort);
 
                     if (oNode == nodeIndex)
                     {
-                        std::string namePart = "[" + node->getName() + "]";
-                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(
-                            oPort);
+                        std::string namePart = "[" + node->getShortName() + "]";
+                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
 
                         maxNameWidth = std::max(maxNameWidth, namePart.length());
                         maxLeftWidth = std::max(maxLeftWidth, leftSide.length());
@@ -208,9 +241,9 @@ public:
             {
                 size_t nodeIndex = std::distance(nodes.begin(), it);
 
-                for (const auto& [outputPort, connections] : context->adjacencyList)
+                for (const auto& [outputPort, connections] : adjacencyList)
                 {
-                    auto [oNode, oPort] = outputPort;
+                    auto [oNode, oPort] = PortHelpers::getNodeAndPortID(outputPort);
 
                     if (oNode == nodeIndex)
                     {
@@ -228,12 +261,13 @@ public:
                         if (!connections.empty())
                         {
                             bool first = true;
-                            for (const auto& [iNode, iPort] : connections)
+                            for (const auto& portKey : connections)
                             {
+                                auto [iNode, iPort] = PortHelpers::getNodeAndPortID(portKey);
                                 if (!first)
                                 {
                                     // Align continuation lines
-                                    std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 6) << std::right;
+                                    std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 1) << std::right;
                                 }
                                 first = false;
                                 std::cout << "[" << nodes[iNode]->getShortName() << "] " << iNode << ", Port " << iPort <<
@@ -263,12 +297,12 @@ public:
 
             isVisited[nodeIndex] = true;
 
-            auto adjacencyIt = context->adjacencyList.find({nodeIndex, 0}); // 0 for inputPort index
-            if (adjacencyIt != context->adjacencyList.end())
+            auto adjacencyIt = adjacencyList.find(PortHelpers::getKey(nodeIndex, 0)); // 0 for inputPort index
+            if (adjacencyIt != adjacencyList.end())
             {
                 for (const auto& downstreamNodePair : adjacencyIt->second)
                 {
-                    int downstreamNodeIndex = downstreamNodePair.first;
+                    int downstreamNodeIndex = PortHelpers::getNodeID(downstreamNodePair);
                     if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodes.size())
                     {
                         dfs(nodes[downstreamNodeIndex].get(), downstreamNodeIndex);
@@ -338,6 +372,20 @@ public:
 
         context->eventPool.releaseAllEvents();
     }
+
+protected:
+    AdjacencyList adjacencyList;
+
+    struct pair_hash {
+        template <class T1, class T2>
+        std::size_t operator()(const std::pair<T1, T2>& pair) const {
+            auto hash1 = std::hash<T1>{}(pair.first);
+            auto hash2 = std::hash<T2>{}(pair.second);
+            return hash1 ^ (hash2 << 1); // Combine hashes
+        }
+    };
+
+    std::unordered_map<uint32_t, std::vector<uint32_t>> connectionTable;
 };
 
 class Graphs

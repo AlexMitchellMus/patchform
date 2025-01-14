@@ -7,6 +7,8 @@
 #pragma once
 
 #include <vector>
+#include <functional>
+
 #include "AudioPort.h"
 #include "../Graph/NodeContext.h"
 #include "NodeRegistry.h"
@@ -58,6 +60,7 @@ public:
     bool dirty = false;                // Marks if a state swap is needed
 
     std::vector<AudioInputPort> inputPorts;
+    std::vector<std::vector<float>> inputPortBuffers;
     AudioPort outputPort;
     NodeContext* context;
 
@@ -97,6 +100,7 @@ public:
     // Add an input port (for dependency)
     void addInputPort(std::string portName)
     {
+        inputPortBuffers.push_back(std::vector<float>());
         inputPorts.emplace_back(portName);
     }
 
@@ -114,7 +118,11 @@ public:
         return &outputPort;
     }
 
+    std::function<void(std::vector<std::vector<float>>&)> sumInputBuffers;
+
     std::vector<AudioInputPort>& getInputPorts() { return inputPorts; };
+
+    uint32_t nodeID;
 
 private:
     void process(float* buffer, unsigned long frameCount)

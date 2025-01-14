@@ -146,10 +146,6 @@ struct AudioInputPort {
         for (auto* port : connectedPorts) {
             if (!port) continue;
             auto& events = port->getEvents();
-            //for (auto& event : events)
-            //{
-            //    std::cout << event->getTimeStamp() << std::endl;
-            //}
             summedEvents.insert(summedEvents.end(), events.begin(), events.end());
         }
 
