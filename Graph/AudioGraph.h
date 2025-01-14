@@ -101,7 +101,7 @@ public:
                                 summingAudioBuffer[i] += outputBuffer[i];
                             }
                         }
-                        auto& events = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort()->getEvents();
+                        auto& events = connection->getEvents();
                         summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
 
                         // Sort combined by timestamp
@@ -302,46 +302,65 @@ public:
     // Topological sort using the provided adjacency list
     void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     {
-        std::vector<bool> isVisited(nodes.size(), false); // Vector for isVisited
+        size_t nodeCount = nodes.size();
+        sortedNodes.clear();
+        sortedNodes.reserve(nodeCount); // Reserve space upfront to avoid reallocations
 
-        // Recursive DFS lambda
-        std::function<void(AudioNode*, int)> dfs = [&](AudioNode* node, int nodeIndex)
+        std::vector<int> inDegree(nodeCount, 0); // Vector to store in-degrees
+
+        // Compute in-degrees in a single pass
+        for (const auto& [inputKey, outputKeys] : connectionTable)
         {
-            if (isVisited[nodeIndex])
+            int nodeIndex = PortHelpers::getNodeID(inputKey);
+            if (nodeIndex >= 0 && nodeIndex < static_cast<int>(nodeCount))
             {
-                return;
-            }
-
-            isVisited[nodeIndex] = true;
-
-            auto adjacencyIt = adjacencyList.find(PortHelpers::getKey(nodeIndex, 0)); // 0 for inputPort index
-            if (adjacencyIt != adjacencyList.end())
-            {
-                for (const auto& downstreamNodePair : adjacencyIt->second)
-                {
-                    int downstreamNodeIndex = PortHelpers::getNodeID(downstreamNodePair);
-                    if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodes.size())
-                    {
-                        dfs(nodes[downstreamNodeIndex].get(), downstreamNodeIndex);
-                    }
-                }
-            }
-
-            // Add the node to sorted list after processing its downstream nodes
-            sortedNodes.push_back(node);
-        };
-
-        // Perform DFS on all unvisited nodes
-        for (size_t i = 0; i < nodes.size(); ++i)
-        {
-            if (!isVisited[i])
-            {
-                dfs(nodes[i].get(), static_cast<int>(i));
+                ++inDegree[nodeIndex];
             }
         }
 
-        // Reverse the sortedNodes vector to get the correct topological order
-        std::reverse(sortedNodes.begin(), sortedNodes.end());
+        // Prepare the zero in-degree "queue" (vector for cache efficiency)
+        std::vector<int> zeroInDegreeNodes;
+        zeroInDegreeNodes.reserve(nodeCount); // Reserve enough space upfront
+
+        for (size_t i = 0; i < nodeCount; ++i)
+        {
+            if (inDegree[i] == 0)
+            {
+                zeroInDegreeNodes.push_back(static_cast<int>(i));
+            }
+        }
+
+        // Process nodes in topological order
+        size_t processIndex = 0;
+        while (processIndex < zeroInDegreeNodes.size())
+        {
+            int currentIndex = zeroInDegreeNodes[processIndex++];
+            sortedNodes.push_back(nodes[currentIndex].get());
+
+            // Reduce in-degree for downstream nodes
+            auto adjacencyIt = adjacencyList.find(PortHelpers::getKey(currentIndex, 0)); // 0 for inputPort index
+            if (adjacencyIt != adjacencyList.end())
+            {
+                for (const auto& downstreamKey : adjacencyIt->second)
+                {
+                    int downstreamNodeIndex = PortHelpers::getNodeID(downstreamKey);
+                    if (downstreamNodeIndex >= 0 && downstreamNodeIndex < static_cast<int>(nodeCount))
+                    {
+                        if (--inDegree[downstreamNodeIndex] == 0)
+                        {
+                            zeroInDegreeNodes.push_back(downstreamNodeIndex);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for cycles: If sortedNodes.size() != nodes.size(), there is a cycle
+        if (sortedNodes.size() != nodeCount)
+        {
+            sortedNodes.clear();
+            std::cout << "Cycle detected, clearing graph" << std::endl;
+        }
     }
 
     void sortNodes()
