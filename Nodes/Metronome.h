@@ -8,6 +8,8 @@
 
 #include "AudioNodeBase.h"
 
+// Sample accurate metronome implementation
+
 struct MetroState : AudioNode::StateBase
 {
 
@@ -17,43 +19,45 @@ class Metronome : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Metronome", "metro");
 
-    uint64_t sampleCounter = 0;
-    uint64_t tickInterval;
+    float sampleCounter = 0.0f;
+    float tickInterval;
+
+//#define TEST_TIMING
+#ifdef TEST_TIMING
+    unsigned long accumulatedFrames = 0;
+#endif
 
 public:
     Metronome(NodeContext* context, float hz) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
     {
-        tickInterval = static_cast<uint64_t>(context->sampleRate / hz);
+        tickInterval = context->sampleRate / hz;
 
         addInputPort("ControlInput", AudioPort::PortType::Data);
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        unsigned long samplesProcessed = 0;
+        float samplesProcessed = 0.0f;
 
         auto events = inputPortBuffers[0]->getEvents();
 
         // Handle first event in metronome
-        if (sampleCounter == 0)
+        if (sampleCounter == 0.0)
         {
             Event* e = context->eventPool.getFreeEvent();
 
             if (e) {
                 e->setTimeStamp(0); // Set event at time 0
                 outputPort.addEvent(e);
-                //Logger::getInstance().logEvent(this, e->getTimeStamp(), e->data);
+#ifdef TEST_TIMING
+                std::cout << accumulatedFrames << std::endl;
+#endif
             }
-            else {
-                // Handle out-of-event-pool condition
-            }
-
-            sampleCounter = 0;
         }
 
         while (samplesProcessed < frameCount)
         {
-            unsigned long samplesUntilNextTick = static_cast<unsigned long>(tickInterval - sampleCounter);
+            double samplesUntilNextTick = tickInterval - sampleCounter;
 
             if (samplesUntilNextTick >= (frameCount - samplesProcessed))
             {
@@ -61,24 +65,23 @@ public:
                 break;
             }
 
-            unsigned long tickPosition = samplesProcessed + samplesUntilNextTick;
+            float tickPosition = samplesProcessed + samplesUntilNextTick;
 
             Event* e = context->eventPool.getFreeEvent();
-
-            if (e) {
+            if (e)
+            {
                 e->setTimeStamp(tickPosition);
-
-                // Now add it to the output port’s event list
                 outputPort.addEvent(e);
-                //Logger::getInstance().logEvent(this, e->getTimeStamp(), e->data);
-            }
-            else {
-                // If you get nullptr, you ran out of free events.
-                // handle it (grow pool outside RT or skip event, etc.)
+#ifdef TEST_TIMING
+                std::cout << (accumulatedFrames + static_cast<unsigned long>(tickPosition)) << std::endl;
+#endif
             }
 
-            sampleCounter = 0;
+            sampleCounter = (sampleCounter + samplesUntilNextTick) - tickInterval;
             samplesProcessed = tickPosition;
         }
+#ifdef TEST_TIMING
+        accumulatedFrames += frameCount;
+#endif
     }
 };

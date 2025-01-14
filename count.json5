@@ -1,21 +1,21 @@
 {
   "nodes": [
-    { "id": 0, "type": "Metro", "hz": 40 },
+    { "id": 0, "type": "Metro", "hz": 6 },
     { "id": 1, "type": "Count", "min": 0, "max": 3 },
     { "id": 2, "type": "If", "if": 0, "return": 240 },
-    { "id": 3, "type": "If", "if": 1, "return": 660 },
-    { "id": 4, "type": "If", "if": 2, "return": 770 },
+    { "id": 3, "type": "If", "if": 1, "return": 440 },
+    { "id": 4, "type": "If", "if": 2, "return": 335 },
     { "id": 5, "type": "If", "if": 3, "return": 660 },
 
-    { "id": 6, "type": "Oscillator", "waveform": "sine", "freq":  660 },
-    { "id": 7, "type": "Oscillator", "waveform": "sine", "freq":  660 },
-    { "id": 8, "type": "Oscillator", "waveform": "sine", "freq":  660 },
-    { "id": 9, "type": "Oscillator", "waveform": "sine", "freq":  660 },
+    { "id": 6, "type": "Osc", "waveform": "sine", "freq":  660 },
+    { "id": 7, "type": "Osc", "waveform": "sine", "freq":  660 },
+    { "id": 8, "type": "Osc", "waveform": "sine", "freq":  660 },
+    { "id": 9, "type": "Osc", "waveform": "sine", "freq":  660 },
 
-    { "id": 10, "type": "Envelope", "attack": 100, "decay": 200 },
-    { "id": 11, "type": "Envelope", "attack": 10, "decay": 200 },
-    { "id": 12, "type": "Envelope", "attack": 300, "decay": 5 },
-    { "id": 13, "type": "Envelope", "attack": 5, "decay": 50 },
+    { "id": 10, "type": "Env", "attack": 0, "decay": 100 },
+    { "id": 11, "type": "Env", "attack": 0, "decay": 100 },
+    { "id": 12, "type": "Env", "attack": 0, "decay": 100 },
+    { "id": 13, "type": "Env", "attack": 0, "decay": 100 },
 
     { "id": 14, "type": "AudioOut" }
   ],
