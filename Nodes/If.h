@@ -18,9 +18,9 @@ class If : public AudioNode {
 public:
     If(NodeContext* context, int ifValue, float rtnValue) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
     {
-        addInputPort("A"); // hot port
-        addInputPort("B"); // cold port
-        addInputPort("C"); // cold port
+        addInputPort("A", AudioPort::PortType::Data); // hot port
+        addInputPort("B", AudioPort::PortType::Data); // cold port
+        addInputPort("C", AudioPort::PortType::Data); // cold port
 
         coldValueIf = ifValue;
         coldValueReturn = rtnValue;
@@ -28,8 +28,8 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPorts[0].sumEvents();
-        if (auto bEvent = inputPorts[1].sumEvents(); bEvent.size())
+        auto aEvents = inputPortBuffers[0]->getEvents();
+        if (auto bEvent = inputPortBuffers[1]->getEvents(); bEvent.size())
             coldValueIf = bEvent.back()->data;
 
         for (auto event : aEvents)

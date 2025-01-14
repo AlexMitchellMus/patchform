@@ -59,8 +59,12 @@ public:
     StateBase* activeState;            // Pointer to the inactive state
     bool dirty = false;                // Marks if a state swap is needed
 
+    // old input buffer system (fixed pointer)
     std::vector<AudioInputPort> inputPorts;
-    std::vector<std::vector<float>> inputPortBuffers;
+
+    // new input buffer system (dynamic - lookup table)
+    std::vector<std::unique_ptr<AudioPort>> inputPortBuffers;
+
     AudioPort outputPort;
     NodeContext* context;
 
@@ -82,7 +86,7 @@ public:
 
     int getNumOutputs() { return 1; };
 
-    int getNumInputs() { return inputPorts.size(); };
+    int getNumInputs() { return inputPortBuffers.size(); };
 
     // Mark the node as dirty to trigger a state swap
     void setDirty() { dirty = true; }
@@ -98,9 +102,9 @@ public:
     }
 
     // Add an input port (for dependency)
-    void addInputPort(std::string portName)
+    void addInputPort(std::string portName, AudioPort::PortType portType)
     {
-        inputPortBuffers.push_back(std::vector<float>());
+        inputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
         inputPorts.emplace_back(portName);
     }
 
@@ -118,7 +122,7 @@ public:
         return &outputPort;
     }
 
-    std::function<void(std::vector<std::vector<float>>&)> sumInputBuffers;
+    std::function<void(std::vector<std::unique_ptr<AudioPort>>&)> sumInputBuffers;
 
     std::vector<AudioInputPort>& getInputPorts() { return inputPorts; };
 
@@ -128,6 +132,7 @@ private:
     void process(float* buffer, unsigned long frameCount)
     {
         //swapStatesIfDirty();
+        sumInputBuffers(inputPortBuffers);
         outputPort.clear(frameCount);
         processAudio(buffer, frameCount);
     }

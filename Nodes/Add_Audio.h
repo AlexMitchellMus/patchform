@@ -15,18 +15,16 @@ class Add_Audio : public AudioNode {
 public:
     Add_Audio(NodeContext* context) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
     {
-        addInputPort("A");
-        addInputPort("B");
+        addInputPort("A", AudioPort::PortType::Signal);
+        addInputPort("B", AudioPort::PortType::Signal);
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
-        if (inputPorts.size() >= 2) {
-            const float* buffer1 = inputPorts[0].sumAudio().data();
-            const float* buffer2 = inputPorts[1].sumAudio().data();
+        const float* buffer1 = inputPortBuffers[0]->getAudioBuffer();
+        const float* buffer2 = inputPortBuffers[1]->getAudioBuffer();
 
-            for (unsigned long i = 0; i < frameCount; i++) {
-                outputPort.getAudioBuffer()[i] = buffer1[i] + buffer2[i];  // Directly write to output buffer
-            }
+        for (unsigned long i = 0; i < frameCount; i++) {
+            outputPort.getAudioBuffer()[i] = buffer1[i] + buffer2[i]; // Directly write to output buffer
         }
     }
 };

@@ -19,14 +19,14 @@ class Count : public AudioNode {
 public:
     Count(NodeContext* context, int min, int max) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
     {
-        addInputPort("A"); // hot port
+        addInputPort("A", AudioPort::PortType::Data); // hot port
         countValue = minCount = min;
         maxCount = max;
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPorts[0].sumEvents();
+        auto aEvents = inputPortBuffers[0]->getEvents();
 
         for (auto event : aEvents)
         {

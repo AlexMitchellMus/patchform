@@ -31,7 +31,8 @@ public:
         currentState->value = value;
     }
 
-    void processAudio(float* out, unsigned long frameCount) override {
+    void processAudio(float* out, unsigned long frameCount) override
+    {
         auto output = outputPort.getAudioBuffer();
         auto* currentState = dynamic_cast<ValueState*>(activeState);
         for (unsigned long i = 0; i < frameCount; i++) {

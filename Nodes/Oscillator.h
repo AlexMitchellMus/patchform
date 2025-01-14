@@ -103,16 +103,16 @@ public:
         , waveform(std::move(waveform))
         , freq(freq)
     {
-        addInputPort("phase");
-        addInputPort("frequency");
+        addInputPort("phase", AudioPort::PortType::Data);
+        addInputPort("frequency", AudioPort::PortType::Signal);
         initializeWaveformTable(this->waveform, this->useTable);
     }
 
     void processAudio(float* out, unsigned long frameCount) override {
-        auto events = inputPorts[0].sumEvents();
-        auto freqEvents = inputPorts[1].sumEvents();
+        auto events = inputPortBuffers[0]->getEvents();
+        auto freqEvents = inputPortBuffers[1]->getEvents();
         bool useSignalFreq = inputPorts[1].isAnyConnectedPortsSignal();
-        auto freqIn = inputPorts[1].sumAudio();     // Frequency input
+        auto freqIn = inputPortBuffers[1]->getAudioBuffer();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 
         unsigned int nextEventIndex = 0;

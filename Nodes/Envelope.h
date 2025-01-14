@@ -23,15 +23,15 @@ public:
         , attackVal(attackVal * (context->sampleRate / 1000))
         , decayVal(decayVal * (context->sampleRate / 1000))
     {
-        addInputPort("Events");
-        addInputPort("Signal");
+        addInputPort("Events", AudioPort::PortType::Data);
+        addInputPort("Signal", AudioPort::PortType::Signal);
     }
 
     void processAudio(float* out, const unsigned long frameCount) override
     {
+        auto events = inputPortBuffers[0]->getEvents();
+        auto signal = inputPortBuffers[1]->getAudioBuffer();;
         auto output = outputPort.getAudioBuffer();
-        auto events = inputPorts[0].sumEvents();
-        auto signal = inputPorts[1].sumAudio().data();
 
         std::vector<Event*> toRelease;
         unsigned long nextEventIndex = 0;

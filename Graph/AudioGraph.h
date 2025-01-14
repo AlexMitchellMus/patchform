@@ -67,11 +67,18 @@ public:
         auto nodeID = nodes.size();
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
-        node->sumInputBuffers = [this, nodeID](std::vector<std::vector<float>>& buffers) {
-            for (size_t portID = 0; portID < buffers.size(); ++portID) {
-                // Initialize the buffer for the current portID
-                std::vector<float>& buffer = buffers[portID];
-                buffer.assign(context->frameCount, 0.0f);
+        node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) {
+            for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
+                auto& port = inputPorts[portID];
+
+                if (port->isSignal()) {
+                    // clear the audio buffer for the current portID
+                    port->setSize(context->frameCount);
+                }
+
+                port->clearEvents();
+                auto& summingEventBuffer = port->getEvents();
+                auto summingAudioBuffer = port->getAudioBuffer();
 
                 // Find connections for the current port
                 auto it = connectionTable.find(PortHelpers::getKey(nodeID, portID));
@@ -81,12 +88,21 @@ public:
                     // Sum contributions from connected nodes
                     for (uint32_t connKey : connections) {
                         // Fetch the output buffer from the connected node
-                        const auto& outputBuffer = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort()->getAudioBuffer();
+                        const auto outputBuffer = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort()->getAudioBuffer();
 
-                        // Accumulate values in the buffer
-                        for (size_t i = 0; i < context->frameCount; ++i) {
-                            buffer[i] += outputBuffer[i];
+                        if (port->isSignal()) {
+                            // Accumulate values in the buffer
+                            for (size_t i = 0; i < context->frameCount; ++i) {
+                                summingAudioBuffer[i] += outputBuffer[i];
+                            }
                         }
+                        auto& events = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort()->getEvents();
+                        summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
+
+                        // Sort combined by timestamp
+                        std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b) {
+                            return a->getTimeStamp() < b->getTimeStamp();
+                        });
                     }
                 }
             }
@@ -248,14 +264,11 @@ public:
                     if (oNode == nodeIndex)
                     {
                         std::string namePart = "[" + node->getShortName() + "]";
-                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(
-                            oPort);
+                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
 
                         // Print the left side (name + node/port info) with alignment
-                        std::cout << std::setw(maxNameWidth) << std::left << namePart << " "
-                            << std::setw(maxLeftWidth - maxNameWidth) << (std::to_string(oNode) + ", Port " +
-                                std::to_string(oPort))
-                            << " -> ";
+                        std::cout << std::setw(maxNameWidth) << std::left << namePart << " " << std::setw(maxLeftWidth - maxNameWidth)
+                        << (std::to_string(oNode) + ", Port " + std::to_string(oPort)) << " -> ";
 
                         // Print connections
                         if (!connections.empty())
@@ -270,8 +283,7 @@ public:
                                     std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 1) << std::right;
                                 }
                                 first = false;
-                                std::cout << "[" << nodes[iNode]->getShortName() << "] " << iNode << ", Port " << iPort <<
-                                    "] ";
+                                std::cout << "[" << nodes[iNode]->getShortName() << "] " << std::to_string(iNode) << ", Port " << std::to_string(iPort) << "] ";
                             }
                         }
                         std::cout << "\n";

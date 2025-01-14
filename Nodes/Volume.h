@@ -14,18 +14,14 @@ class Volume : public AudioNode {
 public:
     Volume(NodeContext* context) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
     {
-        addInputPort("A");
-        addInputPort("B");
+        addInputPort("A", AudioPort::PortType::Signal);
+        addInputPort("B", AudioPort::PortType::Signal);
     }
 
-    void processAudio(float* buffer, unsigned long frameCount) override {
-        sumInputBuffers(inputPortBuffers);
-
-        //const float* buffer1 = inputPorts[0].sumAudio().data();
-        //const float* buffer2 = inputPorts[1].sumAudio().data();
-
-        const float* buffer1 = inputPortBuffers[0].data();
-        const float* buffer2 = inputPortBuffers[1].data();
+    void processAudio(float* buffer, unsigned long frameCount) override
+    {
+        const float* buffer1 = inputPortBuffers[0]->getAudioBuffer();
+        const float* buffer2 = inputPortBuffers[1]->getAudioBuffer();
 
         auto output = outputPort.getAudioBuffer();
 

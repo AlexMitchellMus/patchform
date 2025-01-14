@@ -15,12 +15,12 @@ class Print : public AudioNode {
 public:
     Print(NodeContext* context) : AudioNode(std::make_unique<AudioNode::NullState>(), context, AudioPort::PortType::None)
     {
-        addInputPort("A"); // hot port
+        addInputPort("A", AudioPort::PortType::Data); // hot port
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPorts[0].sumEvents();
+        auto aEvents = inputPortBuffers[0]->getEvents();
 
         for (auto event : aEvents)
         {

@@ -14,13 +14,13 @@ class AudioOut : public AudioNode {
 public:
     AudioOut(NodeContext* context) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::None)
     {
-        addInputPort("Signal");
+        addInputPort("Signal", AudioPort::PortType::Signal);
     }
 
     void processAudio(float* buffer, unsigned long frameCount) override
     {
         // The input port audio is directly sent to the PortAudio stream
-        auto inputPort = inputPorts[0].sumAudio().data();
+        auto inputPort = inputPortBuffers[0]->getAudioBuffer();
         std::copy(inputPort, inputPort + frameCount, buffer);
     }
 };

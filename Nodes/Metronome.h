@@ -25,7 +25,7 @@ public:
     {
         tickInterval = static_cast<uint64_t>(context->sampleRate / hz);
 
-        addInputPort("ControlInput");
+        addInputPort("ControlInput", AudioPort::PortType::Data);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

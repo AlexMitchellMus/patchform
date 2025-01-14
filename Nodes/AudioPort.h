@@ -38,6 +38,7 @@ public:
         return audioBuffer.size();
     }
 
+    // todo: this should be getEventBuffer
     std::vector<Event*>& getEvents()
     {
         return events;
@@ -61,8 +62,7 @@ public:
 
     void setSize(size_t size)
     {
-        if (audioBuffer.size() != size)
-            audioBuffer.resize(size, 0.0f);
+        audioBuffer.assign(size, 0.0f);
     }
 
     bool isSignal()
