@@ -18,6 +18,8 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
+#include "unordered_dense.h"
+
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
 
@@ -30,12 +32,6 @@ using json = nlohmann::json;
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
 private:
-    // Custom Adjacency List definition using the custom hash
-    using AdjacencyList = std::unordered_map<uint32_t, std::vector<uint32_t>>;
-
-    std::vector<std::unique_ptr<AudioNode>> nodes;
-    std::vector<AudioNode*> sortedNodes;
-
     NodeContext* context;
 
 public:
@@ -395,18 +391,16 @@ public:
     }
 
 protected:
+    // Custom Adjacency List definition using the custom hash
+    using AdjacencyList = ankerl::unordered_dense::map<uint32_t, std::vector<uint32_t>>;
+
+    std::vector<std::unique_ptr<AudioNode>> nodes;
+    std::vector<AudioNode*> sortedNodes;
+
+    // Forward links - output->input (for sorting)
     AdjacencyList adjacencyList;
-
-    struct pair_hash {
-        template <class T1, class T2>
-        std::size_t operator()(const std::pair<T1, T2>& pair) const {
-            auto hash1 = std::hash<T1>{}(pair.first);
-            auto hash2 = std::hash<T2>{}(pair.second);
-            return hash1 ^ (hash2 << 1); // Combine hashes
-        }
-    };
-
-    std::unordered_map<uint32_t, std::vector<uint32_t>> connectionTable;
+    // Backward links - input->output (for running)
+    AdjacencyList connectionTable;
 };
 
 class Graphs

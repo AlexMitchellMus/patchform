@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_subdirectory(external/portaudio)
 add_subdirectory(external/json)
 add_subdirectory(external/linenoise-ng)
+add_subdirectory(external/unordered_dense)
 
 add_library(moodycamel_concurrentqueue INTERFACE)
 target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/concurrentqueue")
@@ -38,9 +39,10 @@ target_include_directories(PlugPatch PRIVATE
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
         "${CMAKE_SOURCE_DIR}/external/linenoise-ng/include"
         "${CMAKE_SOURCE_DIR}/external/portaudio/include"
+        "${CMAKE_SOURCE_DIR}/external/unordered_dense/include/ankerl"
 )
 
-target_link_libraries(PlugPatch PRIVATE portaudio linenoise moodycamel_concurrentqueue)
+target_link_libraries(PlugPatch PRIVATE portaudio linenoise moodycamel_concurrentqueue unordered_dense)
 
 # Ensure linenoise is built before PlugPatch
 add_dependencies(PlugPatch linenoise)
