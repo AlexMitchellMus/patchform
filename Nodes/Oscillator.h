@@ -111,7 +111,8 @@ public:
     void processAudio(float* out, unsigned long frameCount) override {
         auto events = inputPortBuffers[0]->getEvents();
         auto freqEvents = inputPortBuffers[1]->getEvents();
-        bool useSignalFreq = inputPorts[1].isAnyConnectedPortsSignal();
+        // If a signal cable is connected, don't process events, and use the signal instead
+        bool useSignalFreq = inputPortBuffers[1]->isAnyConnectedPortSignal;
         auto freqIn = inputPortBuffers[1]->getAudioBuffer();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 

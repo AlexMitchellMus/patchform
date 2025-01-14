@@ -38,6 +38,9 @@ public:
         return audioBuffer.size();
     }
 
+    // Only used if this port used for input summing
+    bool isAnyConnectedPortSignal = false;
+
     // todo: this should be getEventBuffer
     std::vector<Event*>& getEvents()
     {
@@ -89,72 +92,4 @@ protected:
     std::string name;
 
     PortType portType;
-};
-
-struct AudioInputPort {
-    std::string name;
-    std::vector<AudioPort*> connectedPorts;
-    std::vector<float> summed;
-    std::vector<Event*> summedEvents;
-
-
-    explicit AudioInputPort(const std::string& portName)
-        : name(portName)
-    {
-        summedEvents.reserve(1024);
-    }
-
-    bool isAnyConnectedPortsSignal()
-    {
-        return std::any_of(connectedPorts.begin(), connectedPorts.end(), [](auto const& port) {
-            return port->isSignal();
-        });
-    }
-
-    std::vector<float>& sumAudio()
-    {
-        if (connectedPorts.size() == 0)
-            return summed;
-
-        if (!isAnyConnectedPortsSignal())
-            return summed;
-
-        std::size_t dataSize = connectedPorts[0]->getAudioBufferSize();
-
-        if (dataSize != summed.size())
-            summed.resize(dataSize, 0.0f);
-
-        std::fill(summed.begin(), summed.end(), 0.0f);
-
-        // Sum each port’s audio
-        for (auto* port : connectedPorts) {
-            const auto& audio = port->getAudioBuffer();
-
-            // (Optional) confirm data.size() == dataSize. If not, handle mismatch.
-            for (std::size_t i = 0; i < dataSize; i++) {
-                summed[i] += audio[i];
-            }
-        }
-
-        return summed;
-    }
-
-    std::vector<Event*>& sumEvents()
-    {
-        summedEvents.clear();
-
-        for (auto* port : connectedPorts) {
-            if (!port) continue;
-            auto& events = port->getEvents();
-            summedEvents.insert(summedEvents.end(), events.begin(), events.end());
-        }
-
-        // Sort combined by timestamp
-        std::sort(summedEvents.begin(), summedEvents.end(), [](const Event* a, const Event* b) {
-            return a->getTimeStamp() < b->getTimeStamp();
-        });
-
-        return summedEvents;
-    }
-
 };

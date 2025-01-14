@@ -67,10 +67,16 @@ public:
         auto nodeID = nodes.size();
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
+
+        // Function responsible for summing audio & event buffers of connected inputs for each node.
+        // This dynamically looks up the connections port via the connection table.
+        // TODO: cache the connected port, and only recalculate if flag is set
         node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) {
             for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
                 auto& port = inputPorts[portID];
 
+                // Data ports don't process audio
+                // Audio ports process both audio and data
                 if (port->isSignal()) {
                     // clear the audio buffer for the current portID
                     port->setSize(context->frameCount);
@@ -88,9 +94,12 @@ public:
                     // Sum contributions from connected nodes
                     for (uint32_t connKey : connections) {
                         // Fetch the output buffer from the connected node
-                        const auto outputBuffer = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort()->getAudioBuffer();
+                        auto connection = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort();
+                        const auto outputBuffer = connection->getAudioBuffer();
 
                         if (port->isSignal()) {
+                            // Set the ports preference to signal values if any of the connected ports are signal
+                            port->isAnyConnectedPortSignal = port->isAnyConnectedPortSignal || connection->isSignal();
                             // Accumulate values in the buffer
                             for (size_t i = 0; i < context->frameCount; ++i) {
                                 summingAudioBuffer[i] += outputBuffer[i];
@@ -199,15 +208,15 @@ public:
     };
 
     // Connect nodes dynamically by addressing them by order of addition
-    void connect(int oNode, int oPort, int iNode, int iPort) {
-        nodes.at(iNode)->linkInputPort(nodes.at(oNode)->getOutputPort(), iPort);
-
+    void connect(int oNode, int oPort, int iNode, int iPort)
+    {
         auto outputKey = PortHelpers::getKey(oNode, oPort);
         auto inputKey = PortHelpers::getKey(iNode, iPort);
 
-        connectionTable[PortHelpers::getKey(iNode, iPort)].emplace_back(outputKey);
+        // Table for use during processing
+        connectionTable[inputKey].emplace_back(outputKey);
 
-        // Add connection to adjacency list
+        // Add connection to adjacency list for sorting
         adjacencyList[outputKey].emplace_back(inputKey);
     }
 
@@ -294,7 +303,7 @@ public:
     }
 
 
-    // Topological sort using the provided adjacency list and input dependency map.
+    // Topological sort using the provided adjacency list
     void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     {
         std::vector<bool> isVisited(nodes.size(), false); // Vector for isVisited

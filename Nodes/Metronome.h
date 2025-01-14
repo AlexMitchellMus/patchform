@@ -32,7 +32,7 @@ public:
     {
         unsigned long samplesProcessed = 0;
 
-        auto events = inputPorts[0].sumEvents();
+        auto events = inputPortBuffers[0]->getEvents();
 
         // Handle first event in metronome
         if (sampleCounter == 0)

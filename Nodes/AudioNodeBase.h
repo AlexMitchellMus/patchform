@@ -60,7 +60,7 @@ public:
     bool dirty = false;                // Marks if a state swap is needed
 
     // old input buffer system (fixed pointer)
-    std::vector<AudioInputPort> inputPorts;
+    //std::vector<AudioInputPort> inputPorts;
 
     // new input buffer system (dynamic - lookup table)
     std::vector<std::unique_ptr<AudioPort>> inputPortBuffers;
@@ -105,12 +105,6 @@ public:
     void addInputPort(std::string portName, AudioPort::PortType portType)
     {
         inputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
-        inputPorts.emplace_back(portName);
-    }
-
-    void linkInputPort(AudioPort* portToLink, int inputPortIndex)
-    {
-        inputPorts[inputPortIndex].connectedPorts.push_back(portToLink);
     }
 
     // Virtual method for processing the audio buffer
@@ -123,8 +117,6 @@ public:
     }
 
     std::function<void(std::vector<std::unique_ptr<AudioPort>>&)> sumInputBuffers;
-
-    std::vector<AudioInputPort>& getInputPorts() { return inputPorts; };
 
     uint32_t nodeID;
 
