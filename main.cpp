@@ -16,22 +16,11 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
+#include "Utility/ppl_string.hpp"
+
 #include "external/linenoise-ng/include/linenoise.h"
 
 #include "Graph/AudioGraph.h"
-
-std::vector<std::string> tokenize(const std::string& input) {
-    std::istringstream stream(input);
-    std::vector<std::string> tokens;
-    std::string token;
-
-    // Read words, skipping extra spaces
-    while (stream >> token) {
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
 
 // PortAudio Callback
 static int audioCallback(const void* input, void* output,
@@ -58,98 +47,164 @@ std::atomic<bool> running(true); // Flag to control the loop
 void repl(Graphs& graphs) {
     while (running) {
         // Display REPL prompt
-        char* line = linenoise("\x1b[1;32mPlugPatch\x1b[0m>> ");
-        if (line == nullptr) {
+        auto rawLine = linenoise("\x1b[1;32mPlugPatch\x1b[0m>> ");
+        auto line = ppl::string(rawLine);
+        if (line.isEmpty()) {
             continue; // Skip if no input
         }
 
         // Tokenize input
-        auto tokens = tokenize(line);
+        auto tokens = line.tokenize(" ");
 
         // Handle empty input
         if (tokens.empty()) {
-            free(line);
+            free(rawLine);
             continue;
         }
 
-        const std::string& command = tokens[0]; // First token is the command
+        const auto& command = tokens[0]; // First token is the command
 
-        if (command == "exit" || command == "quit" || command == "q") {
-            std::cout << "Exiting..." << std::endl;
-            running = false;
+        switch (hash(command))
+        {
+        case hash("exit"):
+        case hash("quit"):
+        case hash("q"):
+            {
+                std::cout << "Exiting..." << std::endl;
+                running = false;
+            }
             break;
-        } else if (command == "load" && tokens.size() > 1) {
-            // Command starts with "load" and has a filename
-            std::string filename = tokens[1];
-            std::cout << "Loading graph from file: " << filename << "..." << std::endl;
+        case hash("load"):
+            if (tokens.size() > 1) {
+                // Command starts with "load" and has a filename
+                auto filename = tokens[1];
+                std::cout << "Loading graph from file: " << filename << "..." << std::endl;
 
-            // Handle file loading
-            char buffer[MAX_PATH];
-            DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
-            if (length == 0) {
-                std::cerr << "Error getting current directory." << std::endl;
-                continue;
-            }
+                // Handle file loading
+                char buffer[MAX_PATH];
+                DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
+                if (length == 0) {
+                    std::cerr << "Error getting current directory." << std::endl;
+                    break;
+                }
 
-            std::string fullPath = filename + ".json";
-            std::ifstream file(fullPath);
+                auto fullPath = filename + ".json";
+                std::ifstream file(fullPath.str());
 
-            if (!file.is_open()) {
-                // Try loading JSON5 file
-                fullPath = filename + ".json5";
-                file.open(fullPath);
                 if (!file.is_open()) {
-                    std::cerr << "Could not open file: " << fullPath << std::endl;
-                    continue;
+                    // Try loading JSON5 file
+                    fullPath = filename + ".json5";
+                    file.open(fullPath.str());
+                    if (!file.is_open())
+                    {
+                        std::cerr << "Could not open file: " << fullPath << std::endl;
+                        break;
+                    }
+                }
+
+                std::cout << fullPath << " loaded successfully" << std::endl;
+
+                std::string fileContent((std::istreambuf_iterator<char>(file)),
+                                        std::istreambuf_iterator<char>());
+                file.close();
+
+                try {
+                    nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, false, true);
+                    if (!patch.empty()) {
+                        bool logVerbose = tokens.size() > 2 && (tokens[2] == "-v" || tokens[2] == "-verbose");
+                        graphs.setActiveGraph(patch, logVerbose);
+                    }
+                }
+                catch (const nlohmann::json::parse_error& ex)
+                {
+                    std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
                 }
             }
-
-            std::cout << fullPath << " loaded successfully!" << std::endl;
-
-            std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-            file.close();
-
-            try {
-                nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, false, true);
-                if (!patch.empty()) {
-                    bool logVerbose = tokens.size() > 2 && (tokens[2] == "-v" || tokens[2] == "-verbose");
-                    graphs.setActiveGraph(patch, logVerbose);
+            break;
+        case hash("list"):
+            if (tokens.size() > 1) {
+                if (tokens[1] == "nodes") {
+                    for (const auto& name : NodeRegistry::getInstance().getNodeNames()) {
+                        std::cout << "- " << name << std::endl;
+                    }
+                } else {
+                    std::cout << "Unknown list command" << std::endl;
                 }
-            } catch (const nlohmann::json::parse_error& ex) {
-                std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
             }
-        } else if (command == "list" && tokens.size() > 1) {
-            if (tokens[1] == "nodes") {
-                for (const auto& name : NodeRegistry::getInstance().getNodeNames()) {
-                    std::cout << "- " << name << std::endl;
-                }
-            } else {
-                std::cout << "Unknown list command!" << std::endl;
-            }
-        } else if (command == "h" || command == "help") {
-            std::string text =
-                "\n"
-                "PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.\n"
-                "\n"
-                "Commands:\n"
-                "exit, quit, q   Exit the application.\n"
-                "load            Load a graph file. Example: load graph\n"
-                "load -v         Print the adjacency list\n"
-                "list            List the currently loaded graph.\n"
-                "list sort       List the currently loaded sorted graph.\n"
-                "list nodes      List available nodes that can be added.\n"
-                "add             Add a node to the graph. Example: add metro\n"
-                "connect         Connect nodes together. Example: connect 0.0 1.0\n"
-                "credits         List credits / OSS libraries\n";
+            break;
+        case hash("h"):
+        case hash("help"):
+            {
+                constexpr std::string_view helpText = R"(
+PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.
 
-            std::cout << text << std::endl;
-        } else {
-            std::cout << "Invalid command!" << std::endl;
+Commands:
+exit, quit, q   Exit the application.
+load            Load a graph file. Example: load graph
+load -v         Print the adjacency list
+list            List the currently loaded graph.
+list sort       List the currently loaded sorted graph.
+list nodes      List available nodes that can be added.
+add             Add a node to the graph. Example: add metro
+connect         Connect nodes together. Example: connect 0.0 1.0
+credits         List credits / OSS libraries
+                )";
+
+                std::cout << helpText << std::endl;
+            }
+            break;
+        case hash("credits"):
+            {
+                constexpr std::array<std::string_view, 5> credits = {{
+                    R"(linenoise-ng (CLI REPL)
+    Martijn van Steenbergen
+    BSD-3-Clause License
+    https://github.com/arangodb/linenoise-ng)",
+
+                    R"(moodycamel ConcurrentQueue (Lockfree queue)
+    Cameron Desrochers
+    Simplified BSD License
+    https://github.com/cameron314/concurrentqueue)",
+
+                    R"(nlohmann/json (JSON file parsing)
+    Niels Lohmann
+    MIT License
+    https://github.com/nlohmann/json)",
+
+                    R"(PortAudio (CLI Audio I/O)
+    PortAudio Team
+    MIT License
+    https://github.com/PortAudio/portaudio)",
+
+                    R"(unordered_dense (Replacement for std::unordered_map)
+    Martin Ankerl
+    MIT License
+    https://github.com/martinus/unordered_dense)"
+                }};
+
+                // Copy to a runtime array and sort by the first letter of each string
+                auto sortedCredits = credits;
+                std::sort(sortedCredits.begin(), sortedCredits.end(), [](std::string_view a, std::string_view b) {
+                    char firstA = std::tolower(static_cast<unsigned char>(a[0]));
+                    char firstB = std::tolower(static_cast<unsigned char>(b[0]));
+                    return firstA < firstB;
+                });
+
+                std::cout << "Credits in alphabetical order:" << "\n\n";
+
+                // Print each entry
+                for (const auto& credit : sortedCredits) {
+                    std::cout << credit << "\n\n";
+                }
+            }
+            break;
+        default:
+            std::cout << "Invalid command" << std::endl;
         }
 
         // Add to command history and free memory
-        linenoiseHistoryAdd(line);
-        free(line);
+        linenoiseHistoryAdd(rawLine);
+        free(rawLine);
     }
 }
 

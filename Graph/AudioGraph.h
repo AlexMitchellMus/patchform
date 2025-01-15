@@ -26,6 +26,7 @@ using json = nlohmann::json;
 #include "PortHelpers.h"
 
 #include "Logger.h"
+#include "../Utility/ppl_string.hpp"
 
 #undef max
 
@@ -52,6 +53,7 @@ public:
         }
 
         sortNodes();
+
         if (logVerbose)
         {
             printAdjacencyList();
@@ -117,37 +119,37 @@ public:
 
     bool addObject(json node)
     {
-        auto const object = node["type"].get<std::string>();
+        auto const object = ppl::string(node["type"].get<std::string>()).toLower();
 
         switch (hash(object))
         {
-        case hash("Add"):
+        case hash("add"):
             {
                 auto const value = node.value("value", 0.0f);
                 addNode<Add>(value);
             }
             break;
-        case hash("Count"):
+        case hash("count"):
             {
                 auto const min = node.value("min", 0.0f);
                 auto const max = node.value("max", std::numeric_limits<int>::max());
                 addNode<Count>(min, max);
             }
             break;
-        case hash("Print"):
+        case hash("print"):
             {
                 addNode<Print>();
             }
             break;
-        case hash("If"):
+        case hash("if"):
             {
                 auto const ifVal = node.value("if", 0.0f);
                 auto const rtnVal = node.value("return", 0.0f);
                 addNode<If>(ifVal, rtnVal);
             }
             break;
-        case hash("Env"):
-        case hash("Envelope"):
+        case hash("env"):
+        case hash("envelope"):
             {
                 auto const attackVal = node.value("attack", 0.0f);
                 auto const decayVal = node.value("decay", 0.0f);
@@ -157,47 +159,48 @@ public:
                 addNode<Envelope>(attackVal, decayVal);
             }
             break;
-        case hash("Metro"):
-        case hash("Metronome"):
+        case hash("metro"):
+        case hash("metronome"):
             {
                 auto const value = node.value("hz", 1.0f);
                 addNode<Metronome>(value);
             }
             break;
-        case hash("Val"):
-        case hash("Value"):
+        case hash("val"):
+        case hash("value"):
             {
                 auto const value = node.value("value", 0.0f);
                 addNode<Value>(value);
             }
             break;
-        case hash("LFO"):
+        case hash("lfo"):
             {
                 auto const rate = node.value("rate", 1.0f);
                 addNode<LFO>(rate);
             }
             break;
-        case hash("Volume"):
+        case hash("volume"):
             {
                 addNode<Volume>();
             }
             break;
-        case hash("Osc"):
-        case hash("Oscillator"):
+        case hash("osc"):
+        case hash("oscillator"):
             {
                 auto const waveform = node.value("waveform", "sine");
                 auto const freq = node.value("freq", 440);
                 addNode<Oscillator>(waveform, freq);
             }
             break;
-        case hash("AOut"):
-        case hash("AudioOut"):
+        case hash("aout"):
+        case hash("audioout"):
             {
                 addNode<AudioOut>();
             }
             break;
         default:
             // Unknown object name, return error
+            std::cout << "Unknown object: " << object << std::endl;
             return false;
         }
         return true;

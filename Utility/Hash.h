@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <string>
+#include "ppl_string.hpp"
 
 using hash32 = uint32_t;
 #define EMPTY_HASH ((hash32)0x811c9dc5)
@@ -35,6 +36,11 @@ constexpr hash32 hash(char const* str)
  * FNV-1a hash function, for std::string, only at run time
  */
 inline hash32 hash(std::string const& str)
+{
+    return hash(str.c_str());
+}
+
+inline hash32 hash(ppl::string const& str)
 {
     return hash(str.c_str());
 }
