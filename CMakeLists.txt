@@ -82,3 +82,23 @@ foreach(source_file IN LISTS SOURCE_FILES)
             COMMENT "Copying ${file_name} to ${dest_file}"
     )
 endforeach()
+
+set(INSTALLER_DIR ${CMAKE_SOURCE_DIR}/installer)
+set(NSIS_SCRIPT ${INSTALLER_DIR}/windows/installer.nsi)
+
+# Add a custom target to run the NSIS script
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_custom_target(
+            PackageInstaller ALL
+            COMMAND ${CMAKE_COMMAND} -E echo "Creating NSIS installer..."
+            COMMAND makensis.exe /DOUTPUT_DIR=${CMAKE_BINARY_DIR}/Release ${NSIS_SCRIPT}
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMENT "Packaging installer with NSIS"
+            VERBATIM
+    )
+
+    # Ensure the installer runs only after the project is built
+    add_dependencies(PackageInstaller PlugPatch)  # Replace 'PlugPatch' with your actual build target
+else ()
+    message(WARNING "The PackageInstaller target is only available in Release mode.")
+endif ()
