@@ -128,7 +128,7 @@ public:
 
     bool addObject(json node)
     {
-        auto const object = ppl::string(node["type"].get<std::string>()).toLower();
+        auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
 
         // Attempt to get the ID as a string,
         // if no string dump the value (int or float into string)

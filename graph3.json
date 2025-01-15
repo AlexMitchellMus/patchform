@@ -1,10 +1,10 @@
 {
     "nodes": [
-        { "id": 0, "type": "AudioOut" },
-        { "id": 1, "type": "Value", "value": 220.0 },
-        { "id": 2, "type": "Oscillator" },
-        { "id": 3, "type": "Value", "value": 550.0 },
-        { "id": 4, "type": "Oscillator" }
+        { "id": 0, "obj": "AudioOut" },
+        { "id": 1, "obj": "Value", "value": 220.0 },
+        { "id": 2, "obj": "Oscillator" },
+        { "id": 3, "obj": "Value", "value": 550.0 },
+        { "id": 4, "obj": "Oscillator" }
     ],
     "connections": [
         { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },

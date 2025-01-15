@@ -1,15 +1,15 @@
 {
     "nodes": [
-        { "id": 0, "type": "Value", "value": 770.0 },
-        { "id": 1, "type": "Oscillator", "waveform": "sine" },
-        { "id": 2, "type": "Metro", "hz": 5 },
-        { "id": 3, "type": "Envelope", "attack": 0, "decay": 200 },
+        { "id": 0, "obj": "Value", "value": 770.0 },
+        { "id": 1, "obj": "Oscillator", "waveform": "sine" },
+        { "id": 2, "obj": "Metro", "hz": 5 },
+        { "id": 3, "obj": "Envelope", "attack": 0, "decay": 200 },
 
-        { "id": 4, "type": "Value", "value": 200.0 },
-        { "id": 5, "type": "Oscillator", "waveform": "tri" },
-        { "id": 6, "type": "Envelope", "attack": 70, "decay": 200 },
+        { "id": 4, "obj": "Value", "value": 200.0 },
+        { "id": 5, "obj": "Oscillator", "waveform": "tri" },
+        { "id": 6, "obj": "Envelope", "attack": 70, "decay": 200 },
 
-        { "id": 7, "type": "AudioOut" }
+        { "id": 7, "obj": "AudioOut" }
     ],
     "connections": [
         // value -> oscillator

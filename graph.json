@@ -2,2015 +2,2015 @@
     "nodes": [
         {
             "id": 0,
-            "type": "Value",
+            "obj": "Value",
             "value": 941.4632477256358
         },
         {
             "id": 1,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 2,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.6223968075993708
         },
         {
             "id": 3,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 601,
             "decay": 56
         },
         {
             "id": 4,
-            "type": "Value",
+            "obj": "Value",
             "value": 631.3689218376303
         },
         {
             "id": 5,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 6,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.17637451651964478
         },
         {
             "id": 7,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1436,
             "decay": 176
         },
         {
             "id": 8,
-            "type": "Value",
+            "obj": "Value",
             "value": 308.494852463604
         },
         {
             "id": 9,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 10,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9330620484031107
         },
         {
             "id": 11,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 423,
             "decay": 98
         },
         {
             "id": 12,
-            "type": "Value",
+            "obj": "Value",
             "value": 242.22575714082834
         },
         {
             "id": 13,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 14,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.22342211823049235
         },
         {
             "id": 15,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 749,
             "decay": 353
         },
         {
             "id": 16,
-            "type": "Value",
+            "obj": "Value",
             "value": 399.9490240543286
         },
         {
             "id": 17,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 18,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5070068447414648
         },
         {
             "id": 19,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 594,
             "decay": 181
         },
         {
             "id": 20,
-            "type": "Value",
+            "obj": "Value",
             "value": 756.6967447846359
         },
         {
             "id": 21,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 22,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.06164279385331469
         },
         {
             "id": 23,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 3021,
             "decay": 5668
         },
         {
             "id": 24,
-            "type": "Value",
+            "obj": "Value",
             "value": 180.89030269723804
         },
         {
             "id": 25,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 26,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9920037493593012
         },
         {
             "id": 27,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 51,
             "decay": 478
         },
         {
             "id": 28,
-            "type": "Value",
+            "obj": "Value",
             "value": 772.15431991228
         },
         {
             "id": 29,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 30,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.27294088921041787
         },
         {
             "id": 31,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 44,
             "decay": 1723
         },
         {
             "id": 32,
-            "type": "Value",
+            "obj": "Value",
             "value": 404.6940224201364
         },
         {
             "id": 33,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 34,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.6816128387351867
         },
         {
             "id": 35,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 381,
             "decay": 153
         },
         {
             "id": 36,
-            "type": "Value",
+            "obj": "Value",
             "value": 231.9818274988306
         },
         {
             "id": 37,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 38,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.6420096512667738
         },
         {
             "id": 39,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 93,
             "decay": 609
         },
         {
             "id": 40,
-            "type": "Value",
+            "obj": "Value",
             "value": 712.4637481440647
         },
         {
             "id": 41,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 42,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.36308566473097037
         },
         {
             "id": 43,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 974,
             "decay": 318
         },
         {
             "id": 44,
-            "type": "Value",
+            "obj": "Value",
             "value": 749.9873282852595
         },
         {
             "id": 45,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 46,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.34319176538657914
         },
         {
             "id": 47,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 924,
             "decay": 1044
         },
         {
             "id": 48,
-            "type": "Value",
+            "obj": "Value",
             "value": 247.25417515759528
         },
         {
             "id": 49,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 50,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.7371685682416134
         },
         {
             "id": 51,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 345,
             "decay": 121
         },
         {
             "id": 52,
-            "type": "Value",
+            "obj": "Value",
             "value": 559.49825215243
         },
         {
             "id": 53,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 54,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.25911924484984983
         },
         {
             "id": 55,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1585,
             "decay": 1606
         },
         {
             "id": 56,
-            "type": "Value",
+            "obj": "Value",
             "value": 326.01227512418876
         },
         {
             "id": 57,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 58,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3309354952386087
         },
         {
             "id": 59,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1497,
             "decay": 215
         },
         {
             "id": 60,
-            "type": "Value",
+            "obj": "Value",
             "value": 664.8584996691208
         },
         {
             "id": 61,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 62,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.014770981829502944
         },
         {
             "id": 63,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1870,
             "decay": 32118
         },
         {
             "id": 64,
-            "type": "Value",
+            "obj": "Value",
             "value": 867.1322667399235
         },
         {
             "id": 65,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 66,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8183554001909012
         },
         {
             "id": 67,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 475,
             "decay": 11
         },
         {
             "id": 68,
-            "type": "Value",
+            "obj": "Value",
             "value": 103.30652402043403
         },
         {
             "id": 69,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 70,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.18134857612513722
         },
         {
             "id": 71,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 2544,
             "decay": 336
         },
         {
             "id": 72,
-            "type": "Value",
+            "obj": "Value",
             "value": 130.14955892067672
         },
         {
             "id": 73,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 74,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.20285588564189125
         },
         {
             "id": 75,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 464,
             "decay": 1312
         },
         {
             "id": 76,
-            "type": "Value",
+            "obj": "Value",
             "value": 459.4168931921866
         },
         {
             "id": 77,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 78,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4952642345340235
         },
         {
             "id": 79,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 986,
             "decay": 80
         },
         {
             "id": 80,
-            "type": "Value",
+            "obj": "Value",
             "value": 575.5808124726896
         },
         {
             "id": 81,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 82,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8246687299892596
         },
         {
             "id": 83,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 484,
             "decay": 6
         },
         {
             "id": 84,
-            "type": "Value",
+            "obj": "Value",
             "value": 651.0125338545035
         },
         {
             "id": 85,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 86,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.07581339834275737
         },
         {
             "id": 87,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 2106,
             "decay": 5092
         },
         {
             "id": 88,
-            "type": "Value",
+            "obj": "Value",
             "value": 734.081599611576
         },
         {
             "id": 89,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 90,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.47853529182474913
         },
         {
             "id": 91,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 200,
             "decay": 372
         },
         {
             "id": 92,
-            "type": "Value",
+            "obj": "Value",
             "value": 874.4550683982959
         },
         {
             "id": 93,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 94,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9686319745932611
         },
         {
             "id": 95,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 98,
             "decay": 145
         },
         {
             "id": 96,
-            "type": "Value",
+            "obj": "Value",
             "value": 301.40108645519854
         },
         {
             "id": 97,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 98,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9619868953206845
         },
         {
             "id": 99,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 435,
             "decay": 473
         },
         {
             "id": 100,
-            "type": "Value",
+            "obj": "Value",
             "value": 745.0387573890347
         },
         {
             "id": 101,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 102,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.2984167693857332
         },
         {
             "id": 103,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1212,
             "decay": 1283
         },
         {
             "id": 104,
-            "type": "Value",
+            "obj": "Value",
             "value": 623.9054549953829
         },
         {
             "id": 105,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 106,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3663605207179895
         },
         {
             "id": 107,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 86,
             "decay": 510
         },
         {
             "id": 108,
-            "type": "Value",
+            "obj": "Value",
             "value": 326.7127219923688
         },
         {
             "id": 109,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 110,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8621841096898935
         },
         {
             "id": 111,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 554,
             "decay": 58
         },
         {
             "id": 112,
-            "type": "Value",
+            "obj": "Value",
             "value": 455.8668705938774
         },
         {
             "id": 113,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 114,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.43836163330560385
         },
         {
             "id": 115,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 996,
             "decay": 1083
         },
         {
             "id": 116,
-            "type": "Value",
+            "obj": "Value",
             "value": 273.40473185099523
         },
         {
             "id": 117,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 118,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.6277832235142933
         },
         {
             "id": 119,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 506,
             "decay": 665
         },
         {
             "id": 120,
-            "type": "Value",
+            "obj": "Value",
             "value": 565.4413654327708
         },
         {
             "id": 121,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 122,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3606080388255473
         },
         {
             "id": 123,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1006,
             "decay": 858
         },
         {
             "id": 124,
-            "type": "Value",
+            "obj": "Value",
             "value": 480.6344651544831
         },
         {
             "id": 125,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 126,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.29289004513769457
         },
         {
             "id": 127,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 343,
             "decay": 162
         },
         {
             "id": 128,
-            "type": "Value",
+            "obj": "Value",
             "value": 508.354667091962
         },
         {
             "id": 129,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 130,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.7567391278421138
         },
         {
             "id": 131,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 539,
             "decay": 242
         },
         {
             "id": 132,
-            "type": "Value",
+            "obj": "Value",
             "value": 141.7419926470862
         },
         {
             "id": 133,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 134,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.25922906608478846
         },
         {
             "id": 135,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 59,
             "decay": 71
         },
         {
             "id": 136,
-            "type": "Value",
+            "obj": "Value",
             "value": 649.2476959585188
         },
         {
             "id": 137,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 138,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.25174756172294677
         },
         {
             "id": 139,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 363,
             "decay": 1575
         },
         {
             "id": 140,
-            "type": "Value",
+            "obj": "Value",
             "value": 347.66227947242805
         },
         {
             "id": 141,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 142,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8862998457478798
         },
         {
             "id": 143,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 540,
             "decay": 464
         },
         {
             "id": 144,
-            "type": "Value",
+            "obj": "Value",
             "value": 137.63424040450545
         },
         {
             "id": 145,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 146,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5269742207568479
         },
         {
             "id": 147,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 537,
             "decay": 351
         },
         {
             "id": 148,
-            "type": "Value",
+            "obj": "Value",
             "value": 274.89566177557185
         },
         {
             "id": 149,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 150,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3076590309824974
         },
         {
             "id": 151,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 595,
             "decay": 1138
         },
         {
             "id": 152,
-            "type": "Value",
+            "obj": "Value",
             "value": 284.62651407530745
         },
         {
             "id": 153,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 154,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.049160572545447125
         },
         {
             "id": 155,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 4218,
             "decay": 3971
         },
         {
             "id": 156,
-            "type": "Value",
+            "obj": "Value",
             "value": 179.6522607914065
         },
         {
             "id": 157,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 158,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4182201233155798
         },
         {
             "id": 159,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1174,
             "decay": 81
         },
         {
             "id": 160,
-            "type": "Value",
+            "obj": "Value",
             "value": 805.2178556016173
         },
         {
             "id": 161,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 162,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.24549301321022995
         },
         {
             "id": 163,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 59,
             "decay": 115
         },
         {
             "id": 164,
-            "type": "Value",
+            "obj": "Value",
             "value": 143.5540612272741
         },
         {
             "id": 165,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 166,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.382848309350572
         },
         {
             "id": 167,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 603,
             "decay": 1042
         },
         {
             "id": 168,
-            "type": "Value",
+            "obj": "Value",
             "value": 185.29946846326234
         },
         {
             "id": 169,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 170,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8018338409756799
         },
         {
             "id": 171,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 447,
             "decay": 558
         },
         {
             "id": 172,
-            "type": "Value",
+            "obj": "Value",
             "value": 434.42181804059675
         },
         {
             "id": 173,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 174,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.2785940770730066
         },
         {
             "id": 175,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 80,
             "decay": 1248
         },
         {
             "id": 176,
-            "type": "Value",
+            "obj": "Value",
             "value": 723.8245376680397
         },
         {
             "id": 177,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 178,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.1393544389715484
         },
         {
             "id": 179,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 341,
             "decay": 2617
         },
         {
             "id": 180,
-            "type": "Value",
+            "obj": "Value",
             "value": 628.7856400877092
         },
         {
             "id": 181,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 182,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8558033069168246
         },
         {
             "id": 183,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 357,
             "decay": 306
         },
         {
             "id": 184,
-            "type": "Value",
+            "obj": "Value",
             "value": 354.7698958240452
         },
         {
             "id": 185,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 186,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5098038701723239
         },
         {
             "id": 187,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 343,
             "decay": 778
         },
         {
             "id": 188,
-            "type": "Value",
+            "obj": "Value",
             "value": 541.2722109384238
         },
         {
             "id": 189,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 190,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4793728744623162
         },
         {
             "id": 191,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1000,
             "decay": 791
         },
         {
             "id": 192,
-            "type": "Value",
+            "obj": "Value",
             "value": 781.4503861207356
         },
         {
             "id": 193,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 194,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8162680284583095
         },
         {
             "id": 195,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 233,
             "decay": 10
         },
         {
             "id": 196,
-            "type": "Value",
+            "obj": "Value",
             "value": 599.1516941027936
         },
         {
             "id": 197,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 198,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.7235270159567058
         },
         {
             "id": 199,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 269,
             "decay": 146
         },
         {
             "id": 200,
-            "type": "Value",
+            "obj": "Value",
             "value": 287.67232569750274
         },
         {
             "id": 201,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 202,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8246361124185047
         },
         {
             "id": 203,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 373,
             "decay": 429
         },
         {
             "id": 204,
-            "type": "Value",
+            "obj": "Value",
             "value": 129.5811969649317
         },
         {
             "id": 205,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 206,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.0833143878944457
         },
         {
             "id": 207,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1643,
             "decay": 2178
         },
         {
             "id": 208,
-            "type": "Value",
+            "obj": "Value",
             "value": 794.6279600245663
         },
         {
             "id": 209,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 210,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8118822960903612
         },
         {
             "id": 211,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 281,
             "decay": 259
         },
         {
             "id": 212,
-            "type": "Value",
+            "obj": "Value",
             "value": 744.8219458318781
         },
         {
             "id": 213,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 214,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4726433920019043
         },
         {
             "id": 215,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 197,
             "decay": 19
         },
         {
             "id": 216,
-            "type": "Value",
+            "obj": "Value",
             "value": 198.5609626617731
         },
         {
             "id": 217,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 218,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.25918297001630913
         },
         {
             "id": 219,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 259,
             "decay": 1924
         },
         {
             "id": 220,
-            "type": "Value",
+            "obj": "Value",
             "value": 416.3869448677454
         },
         {
             "id": 221,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 222,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.1919860846434508
         },
         {
             "id": 223,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 2520,
             "decay": 942
         },
         {
             "id": 224,
-            "type": "Value",
+            "obj": "Value",
             "value": 536.7064173594041
         },
         {
             "id": 225,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 226,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.7312389042683989
         },
         {
             "id": 227,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 12,
             "decay": 222
         },
         {
             "id": 228,
-            "type": "Value",
+            "obj": "Value",
             "value": 686.6129714097787
         },
         {
             "id": 229,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 230,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4698424835794347
         },
         {
             "id": 231,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 699,
             "decay": 213
         },
         {
             "id": 232,
-            "type": "Value",
+            "obj": "Value",
             "value": 684.8624614381677
         },
         {
             "id": 233,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 234,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5744761125253619
         },
         {
             "id": 235,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 830,
             "decay": 823
         },
         {
             "id": 236,
-            "type": "Value",
+            "obj": "Value",
             "value": 116.71723666827678
         },
         {
             "id": 237,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 238,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.059631497930211226
         },
         {
             "id": 239,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 7339,
             "decay": 1088
         },
         {
             "id": 240,
-            "type": "Value",
+            "obj": "Value",
             "value": 600.2079715108282
         },
         {
             "id": 241,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 242,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.028022079562543677
         },
         {
             "id": 243,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 13602,
             "decay": 13672
         },
         {
             "id": 244,
-            "type": "Value",
+            "obj": "Value",
             "value": 385.9461880711998
         },
         {
             "id": 245,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 246,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3634729860607074
         },
         {
             "id": 247,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1335,
             "decay": 1022
         },
         {
             "id": 248,
-            "type": "Value",
+            "obj": "Value",
             "value": 115.97743126094831
         },
         {
             "id": 249,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 250,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.31495438160239164
         },
         {
             "id": 251,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 584,
             "decay": 441
         },
         {
             "id": 252,
-            "type": "Value",
+            "obj": "Value",
             "value": 997.8086143307986
         },
         {
             "id": 253,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 254,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5935669991188957
         },
         {
             "id": 255,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 815,
             "decay": 747
         },
         {
             "id": 256,
-            "type": "Value",
+            "obj": "Value",
             "value": 821.9182160841503
         },
         {
             "id": 257,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 258,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5204673235254675
         },
         {
             "id": 259,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 457,
             "decay": 926
         },
         {
             "id": 260,
-            "type": "Value",
+            "obj": "Value",
             "value": 757.0698333263724
         },
         {
             "id": 261,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 262,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.37399263646710196
         },
         {
             "id": 263,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 259,
             "decay": 558
         },
         {
             "id": 264,
-            "type": "Value",
+            "obj": "Value",
             "value": 382.5918738858014
         },
         {
             "id": 265,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 266,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.7668283546074897
         },
         {
             "id": 267,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 510,
             "decay": 209
         },
         {
             "id": 268,
-            "type": "Value",
+            "obj": "Value",
             "value": 425.0970636642295
         },
         {
             "id": 269,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 270,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.567091739930179
         },
         {
             "id": 271,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 383,
             "decay": 217
         },
         {
             "id": 272,
-            "type": "Value",
+            "obj": "Value",
             "value": 445.728332548124
         },
         {
             "id": 273,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 274,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9253796776963603
         },
         {
             "id": 275,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 76,
             "decay": 3
         },
         {
             "id": 276,
-            "type": "Value",
+            "obj": "Value",
             "value": 532.3194655221989
         },
         {
             "id": 277,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 278,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8958398133688376
         },
         {
             "id": 279,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 204,
             "decay": 151
         },
         {
             "id": 280,
-            "type": "Value",
+            "obj": "Value",
             "value": 485.5908478991439
         },
         {
             "id": 281,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 282,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3493736453014404
         },
         {
             "id": 283,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1311,
             "decay": 309
         },
         {
             "id": 284,
-            "type": "Value",
+            "obj": "Value",
             "value": 652.9574557270162
         },
         {
             "id": 285,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 286,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.46428472128711795
         },
         {
             "id": 287,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1010,
             "decay": 836
         },
         {
             "id": 288,
-            "type": "Value",
+            "obj": "Value",
             "value": 817.7206495220405
         },
         {
             "id": 289,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 290,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.1455936610323509
         },
         {
             "id": 291,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 2737,
             "decay": 1497
         },
         {
             "id": 292,
-            "type": "Value",
+            "obj": "Value",
             "value": 121.88173491169687
         },
         {
             "id": 293,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 294,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.19121541740880055
         },
         {
             "id": 295,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 2518,
             "decay": 353
         },
         {
             "id": 296,
-            "type": "Value",
+            "obj": "Value",
             "value": 905.563317206565
         },
         {
             "id": 297,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 298,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.6709866016072029
         },
         {
             "id": 299,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 128,
             "decay": 226
         },
         {
             "id": 300,
-            "type": "Value",
+            "obj": "Value",
             "value": 185.57264177530294
         },
         {
             "id": 301,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 302,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4976241701438525
         },
         {
             "id": 303,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 166,
             "decay": 21
         },
         {
             "id": 304,
-            "type": "Value",
+            "obj": "Value",
             "value": 420.70827296667704
         },
         {
             "id": 305,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 306,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5784865671765842
         },
         {
             "id": 307,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 599,
             "decay": 181
         },
         {
             "id": 308,
-            "type": "Value",
+            "obj": "Value",
             "value": 134.68919383647432
         },
         {
             "id": 309,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 310,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9170773124601495
         },
         {
             "id": 311,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 370,
             "decay": 157
         },
         {
             "id": 312,
-            "type": "Value",
+            "obj": "Value",
             "value": 841.9786414983399
         },
         {
             "id": 313,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 314,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9708568011088302
         },
         {
             "id": 315,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 272,
             "decay": 349
         },
         {
             "id": 316,
-            "type": "Value",
+            "obj": "Value",
             "value": 578.3613984485285
         },
         {
             "id": 317,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 318,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.7084309586355734
         },
         {
             "id": 319,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 359,
             "decay": 483
         },
         {
             "id": 320,
-            "type": "Value",
+            "obj": "Value",
             "value": 947.3553747096777
         },
         {
             "id": 321,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 322,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.7836402516134447
         },
         {
             "id": 323,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 547,
             "decay": 269
         },
         {
             "id": 324,
-            "type": "Value",
+            "obj": "Value",
             "value": 873.52615159529
         },
         {
             "id": 325,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 326,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.14015203782977081
         },
         {
             "id": 327,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1142,
             "decay": 1829
         },
         {
             "id": 328,
-            "type": "Value",
+            "obj": "Value",
             "value": 209.92459344616054
         },
         {
             "id": 329,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 330,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3339862137041539
         },
         {
             "id": 331,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 100,
             "decay": 1128
         },
         {
             "id": 332,
-            "type": "Value",
+            "obj": "Value",
             "value": 613.3273846458061
         },
         {
             "id": 333,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 334,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.9321423471015501
         },
         {
             "id": 335,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 66,
             "decay": 115
         },
         {
             "id": 336,
-            "type": "Value",
+            "obj": "Value",
             "value": 732.9967502337197
         },
         {
             "id": 337,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 338,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.33109878494415956
         },
         {
             "id": 339,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 630,
             "decay": 67
         },
         {
             "id": 340,
-            "type": "Value",
+            "obj": "Value",
             "value": 339.60154645078035
         },
         {
             "id": 341,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 342,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.8380749636894047
         },
         {
             "id": 343,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 106,
             "decay": 196
         },
         {
             "id": 344,
-            "type": "Value",
+            "obj": "Value",
             "value": 669.8276975730973
         },
         {
             "id": 345,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 346,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.844261684683172
         },
         {
             "id": 347,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 231,
             "decay": 174
         },
         {
             "id": 348,
-            "type": "Value",
+            "obj": "Value",
             "value": 644.361051414814
         },
         {
             "id": 349,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 350,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.08514349193876773
         },
         {
             "id": 351,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 2265,
             "decay": 2407
         },
         {
             "id": 352,
-            "type": "Value",
+            "obj": "Value",
             "value": 567.7386111820032
         },
         {
             "id": 353,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 354,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.2504638683463697
         },
         {
             "id": 355,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1207,
             "decay": 10
         },
         {
             "id": 356,
-            "type": "Value",
+            "obj": "Value",
             "value": 120.61384815567425
         },
         {
             "id": 357,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 358,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.24397882271835344
         },
         {
             "id": 359,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 912,
             "decay": 1900
         },
         {
             "id": 360,
-            "type": "Value",
+            "obj": "Value",
             "value": 755.433586794671
         },
         {
             "id": 361,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 362,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.22548396651027197
         },
         {
             "id": 363,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 1370,
             "decay": 680
         },
         {
             "id": 364,
-            "type": "Value",
+            "obj": "Value",
             "value": 134.40033887795434
         },
         {
             "id": 365,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 366,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5190014463544904
         },
         {
             "id": 367,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 400,
             "decay": 463
         },
         {
             "id": 368,
-            "type": "Value",
+            "obj": "Value",
             "value": 625.8657185073299
         },
         {
             "id": 369,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 370,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.3976625428346929
         },
         {
             "id": 371,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 120,
             "decay": 1
         },
         {
             "id": 372,
-            "type": "Value",
+            "obj": "Value",
             "value": 286.96789922063897
         },
         {
             "id": 373,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 374,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.48706482316644906
         },
         {
             "id": 375,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 284,
             "decay": 20
         },
         {
             "id": 376,
-            "type": "Value",
+            "obj": "Value",
             "value": 213.10531417436619
         },
         {
             "id": 377,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 378,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4519919291724463
         },
         {
             "id": 379,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 620,
             "decay": 969
         },
         {
             "id": 380,
-            "type": "Value",
+            "obj": "Value",
             "value": 274.4562937243645
         },
         {
             "id": 381,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 382,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.018972415260245144
         },
         {
             "id": 383,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 7291,
             "decay": 48
         },
         {
             "id": 384,
-            "type": "Value",
+            "obj": "Value",
             "value": 224.99473444252163
         },
         {
             "id": 385,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 386,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.4203925576391216
         },
         {
             "id": 387,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 301,
             "decay": 405
         },
         {
             "id": 388,
-            "type": "Value",
+            "obj": "Value",
             "value": 320.05200775683306
         },
         {
             "id": 389,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 390,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.5944327406258947
         },
         {
             "id": 391,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 138,
             "decay": 31
         },
         {
             "id": 392,
-            "type": "Value",
+            "obj": "Value",
             "value": 412.42189820351683
         },
         {
             "id": 393,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 394,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.08418572783828851
         },
         {
             "id": 395,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 4896,
             "decay": 2567
         },
         {
             "id": 396,
-            "type": "Value",
+            "obj": "Value",
             "value": 206.62152123984563
         },
         {
             "id": 397,
-            "type": "Oscillator"
+            "obj": "Oscillator"
         },
         {
             "id": 398,
-            "type": "Metro",
+            "obj": "Metro",
             "hz": 0.1201141616738084
         },
         {
             "id": 399,
-            "type": "Envelope",
+            "obj": "Envelope",
             "attack": 3074,
             "decay": 2478
         },
         {
             "id": 400,
-            "type": "Volume"
+            "obj": "Volume"
         },
         {
             "id": 401,
-            "type": "AudioOut"
+            "obj": "AudioOut"
         },
         {
             "id": 402,
-            "type": "Value",
+            "obj": "Value",
             "value": 0.1
         }
     ],
