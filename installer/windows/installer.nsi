@@ -4,6 +4,7 @@
 !define APP_VERSION "1.0"
 !define INSTALL_DIR "$PROGRAMFILES64\${APP_NAME}"
 !define MUI_ICON plugpatchicon.ico
+!define MUI_UNICON plugpatchicon.ico
 
 OutFile "PlugPatchInstaller.exe"
 InstallDir "${INSTALL_DIR}"
@@ -27,7 +28,7 @@ Page custom CustomOptions CustomOptionsLeave
 !insertmacro MUI_LANGUAGE "English"
 
 Section "Install"
-    SetOutPath "${INSTALL_DIR}"
+    SetOutPath "$INSTDIR"
     File "${OUTPUT_DIR}\PlugPatch.exe"
     File "${OUTPUT_DIR}\count.json5"
     File "${OUTPUT_DIR}\graph.json"
