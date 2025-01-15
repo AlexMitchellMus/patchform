@@ -57,6 +57,14 @@ if(MSVC)
     )
 endif()
 
+if (WIN32)
+    # Define the path to the resource file
+    set(APP_ICON_RESOURCE "installer/windows/resources.rc")
+
+    # Add the resource file to your application target
+    target_sources(PlugPatch PRIVATE ${APP_ICON_RESOURCE})  # Replace PlugPatch with your target name
+endif ()
+
 # patch assets to copy
 set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/graph.json"
