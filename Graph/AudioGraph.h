@@ -49,7 +49,11 @@ public:
 
         // Create connections
         for (const auto& connection : patch["connections"]) {
-            connect(connection["sourceNode"], connection["sourcePort"], connection["targetNode"], connection["targetPort"]);
+            // source and target ID needs to be set in the file format
+            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
+            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
+
+            connect(source, connection["sourcePort"], target, connection["targetPort"]);
         }
 
         sortNodes();
@@ -61,10 +65,15 @@ public:
     }
 
     template <typename NodeType, typename... Args>
-    void addNode(Args&&... args) {
+    void addNode(const std::optional<std::string>& idString, Args&&... args) {
         auto nodeID = objectsList.size();
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
+
+        // Determine the ID to use for the object ID map
+        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node index in vector
+
+        objectIDMap[finalID] = nodeID;
 
         // Function responsible for summing audio & event buffers of connected inputs for each node.
         // This dynamically looks up the connections port via the connection table.
@@ -121,31 +130,40 @@ public:
     {
         auto const object = ppl::string(node["type"].get<std::string>()).toLower();
 
+        // Attempt to get the ID as a string,
+        // if no string dump the value (int or float into string)
+        // otherwise return empty value which makes the object use the index in patch
+        const std::optional<std::string> idString = node.contains("id")
+            ? (node["id"].is_string()
+                ? std::make_optional(node["id"].get<std::string>())
+                : std::make_optional(node["id"].dump()))
+            : std::nullopt;
+
         switch (hash(object))
         {
         case hash("add"):
             {
                 auto const value = node.value("value", 0.0f);
-                addNode<Add>(value);
+                addNode<Add>(idString, value);
             }
             break;
         case hash("count"):
             {
                 auto const min = node.value("min", 0.0f);
                 auto const max = node.value("max", std::numeric_limits<int>::max());
-                addNode<Count>(min, max);
+                addNode<Count>(idString, min, max);
             }
             break;
         case hash("print"):
             {
-                addNode<Print>();
+                addNode<Print>(idString);
             }
             break;
         case hash("if"):
             {
                 auto const ifVal = node.value("if", 0.0f);
                 auto const rtnVal = node.value("return", 0.0f);
-                addNode<If>(ifVal, rtnVal);
+                addNode<If>(idString, ifVal, rtnVal);
             }
             break;
         case hash("env"):
@@ -156,32 +174,32 @@ public:
 
                 //auto const attackCurve = node.value("attackCurve", 1.5f);
                 //auto const decayCurve = node.value("decayCurve", 2.0f);
-                addNode<Envelope>(attackVal, decayVal);
+                addNode<Envelope>(idString, attackVal, decayVal);
             }
             break;
         case hash("metro"):
         case hash("metronome"):
             {
                 auto const value = node.value("hz", 1.0f);
-                addNode<Metronome>(value);
+                addNode<Metronome>(idString, value);
             }
             break;
         case hash("val"):
         case hash("value"):
             {
                 auto const value = node.value("value", 0.0f);
-                addNode<Value>(value);
+                addNode<Value>(idString, value);
             }
             break;
         case hash("lfo"):
             {
                 auto const rate = node.value("rate", 1.0f);
-                addNode<LFO>(rate);
+                addNode<LFO>(idString, rate);
             }
             break;
         case hash("volume"):
             {
-                addNode<Volume>();
+                addNode<Volume>(idString);
             }
             break;
         case hash("osc"):
@@ -189,13 +207,13 @@ public:
             {
                 auto const waveform = node.value("waveform", "sine");
                 auto const freq = node.value("freq", 440);
-                addNode<Oscillator>(waveform, freq);
+                addNode<Oscillator>(idString, waveform, freq);
             }
             break;
         case hash("aout"):
         case hash("audioout"):
             {
-                addNode<AudioOut>();
+                addNode<AudioOut>(idString);
             }
             break;
         default:
@@ -207,7 +225,7 @@ public:
     };
 
     // Connect nodes dynamically by addressing them by order of addition
-    void connect(int oNode, int oPort, int iNode, int iPort)
+    void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
         auto outputKey = PortHelpers::getKey(oNode, oPort);
         auto inputKey = PortHelpers::getKey(iNode, iPort);
@@ -223,7 +241,7 @@ public:
         size_t maxNameWidth = 0;
         size_t maxLeftWidth = 0;
 
-        // Precompute maximum widths for alignment
+        // Precompute maximum widths for character alignment
         for (const auto& node : objectsSorted)
         {
             auto it = std::find_if(
@@ -418,6 +436,9 @@ public:
 protected:
 
     std::vector<std::unique_ptr<AudioNode>> objectsList;
+
+    // Keep track of object id's and position in objectList
+    ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
 
     std::vector<AudioNode*> objectsListCopy;
     std::vector<AudioNode*> objectsSorted;

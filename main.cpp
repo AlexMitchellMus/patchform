@@ -109,7 +109,7 @@ void repl(Graphs& graphs) {
                 file.close();
 
                 try {
-                    nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, false, true);
+                    nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, true, true);
                     if (!patch.empty()) {
                         bool logVerbose = tokens.size() > 2 && (tokens[2] == "-v" || tokens[2] == "-verbose");
                         graphs.setActiveGraph(patch, logVerbose);
@@ -210,7 +210,7 @@ credits         List credits / OSS libraries
 
 int main() {
     PaError err;
-    unsigned long frameCount = 256;
+    unsigned long frameCount = 64;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio
