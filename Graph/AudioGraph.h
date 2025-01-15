@@ -83,8 +83,8 @@ public:
                 auto summingAudioBuffer = port->getAudioBuffer();
 
                 // Find connections for the current port
-                auto it = connectionTable.find(PortHelpers::getKey(nodeID, portID));
-                if (it != connectionTable.end()) {
+                auto it = adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
+                if (it != adjacencyMap.getBackward().end()) {
                     const auto& connections = it->second;
 
                     // Sum contributions from connected nodes
@@ -209,11 +209,7 @@ public:
         auto outputKey = PortHelpers::getKey(oNode, oPort);
         auto inputKey = PortHelpers::getKey(iNode, iPort);
 
-        // Table for use during processing
-        connectionTable[inputKey].emplace_back(outputKey);
-
-        // Add connection to adjacency list for sorting
-        adjacencyList[outputKey].emplace_back(inputKey);
+        adjacencyMap.addAdjacency(inputKey, outputKey);
     }
 
     void printAdjacencyList()
@@ -235,7 +231,7 @@ public:
             {
                 size_t nodeIndex = std::distance(nodes.begin(), it);
 
-                for (const auto& outputPort : adjacencyList | std::views::keys)
+                for (const auto& outputPort : adjacencyMap.getForward() | std::views::keys)
                 {
                     auto [oNode, oPort] = PortHelpers::getNodeAndPortID(outputPort);
 
@@ -262,7 +258,7 @@ public:
             {
                 size_t nodeIndex = std::distance(nodes.begin(), it);
 
-                for (const auto& [outputPort, connections] : adjacencyList)
+                for (const auto& [outputPort, connections] : adjacencyMap.getForward())
                 {
                     auto [oNode, oPort] = PortHelpers::getNodeAndPortID(outputPort);
 
@@ -309,7 +305,7 @@ public:
         std::vector<int> inDegree(nodeCount, 0); // Vector to store in-degrees
 
         // Compute in-degrees in a single pass
-        for (const auto& [inputKey, outputKeys] : connectionTable)
+        for (const auto& [inputKey, outputKeys] : adjacencyMap.getBackward())
         {
             int nodeIndex = PortHelpers::getNodeID(inputKey);
             if (nodeIndex >= 0 && nodeIndex < static_cast<int>(nodeCount))
@@ -338,8 +334,8 @@ public:
             sortedNodes.push_back(nodes[currentIndex].get());
 
             // Reduce in-degree for downstream nodes
-            auto adjacencyIt = adjacencyList.find(PortHelpers::getKey(currentIndex, 0)); // 0 for inputPort index
-            if (adjacencyIt != adjacencyList.end())
+            auto adjacencyIt = adjacencyMap.getForward().find(PortHelpers::getKey(currentIndex, 0)); // 0 for inputPort index
+            if (adjacencyIt != adjacencyMap.getForward().end())
             {
                 for (const auto& downstreamKey : adjacencyIt->second)
                 {
@@ -410,16 +406,35 @@ public:
     }
 
 protected:
-    // Custom Adjacency List definition using the custom hash
-    using AdjacencyList = ankerl::unordered_dense::map<uint32_t, std::vector<uint32_t>>;
 
     std::vector<std::unique_ptr<AudioNode>> nodes;
     std::vector<AudioNode*> sortedNodes;
 
-    // Forward links - output->input (for sorting)
-    AdjacencyList adjacencyList;
-    // Backward links - input->output (for running)
-    AdjacencyList connectionTable;
+    struct AdjacencyMap
+    {
+        // Custom Adjacency List definition using the custom hash
+        using AdjacencyList = ankerl::unordered_dense::map<uint32_t, std::vector<uint32_t>>;
+
+        void addAdjacency(uint32_t inputKey, uint32_t outputKey)
+        {
+            forward[outputKey].emplace_back(inputKey);
+            backward[inputKey].emplace_back(outputKey);
+        }
+
+        [[nodiscard]] const AdjacencyList& getForward() const
+        {
+            return forward;
+        }
+
+        [[nodiscard]] const AdjacencyList& getBackward() const
+        {
+            return backward;
+        }
+
+    private:
+        AdjacencyList forward{};
+        AdjacencyList backward{};
+    } adjacencyMap;
 };
 
 class Graphs

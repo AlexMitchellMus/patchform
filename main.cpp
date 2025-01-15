@@ -155,7 +155,7 @@ void repl(Graphs& graphs) {
 
 int main() {
     PaError err;
-    unsigned long frameCount = 1024;
+    unsigned long frameCount = 256;
     float sampleRate = 44100.0f;
 
     // Initialize PortAudio
