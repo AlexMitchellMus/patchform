@@ -52,7 +52,7 @@ if(MSVC)
     target_compile_options(PlugPatch PRIVATE
             /std:c++20 # Enable C++20
             $<$<CONFIG:Debug>:/Od /Z7>
-            $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL>
+            $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
             $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
     )
 endif()

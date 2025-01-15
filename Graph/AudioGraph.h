@@ -299,10 +299,14 @@ public:
     void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     {
         size_t nodeCount = objectsListCopy.size();
-        sortedNodes.clear();
-        sortedNodes.reserve(nodeCount); // Reserve space upfront to avoid reallocations
 
-        std::vector<int> inDegree(nodeCount, 0); // Vector to store in-degrees
+        sortedNodes.reserve(nodeCount);
+        sortedNodes.clear();
+
+        zeroInDegreeNodes.reserve(nodeCount);
+        zeroInDegreeNodes.clear();
+
+        inDegree.assign(nodeCount, 0);
 
         // Compute in-degrees in a single pass
         for (const auto& [inputKey, outputKeys] : adjacencyMap.getBackward())
@@ -313,10 +317,6 @@ public:
                 ++inDegree[nodeIndex];
             }
         }
-
-        // Prepare the zero in-degree "queue" (vector for cache efficiency)
-        std::vector<int> zeroInDegreeNodes;
-        zeroInDegreeNodes.reserve(nodeCount); // Reserve enough space upfront
 
         for (size_t i = 0; i < nodeCount; ++i)
         {
@@ -365,6 +365,9 @@ public:
 #ifdef GRAPH_STATS
         auto start = std::chrono::high_resolution_clock::now();
 #endif
+
+        objectsListCopy.reserve(objectsList.size());
+        objectsListCopy.clear();
 
         for (auto& obj : objectsList) {
             objectsListCopy.push_back(obj.get());
@@ -415,6 +418,10 @@ protected:
 
     std::vector<AudioNode*> objectsListCopy;
     std::vector<AudioNode*> objectsSorted;
+
+    // Only for sorting
+    std::vector<int> zeroInDegreeNodes;
+    std::vector<int> inDegree;
 
     struct AdjacencyMap
     {
