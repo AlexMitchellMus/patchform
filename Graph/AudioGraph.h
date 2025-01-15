@@ -60,7 +60,7 @@ public:
 
     template <typename NodeType, typename... Args>
     void addNode(Args&&... args) {
-        auto nodeID = nodes.size();
+        auto nodeID = objectsList.size();
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
 
@@ -90,7 +90,7 @@ public:
                     // Sum contributions from connected nodes
                     for (uint32_t connKey : connections) {
                         // Fetch the output buffer from the connected node
-                        auto connection = nodes[PortHelpers::getNodeID(connKey)]->getOutputPort();
+                        auto connection = objectsListCopy[PortHelpers::getNodeID(connKey)]->getOutputPort();
                         const auto outputBuffer = connection->getAudioBuffer();
 
                         if (port->isSignal()) {
@@ -112,7 +112,7 @@ public:
                 }
             }
         };
-        nodes.push_back(std::move(node));
+        objectsList.push_back(std::move(node));
     };
 
     bool addObject(json node)
@@ -221,15 +221,15 @@ public:
         size_t maxLeftWidth = 0;
 
         // Precompute maximum widths for alignment
-        for (const auto& node : sortedNodes)
+        for (const auto& node : objectsSorted)
         {
             auto it = std::find_if(
-                nodes.begin(), nodes.end(),
-                [&node](const std::unique_ptr<AudioNode>& n) { return n.get() == node; });
+                objectsListCopy.begin(), objectsListCopy.end(),
+                [&node](const AudioNode* n) { return n == node; });
 
-            if (it != nodes.end())
+            if (it != objectsListCopy.end())
             {
-                size_t nodeIndex = std::distance(nodes.begin(), it);
+                size_t nodeIndex = std::distance(objectsListCopy.begin(), it);
 
                 for (const auto& outputPort : adjacencyMap.getForward() | std::views::keys)
                 {
@@ -248,15 +248,15 @@ public:
         }
 
         // Print the adjacency list in sorted order
-        for (const auto& node : sortedNodes)
+        for (const auto& node : objectsSorted)
         {
             auto it = std::find_if(
-                nodes.begin(), nodes.end(),
-                [&node](const std::unique_ptr<AudioNode>& n) { return n.get() == node; });
+                objectsListCopy.begin(), objectsListCopy.end(),
+                [&node](const AudioNode* n) { return n == node; });
 
-            if (it != nodes.end())
+            if (it != objectsListCopy.end())
             {
-                size_t nodeIndex = std::distance(nodes.begin(), it);
+                size_t nodeIndex = std::distance(objectsListCopy.begin(), it);
 
                 for (const auto& [outputPort, connections] : adjacencyMap.getForward())
                 {
@@ -284,7 +284,7 @@ public:
                                     std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 1) << std::right;
                                 }
                                 first = false;
-                                std::cout << "[" << nodes[iNode]->getShortName() << "] " << std::to_string(iNode) << ", Port " << std::to_string(iPort) << "] ";
+                                std::cout << "[" << objectsListCopy[iNode]->getShortName() << "] " << std::to_string(iNode) << ", Port " << std::to_string(iPort) << "] ";
                             }
                         }
                         std::cout << "\n";
@@ -298,7 +298,7 @@ public:
     // Topological sort using the provided adjacency list
     void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     {
-        size_t nodeCount = nodes.size();
+        size_t nodeCount = objectsListCopy.size();
         sortedNodes.clear();
         sortedNodes.reserve(nodeCount); // Reserve space upfront to avoid reallocations
 
@@ -331,7 +331,7 @@ public:
         while (processIndex < zeroInDegreeNodes.size())
         {
             int currentIndex = zeroInDegreeNodes[processIndex++];
-            sortedNodes.push_back(nodes[currentIndex].get());
+            sortedNodes.push_back(objectsListCopy[currentIndex]);
 
             // Reduce in-degree for downstream nodes
             auto adjacencyIt = adjacencyMap.getForward().find(PortHelpers::getKey(currentIndex, 0)); // 0 for inputPort index
@@ -366,13 +366,17 @@ public:
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-        topologicalSort(sortedNodes);
+        for (auto& obj : objectsList) {
+            objectsListCopy.push_back(obj.get());
+        }
+
+        topologicalSort(objectsSorted);
 
 #ifdef GRAPH_STATS
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout << sortedNodes.size() << " objects in graph, sort took " << elapsedNs << " ns.\n";
+        std::cout << objectsSorted.size() << " objects in graph, sort took " << elapsedNs << " ns.\n";
 #endif
 
 
@@ -393,11 +397,11 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
-        for (auto& node : sortedNodes) {
+        for (auto& node : objectsSorted) {
             node->process(buffer, frameCount);
         }
 
-        for (auto& node : sortedNodes) {
+        for (auto& node : objectsSorted) {
             if (auto outPort = node->getOutputPort())
                 outPort->clearEvents();
         }
@@ -407,8 +411,10 @@ public:
 
 protected:
 
-    std::vector<std::unique_ptr<AudioNode>> nodes;
-    std::vector<AudioNode*> sortedNodes;
+    std::vector<std::unique_ptr<AudioNode>> objectsList;
+
+    std::vector<AudioNode*> objectsListCopy;
+    std::vector<AudioNode*> objectsSorted;
 
     struct AdjacencyMap
     {
