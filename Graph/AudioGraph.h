@@ -447,6 +447,10 @@ public:
 
     void updateSumming()
     {
+        // FIXME: This is horrible, we need to re-inject the lambda because
+        // something is wrong with the graph pointer updating.
+        // The lambda is capturing "this" and not allowing it to be dynamic or something?
+
         for (auto const& obj : objectList)
         {
             injectSummingFunction(obj.get());
@@ -455,10 +459,6 @@ public:
 
     void injectSummingFunction(AudioNode* node)
     {
-        // FIXME: This is horrible, we need to re-inject the lambda because something is wrong with the
-        // graph pointer updating.
-        // The lambda is capturing "this" and not allowing it to be dynamic or something?
-
         auto nodeID = node->nodeID;
         node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) mutable {
 
