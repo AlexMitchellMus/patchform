@@ -531,6 +531,11 @@ public:
 
     void printGraph()
     {
+        if (!activeGraph) {
+            std::cout << "No graph loaded" << std::endl;
+            return;
+        }
+
         activeGraph->printGraph();
     }
 

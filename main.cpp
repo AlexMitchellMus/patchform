@@ -131,13 +131,19 @@ void repl(GraphManager& graphs) {
             }
             break;
         case hash("list"):
-            if (tokens.size() > 1) {
-                if (tokens[1] == "nodes") {
+            if (tokens.size() == 1) {
+                graphs.printGraph();
+            }
+            else if (tokens.size() > 1) {
+                switch (hash(tokens[1]))
+                {
+                case hash("nodes"):
                     for (const auto& name : NodeRegistry::getInstance().getNodeNames()) {
                         std::cout << "- " << name << std::endl;
                     }
-                } else {
-                    std::cout << "Unknown list command" << std::endl;
+                    break;
+                default:
+                    std::cout << "Unknown list action: " << tokens[1] << std::endl;
                 }
             }
             break;
