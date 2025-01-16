@@ -116,7 +116,7 @@ public:
         return &outputPort;
     }
 
-    std::function<void(std::vector<std::unique_ptr<AudioPort>>&, int&, const std::string&)> sumInputBuffers;
+    std::function<void(std::vector<std::unique_ptr<AudioPort>>&)> sumInputBuffers;
 
     uint32_t nodeID;
 
@@ -126,7 +126,7 @@ private:
     void process(float* buffer, unsigned long frameCount)
     {
         //swapStatesIfDirty();
-        sumInputBuffers(inputPortBuffers, runCount, getShortName());
+        sumInputBuffers(inputPortBuffers);
         outputPort.clear(frameCount);
         processAudio(buffer, frameCount);
     }

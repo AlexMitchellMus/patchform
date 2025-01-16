@@ -261,6 +261,37 @@ public:
             backward[inputKey].emplace_back(outputKey);
         }
 
+        void removeAdjacency(uint32_t inputKey, uint32_t outputKey)
+        {
+            // Remove inputKey from forward[outputKey]
+            auto forwardIt = forward.find(outputKey);
+            if (forwardIt != forward.end())
+            {
+                auto& inputs = forwardIt->second;
+                inputs.erase(std::remove(inputs.begin(), inputs.end(), inputKey), inputs.end());
+
+                // If the vector becomes empty, erase the entry from the map
+                if (inputs.empty())
+                {
+                    forward.erase(forwardIt);
+                }
+            }
+
+            // Remove outputKey from backward[inputKey]
+            auto backwardIt = backward.find(inputKey);
+            if (backwardIt != backward.end())
+            {
+                auto& outputs = backwardIt->second;
+                outputs.erase(std::remove(outputs.begin(), outputs.end(), outputKey), outputs.end());
+
+                // If the vector becomes empty, erase the entry from the map
+                if (outputs.empty())
+                {
+                    backward.erase(backwardIt);
+                }
+            }
+        }
+
         [[nodiscard]] const AdjacencyList& getForward() const
         {
             return forward;
@@ -269,6 +300,17 @@ public:
         [[nodiscard]] const AdjacencyList& getBackward() const
         {
             return backward;
+        }
+
+        bool containsAdjacency(uint32_t inputKey, uint32_t outputKey) const
+        {
+            auto it = forward.find(outputKey);
+            if (it != forward.end())
+            {
+                const auto& inputs = it->second;
+                return std::find(inputs.begin(), inputs.end(), inputKey) != inputs.end();
+            }
+            return false;
         }
 
         AdjacencyList forward{};
@@ -297,9 +339,9 @@ public:
     GraphHolder(const GraphHolder* other)
     : context(other->context) // Reuse the same context
 {
-        std::cout << "copying graph" << std::endl;
         objectList = other->objectList;
         objectIDMap = other->objectIDMap;
+
         // Create a new AudioGraph using the copied objectList and context
         graph = std::make_unique<AudioGraph>(context);
         graph->adjacencyMap = other->graph->adjacencyMap;
@@ -356,7 +398,36 @@ public:
         auto outputKey = PortHelpers::getKey(oNode, oPort);
         auto inputKey = PortHelpers::getKey(iNode, iPort);
 
+        if (graph->adjacencyMap.containsAdjacency(inputKey, outputKey))
+        {
+            std::cout << "Connection already exits!" << std::endl;
+            return;
+        }
+
         graph->adjacencyMap.addAdjacency(inputKey, outputKey);
+    }
+
+    // Create connections from idString:port pairs
+    bool disconnect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
+        if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
+        {
+            disconnect(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
+            return true;
+        }
+        return false;
+    }
+
+    // Create connections with the object index
+    void disconnect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
+    {
+        auto outputKey = PortHelpers::getKey(oNode, oPort);
+        auto inputKey = PortHelpers::getKey(iNode, iPort);
+
+        if (graph->adjacencyMap.containsAdjacency(inputKey, outputKey)) {
+            graph->adjacencyMap.removeAdjacency(inputKey, outputKey);
+        } else {
+            std::cout << "Connection doesnt exist!" << std::endl;
+        }
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -384,18 +455,13 @@ public:
 
     void injectSummingFunction(AudioNode* node)
     {
-        auto nodeID = node->nodeID;
-        node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts, int& runCount, const std::string& name) mutable {
+        // FIXME: This is horrible, we need to re-inject the lambda because something is wrong with the
+        // graph pointer updating.
+        // The lambda is capturing "this" and not allowing it to be dynamic or something?
 
-            auto activeGraph = *graph;
-            //auto debugRun = [this, &runCount, name, getGraph]()
-            //{
-            //    static auto previousGraph = getGraph();
-            //    if (previousGraph != getGraph()) {
-            //        std::cout << "Graph pointer is: " << getGraph() << std::endl;
-            //        previousGraph = getGraph();
-            //    }
-            //};
+        auto nodeID = node->nodeID;
+        node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) mutable {
+
             for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
                 auto& port = inputPorts[portID];
 
@@ -411,15 +477,15 @@ public:
                 auto summingAudioBuffer = port->getAudioBuffer();
 
                 // Find connections for the current port
-                auto it = activeGraph.adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
+                auto it = graph->adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
 
-                if (it != activeGraph.adjacencyMap.getBackward().end()) {
+                if (it != graph->adjacencyMap.getBackward().end()) {
                     for (uint32_t connKey : it->second) {
 
                         //debugRun();
 
                         // Fetch the output buffer from the connected node
-                        auto connection = activeGraph.objectsListCopy[PortHelpers::getNodeID(connKey)]->getOutputPort();
+                        auto connection = graph->objectsListCopy[PortHelpers::getNodeID(connKey)]->getOutputPort();
                         const auto outputBuffer = connection->getAudioBuffer();
 
                         if (port->isSignal()) {
@@ -613,7 +679,31 @@ public:
 
         transitioningGraph->sortNodes();
 
-        transitioningGraph->printAdjacencyList();
+        //transitioningGraph->printAdjacencyList();
+
+        transitioningGraph->updateSumming();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+        return true;
+    }
+
+    bool disconnect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
+    {
+        if (!activeGraph) {
+            std::cerr << "No active graph available to disconnect connection." << std::endl;
+            return false;
+        }
+
+        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
+        // Add the connection to the transitioning graph
+        if (!transitioningGraph->disconnect(oObj, oPort, iObj, iPort)) {
+            std::cerr << "Failed to connect objects in the transitioning graph." << std::endl;
+            transitioningGraph.reset(); // Discard transitioning graph
+            return false;
+        }
+
+        transitioningGraph->sortNodes();
 
         transitioningGraph->updateSumming();
 
@@ -667,7 +757,6 @@ public:
         auto startTime = std::chrono::high_resolution_clock::now();
 #endif
         if (swapGraph.load(std::memory_order_acquire)) {
-            std::cout << "======== swapping graphs ========" << std::endl;
             // Perform the swap on the audio thread
             activeGraph.swap(transitioningGraph);
             swapGraph.store(false, std::memory_order_release);

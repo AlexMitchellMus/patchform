@@ -76,20 +76,39 @@ void repl(GraphManager& graphs) {
             break;
         case hash("add"):
             if (tokens.size() > 1) {
-                auto object = tokens[1].str();
-                if (graphs.addObject(object))
+                auto addType = tokens[1].str();
+                switch (hash(addType))
                 {
-                    graphs.printGraph();
+                    case hash("con"):
+                    case hash("connection"):
+                    if (tokens.size() == 6) {
+                        graphs.connect(tokens[2].str(), stoi(tokens[3].str()), tokens[4].str(), stoi(tokens[5].str()));
+                    } else
+                    {
+                        std::cout << "Error: needs: <outObj> <outPort> <inObj> <inPort>" << std::endl;
+                    }
+                    break;
                 }
             }
             break;
-        case hash("conn"):
-        case hash("connect"):
-            if (tokens.size() == 5) {
-                graphs.connect(tokens[1].str(), stoi(tokens[2].str()), tokens[3].str(), stoi(tokens[4].str()));
-            } else
-            {
-                std::cout << "Error: needs: <outObj> <outPort> <inObj> <inPort>" << std::endl;
+        case hash("rem"):
+        case hash("del"):
+        case hash("delete"):
+        case hash("remove"):
+            if (tokens.size() > 1) {
+                auto addType = tokens[1].str();
+                switch (hash(addType))
+                {
+                case hash("con"):
+                case hash("connection"):
+                if (tokens.size() == 6) {
+                    graphs.disconnect(tokens[2].str(), stoi(tokens[3].str()), tokens[4].str(), stoi(tokens[5].str()));
+                } else
+                {
+                    std::cout << "Error: needs: <outObj> <outPort> <inObj> <inPort>" << std::endl;
+                }
+                    break;
+                }
             }
             break;
         case hash("load"):
@@ -140,17 +159,19 @@ void repl(GraphManager& graphs) {
             }
             break;
         case hash("list"):
-            if (tokens.size() == 1) {
-                graphs.printGraph();
-            }
-            else if (tokens.size() > 1) {
+             if (tokens.size() > 1) {
                 switch (hash(tokens[1]))
                 {
-                case hash("nodes"):
+                case hash("graph"):
+                    graphs.printGraph();
+                    break;
+                case hash("obj"):
+                case hash("objects"):
                     for (const auto& name : NodeRegistry::getInstance().getNodeNames()) {
                         std::cout << "- " << name << std::endl;
                     }
                     break;
+                case hash("con"):
                 case hash("conn"):
                 case hash("connections"):
                     graphs.printAdjacencyList();
