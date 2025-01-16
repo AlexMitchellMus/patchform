@@ -523,9 +523,9 @@ public:
 
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
     {
-        if (!activeGraph)
-        {
-            activeGraph = std::make_unique<AudioGraph>(ctx);
+        if (!activeGraph) {
+            std::cerr << "No active graph available to connect objects." << std::endl;
+            return false;
         }
 
         return activeGraph->connect(oObj, oPort, iObj, iPort);
