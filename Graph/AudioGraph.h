@@ -552,13 +552,13 @@ public:
     }
 
     void setActiveGraph(const json& patch, bool logVerbose) {
-        if (swapReady.load(std::memory_order_acquire)) {
+        if (swapGraph.load(std::memory_order_acquire)) {
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
             return;
         }
         transitioningGraph = std::make_shared<AudioGraph>(ctx);
         transitioningGraph->loadPatch(patch, logVerbose);
-        swapReady.store(true, std::memory_order_release);
+        swapGraph.store(true, std::memory_order_release);
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -575,10 +575,10 @@ public:
 
         auto startTime = std::chrono::high_resolution_clock::now();
 #endif
-        if (swapReady.load(std::memory_order_acquire)) {
+        if (swapGraph.load(std::memory_order_acquire)) {
             // Perform the swap on the audio thread
             activeGraph.swap(transitioningGraph);
-            swapReady.store(false, std::memory_order_release);
+            swapGraph.store(false, std::memory_order_release);
         }
 
         // Process the current front graph
@@ -631,6 +631,6 @@ public:
 protected:
     std::shared_ptr<AudioGraph> activeGraph;         // Actively processed graph
     std::shared_ptr<AudioGraph> transitioningGraph;  // New graph prepared for swapping
-    std::atomic<bool> swapReady = false;             // Signal for readiness to swap
+    std::atomic<bool> swapGraph = false;             // Signal for readiness to swap
     NodeContext* ctx;
 };
