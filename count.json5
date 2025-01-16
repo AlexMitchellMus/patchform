@@ -1,6 +1,6 @@
 {
   "nodes": [
-    { "id": "met_0", "obj": "Metro", "hz": 6 },
+    { "id": "met_0", "obj": "Metro", "hz": 3 },
     { "id": "cnt_0", "obj": "Count", "min": 0, "max": 3 },
     { "id": "if_0", "obj": "If", "if": 0, "return": 240 },
     { "id": "if_1", "obj": "If", "if": 1, "return": 440 },
@@ -54,9 +54,9 @@
     { "sourceNode": 5, "sourcePort": 0, "targetNode": 13, "targetPort": 0 },
 
     // envelopes -> output
-    { "sourceNode": 10, "sourcePort": 0, "targetNode": 14, "targetPort": 0 },
-    { "sourceNode": 11, "sourcePort": 0, "targetNode": 14, "targetPort": 0 },
-    { "sourceNode": 12, "sourcePort": 0, "targetNode": 14, "targetPort": 0 },
+    //{ "sourceNode": 10, "sourcePort": 0, "targetNode": 14, "targetPort": 0 },
+    //{ "sourceNode": 11, "sourcePort": 0, "targetNode": 14, "targetPort": 0 },
+    //{ "sourceNode": 12, "sourcePort": 0, "targetNode": 14, "targetPort": 0 },
     { "sourceNode": 13, "sourcePort": 0, "targetNode": 14, "targetPort": 0 }
   ]
 }

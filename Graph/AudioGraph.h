@@ -36,219 +36,9 @@ private:
     NodeContext* context;
 
 public:
-    AudioGraph(NodeContext* context) : context(context)
+    AudioGraph(NodeContext* context)
+        : context(context)
     {
-    }
-
-    void loadPatch(const json& patch, bool logVerbose)
-    {
-        // Create nodes
-        for (const auto& node : patch["nodes"]) {
-            addObject(node);
-        }
-
-        // Create connections
-        for (const auto& connection : patch["connections"]) {
-            // source and target ID needs to be set in the file format
-            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
-            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
-
-            connect(source, connection["sourcePort"], target, connection["targetPort"]);
-        }
-
-        sortNodes();
-
-        if (logVerbose)
-        {
-            printAdjacencyList();
-        }
-    }
-
-    template <typename NodeType, typename... Args>
-    void addNode(const std::optional<std::string>& idString, Args&&... args) {
-        auto nodeID = objectList.size();
-        auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
-        node->nodeID = nodeID;
-
-        // Determine the ID to use for the object ID map
-        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node index in vector
-
-        objectIDMap[finalID] = nodeID;
-
-        // Function responsible for summing audio & event buffers of connected inputs for each node.
-        // This dynamically looks up the connections port via the connection table.
-        // TODO: cache the connected port, and only recalculate if flag is set
-        node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) {
-            for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
-                auto& port = inputPorts[portID];
-
-                // Data ports don't process audio
-                // Audio ports process both audio and data
-                if (port->isSignal()) {
-                    // clear the audio buffer for the current portID
-                    port->setSize(context->frameCount);
-                }
-
-                port->clearEvents();
-                auto& summingEventBuffer = port->getEvents();
-                auto summingAudioBuffer = port->getAudioBuffer();
-
-                // Find connections for the current port
-                auto it = adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
-                if (it != adjacencyMap.getBackward().end()) {
-                    const auto& connections = it->second;
-
-                    // Sum contributions from connected nodes
-                    for (uint32_t connKey : connections) {
-                        // Fetch the output buffer from the connected node
-                        auto connection = objectsListCopy[PortHelpers::getNodeID(connKey)]->getOutputPort();
-                        const auto outputBuffer = connection->getAudioBuffer();
-
-                        if (port->isSignal()) {
-                            // Set the ports preference to signal values if any of the connected ports are signal
-                            port->isAnyConnectedPortSignal = port->isAnyConnectedPortSignal || connection->isSignal();
-                            // Accumulate values in the buffer
-                            for (size_t i = 0; i < context->frameCount; ++i) {
-                                summingAudioBuffer[i] += outputBuffer[i];
-                            }
-                        }
-                        auto& events = connection->getEvents();
-                        summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
-
-                        // Sort combined by timestamp
-                        std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b) {
-                            return a->getTimeStamp() < b->getTimeStamp();
-                        });
-                    }
-                }
-            }
-        };
-        objectList.push_back(std::move(node));
-    };
-
-    bool addObject(json node)
-    {
-        auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
-
-        // Attempt to get the ID as a string,
-        // if no string dump the value (int or float into string)
-        // otherwise return empty value which makes the object use the index in patch
-        const std::optional<std::string> idString = node.contains("id")
-            ? (node["id"].is_string()
-                ? std::make_optional(node["id"].get<std::string>())
-                : std::make_optional(node["id"].dump()))
-            : std::nullopt;
-
-        switch (hash(object))
-        {
-        case hash("add"):
-            {
-                auto const value = node.value("value", 0.0f);
-                addNode<Add>(idString, value);
-            }
-            break;
-        case hash("count"):
-            {
-                auto const min = node.value("min", 0.0f);
-                auto const max = node.value("max", std::numeric_limits<int>::max());
-                addNode<Count>(idString, min, max);
-            }
-            break;
-        case hash("print"):
-            {
-                addNode<Print>(idString);
-            }
-            break;
-        case hash("if"):
-            {
-                auto const ifVal = node.value("if", 0.0f);
-                auto const rtnVal = node.value("return", 0.0f);
-                addNode<If>(idString, ifVal, rtnVal);
-            }
-            break;
-        case hash("env"):
-        case hash("envelope"):
-            {
-                auto const attackVal = node.value("attack", 0.0f);
-                auto const decayVal = node.value("decay", 0.0f);
-
-                //auto const attackCurve = node.value("attackCurve", 1.5f);
-                //auto const decayCurve = node.value("decayCurve", 2.0f);
-                addNode<Envelope>(idString, attackVal, decayVal);
-            }
-            break;
-        case hash("metro"):
-        case hash("metronome"):
-            {
-                auto const value = node.value("hz", 1.0f);
-                addNode<Metronome>(idString, value);
-            }
-            break;
-        case hash("val"):
-        case hash("value"):
-            {
-                auto const value = node.value("value", 0.0f);
-                addNode<Value>(idString, value);
-            }
-            break;
-        case hash("lfo"):
-            {
-                auto const rate = node.value("rate", 1.0f);
-                addNode<LFO>(idString, rate);
-            }
-            break;
-        case hash("volume"):
-            {
-                addNode<Volume>(idString);
-            }
-            break;
-        case hash("osc"):
-        case hash("oscillator"):
-            {
-                auto const waveform = node.value("waveform", "sine");
-                auto const freq = node.value("freq", 440);
-                addNode<Oscillator>(idString, waveform, freq);
-            }
-            break;
-        case hash("aout"):
-        case hash("audioout"):
-            {
-                addNode<AudioOut>(idString);
-            }
-            break;
-        default:
-            // Unknown object name, return error
-            std::cout << "Unknown object: " << object << std::endl;
-            return false;
-        }
-        return true;
-    };
-
-    // Create connections from idString:port pairs
-    bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
-        if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
-        {
-            connect(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
-            return true;
-        }
-        return false;
-    }
-
-    // Create connections with the object index
-    void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
-    {
-        auto outputKey = PortHelpers::getKey(oNode, oPort);
-        auto inputKey = PortHelpers::getKey(iNode, iPort);
-
-        adjacencyMap.addAdjacency(inputKey, outputKey);
-    }
-
-    void printGraph()
-    {
-        for (const auto& obj : objectList)
-        {
-             std::cout << obj->nodeID << " [" << obj->getShortName() << "]" << std::endl;
-        }
     }
 
     void printAdjacencyList()
@@ -398,7 +188,7 @@ public:
         }
     }
 
-    void sortNodes()
+    void sortNodes(const std::vector<std::shared_ptr<AudioNode>>& objectList)
     {
 #define GRAPH_STATS
 #ifdef GRAPH_STATS
@@ -453,12 +243,6 @@ public:
 
     bool flagForDeletion = false;
 
-protected:
-    std::vector<std::unique_ptr<AudioNode>> objectList;
-
-    // Keep track of object id's and position in objectList
-    ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
-
     std::vector<AudioNode*> objectsListCopy;
     std::vector<AudioNode*> objectsSorted;
 
@@ -487,10 +271,301 @@ protected:
             return backward;
         }
 
-    private:
         AdjacencyList forward{};
         AdjacencyList backward{};
     } adjacencyMap;
+};
+
+class GraphHolder
+{
+    std::vector<std::shared_ptr<AudioNode>> objectList;
+    ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
+    NodeContext* context;
+
+    int graphID;
+
+public:
+    std::unique_ptr<AudioGraph> graph;
+
+    GraphHolder(NodeContext* ctx, int iD)
+        : context(ctx)
+        , graphID(iD)
+    {
+        graph = std::make_unique<AudioGraph>(ctx);
+    };
+
+    GraphHolder(const GraphHolder* other)
+    : context(other->context) // Reuse the same context
+{
+        std::cout << "copying graph" << std::endl;
+        objectList = other->objectList;
+        objectIDMap = other->objectIDMap;
+        // Create a new AudioGraph using the copied objectList and context
+        graph = std::make_unique<AudioGraph>(context);
+        graph->adjacencyMap = other->graph->adjacencyMap;
+}
+
+    AudioGraph* getGraph() const
+    {
+        return graph.get();
+    }
+
+    void loadPatch(const json& patch, bool logVerbose)
+    {
+        // Create nodes
+        for (const auto& node : patch["nodes"])
+        {
+            addObject(node);
+        }
+
+        // Create connections
+        for (const auto& connection : patch["connections"])
+        {
+            // source and target ID needs to be set in the file format
+            uint32_t source = connection["sourceNode"].is_string()
+                                  ? objectIDMap[connection["sourceNode"].get<std::string>()]
+                                  : connection["sourceNode"].get<int>();
+            uint32_t target = connection["targetNode"].is_string()
+                                  ? objectIDMap[connection["targetNode"].get<std::string>()]
+                                  : connection["targetNode"].get<int>();
+
+            connect(source, connection["sourcePort"], target, connection["targetPort"]);
+        }
+
+        sortNodes();
+
+        if (logVerbose)
+        {
+            printAdjacencyList();
+        }
+    }
+
+    // Create connections from idString:port pairs
+    bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
+        if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
+        {
+            connect(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
+            return true;
+        }
+        return false;
+    }
+
+    // Create connections with the object index
+    void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
+    {
+        auto outputKey = PortHelpers::getKey(oNode, oPort);
+        auto inputKey = PortHelpers::getKey(iNode, iPort);
+
+        graph->adjacencyMap.addAdjacency(inputKey, outputKey);
+    }
+
+    void process(float* buffer, unsigned long frameCount)
+    {
+        graph->process(buffer, frameCount);
+    }
+
+    void sortNodes()
+    {
+        graph->sortNodes(objectList);
+    }
+
+    void printAdjacencyList()
+    {
+        graph->printAdjacencyList();
+    }
+
+    void updateSumming()
+    {
+        for (auto const& obj : objectList)
+        {
+            injectSummingFunction(obj.get());
+        }
+    }
+
+    void injectSummingFunction(AudioNode* node)
+    {
+        auto nodeID = node->nodeID;
+        node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts, int& runCount, const std::string& name) mutable {
+
+            auto activeGraph = *graph;
+            //auto debugRun = [this, &runCount, name, getGraph]()
+            //{
+            //    static auto previousGraph = getGraph();
+            //    if (previousGraph != getGraph()) {
+            //        std::cout << "Graph pointer is: " << getGraph() << std::endl;
+            //        previousGraph = getGraph();
+            //    }
+            //};
+            for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
+                auto& port = inputPorts[portID];
+
+                // Data ports don't process audio
+                // Audio ports process both audio and data
+                if (port->isSignal()) {
+                    // clear the audio buffer for the current portID
+                    port->setSize(context->frameCount);
+                }
+
+                port->clearEvents();
+                auto& summingEventBuffer = port->getEvents();
+                auto summingAudioBuffer = port->getAudioBuffer();
+
+                // Find connections for the current port
+                auto it = activeGraph.adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
+
+                if (it != activeGraph.adjacencyMap.getBackward().end()) {
+                    for (uint32_t connKey : it->second) {
+
+                        //debugRun();
+
+                        // Fetch the output buffer from the connected node
+                        auto connection = activeGraph.objectsListCopy[PortHelpers::getNodeID(connKey)]->getOutputPort();
+                        const auto outputBuffer = connection->getAudioBuffer();
+
+                        if (port->isSignal()) {
+                            // Set the ports preference to signal values if any of the connected ports are signal
+                            port->isAnyConnectedPortSignal = port->isAnyConnectedPortSignal || connection->isSignal();
+                            // Accumulate values in the buffer
+                            for (size_t i = 0; i < context->frameCount; ++i) {
+                                summingAudioBuffer[i] += outputBuffer[i];
+                            }
+                        }
+                        auto& events = connection->getEvents();
+                        summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
+
+                        // Sort combined by timestamp
+                        std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b) {
+                            return a->getTimeStamp() < b->getTimeStamp();
+                        });
+                    }
+                }
+            }
+        };
+    }
+
+    template <typename NodeType, typename... Args>
+    void addNode(const std::optional<std::string>& idString, Args&&... args) {
+        auto nodeID = objectList.size();
+        auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
+        node->nodeID = nodeID;
+
+        // Determine the ID to use for the object ID map
+        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node index in vector
+
+        objectIDMap[finalID] = nodeID;
+
+        // Function responsible for summing audio & event buffers of connected inputs for each node.
+        // This dynamically looks up the connections port via the connection table.
+        // TODO: cache the connected port, and only recalculate if flag is set
+        injectSummingFunction(node.get());
+        objectList.push_back(std::move(node));
+    };
+
+    bool addObject(json node)
+    {
+        auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
+
+        // Attempt to get the ID as a string,
+        // if no string dump the value (int or float into string)
+        // otherwise return empty value which makes the object use the index in patch
+        const std::optional<std::string> idString = node.contains("id")
+            ? (node["id"].is_string()
+                ? std::make_optional(node["id"].get<std::string>())
+                : std::make_optional(node["id"].dump()))
+            : std::nullopt;
+
+        switch (hash(object))
+        {
+        case hash("add"):
+            {
+                auto const value = node.value("value", 0.0f);
+                addNode<Add>(idString, value);
+            }
+            break;
+        case hash("count"):
+            {
+                auto const min = node.value("min", 0.0f);
+                auto const max = node.value("max", std::numeric_limits<int>::max());
+                addNode<Count>(idString, min, max);
+            }
+            break;
+        case hash("print"):
+            {
+                addNode<Print>(idString);
+            }
+            break;
+        case hash("if"):
+            {
+                auto const ifVal = node.value("if", 0.0f);
+                auto const rtnVal = node.value("return", 0.0f);
+                addNode<If>(idString, ifVal, rtnVal);
+            }
+            break;
+        case hash("env"):
+        case hash("envelope"):
+            {
+                auto const attackVal = node.value("attack", 0.0f);
+                auto const decayVal = node.value("decay", 0.0f);
+
+                //auto const attackCurve = node.value("attackCurve", 1.5f);
+                //auto const decayCurve = node.value("decayCurve", 2.0f);
+                addNode<Envelope>(idString, attackVal, decayVal);
+            }
+            break;
+        case hash("metro"):
+        case hash("metronome"):
+            {
+                auto const value = node.value("hz", 1.0f);
+                addNode<Metronome>(idString, value);
+            }
+            break;
+        case hash("val"):
+        case hash("value"):
+            {
+                auto const value = node.value("value", 0.0f);
+                addNode<Value>(idString, value);
+            }
+            break;
+        case hash("lfo"):
+            {
+                auto const rate = node.value("rate", 1.0f);
+                addNode<LFO>(idString, rate);
+            }
+            break;
+        case hash("volume"):
+            {
+                addNode<Volume>(idString);
+            }
+            break;
+        case hash("osc"):
+        case hash("oscillator"):
+            {
+                auto const waveform = node.value("waveform", "sine");
+                auto const freq = node.value("freq", 440);
+                addNode<Oscillator>(idString, waveform, freq);
+            }
+            break;
+        case hash("aout"):
+        case hash("audioout"):
+            {
+                addNode<AudioOut>(idString);
+            }
+            break;
+        default:
+            // Unknown object name, return error
+            std::cout << "Unknown object: " << object << std::endl;
+            return false;
+        }
+        return true;
+    };
+
+    void printGraph()
+    {
+        for (const auto& obj : objectList)
+        {
+            std::cout << obj->nodeID << " [" << obj->getShortName() << "]" << std::endl;
+        }
+    }
 };
 
 class GraphManager
@@ -511,7 +586,7 @@ public:
     {
         if (!activeGraph)
         {
-            activeGraph = std::make_unique<AudioGraph>(ctx);
+            activeGraph = std::make_unique<GraphHolder>(ctx, 0);
         }
 
         // TODO: Lock the graph, or communicate via a queue
@@ -528,7 +603,23 @@ public:
             return false;
         }
 
-        return activeGraph->connect(oObj, oPort, iObj, iPort);
+        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
+        // Add the connection to the transitioning graph
+        if (!transitioningGraph->connect(oObj, oPort, iObj, iPort)) {
+            std::cerr << "Failed to connect objects in the transitioning graph." << std::endl;
+            transitioningGraph.reset(); // Discard transitioning graph
+            return false;
+        }
+
+        transitioningGraph->sortNodes();
+
+        transitioningGraph->printAdjacencyList();
+
+        transitioningGraph->updateSumming();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+        return true;
     }
 
     void printAdjacencyList()
@@ -556,7 +647,7 @@ public:
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
             return;
         }
-        transitioningGraph = std::make_shared<AudioGraph>(ctx);
+        transitioningGraph = std::make_shared<GraphHolder>(ctx, 2);
         transitioningGraph->loadPatch(patch, logVerbose);
         swapGraph.store(true, std::memory_order_release);
     }
@@ -576,12 +667,13 @@ public:
         auto startTime = std::chrono::high_resolution_clock::now();
 #endif
         if (swapGraph.load(std::memory_order_acquire)) {
+            std::cout << "======== swapping graphs ========" << std::endl;
             // Perform the swap on the audio thread
             activeGraph.swap(transitioningGraph);
             swapGraph.store(false, std::memory_order_release);
         }
 
-        // Process the current front graph
+        // Process the current graph
         auto graph = activeGraph;
         if (graph) {
             graph->process(buffer, frameCount);
@@ -629,8 +721,8 @@ public:
     }
 
 protected:
-    std::shared_ptr<AudioGraph> activeGraph;         // Actively processed graph
-    std::shared_ptr<AudioGraph> transitioningGraph;  // New graph prepared for swapping
+    std::shared_ptr<GraphHolder> activeGraph;         // Actively processed graph
+    std::shared_ptr<GraphHolder> transitioningGraph;  // New graph prepared for swapping
     std::atomic<bool> swapGraph = false;             // Signal for readiness to swap
     NodeContext* ctx;
 };

@@ -42,6 +42,7 @@ public:
                 envValue = 0.0f;
                 isAttack = true;
                 nextEventIndex++;
+                //std::cout << "Envelope " << nodeID << " triggered" << std::endl;
             }
 
             if (isAttack)
