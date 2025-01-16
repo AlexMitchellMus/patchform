@@ -553,7 +553,7 @@ public:
 
     void setActiveGraph(const json& patch, bool logVerbose) {
         if (swapReady.load(std::memory_order_acquire)) {
-            std::cerr << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
+            std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
             return;
         }
         transitioningGraph = std::make_shared<AudioGraph>(ctx);
