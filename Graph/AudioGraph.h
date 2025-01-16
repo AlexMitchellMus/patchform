@@ -237,7 +237,7 @@ public:
     {
         for (const auto& obj : objectsList)
         {
-             std::cout << "[" << obj->getName() << "]" << std::endl;
+             std::cout << obj->nodeID << " [" << obj->getShortName() << "]" << std::endl;
         }
     }
 
@@ -527,6 +527,16 @@ public:
         json object;
         object["obj"] = objName;
         return activeGraph->addObject(object);
+    }
+
+    void printAdjacencyList()
+    {
+        if (!activeGraph) {
+            std::cout << "No graph loaded" << std::endl;
+            return;
+        }
+
+        activeGraph->printAdjacencyList();
     }
 
     void printGraph()

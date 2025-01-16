@@ -142,6 +142,10 @@ void repl(GraphManager& graphs) {
                         std::cout << "- " << name << std::endl;
                     }
                     break;
+                case hash("conn"):
+                case hash("connections"):
+                    graphs.printAdjacencyList();
+                    break;
                 default:
                     std::cout << "Unknown list action: " << tokens[1] << std::endl;
                 }
