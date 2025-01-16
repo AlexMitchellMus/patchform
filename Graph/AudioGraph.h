@@ -224,7 +224,7 @@ public:
         return true;
     };
 
-    // Create connections
+    // Create connections from idString:port pairs
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
         if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
         {
@@ -234,7 +234,7 @@ public:
         return false;
     }
 
-    // Connect nodes dynamically by addressing them by order of addition
+    // Create connections with the object index
     void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
         auto outputKey = PortHelpers::getKey(oNode, oPort);
