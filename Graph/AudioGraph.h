@@ -66,7 +66,7 @@ public:
 
     template <typename NodeType, typename... Args>
     void addNode(const std::optional<std::string>& idString, Args&&... args) {
-        auto nodeID = objectsList.size();
+        auto nodeID = objectList.size();
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
 
@@ -123,7 +123,7 @@ public:
                 }
             }
         };
-        objectsList.push_back(std::move(node));
+        objectList.push_back(std::move(node));
     };
 
     bool addObject(json node)
@@ -245,7 +245,7 @@ public:
 
     void printGraph()
     {
-        for (const auto& obj : objectsList)
+        for (const auto& obj : objectList)
         {
              std::cout << obj->nodeID << " [" << obj->getShortName() << "]" << std::endl;
         }
@@ -405,10 +405,10 @@ public:
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-        objectsListCopy.reserve(objectsList.size());
+        objectsListCopy.reserve(objectList.size());
         objectsListCopy.clear();
 
-        for (auto& obj : objectsList) {
+        for (auto& obj : objectList) {
             objectsListCopy.push_back(obj.get());
         }
 
@@ -451,9 +451,10 @@ public:
         context->eventPool.releaseAllEvents();
     }
 
-protected:
+    bool flagForDeletion = false;
 
-    std::vector<std::unique_ptr<AudioNode>> objectsList;
+protected:
+    std::vector<std::unique_ptr<AudioNode>> objectList;
 
     // Keep track of object id's and position in objectList
     ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
@@ -494,29 +495,10 @@ protected:
 
 class GraphManager
 {
-protected:
-    std::unique_ptr<AudioGraph> activeGraph;
-    std::unique_ptr<AudioGraph> transitioningGraph;
-    NodeContext* ctx;
-    std::vector<float> fadeOutBuffer;
-    std::vector<float> fadeInBuffer;
-    bool isTransitioning = false;
-
 public:
     GraphManager(NodeContext* context)
         : ctx(context)
     {
-        // Resize fade buffers to match the frame count, one frame xfade for now
-        fadeOutBuffer.resize(ctx->frameCount);
-        fadeInBuffer.resize(ctx->frameCount);
-
-        // Fill the fade buffers with linear fade values
-        for (unsigned long i = 0; i < ctx->frameCount; ++i)
-        {
-            fadeOutBuffer[i] = 1.0f - (static_cast<float>(i) / ctx->frameCount);
-            fadeInBuffer[i] = static_cast<float>(i) / ctx->frameCount;
-        }
-
         Logger::getInstance().startProcessingThread();
     }
 
@@ -569,23 +551,14 @@ public:
         activeGraph->printGraph();
     }
 
-    void setActiveGraph(const json& patch, bool logVerbose)
-    {
-        auto newGraph = std::make_unique<AudioGraph>(ctx);
-        newGraph->loadPatch(patch, logVerbose);
-
-        if (activeGraph)
-        {
-            std::cout << "transition to new graph" << std::endl;
-            // Start transition if there's an active graph
-            transitioningGraph = std::move(newGraph);
-            isTransitioning = true;
+    void setActiveGraph(const json& patch, bool logVerbose) {
+        if (swapReady.load(std::memory_order_acquire)) {
+            std::cerr << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
+            return;
         }
-        else
-        {
-            // If no active graph, directly assign
-            activeGraph = std::move(newGraph);
-        }
+        transitioningGraph = std::make_shared<AudioGraph>(ctx);
+        transitioningGraph->loadPatch(patch, logVerbose);
+        swapReady.store(true, std::memory_order_release);
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -602,36 +575,16 @@ public:
 
         auto startTime = std::chrono::high_resolution_clock::now();
 #endif
-
-        if (isTransitioning)
-        {
-            // Temporary buffers for processing
-            std::vector<float> activeBuffer(frameCount, 0.0f);
-            std::vector<float> transitionBuffer(frameCount, 0.0f);
-
-            // Process each graph into its temporary buffer
-            if (activeGraph)
-                activeGraph->process(activeBuffer.data(), frameCount);
-
-            if (transitioningGraph)
-                transitioningGraph->process(transitionBuffer.data(), frameCount);
-
-            // Apply the fade to the buffers
-            for (unsigned long i = 0; i < frameCount; ++i)
-            {
-                float fadeFactor = i / static_cast<float>(frameCount);
-
-                // Mix the faded buffers into the output buffer
-                buffer[i] = (activeBuffer[i] * (1 - fadeFactor)) + (transitionBuffer[i] * fadeFactor);
-            }
-
-            activeGraph = std::move(transitioningGraph);
-            isTransitioning = false;
+        if (swapReady.load(std::memory_order_acquire)) {
+            // Perform the swap on the audio thread
+            activeGraph.swap(transitioningGraph);
+            swapReady.store(false, std::memory_order_release);
         }
-        else if (activeGraph)
-        {
-            // Only process the active graph if no transition is occurring
-            activeGraph->process(buffer, frameCount);
+
+        // Process the current front graph
+        auto graph = activeGraph;
+        if (graph) {
+            graph->process(buffer, frameCount);
         }
 
 #ifdef DSP_TIMING
@@ -674,4 +627,10 @@ public:
         }
 #endif
     }
+
+protected:
+    std::shared_ptr<AudioGraph> activeGraph;         // Actively processed graph
+    std::shared_ptr<AudioGraph> transitioningGraph;  // New graph prepared for swapping
+    std::atomic<bool> swapReady = false;             // Signal for readiness to swap
+    NodeContext* ctx;
 };
