@@ -83,6 +83,15 @@ void repl(GraphManager& graphs) {
                 }
             }
             break;
+        case hash("conn"):
+        case hash("connect"):
+            if (tokens.size() == 5) {
+                graphs.connect(tokens[1].str(), stoi(tokens[2].str()), tokens[3].str(), stoi(tokens[4].str()));
+            } else
+            {
+                std::cout << "Error: needs: <outObj> <outPort> <inObj> <inPort>" << std::endl;
+            }
+            break;
         case hash("load"):
             if (tokens.size() > 1) {
                 // Command starts with "load" and has a filename
@@ -158,21 +167,34 @@ void repl(GraphManager& graphs) {
 PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.
 
 Commands:
-exit, quit, q   Exit the application.
-load            Load a graph file. Example: load graph
-load -v         Print the adjacency list
-list            List the currently loaded graph.
-list sort       List the currently loaded sorted graph.
-list nodes      List available nodes that can be added.
-add             Add a node to the graph. Example: add metro
-connect         Connect nodes together. Example: connect 0.0 1.0
-credits         List credits / OSS libraries
+[quit]          Exit the application.
+                Aliases: [q], [exit]
+
+[load]          Load a graph file. Example: "load graph"
+                Options:
+                [-verbose]   Print the connection layout.
+                             Alias: [-v]
+
+[list]          List the currently loaded graph.
+                Options:
+                [connection] Print the connection layout.
+                             Alias: [conn]
+                [nodes]      Print available nodes that can be added.
+
+[add]           Add a node to the graph. Example: add metro
+
+[connect]       Connect nodes together: Connect <outObj> <outPort> <inObj> <inPort>. Example: "connect 0 1 1 0"
+
+[about]         Print credits / OSS libraries
+
+[help]          Print this help text
+                Alias: [h]
                 )";
 
                 std::cout << helpText << std::endl;
             }
             break;
-        case hash("credits"):
+        case hash("about"):
             {
                 constexpr std::array<std::string_view, 5> credits = {{
                     R"(linenoise-ng (CLI REPL)
