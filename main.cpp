@@ -28,7 +28,7 @@ static int audioCallback(const void* input, void* output,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags,
                          void* userData) {
-    auto* graphs = static_cast<Graphs*>(userData);
+    auto* graphs = static_cast<GraphManager*>(userData);
     float* out = (float*)output;
 
     std::fill(out, out+frameCount, 0.0);
@@ -44,7 +44,7 @@ static int audioCallback(const void* input, void* output,
 
 std::atomic<bool> running(true); // Flag to control the loop
 
-void repl(Graphs& graphs) {
+void repl(GraphManager& graphs) {
     while (running) {
         // Display REPL prompt
         auto rawLine = linenoise("\x1b[1;32mPlugPatch\x1b[0m>> ");
@@ -72,6 +72,15 @@ void repl(Graphs& graphs) {
             {
                 std::cout << "Exiting..." << std::endl;
                 running = false;
+            }
+            break;
+        case hash("add"):
+            if (tokens.size() > 1) {
+                auto object = tokens[1].str();
+                if (graphs.addObject(object))
+                {
+                    graphs.printGraph();
+                }
             }
             break;
         case hash("load"):
@@ -222,7 +231,7 @@ int main() {
 
     auto context = std::make_unique<NodeContext>(sampleRate, frameCount);
 
-    Graphs graphs(context.get());
+    GraphManager graphs(context.get());
 
     // Set up PortAudio stream
     PaStream* stream;

@@ -233,6 +233,14 @@ public:
         adjacencyMap.addAdjacency(inputKey, outputKey);
     }
 
+    void printGraph()
+    {
+        for (const auto& obj : objectsList)
+        {
+             std::cout << "[" << obj->getName() << "]" << std::endl;
+        }
+    }
+
     void printAdjacencyList()
     {
         std::cout << "Adjacency List:\n";
@@ -474,7 +482,7 @@ protected:
     } adjacencyMap;
 };
 
-class Graphs
+class GraphManager
 {
 protected:
     std::unique_ptr<AudioGraph> activeGraph;
@@ -485,7 +493,7 @@ protected:
     bool isTransitioning = false;
 
 public:
-    Graphs(NodeContext* context)
+    GraphManager(NodeContext* context)
         : ctx(context)
     {
         // Resize fade buffers to match the frame count, one frame xfade for now
@@ -502,9 +510,28 @@ public:
         Logger::getInstance().startProcessingThread();
     }
 
-    ~Graphs()
+    ~GraphManager()
     {
         Logger::getInstance().stopProcessingThread();
+    }
+
+    bool addObject(const std::string& objName)
+    {
+        if (!activeGraph)
+        {
+            activeGraph = std::make_unique<AudioGraph>(ctx);
+        }
+
+        // TODO: Lock the graph, or communicate via a queue
+
+        json object;
+        object["obj"] = objName;
+        return activeGraph->addObject(object);
+    }
+
+    void printGraph()
+    {
+        activeGraph->printGraph();
     }
 
     void setActiveGraph(const json& patch, bool logVerbose)
