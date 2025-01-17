@@ -80,6 +80,7 @@ void repl(GraphManager& graphs) {
                 switch (hash(addType))
                 {
                     case hash("con"):
+                    case hash("conn"):
                     case hash("connection"):
                     if (tokens.size() == 6) {
                         graphs.connect(tokens[2].str(), stoi(tokens[3].str()), tokens[4].str(), stoi(tokens[5].str()));
@@ -87,6 +88,8 @@ void repl(GraphManager& graphs) {
                     {
                         std::cout << "Error: needs: <outObj> <outPort> <inObj> <inPort>" << std::endl;
                     }
+                    default:
+                        std::cout << "Error: unknown command: " << addType << std::endl;
                     break;
                 }
             }
