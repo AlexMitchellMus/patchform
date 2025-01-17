@@ -688,7 +688,7 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
-#define DSP_TIMING
+//#define DSP_TIMING
 #ifdef DSP_TIMING
         //=====================
         // 1) Timing the DSP
