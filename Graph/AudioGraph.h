@@ -252,7 +252,7 @@ public:
 
     struct AdjacencyMap
     {
-        // Custom Adjacency List definition using the custom hash
+        // Custom Adjacency List definition using keys: node:port packed int
         using AdjacencyList = ankerl::unordered_dense::map<uint32_t, std::vector<uint32_t>>;
 
         void addAdjacency(uint32_t inputKey, uint32_t outputKey)
