@@ -320,7 +320,7 @@ public:
 
 class GraphHolder
 {
-    std::vector<std::shared_ptr<AudioNode>> objectList;
+    std::vector<std::shared_ptr<AudioNode>> mainObjectList;
     ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
     NodeContext* context;
 
@@ -338,10 +338,9 @@ public:
 
     GraphHolder(const GraphHolder* other)
     : context(other->context) // Reuse the same context
+    , mainObjectList(other->mainObjectList)
+    , objectIDMap(other->objectIDMap)
 {
-        objectList = other->objectList;
-        objectIDMap = other->objectIDMap;
-
         // Create a new AudioGraph using the copied objectList and context
         graph = std::make_unique<AudioGraph>(context);
         graph->adjacencyMap = other->graph->adjacencyMap;
@@ -437,7 +436,7 @@ public:
 
     void sortNodes()
     {
-        graph->sortNodes(objectList);
+        graph->sortNodes(mainObjectList);
     }
 
     void printAdjacencyList()
@@ -451,7 +450,7 @@ public:
         // something is wrong with the graph pointer updating.
         // The lambda is capturing "this" and not allowing it to be dynamic or something?
 
-        for (auto const& obj : objectList)
+        for (auto const& obj : mainObjectList)
         {
             injectSummingFunction(obj.get());
         }
@@ -512,7 +511,7 @@ void injectSummingFunction(AudioNode* node)
 
     template <typename NodeType, typename... Args>
     void addNode(const std::optional<std::string>& idString, Args&&... args) {
-        auto nodeID = objectList.size();
+        auto nodeID = mainObjectList.size();
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
 
@@ -525,7 +524,7 @@ void injectSummingFunction(AudioNode* node)
         // This dynamically looks up the connections port via the connection table.
         // TODO: cache the connected port, and only recalculate if flag is set
         injectSummingFunction(node.get());
-        objectList.push_back(std::move(node));
+        mainObjectList.push_back(std::move(node));
     };
 
     bool addObject(json node)
@@ -628,7 +627,7 @@ void injectSummingFunction(AudioNode* node)
 
     void printGraph()
     {
-        for (const auto& obj : objectList)
+        for (const auto& obj : mainObjectList)
         {
             std::cout << obj->nodeID << " [" << obj->getShortName() << "]" << std::endl;
         }
