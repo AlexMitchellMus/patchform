@@ -88,9 +88,9 @@ void repl(GraphManager& graphs) {
                     {
                         std::cout << "Error: needs: <outObj> <outPort> <inObj> <inPort>" << std::endl;
                     }
+                        break;
                     default:
                         std::cout << "Error: unknown command: " << addType << std::endl;
-                    break;
                 }
             }
             break;

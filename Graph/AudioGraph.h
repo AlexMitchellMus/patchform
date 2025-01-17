@@ -129,7 +129,7 @@ public:
     // Topological sort using the provided adjacency list
     void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     {
-        size_t nodeCount = objectsListCopy.size();
+        const unsigned int nodeCount = objectsListCopy.size();
 
         sortedNodes.reserve(nodeCount);
         sortedNodes.clear();
@@ -143,17 +143,17 @@ public:
         for (const auto& [inputKey, outputKeys] : adjacencyMap.getBackward())
         {
             int nodeIndex = AdjacencyMap::getNodeID(inputKey);
-            if (nodeIndex >= 0 && nodeIndex < static_cast<int>(nodeCount))
+            if (nodeIndex >= 0 && nodeIndex < nodeCount)
             {
                 ++inDegree[nodeIndex];
             }
         }
 
-        for (size_t i = 0; i < nodeCount; ++i)
+        for (unsigned int i = 0; i < nodeCount; ++i)
         {
             if (inDegree[i] == 0)
             {
-                zeroInDegreeNodes.push_back(static_cast<int>(i));
+                zeroInDegreeNodes.push_back(i);
             }
         }
 
@@ -161,12 +161,11 @@ public:
         size_t processIndex = 0;
         while (processIndex < zeroInDegreeNodes.size())
         {
-            int currentIndex = zeroInDegreeNodes[processIndex++];
+            const auto currentIndex = zeroInDegreeNodes[processIndex++];
             sortedNodes.push_back(objectsListCopy[currentIndex]);
 
             // Reduce in-degree for downstream nodes
-            auto adjacencyIt = adjacencyMap.getForward().find(AdjacencyMap::packKey(currentIndex, 0)); // 0 for inputPort index
-            if (adjacencyIt != adjacencyMap.getForward().end())
+            if (auto adjacencyIt = adjacencyMap.getForward().find(AdjacencyMap::packKey(currentIndex, 0)); adjacencyIt != adjacencyMap.getForward().end())
             {
                 for (const auto& downstreamKey : adjacencyIt->second)
                 {
@@ -249,8 +248,8 @@ public:
     std::vector<AudioNode*> objectsSorted;
 
     // Only for sorting
-    std::vector<int> zeroInDegreeNodes;
-    std::vector<int> inDegree;
+    std::vector<unsigned int> zeroInDegreeNodes;
+    std::vector<unsigned int> inDegree;
 
     bool addAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
