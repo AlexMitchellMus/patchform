@@ -435,7 +435,7 @@ public:
                         }
                         else
                         {
-                            // For subsequent connections, add to the buffer
+                            // For subsequent connections, sum the buffer
                             std::transform(
                                 outputBuffer, outputBuffer + frameCount,
                                 summingAudioBuffer, summingAudioBuffer,
@@ -445,7 +445,8 @@ public:
 
                     // Collect and merge events
                     auto& events = connection->getEvents();
-                    summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
+                    if (!events.empty())
+                        summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
                 }
 
                 // Sort combined events only if there are new events
