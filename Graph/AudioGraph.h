@@ -415,6 +415,7 @@ public:
                     continue;
                 }
 
+                bool isFirstConnection = true; // Track if this is the first connection
                 for (uint32_t connKey : it->second)
                 {
                     auto connectedNode = runningGraph.objectsListCopy[PortHelpers::getNodeID(connKey)];
@@ -425,10 +426,21 @@ public:
                     {
                         // Update port status, any connected signal overrides events
                         port->isAnyConnectedPortSignal = true;
-                        std::transform(
-                            outputBuffer, outputBuffer + frameCount,
-                            summingAudioBuffer, summingAudioBuffer,
-                            std::plus<>());
+
+                        if (isFirstConnection)
+                        {
+                            // For the first connection, perform direct assignment
+                            std::copy(outputBuffer, outputBuffer + frameCount, summingAudioBuffer);
+                            isFirstConnection = false;
+                        }
+                        else
+                        {
+                            // For subsequent connections, add to the buffer
+                            std::transform(
+                                outputBuffer, outputBuffer + frameCount,
+                                summingAudioBuffer, summingAudioBuffer,
+                                std::plus<>());
+                        }
                     }
 
                     // Collect and merge events
@@ -677,7 +689,7 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
-//#define DSP_TIMING
+#define DSP_TIMING
 #ifdef DSP_TIMING
         //=====================
         // 1) Timing the DSP

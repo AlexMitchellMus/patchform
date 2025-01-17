@@ -65,7 +65,8 @@ public:
 
     void setSize(size_t size)
     {
-        audioBuffer.assign(size, 0.0f);
+        if (audioBuffer.size() != size)
+            audioBuffer.assign(size, 0.0f);
     }
 
     bool isSignal()
