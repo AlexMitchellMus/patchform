@@ -363,12 +363,8 @@ public:
         for (const auto& connection : patch["connections"])
         {
             // source and target ID needs to be set in the file format
-            uint32_t source = connection["sourceNode"].is_string()
-                                  ? objectIDMap[connection["sourceNode"].get<std::string>()]
-                                  : connection["sourceNode"].get<int>();
-            uint32_t target = connection["targetNode"].is_string()
-                                  ? objectIDMap[connection["targetNode"].get<std::string>()]
-                                  : connection["targetNode"].get<int>();
+            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
+            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
 
             connect(source, connection["sourcePort"], target, connection["targetPort"]);
         }
