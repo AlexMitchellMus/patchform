@@ -388,7 +388,7 @@ public:
     void setSummingFunctionForNode(AudioNode* node)
     {
         auto nodeID = node->nodeID;
-        node->sumInputBuffers = [this, nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
+        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
                                                const AudioGraph& runningGraph)
         {
             for (size_t portID = 0; portID < inputPorts.size(); ++portID)
