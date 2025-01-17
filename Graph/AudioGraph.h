@@ -23,8 +23,6 @@ using json = nlohmann::json;
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
 
-#include "PortHelpers.h"
-
 #include "Logger.h"
 #include "../Utility/ppl_string.hpp"
 #include "AdjacencyMap.h"
@@ -66,7 +64,7 @@ public:
 
                 for (const auto& outputPort : adjacencyMap.getForward() | std::views::keys)
                 {
-                    auto [oNode, oPort] = PortHelpers::getNodeAndPortID(outputPort);
+                    auto [oNode, oPort] = AdjacencyMap::unpackKey(outputPort);
 
                     if (oNode == nodeIndex)
                     {
@@ -93,7 +91,7 @@ public:
 
                 for (const auto& [outputPort, connections] : adjacencyMap.getForward())
                 {
-                    auto [oNode, oPort] = PortHelpers::getNodeAndPortID(outputPort);
+                    auto [oNode, oPort] = AdjacencyMap::unpackKey(outputPort);
 
                     if (oNode == nodeIndex)
                     {
@@ -110,7 +108,7 @@ public:
                             bool first = true;
                             for (const auto& portKey : connections)
                             {
-                                auto [iNode, iPort] = PortHelpers::getNodeAndPortID(portKey);
+                                auto [iNode, iPort] = AdjacencyMap::unpackKey(portKey);
                                 if (!first)
                                 {
                                     // Align continuation lines
@@ -144,7 +142,7 @@ public:
         // Compute in-degrees in a single pass
         for (const auto& [inputKey, outputKeys] : adjacencyMap.getBackward())
         {
-            int nodeIndex = PortHelpers::getNodeID(inputKey);
+            int nodeIndex = AdjacencyMap::getNodeID(inputKey);
             if (nodeIndex >= 0 && nodeIndex < static_cast<int>(nodeCount))
             {
                 ++inDegree[nodeIndex];
@@ -167,12 +165,12 @@ public:
             sortedNodes.push_back(objectsListCopy[currentIndex]);
 
             // Reduce in-degree for downstream nodes
-            auto adjacencyIt = adjacencyMap.getForward().find(PortHelpers::getKey(currentIndex, 0)); // 0 for inputPort index
+            auto adjacencyIt = adjacencyMap.getForward().find(AdjacencyMap::packKey(currentIndex, 0)); // 0 for inputPort index
             if (adjacencyIt != adjacencyMap.getForward().end())
             {
                 for (const auto& downstreamKey : adjacencyIt->second)
                 {
-                    int downstreamNodeIndex = PortHelpers::getNodeID(downstreamKey);
+                    int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
                     if (downstreamNodeIndex >= 0 && downstreamNodeIndex < static_cast<int>(nodeCount))
                     {
                         if (--inDegree[downstreamNodeIndex] == 0)
@@ -256,8 +254,8 @@ public:
 
     bool addAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto outputKey = PortHelpers::getKey(oNode, oPort);
-        auto inputKey = PortHelpers::getKey(iNode, iPort);
+        auto outputKey = AdjacencyMap::packKey(oNode, oPort);
+        auto inputKey = AdjacencyMap::packKey(iNode, iPort);
 
         if (adjacencyMap.containsAdjacency(inputKey, outputKey))
         {
@@ -271,8 +269,8 @@ public:
 
     void removeAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto outputKey = PortHelpers::getKey(oNode, oPort);
-        auto inputKey = PortHelpers::getKey(iNode, iPort);
+        auto outputKey = AdjacencyMap::packKey(oNode, oPort);
+        auto inputKey = AdjacencyMap::packKey(iNode, iPort);
 
         if (adjacencyMap.containsAdjacency(inputKey, outputKey)) {
             adjacencyMap.removeAdjacency(inputKey, outputKey);
@@ -409,7 +407,7 @@ public:
                 auto summingAudioBuffer = port->getAudioBuffer();
 
                 // Retrieve connections for the current port
-                auto it = runningGraph.adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
+                auto it = runningGraph.adjacencyMap.getBackward().find(AdjacencyMap::packKey(nodeID, portID));
                 if (it == runningGraph.adjacencyMap.getBackward().end())
                 {
                     continue;
@@ -418,7 +416,7 @@ public:
                 bool isFirstConnection = true; // Track if this is the first connection
                 for (uint32_t connKey : it->second)
                 {
-                    auto connectedNode = runningGraph.objectsListCopy[PortHelpers::getNodeID(connKey)];
+                    auto connectedNode = runningGraph.objectsListCopy[AdjacencyMap::getNodeID(connKey)];
                     auto connection = connectedNode->getOutputPort();
                     const auto outputBuffer = connection->getAudioBuffer();
 

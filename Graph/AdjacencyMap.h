@@ -27,6 +27,16 @@ public:
         return {key >> 6, static_cast<uint8_t>(key & 0x3F)};
     }
 
+    // Helper function to extract nodeID from a combined uint32_t
+    static constexpr uint16_t getNodeID(uint32_t combined) {
+        return static_cast<uint16_t>(combined >> 6);
+    }
+
+    // Helper function to extract portID from a combined uint32_t
+    static constexpr uint8_t getPortID(uint32_t combined) {
+        return static_cast<uint8_t>(combined & 0x3F); // Mask the lower 6 bits
+    }
+
     void addAdjacency(uint32_t inputKey, uint32_t outputKey)
     {
         forward[outputKey].emplace_back(inputKey);
