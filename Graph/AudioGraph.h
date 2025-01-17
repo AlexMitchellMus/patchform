@@ -457,57 +457,58 @@ public:
         }
     }
 
-    void injectSummingFunction(AudioNode* node)
-    {
-        auto nodeID = node->nodeID;
-        node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) mutable {
+void injectSummingFunction(AudioNode* node)
+{
+    auto nodeID = node->nodeID;
+    node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) mutable {
 
-            for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
-                auto& port = inputPorts[portID];
+        for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
+            auto& port = inputPorts[portID];
 
-                // Data ports don't process audio
-                // Audio ports process both audio and data
-                if (port->isSignal()) {
-                    // clear the audio buffer for the current portID
-                    port->setSize(context->frameCount);
-                }
-
-                port->clearEvents();
-                auto& summingEventBuffer = port->getEvents();
-                auto summingAudioBuffer = port->getAudioBuffer();
-
-                // Find connections for the current port
-                auto it = graph->adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
-
-                if (it != graph->adjacencyMap.getBackward().end()) {
-                    for (uint32_t connKey : it->second) {
-
-                        //debugRun();
-
-                        // Fetch the output buffer from the connected node
-                        auto connection = graph->objectsListCopy[PortHelpers::getNodeID(connKey)]->getOutputPort();
-                        const auto outputBuffer = connection->getAudioBuffer();
-
-                        if (port->isSignal()) {
-                            // Set the ports preference to signal values if any of the connected ports are signal
-                            port->isAnyConnectedPortSignal = port->isAnyConnectedPortSignal || connection->isSignal();
-                            // Accumulate values in the buffer
-                            for (size_t i = 0; i < context->frameCount; ++i) {
-                                summingAudioBuffer[i] += outputBuffer[i];
-                            }
-                        }
-                        auto& events = connection->getEvents();
-                        summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
-
-                        // Sort combined by timestamp
-                        std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b) {
-                            return a->getTimeStamp() < b->getTimeStamp();
-                        });
-                    }
-                }
+            if (port->isSignal()) {
+                // Clear and resize audio buffer only for signal ports
+                port->setSize(context->frameCount);
             }
-        };
-    }
+
+            port->clearEvents();
+            auto& summingEventBuffer = port->getEvents();
+            auto summingAudioBuffer = port->getAudioBuffer();
+
+            // Retrieve connections for the current port
+            auto it = graph->adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
+            if (it == graph->adjacencyMap.getBackward().end()) {
+                continue;
+            }
+
+            for (uint32_t connKey : it->second) {
+                auto connectedNode = graph->objectsListCopy[PortHelpers::getNodeID(connKey)];
+                auto connection = connectedNode->getOutputPort();
+                const auto outputBuffer = connection->getAudioBuffer();
+
+                if (port->isSignal()) {
+                    // Update signal status and accumulate buffer values
+                    port->isAnyConnectedPortSignal = port->isAnyConnectedPortSignal || connection->isSignal();
+                    std::transform(
+                        outputBuffer, outputBuffer + context->frameCount,
+                        summingAudioBuffer, summingAudioBuffer,
+                        std::plus<>());
+                }
+
+                // Collect and merge events
+                auto& events = connection->getEvents();
+                summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
+            }
+
+            // Sort combined events only if there are new events
+            if (!summingEventBuffer.empty()) {
+                std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b) {
+                    return a->getTimeStamp() < b->getTimeStamp();
+                });
+            }
+        }
+    };
+}
+
 
     template <typename NodeType, typename... Args>
     void addNode(const std::optional<std::string>& idString, Args&&... args) {
