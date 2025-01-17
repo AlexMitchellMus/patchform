@@ -485,9 +485,9 @@ void injectSummingFunction(AudioNode* node)
                 auto connection = connectedNode->getOutputPort();
                 const auto outputBuffer = connection->getAudioBuffer();
 
-                if (port->isSignal()) {
-                    // Update signal status and accumulate buffer values
-                    port->isAnyConnectedPortSignal = port->isAnyConnectedPortSignal || connection->isSignal();
+                if (port->isSignal() && connection->isSignal()) {
+                    // Update signal status
+                    port->isAnyConnectedPortSignal = true;
                     std::transform(
                         outputBuffer, outputBuffer + context->frameCount,
                         summingAudioBuffer, summingAudioBuffer,
