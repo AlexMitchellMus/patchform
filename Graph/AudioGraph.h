@@ -795,10 +795,9 @@ public:
             double usagePct   = (averageMs / periodMs) * 100.0;
 
             // 2c) Print results
-            std::cout
-                << "Average callback time over last second: "
-                << averageMs << " ms, which is "
-                << usagePct << "% of available time.\n";
+            Logger::getInstance().log("Average callback time over last second: "
+                + std::to_string(averageMs) + " ms, which is "
+                + std::to_string(usagePct) + "% of available time");
 
             // 2d) Reset counters for next 1-second interval
             lastPrintTime             = now;

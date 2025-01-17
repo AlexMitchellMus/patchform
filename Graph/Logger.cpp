@@ -16,9 +16,14 @@ Logger& Logger::getInstance() {
     return instance;
 }
 
-// Add a log message from the audio thread
+// Object event message logging
 void Logger::logEvent(AudioNode* node, uint64_t timestamp, float data) {
     logQueue.enqueue(Message{ node->getName(), data, timestamp }); // Enqueue log message safely
+}
+
+// String only message logging
+void Logger::log(const std::string& message) {
+    logQueue.enqueue(Message{ message });
 }
 
 // Start the log processing thread

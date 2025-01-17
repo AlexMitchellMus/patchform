@@ -20,6 +20,8 @@ public:
 
     void logEvent(AudioNode* node, uint64_t timestamp, float data);
 
+    void log(const std::string& message);
+
     // Start the log processing thread
     void startProcessingThread();
 
@@ -38,8 +40,8 @@ private:
     struct Message
     {
         std::string nodeName;
-        float data;
-        uint64_t timestamp;
+        float data = 0.0f;
+        uint64_t timestamp = 0;
     };
 
     moodycamel::ConcurrentQueue<Logger::Message> logQueue;
