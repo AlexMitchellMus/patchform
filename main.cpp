@@ -151,7 +151,7 @@ void repl(GraphManager& graphs) {
                 try {
                     nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, true, true);
                     if (!patch.empty()) {
-                        bool logVerbose = tokens.size() > 2 && (tokens[2] == "-v" || tokens[2] == "-verbose");
+                        bool logVerbose = tokens.size() > 2 && (tokens[2] == "v" || tokens[2] == "verbose");
                         graphs.setActiveGraph(patch, logVerbose);
                     }
                 }
@@ -196,8 +196,8 @@ Commands:
 
 [load]          Load a graph file. Example: "load graph"
                 Options:
-                [-verbose]   Print the connection layout.
-                             Alias: [-v]
+                [verbose]    Print the connection layout.
+                             Alias: [v]
 
 [list]          List the currently loaded graph.
                 Options:
@@ -205,9 +205,10 @@ Commands:
                              Alias: [conn]
                 [nodes]      Print available nodes that can be added.
 
-[add]           Add a node to the graph. Example: add metro
-
-[connect]       Connect nodes together: Connect <outObj> <outPort> <inObj> <inPort>. Example: "connect 0 1 1 0"
+[add]           Add to the currently loaded patch:
+                Options:
+                [connection] Add a connection <outObj> <outPort> <inObj> <inPort>. Example: "add con 0 1 1 0"
+                             Alias: [conn] [con]
 
 [about]         Print credits / OSS libraries
 

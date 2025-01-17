@@ -256,10 +256,48 @@ public:
     std::vector<int> zeroInDegreeNodes;
     std::vector<int> inDegree;
 
+    bool addAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
+    {
+        auto outputKey = PortHelpers::getKey(oNode, oPort);
+        auto inputKey = PortHelpers::getKey(iNode, iPort);
+
+        if (adjacencyMap.containsAdjacency(inputKey, outputKey))
+        {
+            std::cout << "Connection already exits!" << std::endl;
+            return false;
+        }
+
+        adjacencyMap.addAdjacency(inputKey, outputKey);
+        return true;
+    }
+
+    void removeAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
+    {
+        auto outputKey = PortHelpers::getKey(oNode, oPort);
+        auto inputKey = PortHelpers::getKey(iNode, iPort);
+
+        if (adjacencyMap.containsAdjacency(inputKey, outputKey)) {
+            adjacencyMap.removeAdjacency(inputKey, outputKey);
+        } else {
+            std::cout << "Connection doesnt exist!" << std::endl;
+        }
+    }
+
     struct AdjacencyMap
     {
         // Custom Adjacency List definition using keys: node:port packed int
         using AdjacencyList = ankerl::unordered_dense::map<uint32_t, std::vector<uint32_t>>;
+
+        // Pack a target node and port into a single uint32_t key
+        static constexpr uint32_t packKey(uint32_t nodeID, uint8_t portID) {
+            assert(portID < 64);  // Ensure portID uses only 6 bits
+            return (nodeID << 6) | portID;
+        }
+
+        // Unpack a key into nodeID and portID
+        static constexpr std::pair<uint32_t, uint8_t> unpackKey(uint32_t key) {
+            return {key >> 6, static_cast<uint8_t>(key & 0x3F)};
+        }
 
         void addAdjacency(uint32_t inputKey, uint32_t outputKey)
         {
@@ -330,14 +368,11 @@ class GraphHolder
     ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
     NodeContext* context;
 
-    int graphID;
-
 public:
     std::unique_ptr<AudioGraph> graph;
 
-    GraphHolder(NodeContext* ctx, int iD)
+    GraphHolder(NodeContext* ctx)
         : context(ctx)
-        , graphID(iD)
     {
         graph = std::make_unique<AudioGraph>(ctx);
     };
@@ -394,16 +429,7 @@ public:
     // Create connections with the object index
     void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto outputKey = PortHelpers::getKey(oNode, oPort);
-        auto inputKey = PortHelpers::getKey(iNode, iPort);
-
-        if (graph->adjacencyMap.containsAdjacency(inputKey, outputKey))
-        {
-            std::cout << "Connection already exits!" << std::endl;
-            return;
-        }
-
-        graph->adjacencyMap.addAdjacency(inputKey, outputKey);
+        graph->addAdjacency(oNode, oPort, iNode, iPort);
     }
 
     // Create connections from idString:port pairs
@@ -419,14 +445,7 @@ public:
     // Create connections with the object index
     void disconnect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto outputKey = PortHelpers::getKey(oNode, oPort);
-        auto inputKey = PortHelpers::getKey(iNode, iPort);
-
-        if (graph->adjacencyMap.containsAdjacency(inputKey, outputKey)) {
-            graph->adjacencyMap.removeAdjacency(inputKey, outputKey);
-        } else {
-            std::cout << "Connection doesnt exist!" << std::endl;
-        }
+        graph->removeAdjacency(oNode, oPort, iNode, iPort);
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -652,7 +671,7 @@ public:
     {
         if (!activeGraph)
         {
-            activeGraph = std::make_unique<GraphHolder>(ctx, 0);
+            activeGraph = std::make_unique<GraphHolder>(ctx);
         }
 
         // TODO: Lock the graph, or communicate via a queue
@@ -735,7 +754,7 @@ public:
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
             return;
         }
-        transitioningGraph = std::make_shared<GraphHolder>(ctx, 2);
+        transitioningGraph = std::make_shared<GraphHolder>(ctx);
         transitioningGraph->loadPatch(patch, logVerbose);
         swapGraph.store(true, std::memory_order_release);
     }
