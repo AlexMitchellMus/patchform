@@ -391,14 +391,17 @@ public:
         node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
                                                const AudioGraph& runningGraph)
         {
+            const auto frameCount = runningGraph.context->frameCount;
+
             for (size_t portID = 0; portID < inputPorts.size(); ++portID)
             {
                 auto& port = inputPorts[portID];
+                const bool isPortSignal = port->isSignal();
 
-                if (port->isSignal())
+                if (isPortSignal)
                 {
                     // Clear and resize audio buffer only for signal ports
-                    port->setSize(runningGraph.context->frameCount);
+                    port->setSize(frameCount);
                 }
 
                 port->clearEvents();
@@ -418,12 +421,12 @@ public:
                     auto connection = connectedNode->getOutputPort();
                     const auto outputBuffer = connection->getAudioBuffer();
 
-                    if (port->isSignal() && connection->isSignal())
+                    if (isPortSignal && connection->isSignal())
                     {
-                        // Update signal status
+                        // Update port status, any connected signal overrides events
                         port->isAnyConnectedPortSignal = true;
                         std::transform(
-                            outputBuffer, outputBuffer + runningGraph.context->frameCount,
+                            outputBuffer, outputBuffer + frameCount,
                             summingAudioBuffer, summingAudioBuffer,
                             std::plus<>());
                     }
