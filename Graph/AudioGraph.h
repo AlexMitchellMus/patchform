@@ -679,9 +679,7 @@ public:
 
         transitioningGraph->sortNodes();
 
-        //transitioningGraph->printAdjacencyList();
-
-        transitioningGraph->updateSumming();
+        transitioningGraph->updateSumming(); // Oof
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
