@@ -27,14 +27,12 @@ using json = nlohmann::json;
 
 #include "Logger.h"
 #include "../Utility/ppl_string.hpp"
+#include "AdjacencyMap.h"
 
 #undef max
 
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
-private:
-    NodeContext* context;
-
 public:
     AudioGraph(NodeContext* context)
         : context(context)
@@ -236,7 +234,7 @@ public:
     void process(float* buffer, unsigned long frameCount)
     {
         for (auto& node : objectsSorted) {
-            node->process(buffer, frameCount);
+            node->process(buffer, frameCount, *this);
         }
 
         for (auto& node : objectsSorted) {
@@ -282,84 +280,8 @@ public:
             std::cout << "Connection doesnt exist!" << std::endl;
         }
     }
-
-    struct AdjacencyMap
-    {
-        // Custom Adjacency List definition using keys: node:port packed int
-        using AdjacencyList = ankerl::unordered_dense::map<uint32_t, std::vector<uint32_t>>;
-
-        // Pack a target node and port into a single uint32_t key
-        static constexpr uint32_t packKey(uint32_t nodeID, uint8_t portID) {
-            assert(portID < 64);  // Ensure portID uses only 6 bits
-            return (nodeID << 6) | portID;
-        }
-
-        // Unpack a key into nodeID and portID
-        static constexpr std::pair<uint32_t, uint8_t> unpackKey(uint32_t key) {
-            return {key >> 6, static_cast<uint8_t>(key & 0x3F)};
-        }
-
-        void addAdjacency(uint32_t inputKey, uint32_t outputKey)
-        {
-            forward[outputKey].emplace_back(inputKey);
-            backward[inputKey].emplace_back(outputKey);
-        }
-
-        void removeAdjacency(uint32_t inputKey, uint32_t outputKey)
-        {
-            // Remove inputKey from forward[outputKey]
-            auto forwardIt = forward.find(outputKey);
-            if (forwardIt != forward.end())
-            {
-                auto& inputs = forwardIt->second;
-                inputs.erase(std::remove(inputs.begin(), inputs.end(), inputKey), inputs.end());
-
-                // If the vector becomes empty, erase the entry from the map
-                if (inputs.empty())
-                {
-                    forward.erase(forwardIt);
-                }
-            }
-
-            // Remove outputKey from backward[inputKey]
-            auto backwardIt = backward.find(inputKey);
-            if (backwardIt != backward.end())
-            {
-                auto& outputs = backwardIt->second;
-                outputs.erase(std::remove(outputs.begin(), outputs.end(), outputKey), outputs.end());
-
-                // If the vector becomes empty, erase the entry from the map
-                if (outputs.empty())
-                {
-                    backward.erase(backwardIt);
-                }
-            }
-        }
-
-        [[nodiscard]] const AdjacencyList& getForward() const
-        {
-            return forward;
-        }
-
-        [[nodiscard]] const AdjacencyList& getBackward() const
-        {
-            return backward;
-        }
-
-        bool containsAdjacency(uint32_t inputKey, uint32_t outputKey) const
-        {
-            auto it = forward.find(outputKey);
-            if (it != forward.end())
-            {
-                const auto& inputs = it->second;
-                return std::find(inputs.begin(), inputs.end(), inputKey) != inputs.end();
-            }
-            return false;
-        }
-
-        AdjacencyList forward{};
-        AdjacencyList backward{};
-    } adjacencyMap;
+    AdjacencyMap adjacencyMap;
+    NodeContext* context;
 };
 
 class GraphHolder
@@ -463,70 +385,65 @@ public:
         graph->printAdjacencyList();
     }
 
-    void updateSumming()
+    void setSummingFunctionForNode(AudioNode* node)
     {
-        // FIXME: This is horrible, we need to re-inject the lambda because
-        // something is wrong with the graph pointer updating.
-        // The lambda is capturing "this" and not allowing it to be dynamic or something?
-
-        for (auto const& obj : mainObjectList)
+        auto nodeID = node->nodeID;
+        node->sumInputBuffers = [this, nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
+                                               const AudioGraph& runningGraph)
         {
-            injectSummingFunction(obj.get());
-        }
-    }
+            for (size_t portID = 0; portID < inputPorts.size(); ++portID)
+            {
+                auto& port = inputPorts[portID];
 
-void injectSummingFunction(AudioNode* node)
-{
-    auto nodeID = node->nodeID;
-    node->sumInputBuffers = [this, nodeID](std::vector<std::unique_ptr<AudioPort>>& inputPorts) mutable {
-
-        for (size_t portID = 0; portID < inputPorts.size(); ++portID) {
-            auto& port = inputPorts[portID];
-
-            if (port->isSignal()) {
-                // Clear and resize audio buffer only for signal ports
-                port->setSize(context->frameCount);
-            }
-
-            port->clearEvents();
-            auto& summingEventBuffer = port->getEvents();
-            auto summingAudioBuffer = port->getAudioBuffer();
-
-            // Retrieve connections for the current port
-            auto it = graph->adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
-            if (it == graph->adjacencyMap.getBackward().end()) {
-                continue;
-            }
-
-            for (uint32_t connKey : it->second) {
-                auto connectedNode = graph->objectsListCopy[PortHelpers::getNodeID(connKey)];
-                auto connection = connectedNode->getOutputPort();
-                const auto outputBuffer = connection->getAudioBuffer();
-
-                if (port->isSignal() && connection->isSignal()) {
-                    // Update signal status
-                    port->isAnyConnectedPortSignal = true;
-                    std::transform(
-                        outputBuffer, outputBuffer + context->frameCount,
-                        summingAudioBuffer, summingAudioBuffer,
-                        std::plus<>());
+                if (port->isSignal())
+                {
+                    // Clear and resize audio buffer only for signal ports
+                    port->setSize(runningGraph.context->frameCount);
                 }
 
-                // Collect and merge events
-                auto& events = connection->getEvents();
-                summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
-            }
+                port->clearEvents();
+                auto& summingEventBuffer = port->getEvents();
+                auto summingAudioBuffer = port->getAudioBuffer();
 
-            // Sort combined events only if there are new events
-            if (!summingEventBuffer.empty()) {
-                std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b) {
-                    return a->getTimeStamp() < b->getTimeStamp();
-                });
-            }
-        }
-    };
-}
+                // Retrieve connections for the current port
+                auto it = runningGraph.adjacencyMap.getBackward().find(PortHelpers::getKey(nodeID, portID));
+                if (it == runningGraph.adjacencyMap.getBackward().end())
+                {
+                    continue;
+                }
 
+                for (uint32_t connKey : it->second)
+                {
+                    auto connectedNode = runningGraph.objectsListCopy[PortHelpers::getNodeID(connKey)];
+                    auto connection = connectedNode->getOutputPort();
+                    const auto outputBuffer = connection->getAudioBuffer();
+
+                    if (port->isSignal() && connection->isSignal())
+                    {
+                        // Update signal status
+                        port->isAnyConnectedPortSignal = true;
+                        std::transform(
+                            outputBuffer, outputBuffer + runningGraph.context->frameCount,
+                            summingAudioBuffer, summingAudioBuffer,
+                            std::plus<>());
+                    }
+
+                    // Collect and merge events
+                    auto& events = connection->getEvents();
+                    summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
+                }
+
+                // Sort combined events only if there are new events
+                if (!summingEventBuffer.empty())
+                {
+                    std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b)
+                    {
+                        return a->getTimeStamp() < b->getTimeStamp();
+                    });
+                }
+            }
+        };
+    }
 
     template <typename NodeType, typename... Args>
     void addNode(const std::optional<std::string>& idString, Args&&... args) {
@@ -542,7 +459,7 @@ void injectSummingFunction(AudioNode* node)
         // Function responsible for summing audio & event buffers of connected inputs for each node.
         // This dynamically looks up the connections port via the connection table.
         // TODO: cache the connected port, and only recalculate if flag is set
-        injectSummingFunction(node.get());
+        setSummingFunctionForNode(node.get());
         mainObjectList.push_back(std::move(node));
     };
 
@@ -698,8 +615,6 @@ public:
 
         transitioningGraph->sortNodes();
 
-        transitioningGraph->updateSumming(); // Oof
-
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
         return true;
@@ -721,8 +636,6 @@ public:
         }
 
         transitioningGraph->sortNodes();
-
-        transitioningGraph->updateSumming();
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);

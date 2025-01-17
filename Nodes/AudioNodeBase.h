@@ -37,6 +37,8 @@ std::unique_ptr<StateBase> copy() const override {                              
 #define M_PI 3.14159265358979323846
 #endif
 
+class AudioGraph;
+
 // Abstract AudioNode class
 class AudioNode {
 public:
@@ -116,17 +118,17 @@ public:
         return &outputPort;
     }
 
-    std::function<void(std::vector<std::unique_ptr<AudioPort>>&)> sumInputBuffers;
+    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph& runningGraph)> sumInputBuffers;
 
     uint32_t nodeID;
 
     int runCount = 0;
 
 private:
-    void process(float* buffer, unsigned long frameCount)
+    void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph)
     {
         //swapStatesIfDirty();
-        sumInputBuffers(inputPortBuffers);
+        sumInputBuffers(inputPortBuffers, runningGraph);
         outputPort.clear(frameCount);
         processAudio(buffer, frameCount);
     }
