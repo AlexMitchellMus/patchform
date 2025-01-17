@@ -41,6 +41,12 @@ public:
     {
     }
 
+    AudioGraph(AudioGraph* other)
+    : context(other->context)
+    , adjacencyMap(other->adjacencyMap)
+    {
+    }
+
     void printAdjacencyList()
     {
         std::cout << "Adjacency List:\n";
@@ -341,9 +347,7 @@ public:
     , mainObjectList(other->mainObjectList)
     , objectIDMap(other->objectIDMap)
 {
-        // Create a new AudioGraph using the copied objectList and context
-        graph = std::make_unique<AudioGraph>(context);
-        graph->adjacencyMap = other->graph->adjacencyMap;
+        graph = std::make_unique<AudioGraph>(other->graph.get());
 }
 
     AudioGraph* getGraph() const
