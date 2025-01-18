@@ -6,9 +6,8 @@
 
 #include <iostream>
 #include <functional>
+#include <filesystem>
 #include <fstream>
-#include <windows.h>
-#include <thread>
 #include <atomic>
 #include <conio.h>
 
@@ -183,20 +182,13 @@ void repl(GraphManager& graphs) {
                 std::cout << "Loading graph from file: " << filename << "..." << std::endl;
 
                 // Handle file loading
-                char buffer[MAX_PATH];
-                DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
-                if (length == 0) {
-                    std::cerr << "Error getting current directory." << std::endl;
-                    break;
-                }
-
-                auto fullPath = filename + ".json";
-                std::ifstream file(fullPath.str());
+                std::filesystem::path fullPath = std::filesystem::current_path() / (filename.str() + ".json");
+                std::ifstream file(fullPath);
 
                 if (!file.is_open()) {
                     // Try loading JSON5 file
-                    fullPath = filename + ".json5";
-                    file.open(fullPath.str());
+                    fullPath = std::filesystem::current_path() / (filename.str() + ".json5");
+                    file.open(fullPath);
                     if (!file.is_open())
                     {
                         std::cerr << "Could not open file: " << fullPath << std::endl;
@@ -206,8 +198,7 @@ void repl(GraphManager& graphs) {
 
                 std::cout << fullPath << " loaded successfully" << std::endl;
 
-                std::string fileContent((std::istreambuf_iterator<char>(file)),
-                                        std::istreambuf_iterator<char>());
+                std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
                 file.close();
 
                 try {
