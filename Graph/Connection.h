@@ -46,6 +46,26 @@ public:
         return conHash;
     }
 
+    unsigned int getoNode()
+    {
+        return oNode;
+    }
+
+    unsigned int getoPort()
+    {
+        return oPort;
+    }
+
+    unsigned int getiNode()
+    {
+        return iNode;
+    }
+
+    unsigned int getiPort()
+    {
+        return iPort;
+    }
+
     std::string toString()
     {
         return "oNode: " + std::to_string(oNode) +

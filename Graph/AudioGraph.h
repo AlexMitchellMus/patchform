@@ -137,8 +137,7 @@ public:
         // Compute in-degrees in a single pass
         for (const auto& [inputKey, outputKeys] : adjacencyMap.getBackward())
         {
-            int nodeIndex = AdjacencyMap::getNodeID(inputKey);
-            if (nodeIndex >= 0 && nodeIndex < nodeCount)
+            if (int nodeIndex = AdjacencyMap::getNodeID(inputKey); nodeIndex >= 0 && nodeIndex < nodeCount)
             {
                 ++inDegree[nodeIndex];
             }
@@ -194,7 +193,8 @@ public:
         objectsListCopy.reserve(objectList.size());
         objectsListCopy.clear();
 
-        for (auto& obj : objectList) {
+        for (auto& obj : objectList)
+        {
             objectsListCopy.push_back(obj.get());
         }
 
@@ -204,7 +204,7 @@ public:
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout << objectsSorted.size() << " objects in graph, sort took " << elapsedNs << " ns.\n";
+        std::cout <<  "adjacency map size: " << adjacencyMap.getSize() << " " << objectList.size() << " objects in graph " <<  objectsSorted.size() << " objects sorted, sort took " << elapsedNs << " ns.\n";
 #endif
 
 
@@ -240,6 +240,9 @@ public:
     bool flagForDeletion = false;
 
     std::vector<AudioNode*> objectsListCopy;
+
+    ankerl::unordered_dense::map<uint32_t, uint32_t> objectIDtoIndex;
+
     std::vector<AudioNode*> objectsSorted;
 
     // Only for sorting
@@ -248,15 +251,10 @@ public:
 
     bool addAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto outputKey = AdjacencyMap::packKey(oNode, oPort);
-        auto inputKey = AdjacencyMap::packKey(iNode, iPort);
+        auto outputKey = AdjacencyMap::packKey(objectIDtoIndex[oNode], oPort);
+        auto inputKey = AdjacencyMap::packKey(objectIDtoIndex[iNode], iPort);
 
-        if (adjacencyMap.containsAdjacency(inputKey, outputKey))
-        {
-            std::cout << "Connection already exits!" << std::endl;
-            return false;
-        }
-
+        std::cout << "mapping: " << oNode << "->" << objectIDtoIndex[oNode] << " " << oPort << " " << iNode << "->" << objectIDtoIndex[iNode] << " " << iPort << std::endl;
         adjacencyMap.addAdjacency(inputKey, outputKey);
         return true;
     }
@@ -286,6 +284,8 @@ class GraphHolder
     NodeContext* context;
 
 public:
+    std::vector<std::shared_ptr<AudioNode>> removedObjects;
+
     std::unique_ptr<AudioGraph> graph;
 
     GraphHolder(NodeContext* ctx)
@@ -338,16 +338,32 @@ public:
 
     void updateConnections()
     {
+        graph->objectIDtoIndex.reserve(objects.size());
+        graph->objectIDtoIndex.clear();
+
+        int counter = 0;
+        for (auto& obj : objects)
+        {
+            graph->objectIDtoIndex.emplace(obj->nodeID, counter);
+            counter++;
+        }
+
         graph->adjacencyMap.clear();
 
         for (const auto& conn : connections)
         {
-            graph->adjacencyMap.addAdjacency(conn->getIn(), conn->getOut());
+            std::cout << "updating adjacency map!" << conn->toString() << std::endl;
+            graph->addAdjacency(conn->getoNode(), conn->getoPort(), conn->getiNode(), conn->getiPort());
         }
     }
 
     // Create connections from idString:port pairs
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
+        std::cout << "object map id: " << std::endl;
+        for (auto obj : objectIDMap)
+        {
+            std::cout << "objectIDString: " << obj.first << " ID: " << obj.second << std::endl;
+        }
         if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
         {
             connect(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
@@ -392,6 +408,44 @@ public:
         std::erase_if(connections, [toRemove](const auto& connection) {
             return connection->getHash() == toRemove; // Predicate to match the connection to remove
         });
+    }
+
+    void removeObject(unsigned int nodeID)
+    {
+        // to remove an object, we can't delete it straight away
+        // as it's pointer is still used in the graph
+        // So we remove it from the objects list, and place it in a 'removed list'
+        // then after this we will re-build the transitioning graph with the
+        // object removed
+
+        // connections can be deleted straight away, as the transitioning graph
+        // rebuilds it's connections completely
+
+        auto removeResult = std::ranges::remove_if(objects,
+            [nodeID](const std::shared_ptr<AudioNode>& obj)
+            {
+                return obj->nodeID == nodeID;
+            }
+        );
+        auto newBegin = removeResult.begin();
+
+        for (auto it = newBegin; it != objects.end(); ++it)
+        {
+            removedObjects.push_back(std::move(*it));
+        }
+        objects.erase(newBegin, objects.end());
+
+        // find connections that are connected to this node
+        // remove them all
+
+        auto connectionsToRemove = std::ranges::remove_if(connections,
+            [nodeID](const std::shared_ptr<Connection>& con)
+            {
+                return con->getiNode() == nodeID || con->getoNode() == nodeID;
+            }
+        );
+
+        connections.erase(connectionsToRemove.begin(), connectionsToRemove.end());
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -441,7 +495,8 @@ public:
                 bool isFirstConnection = true; // Track if this is the first connection
                 for (uint32_t connKey : it->second)
                 {
-                    auto connectedNode = runningGraph.objectsListCopy[AdjacencyMap::getNodeID(connKey)];
+                    auto connectedNodeID = AdjacencyMap::getNodeID(connKey);
+                    auto connectedNode = runningGraph.objectsListCopy[runningGraph.objectIDtoIndex.find(connectedNodeID)->second];
                     auto connection = connectedNode->getOutputPort();
                     const auto outputBuffer = connection->getAudioBuffer();
 
@@ -485,13 +540,12 @@ public:
     }
 
     template <typename NodeType, typename... Args>
-    void addNode(const std::optional<std::string>& idString, Args&&... args) {
-        auto nodeID = objects.size();
+    void addNode(unsigned int nodeID, const std::optional<std::string>& idString, Args&&... args) {
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
 
         // Determine the ID to use for the object ID map
-        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node index in vector
+        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node ID
 
         objectIDMap[finalID] = nodeID;
 
@@ -504,6 +558,8 @@ public:
 
     bool addObject(json node)
     {
+        static unsigned int idCounter = 0;
+
         auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
 
         // Attempt to get the ID as a string,
@@ -515,31 +571,33 @@ public:
                 : std::make_optional(node["id"].dump()))
             : std::nullopt;
 
+        bool success = true;
+
         switch (hash(object))
         {
         case hash("add"):
             {
                 auto const value = node.value("value", 0.0f);
-                addNode<Add>(idString, value);
+                addNode<Add>(idCounter, idString, value);
             }
             break;
         case hash("count"):
             {
                 auto const min = node.value("min", 0.0f);
                 auto const max = node.value("max", std::numeric_limits<int>::max());
-                addNode<Count>(idString, min, max);
+                addNode<Count>(idCounter, idString, min, max);
             }
             break;
         case hash("print"):
             {
-                addNode<Print>(idString);
+                addNode<Print>(idCounter, idString);
             }
             break;
         case hash("if"):
             {
                 auto const ifVal = node.value("if", 0.0f);
                 auto const rtnVal = node.value("return", 0.0f);
-                addNode<If>(idString, ifVal, rtnVal);
+                addNode<If>(idCounter, idString, ifVal, rtnVal);
             }
             break;
         case hash("env"):
@@ -550,32 +608,32 @@ public:
 
                 //auto const attackCurve = node.value("attackCurve", 1.5f);
                 //auto const decayCurve = node.value("decayCurve", 2.0f);
-                addNode<Envelope>(idString, attackVal, decayVal);
+                addNode<Envelope>(idCounter, idString, attackVal, decayVal);
             }
             break;
         case hash("metro"):
         case hash("metronome"):
             {
                 auto const value = node.value("hz", 1.0f);
-                addNode<Metronome>(idString, value);
+                addNode<Metronome>(idCounter, idString, value);
             }
             break;
         case hash("val"):
         case hash("value"):
             {
                 auto const value = node.value("value", 0.0f);
-                addNode<Value>(idString, value);
+                addNode<Value>(idCounter, idString, value);
             }
             break;
         case hash("lfo"):
             {
                 auto const rate = node.value("rate", 1.0f);
-                addNode<LFO>(idString, rate);
+                addNode<LFO>(idCounter, idString, rate);
             }
             break;
         case hash("volume"):
             {
-                addNode<Volume>(idString);
+                addNode<Volume>(idCounter, idString);
             }
             break;
         case hash("osc"):
@@ -583,21 +641,24 @@ public:
             {
                 auto const waveform = node.value("waveform", "sine");
                 auto const freq = node.value("freq", 440.0f);
-                addNode<Oscillator>(idString, waveform, freq);
+                addNode<Oscillator>(idCounter, idString, waveform, freq);
             }
             break;
         case hash("aout"):
         case hash("audioout"):
             {
-                addNode<AudioOut>(idString);
+                addNode<AudioOut>(idCounter, idString);
             }
             break;
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
-            return false;
+            success = false;
         }
-        return true;
+
+        idCounter++;
+
+        return success;
     };
 
     void printGraph()
@@ -649,8 +710,26 @@ public:
         return activeGraph->addObject(jsonObj);
     }
 
+    void removeObject(int id)
+    {
+        if (!activeGraph)
+            return;
+
+        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
+
+        transitioningGraph->removeObject(id);
+
+        transitioningGraph->updateConnections();
+
+        transitioningGraph->sortNodes();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+    }
+
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
     {
+        std::cout << "== adding connection from CLI" << std::endl;
         if (!activeGraph) {
             std::cerr << "No active graph available to connect objects." << std::endl;
             return false;

@@ -23,7 +23,6 @@ public:
     // Pack a target node and port into a single uint32_t key
     static constexpr uint32_t packKey(uint32_t nodeID, uint8_t portID)
     {
-        //assert(portID < 64); // Ensure portID uses only 6 bits
         return (nodeID << 6) | portID;
     }
 
@@ -34,13 +33,21 @@ public:
     }
 
     // Helper function to extract nodeID from a combined uint32_t
-    static constexpr uint16_t getNodeID(uint32_t combined) {
-        return static_cast<uint16_t>(combined >> 6);
+    static uint32_t getNodeID(uint32_t combined) {
+        return static_cast<uint32_t>(combined >> 6);
     }
 
     // Helper function to extract portID from a combined uint32_t
     static constexpr uint8_t getPortID(uint32_t combined) {
         return static_cast<uint8_t>(combined & 0x3F); // Mask the lower 6 bits
+    }
+
+    int getSize()
+    {
+        if (forward.size() == backward.size())
+            return forward.size();
+
+        return -1;
     }
 
     void clear()

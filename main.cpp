@@ -119,7 +119,6 @@ void repl(GraphManager& graphs) {
                 switch (hash(addType))
                 {
                 case hash("o"):
-                case hash("node"):
                 case hash("obj"):
                 case hash("object"):
                     if (tokens.size() > 1)
@@ -162,6 +161,21 @@ void repl(GraphManager& graphs) {
                 auto addType = tokens[1].str();
                 switch (hash(addType))
                 {
+                case hash("o"):
+                case hash("obj"):
+                case hash("object"):
+                    if (tokens.size() == 3)
+                    {
+                        int indexToRemove;
+                        try {
+                            indexToRemove = stoi(tokens[2].str());
+                            std::cout << "Removing object at index: " << indexToRemove << std::endl;
+                            graphs.removeObject(indexToRemove);
+                        } catch (...) {
+                            std::cerr << "Error: unknown command: " << tokens[2].str() << std::endl;
+                        }
+                    }
+                    break;
                 case hash("c"):
                 case hash("con"):
                 case hash("connection"):
@@ -219,6 +233,7 @@ void repl(GraphManager& graphs) {
              if (tokens.size() > 1) {
                 switch (hash(tokens[1]))
                 {
+                case hash("g"):
                 case hash("graph"):
                     graphs.printGraph();
                     break;
