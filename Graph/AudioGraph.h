@@ -479,7 +479,7 @@ public:
 
                 auto indexIt = runningGraph.objectIDtoIndex.find(nodeID);
                 if (indexIt == runningGraph.objectIDtoIndex.end()) {
-                    // If nodeID wasn't found in the map, skip or handle this case
+                    // If nodeID wasn't found in the map, skip
                     continue;
                 }
 
@@ -810,7 +810,7 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
-//#define DSP_TIMING
+#define DSP_TIMING
 #ifdef DSP_TIMING
         //=====================
         // 1) Timing the DSP
