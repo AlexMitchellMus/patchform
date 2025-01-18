@@ -59,14 +59,12 @@ public:
 
     void clear(size_t size)
     {
-        audioBuffer.resize(size, 0.0f);
-        std::fill(audioBuffer.begin(), audioBuffer.end(), 0.0f);
+        audioBuffer.assign(size, 0.0f);
     }
 
     void setSize(size_t size)
     {
-        if (audioBuffer.size() != size)
-            audioBuffer.assign(size, 0.0f);
+        audioBuffer.assign(size, 0.0f);
     }
 
     bool isSignal()

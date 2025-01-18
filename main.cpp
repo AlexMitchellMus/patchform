@@ -22,6 +22,44 @@ using json = nlohmann::json;
 
 #include "Graph/AudioGraph.h"
 
+json toJsonValue(const std::string& s)
+{
+    // 1) Try integer
+    try {
+        std::size_t pos = 0;
+        long intVal = std::stol(s, &pos, 10);  // base 10
+        // Only accept if we consumed the entire string
+        if (pos == s.size()) {
+            return intVal;
+        }
+    }
+    catch (const std::invalid_argument&) {
+        // Could not parse as integer
+    }
+    catch (const std::out_of_range&) {
+        // Number outside long range
+    }
+
+    // 2) Try floating-point
+    try {
+        std::size_t pos = 0;
+        double doubleVal = std::stod(s, &pos);
+        // Only accept if we consumed the entire string
+        if (pos == s.size()) {
+            return doubleVal;
+        }
+    }
+    catch (const std::invalid_argument&) {
+        // Could not parse as double
+    }
+    catch (const std::out_of_range&) {
+        // Number outside double range
+    }
+
+    // 3) Fallback: store as string
+    return s;
+}
+
 // PortAudio Callback
 static int audioCallback(const void* input, void* output,
                          unsigned long frameCount,
@@ -74,34 +112,58 @@ void repl(GraphManager& graphs) {
                 running = false;
             }
             break;
+        case hash("a"):
         case hash("add"):
-            if (tokens.size() > 1) {
+            if (tokens.size() > 1)
+            {
                 auto addType = tokens[1].str();
                 switch (hash(addType))
                 {
-                    case hash("con"):
-                    case hash("conn"):
-                    case hash("connection"):
-                    if (tokens.size() == 6) {
+                case hash("o"):
+                case hash("node"):
+                case hash("obj"):
+                case hash("object"):
+                    if (tokens.size() > 1)
+                    {
+                        json j;
+                        j["obj"] = tokens[2].str();
+                        for (size_t i = 3; i + 1 < tokens.size(); i += 2)
+                        {
+                            const std::string& tag   = tokens[i].str();
+
+                            // Convert "value" to an integer/double if possible
+                            j[tag] = toJsonValue(tokens[i + 1].str());
+                        }
+                        std::cout << j << std::endl;
+                        graphs.addObject(j);
+                    }
+                    break;
+                case hash("c"):
+                case hash("con"):
+                case hash("conn"):
+                case hash("connection"):
+                    if (tokens.size() == 6)
+                    {
                         graphs.connect(tokens[2].str(), stoi(tokens[3].str()), tokens[4].str(), stoi(tokens[5].str()));
-                    } else
+                    }
+                    else
                     {
                         std::cout << "Error: needs: <outObj> <outPort> <inObj> <inPort>" << std::endl;
                     }
-                        break;
-                    default:
-                        std::cout << "Error: unknown command: " << addType << std::endl;
+                    break;
+                default:
+                    std::cout << "Error: unknown command: " << addType << std::endl;
                 }
             }
             break;
+        case hash("r"):
         case hash("rem"):
-        case hash("del"):
-        case hash("delete"):
         case hash("remove"):
             if (tokens.size() > 1) {
                 auto addType = tokens[1].str();
                 switch (hash(addType))
                 {
+                case hash("c"):
                 case hash("con"):
                 case hash("connection"):
                 if (tokens.size() == 6) {
@@ -161,6 +223,7 @@ void repl(GraphManager& graphs) {
                 }
             }
             break;
+        case hash("ls"):
         case hash("list"):
              if (tokens.size() > 1) {
                 switch (hash(tokens[1]))
@@ -168,12 +231,15 @@ void repl(GraphManager& graphs) {
                 case hash("graph"):
                     graphs.printGraph();
                     break;
+                case hash("o"):
+                case hash("node"):
                 case hash("obj"):
                 case hash("objects"):
                     for (const auto& name : NodeRegistry::getInstance().getNodeNames()) {
                         std::cout << "- " << name << std::endl;
                     }
                     break;
+                case hash("c"):
                 case hash("con"):
                 case hash("conn"):
                 case hash("connections"):
@@ -188,32 +254,49 @@ void repl(GraphManager& graphs) {
         case hash("help"):
             {
                 constexpr std::string_view helpText = R"(
-PlugPatch is an audio environment that uses JSON file format to describe an audio graph of nodes and connections.
+PlugPatch is live audio environment, that allows the user to create an audio graph, with sample accurate events.
 
 Commands:
-[quit]          Exit the application.
-                Aliases: [q], [exit]
+[quit]       Exit the application.
+             Alias: [q], [exit]
 
-[load]          Load a graph file. Example: "load graph"
-                Options:
-                [verbose]    Print the connection layout.
+[load]       Load a graph file. Example: "load graph"
+             Options:
+             [verbose]       Print the connection layout.
                              Alias: [v]
 
-[list]          List the currently loaded graph.
-                Options:
-                [connection] Print the connection layout.
-                             Alias: [conn]
-                [nodes]      Print available nodes that can be added.
+[list]       List the currently loaded graph.
+             Alias: [ls]
+             Options:
+             [objects]       Print available nodes that can be added.
+                             Alias: [nodes] [obj] [o]
+             [connection]    Print the connection layout.
+                             Alias: [conn] [con] [c]
 
-[add]           Add to the currently loaded patch:
-                Options:
-                [connection] Add a connection <outObj> <outPort> <inObj> <inPort>. Example: "add con 0 1 1 0"
-                             Alias: [conn] [con]
+[add]        Add to the currently loaded patch:
+             Options:
+             [objects]       Add an object. After object is key:value pairs
+                             Example: "add obj osc"
+                             Example: "add obj osc waveform tri"
+                             Alias: [nodes] [obj] [o]
+             [connection]    Add a connection <outObj> <outPort> <inObj> <inPort>. Example: "add con 0 1 1 0"
+                             Alias: [conn] [con] [c]
 
-[about]         Print credits / OSS libraries
+[remove]     Remove from the currently loaded patch:
+             Alias: [rem] [r]
+             Options:
+             [objects]       Add an object. After object is key:value pairs
+                             Example: "add obj osc"
+                             Example: "add obj osc waveform tri"
+                             Alias: [nodes] [obj] [o]
+             [connection]    Remove a connection <outObj> <outPort> <inObj> <inPort>.
+                             Example: "remove connection 0 1 1 0"
+                             Alias: [conn] [con] [c]
 
-[help]          Print this help text
-                Alias: [h]
+[about]      Print credits / OSS libraries
+
+[help]       Print this help text
+             Alias: [h]
                 )";
 
                 std::cout << helpText << std::endl;

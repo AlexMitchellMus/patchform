@@ -1,3 +1,9 @@
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #pragma once
 
 #include <vector>
@@ -17,7 +23,7 @@ public:
     // Pack a target node and port into a single uint32_t key
     static constexpr uint32_t packKey(uint32_t nodeID, uint8_t portID)
     {
-        assert(portID < 64); // Ensure portID uses only 6 bits
+        //assert(portID < 64); // Ensure portID uses only 6 bits
         return (nodeID << 6) | portID;
     }
 
@@ -37,6 +43,12 @@ public:
         return static_cast<uint8_t>(combined & 0x3F); // Mask the lower 6 bits
     }
 
+    void clear()
+    {
+        forward.clear();
+        backward.clear();
+    }
+
     void addAdjacency(uint32_t inputKey, uint32_t outputKey)
     {
         forward[outputKey].emplace_back(inputKey);
@@ -45,6 +57,8 @@ public:
 
     void removeAdjacency(uint32_t inputKey, uint32_t outputKey)
     {
+        std::cerr << "removeAdjacency is depreciated" << std::endl;
+        return;
         // Remove inputKey from forward[outputKey]
         auto forwardIt = forward.find(outputKey);
         if (forwardIt != forward.end())
@@ -86,6 +100,8 @@ public:
 
     bool containsAdjacency(uint32_t inputKey, uint32_t outputKey) const
     {
+        std::cerr << "containsAdjacency is depreciated" << std::endl;
+        return false;
         auto it = forward.find(outputKey);
         if (it != forward.end())
         {

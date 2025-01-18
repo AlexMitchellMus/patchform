@@ -103,6 +103,7 @@ public:
         , waveform(std::move(waveform))
         , freq(freq)
     {
+        std::cout << "Constructing Oscillator, freq: " << freq << std::endl;
         addInputPort("phase", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Signal);
         initializeWaveformTable(this->waveform, this->useTable);

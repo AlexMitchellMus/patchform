@@ -26,6 +26,7 @@ using json = nlohmann::json;
 #include "Logger.h"
 #include "../Utility/ppl_string.hpp"
 #include "AdjacencyMap.h"
+#include "Connection.h"
 
 #undef max
 
@@ -34,12 +35,6 @@ class AudioGraph {
 public:
     AudioGraph(NodeContext* context)
         : context(context)
-    {
-    }
-
-    AudioGraph(AudioGraph* other)
-    : context(other->context)
-    , adjacencyMap(other->adjacencyMap)
     {
     }
 
@@ -170,7 +165,7 @@ public:
                 for (const auto& downstreamKey : adjacencyIt->second)
                 {
                     int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
-                    if (downstreamNodeIndex >= 0 && downstreamNodeIndex < static_cast<int>(nodeCount))
+                    if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
                     {
                         if (--inDegree[downstreamNodeIndex] == 0)
                         {
@@ -283,8 +278,11 @@ public:
 
 class GraphHolder
 {
-    std::vector<std::shared_ptr<AudioNode>> mainObjectList;
+    std::vector<std::shared_ptr<Connection>> connections;
+    std::vector<std::shared_ptr<AudioNode>> objects;
+
     ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
+
     NodeContext* context;
 
 public:
@@ -298,10 +296,11 @@ public:
 
     GraphHolder(const GraphHolder* other)
     : context(other->context) // Reuse the same context
-    , mainObjectList(other->mainObjectList)
+    , objects(other->objects)
     , objectIDMap(other->objectIDMap)
+    , connections(other->connections)
+    , graph(std::make_unique<AudioGraph>(context))
 {
-        graph = std::make_unique<AudioGraph>(other->graph.get());
 }
 
     AudioGraph* getGraph() const
@@ -327,11 +326,23 @@ public:
             connect(source, connection["sourcePort"], target, connection["targetPort"]);
         }
 
+        updateConnections();
+
         sortNodes();
 
         if (logVerbose)
         {
             printAdjacencyList();
+        }
+    }
+
+    void updateConnections()
+    {
+        graph->adjacencyMap.clear();
+
+        for (const auto& conn : connections)
+        {
+            graph->adjacencyMap.addAdjacency(conn->getIn(), conn->getOut());
         }
     }
 
@@ -348,10 +359,23 @@ public:
     // Create connections with the object index
     void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        graph->addAdjacency(oNode, oPort, iNode, iPort);
+        auto newConnection = std::make_shared<Connection>(oNode, oPort, iNode, iPort);
+
+        // Check if the connection already exists
+        for (const auto& conn : connections)
+        {
+            if (conn->getHash() == newConnection->getHash())
+            {
+                std::cerr << "Warning: Connection already exists, not adding duplicate." << std::endl;
+                return;
+            }
+        }
+
+        // Add the new connection
+        connections.push_back(newConnection);
     }
 
-    // Create connections from idString:port pairs
+    // Remove connections from idString:port pairs
     bool disconnect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
         if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
         {
@@ -361,10 +385,13 @@ public:
         return false;
     }
 
-    // Create connections with the object index
+    // Remove connections with the object index
     void disconnect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        graph->removeAdjacency(oNode, oPort, iNode, iPort);
+        auto toRemove = Connection::encodeHash(oNode, oPort, iNode, iPort);
+        std::erase_if(connections, [toRemove](const auto& connection) {
+            return connection->getHash() == toRemove; // Predicate to match the connection to remove
+        });
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -374,7 +401,7 @@ public:
 
     void sortNodes()
     {
-        graph->sortNodes(mainObjectList);
+        graph->sortNodes(objects);
     }
 
     void printAdjacencyList()
@@ -459,7 +486,7 @@ public:
 
     template <typename NodeType, typename... Args>
     void addNode(const std::optional<std::string>& idString, Args&&... args) {
-        auto nodeID = mainObjectList.size();
+        auto nodeID = objects.size();
         auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
         node->nodeID = nodeID;
 
@@ -472,7 +499,7 @@ public:
         // This dynamically looks up the connections port via the connection table.
         // TODO: cache the connected port, and only recalculate if flag is set
         setSummingFunctionForNode(node.get());
-        mainObjectList.push_back(std::move(node));
+        objects.push_back(std::move(node));
     };
 
     bool addObject(json node)
@@ -555,7 +582,7 @@ public:
         case hash("oscillator"):
             {
                 auto const waveform = node.value("waveform", "sine");
-                auto const freq = node.value("freq", 440);
+                auto const freq = node.value("freq", 440.0f);
                 addNode<Oscillator>(idString, waveform, freq);
             }
             break;
@@ -575,7 +602,7 @@ public:
 
     void printGraph()
     {
-        for (const auto& obj : mainObjectList)
+        for (const auto& obj : objects)
         {
             std::cout << obj->nodeID << " [" << obj->getShortName() << "]" << std::endl;
         }
@@ -610,6 +637,18 @@ public:
         return activeGraph->addObject(object);
     }
 
+    bool addObject(const json& jsonObj)
+    {
+        if (!activeGraph)
+        {
+            activeGraph = std::make_unique<GraphHolder>(ctx);
+        }
+
+        // TODO: Lock the graph, or communicate via a queue
+
+        return activeGraph->addObject(jsonObj);
+    }
+
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
     {
         if (!activeGraph) {
@@ -624,6 +663,8 @@ public:
             transitioningGraph.reset(); // Discard transitioning graph
             return false;
         }
+
+        transitioningGraph->updateConnections();
 
         transitioningGraph->sortNodes();
 
@@ -646,6 +687,8 @@ public:
             transitioningGraph.reset(); // Discard transitioning graph
             return false;
         }
+
+        transitioningGraph->updateConnections();
 
         transitioningGraph->sortNodes();
 

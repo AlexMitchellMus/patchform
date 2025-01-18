@@ -49,6 +49,7 @@ public:
             if (e) {
                 e->setTimeStamp(0); // Set event at time 0
                 outputPort.addEvent(e);
+
 #ifdef TEST_TIMING
                 std::cout << accumulatedFrames << std::endl;
 #endif
