@@ -80,6 +80,7 @@ public:
 
     virtual ~AudioNode()
     {
+        std::cout << "destorying audio node: " << nodeID << std::endl;
     }
 
     // Defined by the macro for each derived class

@@ -7,8 +7,8 @@
         { "id": 4, "obj": "Oscillator" }
     ],
     "connections": [
-        { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
-        { "sourceNode": 3, "sourcePort": 0, "targetNode": 4, "targetPort": 0 },
+        { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 1 },
+        { "sourceNode": 3, "sourcePort": 0, "targetNode": 4, "targetPort": 1 },
         { "sourceNode": 2, "sourcePort": 0, "targetNode": 0, "targetPort": 0 },
         { "sourceNode": 4, "sourcePort": 0, "targetNode": 0, "targetPort": 0 }
     ]

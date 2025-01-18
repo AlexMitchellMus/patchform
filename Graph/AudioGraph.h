@@ -204,7 +204,7 @@ public:
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout <<  "adjacency map size: " << adjacencyMap.getSize() << " " << objectList.size() << " objects in graph " <<  objectsSorted.size() << " objects sorted, sort took " << elapsedNs << " ns.\n";
+        std::cout << objectList.size() << " objects in graph " <<  objectsSorted.size() << " objects sorted, sort took " << elapsedNs << " ns.\n";
 #endif
 
 
@@ -251,10 +251,9 @@ public:
 
     bool addAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto outputKey = AdjacencyMap::packKey(objectIDtoIndex[oNode], oPort);
-        auto inputKey = AdjacencyMap::packKey(objectIDtoIndex[iNode], iPort);
+        auto outputKey = AdjacencyMap::packKey(oNode, oPort);
+        auto inputKey = AdjacencyMap::packKey(iNode, iPort);
 
-        std::cout << "mapping: " << oNode << "->" << objectIDtoIndex[oNode] << " " << oPort << " " << iNode << "->" << objectIDtoIndex[iNode] << " " << iPort << std::endl;
         adjacencyMap.addAdjacency(inputKey, outputKey);
         return true;
     }
@@ -283,8 +282,9 @@ class GraphHolder
 
     NodeContext* context;
 
-public:
     std::vector<std::shared_ptr<AudioNode>> removedObjects;
+
+public:
 
     std::unique_ptr<AudioGraph> graph;
 
@@ -323,7 +323,8 @@ public:
             uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
             uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
 
-            connect(source, connection["sourcePort"], target, connection["targetPort"]);
+            // connections use unique ID's for nodes
+            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
         }
 
         updateConnections();
@@ -344,26 +345,19 @@ public:
         int counter = 0;
         for (auto& obj : objects)
         {
-            graph->objectIDtoIndex.emplace(obj->nodeID, counter);
-            counter++;
+            graph->objectIDtoIndex[obj->nodeID] = counter++;
         }
 
         graph->adjacencyMap.clear();
 
         for (const auto& conn : connections)
         {
-            std::cout << "updating adjacency map!" << conn->toString() << std::endl;
-            graph->addAdjacency(conn->getoNode(), conn->getoPort(), conn->getiNode(), conn->getiPort());
+            graph->addAdjacency(graph->objectIDtoIndex[conn->getoNode()], conn->getoPort(), graph->objectIDtoIndex[conn->getiNode()], conn->getiPort());
         }
     }
 
     // Create connections from idString:port pairs
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
-        std::cout << "object map id: " << std::endl;
-        for (auto obj : objectIDMap)
-        {
-            std::cout << "objectIDString: " << obj.first << " ID: " << obj.second << std::endl;
-        }
         if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
         {
             connect(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
@@ -418,34 +412,33 @@ public:
         // then after this we will re-build the transitioning graph with the
         // object removed
 
-        // connections can be deleted straight away, as the transitioning graph
-        // rebuilds it's connections completely
-
         auto removeResult = std::ranges::remove_if(objects,
             [nodeID](const std::shared_ptr<AudioNode>& obj)
             {
                 return obj->nodeID == nodeID;
             }
         );
-        auto newBegin = removeResult.begin();
 
-        for (auto it = newBegin; it != objects.end(); ++it)
+        auto newEnd = removeResult.begin();
+
+        // 2) Move the removed items to removedObjects.
+        for (auto it = newEnd; it != objects.end(); ++it)
         {
             removedObjects.push_back(std::move(*it));
         }
-        objects.erase(newBegin, objects.end());
+
+        // 3) Erase them from the original vector.
+        objects.erase(newEnd, objects.end());
+
+        // connections can be deleted straight away, as the transitioning graph
+        // rebuilds it's connections completely
 
         // find connections that are connected to this node
         // remove them all
 
-        auto connectionsToRemove = std::ranges::remove_if(connections,
-            [nodeID](const std::shared_ptr<Connection>& con)
-            {
-                return con->getiNode() == nodeID || con->getoNode() == nodeID;
-            }
-        );
-
-        connections.erase(connectionsToRemove.begin(), connectionsToRemove.end());
+        std::erase_if(connections, [nodeID](const auto& con) {
+            return con->getiNode() == nodeID || con->getoNode() == nodeID;
+        });
     }
 
     void process(float* buffer, unsigned long frameCount)
@@ -466,8 +459,7 @@ public:
     void setSummingFunctionForNode(AudioNode* node)
     {
         auto nodeID = node->nodeID;
-        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts, const AudioGraph& runningGraph)
-        {
+        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts, const AudioGraph& runningGraph) {
             const auto frameCount = runningGraph.context->frameCount;
 
             for (size_t portID = 0; portID < inputPorts.size(); ++portID)
@@ -485,8 +477,19 @@ public:
                 auto& summingEventBuffer = port->getEvents();
                 auto summingAudioBuffer = port->getAudioBuffer();
 
+                auto indexIt = runningGraph.objectIDtoIndex.find(nodeID);
+                if (indexIt == runningGraph.objectIDtoIndex.end()) {
+                    // If nodeID wasn't found in the map, skip or handle this case
+                    continue;
+                }
+
+                // If found, the key you want is indexIt->second
+                auto nodeIndex = indexIt->second;
+
+                auto key = AdjacencyMap::packKey(nodeIndex, portID);
+
                 // Retrieve connections for the current port
-                auto it = runningGraph.adjacencyMap.getBackward().find(AdjacencyMap::packKey(nodeID, portID));
+                auto it = runningGraph.adjacencyMap.getBackward().find(key);
                 if (it == runningGraph.adjacencyMap.getBackward().end())
                 {
                     continue;
@@ -495,8 +498,7 @@ public:
                 bool isFirstConnection = true; // Track if this is the first connection
                 for (uint32_t connKey : it->second)
                 {
-                    auto connectedNodeID = AdjacencyMap::getNodeID(connKey);
-                    auto connectedNode = runningGraph.objectsListCopy[runningGraph.objectIDtoIndex.find(connectedNodeID)->second];
+                    auto connectedNode = runningGraph.objectsListCopy[AdjacencyMap::getNodeID(connKey)];
                     auto connection = connectedNode->getOutputPort();
                     const auto outputBuffer = connection->getAudioBuffer();
 
@@ -547,7 +549,7 @@ public:
         // Determine the ID to use for the object ID map
         const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node ID
 
-        objectIDMap[finalID] = nodeID;
+        objectIDMap[finalID] = objects.size();
 
         // Function responsible for summing audio & event buffers of connected inputs for each node.
         // This dynamically looks up the connections port via the connection table.

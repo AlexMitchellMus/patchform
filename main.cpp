@@ -166,11 +166,10 @@ void repl(GraphManager& graphs) {
                 case hash("object"):
                     if (tokens.size() == 3)
                     {
-                        int indexToRemove;
+                        int idToRemove;
                         try {
-                            indexToRemove = stoi(tokens[2].str());
-                            std::cout << "Removing object at index: " << indexToRemove << std::endl;
-                            graphs.removeObject(indexToRemove);
+                            idToRemove = stoi(tokens[2].str());
+                            graphs.removeObject(idToRemove);
                         } catch (...) {
                             std::cerr << "Error: unknown command: " << tokens[2].str() << std::endl;
                         }

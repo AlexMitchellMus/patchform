@@ -42,14 +42,6 @@ public:
         return static_cast<uint8_t>(combined & 0x3F); // Mask the lower 6 bits
     }
 
-    int getSize()
-    {
-        if (forward.size() == backward.size())
-            return forward.size();
-
-        return -1;
-    }
-
     void clear()
     {
         forward.clear();
