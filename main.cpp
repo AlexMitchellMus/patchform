@@ -73,7 +73,7 @@ static int audioCallback(const void* input, void* output,
     graphs->process(out, frameCount);  // Process the audio graph
 
     if ((statusFlags & paOutputUnderflow) || (statusFlags & paInputOverflow)) {
-        std::cout << "under of over flow" << std::endl;
+        std::cerr << "Audio under of over flow" << std::endl;
     }
 
     return paContinue;
