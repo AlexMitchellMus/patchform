@@ -185,8 +185,8 @@ public:
 
     void sortNodes(const std::vector<std::shared_ptr<AudioNode>>& objectList)
     {
-#define GRAPH_STATS
-#ifdef GRAPH_STATS
+#define SORT_TIME
+#ifdef SORT_TIME
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
@@ -200,7 +200,7 @@ public:
 
         topologicalSort(objectsSorted);
 
-#ifdef GRAPH_STATS
+#ifdef SORT_TIME
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
@@ -225,8 +225,8 @@ public:
 
     void process(float* buffer, unsigned long frameCount)
     {
-        for (auto& node : objectsSorted) {
-            node->process(buffer, frameCount, *this);
+        for (size_t i = 0; i < objectsSorted.size(); i++) {
+            objectsSorted[i]->process(buffer, frameCount, *this, i);
         }
 
         for (auto& node : objectsSorted) {
@@ -243,6 +243,8 @@ public:
 
     ankerl::unordered_dense::map<uint32_t, uint32_t> objectIDtoIndex;
 
+    OutputPortMap outputInputPortMap;
+
     std::vector<AudioNode*> objectsSorted;
 
     // Only for sorting
@@ -258,17 +260,6 @@ public:
         return true;
     }
 
-    void removeAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
-    {
-        auto outputKey = AdjacencyMap::packKey(oNode, oPort);
-        auto inputKey = AdjacencyMap::packKey(iNode, iPort);
-
-        if (adjacencyMap.containsAdjacency(inputKey, outputKey)) {
-            adjacencyMap.removeAdjacency(inputKey, outputKey);
-        } else {
-            std::cout << "Connection doesnt exist!" << std::endl;
-        }
-    }
     AdjacencyMap adjacencyMap;
     NodeContext* context;
 };
@@ -331,10 +322,116 @@ public:
 
         sortNodes();
 
+        updateOutputInputPortMap();
+
         if (logVerbose)
         {
             printAdjacencyList();
         }
+    }
+
+    void updateOutputInputPortMap()
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+
+        graph->outputInputPortMap.reserve(objects.size());
+        graph->outputInputPortMap.clear();
+
+        // Create a mapping from original object IDs to their indices in `objects`
+        ankerl::unordered_dense::map<int, size_t> objectIDtoOriginalIndex;
+
+        for (size_t i = 0; i < objects.size(); ++i)
+        {
+            objectIDtoOriginalIndex[objects[i]->nodeID] = i;
+        }
+
+        // Create a mapping from original object IDs to their indices in `objectsSorted`
+        ankerl::unordered_dense::map<int, size_t> objectIDtoSortedIndex;
+
+        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
+        {
+            objectIDtoSortedIndex[graph->objectsSorted[sortedIndex]->nodeID] = sortedIndex;
+        }
+
+        // Populate the outputInputPortMap
+        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
+        {
+            // Find the original index of the sorted object
+            int objectID = graph->objectsSorted[sortedIndex]->nodeID;
+            if (objectIDtoOriginalIndex.find(objectID) == objectIDtoOriginalIndex.end())
+            {
+                // Object ID not found in the original index map, skip
+                continue;
+            }
+
+            size_t originalIndex = objectIDtoOriginalIndex[objectID];
+
+            // Add a new vector for this object's inputs
+            graph->outputInputPortMap.emplace_back();
+
+            for (size_t j = 0; j < objects[originalIndex]->getNumInputs(); ++j)
+            {
+                // Collect upstream ports for the current input
+                std::vector<AudioPort*> upstreamPorts;
+
+                auto key = AdjacencyMap::packKey(originalIndex, j);
+                const auto& backwardConnections = graph->adjacencyMap.getBackward();
+
+                if (backwardConnections.find(key) != backwardConnections.end())
+                {
+                    for (const auto& outputPortUpstreamNode : backwardConnections.at(key))
+                    {
+                        auto connectedNode = AdjacencyMap::unpackKey(outputPortUpstreamNode);
+
+                        // Find the sorted index of the connected node
+                        int connectedObjectID = objects[connectedNode.first]->nodeID;
+                        if (objectIDtoSortedIndex.find(connectedObjectID) != objectIDtoSortedIndex.end())
+                        {
+                            size_t connectedSortedIndex = objectIDtoSortedIndex[connectedObjectID];
+                            auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort();
+                            upstreamPorts.push_back(connectedPort);
+                        }
+                    }
+                }
+
+                // Add a PortGroup for this input
+                graph->outputInputPortMap.back().emplace_back(PortGroup{
+                    static_cast<uint8_t>(j), std::move(upstreamPorts)
+                });
+            }
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+
+        std::cout << "PortPointerMap took " << elapsedNs << " ns.\n";
+
+//#define PORTPOINTER_DEBUG
+#ifdef PORTPOINTER_DEBUG
+        // Debug print
+        for (size_t i = 0; i < graph->outputInputPortMap.size(); ++i)
+        {
+            std::cout << "Object " << i << " input ports:" << std::endl;
+
+            for (const auto& portGroup : graph->outputInputPortMap[i])
+            {
+                std::cout << "  Input Port " << static_cast<int>(portGroup.inputPortNumber) << ":";
+
+                if (portGroup.connectedPorts.empty())
+                {
+                    std::cout << " No connections" << std::endl;
+                }
+                else
+                {
+                    for (const auto& port : portGroup.connectedPorts)
+                    {
+                        // Assuming `AudioPort` has a `toString` method or similar to print its details
+                        std::cout << " " << port; // Replace with `port->toString()` if such a method exists
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        }
+#endif
     }
 
     void updateConnections()
@@ -342,10 +439,9 @@ public:
         graph->objectIDtoIndex.reserve(objects.size());
         graph->objectIDtoIndex.clear();
 
-        int counter = 0;
-        for (auto& obj : objects)
+        for (size_t i = 0; i < objects.size(); i++)
         {
-            graph->objectIDtoIndex[obj->nodeID] = counter++;
+            graph->objectIDtoIndex[objects[i]->nodeID] = i;
         }
 
         graph->adjacencyMap.clear();
@@ -459,12 +555,20 @@ public:
     void setSummingFunctionForNode(AudioNode* node)
     {
         auto nodeID = node->nodeID;
-        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts, const AudioGraph& runningGraph) {
+        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts, const AudioGraph& runningGraph, const int index)
+        {
+#define USE_POINTER_MAP
+#ifdef USE_POINTER_MAP
             const auto frameCount = runningGraph.context->frameCount;
 
-            for (size_t portID = 0; portID < inputPorts.size(); ++portID)
+            // Retrieve the input port map for the current node
+            const auto& portGroups = runningGraph.outputInputPortMap[index];
+
+            for (const auto& portGroup : portGroups)
             {
+                const auto portID = portGroup.inputPortNumber;
                 auto& port = inputPorts[portID];
+
                 const bool isPortSignal = port->isSignal();
 
                 if (isPortSignal)
@@ -477,29 +581,9 @@ public:
                 auto& summingEventBuffer = port->getEvents();
                 auto summingAudioBuffer = port->getAudioBuffer();
 
-                auto indexIt = runningGraph.objectIDtoIndex.find(nodeID);
-                if (indexIt == runningGraph.objectIDtoIndex.end()) {
-                    // If nodeID wasn't found in the map, skip
-                    continue;
-                }
-
-                // If found, the key you want is indexIt->second
-                auto nodeIndex = indexIt->second;
-
-                auto key = AdjacencyMap::packKey(nodeIndex, portID);
-
-                // Retrieve connections for the current port
-                auto it = runningGraph.adjacencyMap.getBackward().find(key);
-                if (it == runningGraph.adjacencyMap.getBackward().end())
+                for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
                 {
-                    continue;
-                }
-
-                bool isFirstConnection = true; // Track if this is the first connection
-                for (uint32_t connKey : it->second)
-                {
-                    auto connectedNode = runningGraph.objectsListCopy[AdjacencyMap::getNodeID(connKey)];
-                    auto connection = connectedNode->getOutputPort();
+                    auto* connection = portGroup.connectedPorts[connIndex];
                     const auto outputBuffer = connection->getAudioBuffer();
 
                     if (isPortSignal && connection->isSignal())
@@ -507,19 +591,18 @@ public:
                         // Update port status, any connected signal overrides events
                         port->isAnyConnectedPortSignal = true;
 
-                        if (isFirstConnection)
+                        if (connIndex == 0) // Check if this is the first connection
                         {
                             // For the first connection, perform direct assignment
                             std::copy(outputBuffer, outputBuffer + frameCount, summingAudioBuffer);
-                            isFirstConnection = false;
                         }
                         else
                         {
                             // For subsequent connections, sum the buffer
-                            std::transform(
-                                outputBuffer, outputBuffer + frameCount,
-                                summingAudioBuffer, summingAudioBuffer,
-                                std::plus<>());
+                            for (size_t i = 0; i < frameCount; ++i)
+                            {
+                                summingAudioBuffer[i] += outputBuffer[i];
+                            }
                         }
                     }
 
@@ -538,6 +621,88 @@ public:
                     });
                 }
             }
+#else
+            // This method uses the adjacency map to look up the connected AudioPort to sum from
+            // It uses an unorerdered map to find the correct AudioPort in realtime
+            // However, we can do this when we construct the graph, and allow the running graph
+            // to use the cached/baked vector
+            // Any change to the graph will happen at the 'next' cycle
+            // Which allows us time to construct the graph on another thread anyway
+
+            const auto frameCount = runningGraph.context->frameCount;
+            auto indexIt = runningGraph.objectIDtoIndex.find(nodeID);
+            if (indexIt == runningGraph.objectIDtoIndex.end()) {
+                // If nodeID wasn't found in the map, skip
+                return;
+            }
+
+            // If found, the key is indexIt->second
+            auto nodeIndex = indexIt->second;
+
+            for (size_t portID = 0; portID < inputPorts.size(); ++portID)
+            {
+                auto& port = inputPorts[portID];
+                const bool isPortSignal = port->isSignal();
+
+                if (isPortSignal)
+                {
+                    // Clear and resize audio buffer only for signal ports
+                    port->setSize(frameCount);
+                }
+
+                port->clearEvents();
+                auto& summingEventBuffer = port->getEvents();
+                auto summingAudioBuffer = port->getAudioBuffer();
+
+                auto key = AdjacencyMap::packKey(nodeIndex, portID);
+
+                // Retrieve connections for the current port
+                auto it = runningGraph.adjacencyMap.getBackward().find(key);
+                if (it == runningGraph.adjacencyMap.getBackward().end())
+                {
+                    continue;
+                }
+
+                bool isFirstConnection = true; // Track if this is the first connection
+                for (uint32_t connKey : it->second)
+                {
+                    auto connectedNode = runningGraph.objectsListCopy[AdjacencyMap::getNodeID(connKey)];
+                    auto connection = connectedNode->getOutputPort();
+                    const auto outputBuffer = connection->getAudioBuffer();
+
+                    if (isPortSignal && connection->isSignal()) {
+                        // Update port status, any connected signal overrides events
+                        port->isAnyConnectedPortSignal = true;
+
+                        if (isFirstConnection) {
+                            // For the first connection, perform direct assignment
+                            std::copy(outputBuffer, outputBuffer + frameCount, summingAudioBuffer);
+                            isFirstConnection = false;
+                        }
+                        else {
+                            // For subsequent connections, sum the buffer
+                            for (size_t i = 0; i < frameCount; ++i) {
+                                summingAudioBuffer[i] += outputBuffer[i];
+                            }
+                        }
+                    }
+
+                    // Collect and merge events
+                    auto& events = connection->getEvents();
+                    if (!events.empty())
+                        summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
+                }
+
+                // Sort combined events only if there are new events
+                if (!summingEventBuffer.empty())
+                {
+                    std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b)
+                    {
+                        return a->getTimeStamp() < b->getTimeStamp();
+                    });
+                }
+            }
+#endif
         };
     }
 
@@ -549,7 +714,7 @@ public:
         // Determine the ID to use for the object ID map
         const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node ID
 
-        objectIDMap[finalID] = objects.size();
+        objectIDMap[finalID] = nodeID;
 
         // Function responsible for summing audio & event buffers of connected inputs for each node.
         // This dynamically looks up the connections port via the connection table.
@@ -722,8 +887,8 @@ public:
         transitioningGraph->removeObject(id);
 
         transitioningGraph->updateConnections();
-
         transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
@@ -746,8 +911,8 @@ public:
         }
 
         transitioningGraph->updateConnections();
-
         transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
@@ -770,8 +935,8 @@ public:
         }
 
         transitioningGraph->updateConnections();
-
         transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
@@ -804,13 +969,15 @@ public:
             return;
         }
         transitioningGraph = std::make_shared<GraphHolder>(ctx);
+
         transitioningGraph->loadPatch(patch, logVerbose);
+
         swapGraph.store(true, std::memory_order_release);
     }
 
     void process(float* buffer, unsigned long frameCount)
     {
-#define DSP_TIMING
+//#define DSP_TIMING
 #ifdef DSP_TIMING
         //=====================
         // 1) Timing the DSP

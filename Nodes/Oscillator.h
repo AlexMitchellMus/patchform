@@ -16,6 +16,10 @@
 #include <stdexcept>
 #include <random>
 
+#include "unordered_dense.h"
+
+using WaveTables = ankerl::unordered_dense::map<std::string, std::vector<float>>;
+
 // SineWaveNode that generates sine wave audio
 
 class OscillatorState : public AudioNode::StateBase
@@ -33,7 +37,7 @@ class Oscillator : public AudioNode {
 
 protected:
     static constexpr int TABLE_SIZE = 8192;
-    static std::unordered_map<std::string, std::vector<float>> waveformTables;
+    static WaveTables waveformTables;
     static bool initialized;
 
     // TODO: move to state management
@@ -171,6 +175,5 @@ public:
 };
 
 // Static member definitions
-std::unordered_map<std::string, std::vector<float>> Oscillator::waveformTables;
+WaveTables Oscillator::waveformTables;
 bool Oscillator::initialized = false;
-;

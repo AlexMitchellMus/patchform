@@ -12,16 +12,26 @@
 
 #include "../Graph/Event.h"
 
+class AudioPort;
+
+struct PortGroup
+{
+    uint8_t inputPortNumber;
+    std::vector<AudioPort*> connectedPorts;
+};
+
+using OutputPortMap = std::vector<std::vector<PortGroup>>;
+
 class AudioNode;
 
 class AudioPort
 {
 public:
-    enum class PortType
+    enum PortType : uint8_t
     {
-        None =   1 << 0,
-        Signal = 1 << 1,
-        Data   = 1 << 2
+        None =   0,
+        Signal = 1 << 0,
+        Data   = 1 << 1
     };
 
     AudioPort(AudioNode* parent, std::string portName, PortType type) : node(parent), name(portName), portType(type)
@@ -67,9 +77,9 @@ public:
         audioBuffer.assign(size, 0.0f);
     }
 
-    bool isSignal()
+    inline bool isSignal() const
     {
-        return portType == PortType::Signal;
+        return  (portType & PortType::Signal) != 0;
     }
 
     AudioNode* getParentNode() const { return node; }
