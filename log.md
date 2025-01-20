@@ -15,6 +15,15 @@ Project Goals
 
 WORK LOG:
 
+[issue]
+Use glaze for json handling (which will allow compile time etc)
+
+----------
+
+[issue]
+Currently we can only load one patch at a time, allow loading multiple patches.
+Assign each running patch the filename string that it came from
+
 ----------
 [issue]
 

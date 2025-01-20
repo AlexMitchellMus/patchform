@@ -12,3 +12,5 @@ You can download NSIS from the official website: https://nsis.sourceforge.io/.
 Ensure that makensis is available in your system's PATH before running the build process. Without NSIS, the Windows packaging step will fail.
 
 Installer will be built to: /installer/windows/PlugPatchInstaller.exe
+
+Packaging is only available when in release mode (and PackageInstaller is selected as target)
