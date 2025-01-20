@@ -315,7 +315,7 @@ Commands:
             break;
         case hash("about"):
             {
-                constexpr std::array<std::string_view, 5> credits = {{
+                constexpr std::array<std::string_view, 6> credits = {{
                     R"(linenoise-ng (CLI REPL)
     Martijn van Steenbergen
     BSD-3-Clause License
@@ -339,7 +339,12 @@ Commands:
                     R"(unordered_dense (Replacement for std::unordered_map)
     Martin Ankerl
     MIT License
-    https://github.com/martinus/unordered_dense)"
+    https://github.com/martinus/unordered_dense)",
+
+                    R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
+    Stephen Berry
+    MIT License
+    https://github.com/stephenberry/glaze)",
                 }};
 
                 // Copy to a runtime array and sort by the first letter of each string
