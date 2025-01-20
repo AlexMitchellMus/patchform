@@ -755,8 +755,9 @@ public:
         objectIDMap[finalID] = nodeID;
 
         // Function responsible for summing audio & event buffers of connected inputs for each node.
-        // This dynamically looks up the connections port via the connection table.
-        // TODO: cache the connected port, and only recalculate if flag is set
+        // This looks up the index of the running node in the current graphs pointer vector.
+        // We do this so we skip using an unordered_map, as we can pre-process
+        // all the pointers for the running graph in advance.
         setSummingFunctionForNode(node.get());
         objects.push_back(std::move(node));
     };
