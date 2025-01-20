@@ -16,6 +16,11 @@ Project Goals
 WORK LOG:
 
 [issue]
+Remove node state system. I'm quite sure that will not be needed, nor even work
+
+----------
+
+[issue]
 Use glaze for json handling (which will allow compile time etc)
 
 ----------
