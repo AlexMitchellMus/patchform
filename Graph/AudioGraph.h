@@ -346,7 +346,7 @@ public:
             uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
             uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
 
-            std::cout << "connecting: (" << source << " id: " << objects[source]->nodeID << ") -> (" << target << " id: " << objects[target]->nodeID << ")" << std::endl;
+            //std::cout << "connecting: (" << source << " id: " << objects[source]->nodeID << ") -> (" << target << " id: " << objects[target]->nodeID << ")" << std::endl;
 
             // connections use unique ID's for nodes
             connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
