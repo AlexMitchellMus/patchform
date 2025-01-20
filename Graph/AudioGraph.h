@@ -14,9 +14,12 @@
 #include <chrono>
 #include <xutility>
 #include <queue>
+#include <set>
 
 #include "json.hpp"
 using json = nlohmann::json;
+
+#include "glaze/glaze.hpp"
 
 #include "unordered_dense.h"
 
@@ -64,7 +67,7 @@ public:
                     if (oNode == nodeIndex)
                     {
                         std::string namePart = "[" + node->getShortName() + "]";
-                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
+                        std::string leftSide = namePart + " " + std::to_string(objectsListCopy[oNode]->nodeID) + ", Port " + std::to_string(oPort);
 
                         maxNameWidth = std::max(maxNameWidth, namePart.length());
                         maxLeftWidth = std::max(maxLeftWidth, leftSide.length());
@@ -90,12 +93,12 @@ public:
 
                     if (oNode == nodeIndex)
                     {
+                        std::string nodeAsID = std::to_string(objectsListCopy[oNode]->nodeID);
                         std::string namePart = "[" + node->getShortName() + "]";
-                        std::string leftSide = namePart + " " + std::to_string(oNode) + ", Port " + std::to_string(oPort);
+                        std::string leftSide = namePart + " " + nodeAsID + ", Port " + std::to_string(oPort);
 
                         // Print the left side (name + node/port info) with alignment
-                        std::cout << std::setw(maxNameWidth) << std::left << namePart << " " << std::setw(maxLeftWidth - maxNameWidth)
-                        << (std::to_string(oNode) + ", Port " + std::to_string(oPort)) << " -> ";
+                        std::cout << std::setw(maxNameWidth) << std::left << namePart << " " << std::setw(maxLeftWidth - maxNameWidth) << (nodeAsID + ", Port " + std::to_string(oPort)) << " -> ";
 
                         // Print connections
                         if (!connections.empty())
@@ -110,7 +113,8 @@ public:
                                     std::cout << "\n" << std::setw(maxNameWidth + maxLeftWidth - 1) << std::right;
                                 }
                                 first = false;
-                                std::cout << "[" << objectsListCopy[iNode]->getShortName() << "] " << std::to_string(iNode) << ", Port " << std::to_string(iPort) << "] ";
+                                std::string iNodeAsID = std::to_string(objectsListCopy[iNode]->nodeID);
+                                std::cout << "[" << objectsListCopy[iNode]->getShortName() << "] " << iNodeAsID << ", Port " << std::to_string(iPort) << "] ";
                             }
                         }
                         std::cout << "\n";
@@ -313,6 +317,8 @@ public:
             // source and target ID needs to be set in the file format
             uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
             uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
+
+            std::cout << "connecting: (" << source << " id: " << objects[source]->nodeID << ") -> (" << target << " id: " << objects[target]->nodeID << ")" << std::endl;
 
             // connections use unique ID's for nodes
             connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
@@ -706,9 +712,13 @@ public:
         };
     }
 
-    template <typename NodeType, typename... Args>
-    void addNode(unsigned int nodeID, const std::optional<std::string>& idString, Args&&... args) {
-        auto node = std::make_unique<NodeType>(context, std::forward<Args>(args)...);
+    template <typename NodeType>
+    void addNode(const std::optional<std::string>& idString, json& nodeCreationData) {
+
+        auto node = std::make_unique<NodeType>(context, nodeCreationData);
+
+        const auto nodeID = generateID();
+
         node->nodeID = nodeID;
 
         // Determine the ID to use for the object ID map
@@ -723,10 +733,26 @@ public:
         objects.push_back(std::move(node));
     };
 
+    uint32_t generateID() const
+    {
+        std::set<unsigned int> usedIDs;
+        for (const auto& obj : objects) {
+            usedIDs.insert(obj->nodeID); // Assuming objects have a member nodeID
+        }
+
+        // Find the lowest unused ID starting from 0
+        unsigned int idCounter = 0;
+        while (usedIDs.find(idCounter) != usedIDs.end()) {
+            ++idCounter; // Increment until an unused ID is found
+        }
+
+        unsigned int result = idCounter;
+        ++idCounter;
+        return result;
+    }
+
     bool addObject(json node)
     {
-        static unsigned int idCounter = 0;
-
         auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
 
         // Attempt to get the ID as a string,
@@ -738,94 +764,75 @@ public:
                 : std::make_optional(node["id"].dump()))
             : std::nullopt;
 
-        bool success = true;
-
         switch (hash(object))
         {
         case hash("add"):
             {
-                auto const value = node.value("value", 0.0f);
-                addNode<Add>(idCounter, idString, value);
+                addNode<Add>(idString, node);
             }
             break;
         case hash("count"):
             {
-                auto const min = node.value("min", 0.0f);
-                auto const max = node.value("max", std::numeric_limits<int>::max());
-                addNode<Count>(idCounter, idString, min, max);
+                addNode<Count>(idString, node);
             }
             break;
         case hash("print"):
             {
-                addNode<Print>(idCounter, idString);
+                addNode<Print>(idString, node);
             }
             break;
         case hash("if"):
             {
-                auto const ifVal = node.value("if", 0.0f);
-                auto const rtnVal = node.value("return", 0.0f);
-                addNode<If>(idCounter, idString, ifVal, rtnVal);
+                addNode<If>(idString, node);
             }
             break;
         case hash("env"):
         case hash("envelope"):
             {
-                auto const attackVal = node.value("attack", 0.0f);
-                auto const decayVal = node.value("decay", 0.0f);
-
-                //auto const attackCurve = node.value("attackCurve", 1.5f);
-                //auto const decayCurve = node.value("decayCurve", 2.0f);
-                addNode<Envelope>(idCounter, idString, attackVal, decayVal);
+                addNode<Envelope>(idString, node);
             }
             break;
         case hash("metro"):
         case hash("metronome"):
             {
-                auto const value = node.value("hz", 1.0f);
-                addNode<Metronome>(idCounter, idString, value);
+                addNode<Metronome>(idString, node);
             }
             break;
         case hash("val"):
         case hash("value"):
             {
-                auto const value = node.value("value", 0.0f);
-                addNode<Value>(idCounter, idString, value);
+                addNode<Value>(idString, node);
             }
             break;
         case hash("lfo"):
             {
-                auto const rate = node.value("rate", 1.0f);
-                addNode<LFO>(idCounter, idString, rate);
+                addNode<LFO>(idString, node);
             }
             break;
         case hash("volume"):
             {
-                addNode<Volume>(idCounter, idString);
+                addNode<Volume>(idString, node);
             }
             break;
         case hash("osc"):
         case hash("oscillator"):
             {
-                auto const waveform = node.value("waveform", "sine");
-                auto const freq = node.value("freq", 440.0f);
-                addNode<Oscillator>(idCounter, idString, waveform, freq);
+                addNode<Oscillator>(idString, node);
             }
             break;
         case hash("aout"):
         case hash("audioout"):
             {
-                addNode<AudioOut>(idCounter, idString);
+                addNode<AudioOut>(idString, node);
             }
             break;
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
-            success = false;
+            return false;
         }
 
-        idCounter++;
-
-        return success;
+        return true;
     };
 
     void printGraph()

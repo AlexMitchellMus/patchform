@@ -7,10 +7,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(glaze_ENABLE_AVX2 OFF CACHE BOOL "Disable AVX2 for Glaze in Debug mode" FORCE)
+else()
+    set(glaze_ENABLE_AVX2 ON CACHE BOOL "Enable AVX2 for Glaze in non-Debug modes" FORCE)
+endif()
+
 add_subdirectory(external/portaudio)
 add_subdirectory(external/json)
 add_subdirectory(external/linenoise-ng)
 add_subdirectory(external/unordered_dense)
+add_subdirectory(external/glaze)
 
 add_library(moodycamel_concurrentqueue INTERFACE)
 target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/concurrentqueue")
@@ -40,9 +47,10 @@ target_include_directories(PlugPatch PRIVATE
         "${CMAKE_SOURCE_DIR}/external/linenoise-ng/include"
         "${CMAKE_SOURCE_DIR}/external/portaudio/include"
         "${CMAKE_SOURCE_DIR}/external/unordered_dense/include/ankerl"
+        "${CMAKE_SOURCE_DIR}/external/glaze/include/"
 )
 
-target_link_libraries(PlugPatch PRIVATE portaudio linenoise moodycamel_concurrentqueue unordered_dense)
+target_link_libraries(PlugPatch PRIVATE portaudio linenoise moodycamel_concurrentqueue unordered_dense glaze::glaze)
 
 # Ensure linenoise is built before PlugPatch
 add_dependencies(PlugPatch linenoise)

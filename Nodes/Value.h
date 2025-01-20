@@ -16,9 +16,9 @@ class Value : public AudioNode
     float value = 0.0f;
 
 public:
-    Value(NodeContext* context, float val) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
+    Value(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
     {
-        value = val;
+        value = nodeData.value("value", 0.0f);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

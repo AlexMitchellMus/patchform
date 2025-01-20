@@ -18,13 +18,14 @@ class Envelope : public AudioNode
     bool isAttack = false;  // Track whether the envelope is in attack phase
 
 public:
-    Envelope(NodeContext* context, float attackVal, float decayVal)
-        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
-        , attackVal(attackVal * (context->sampleRate / 1000))
-        , decayVal(decayVal * (context->sampleRate / 1000))
+    Envelope(NodeContext* context, const json& nodeData)
+        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
     {
         addInputPort("Events", AudioPort::PortType::Data);
         addInputPort("Signal", AudioPort::PortType::Signal);
+
+        attackVal = nodeData.value("attack", 0.0f) * (context->sampleRate / 1000);
+        decayVal = nodeData.value("decay", 0.0f) * (context->sampleRate / 1000);
     }
 
     void processAudio(float* out, const unsigned long frameCount) override

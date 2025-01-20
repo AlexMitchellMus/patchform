@@ -28,8 +28,9 @@ class Metronome : public AudioNode
 #endif
 
 public:
-    Metronome(NodeContext* context, float hz) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
+    Metronome(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data, nodeData)
     {
+        auto const hz = nodeData.value("hz", 1.0f);
         tickInterval = context->sampleRate / hz;
 
         addInputPort("ControlInput", AudioPort::PortType::Data);

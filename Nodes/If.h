@@ -16,14 +16,14 @@ class If : public AudioNode {
     float coldValueReturn;
 
 public:
-    If(NodeContext* context, int ifValue, float rtnValue) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
+    If(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data, nodeData)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
         addInputPort("B", AudioPort::PortType::Data); // cold port
         addInputPort("C", AudioPort::PortType::Data); // cold port
 
-        coldValueIf = ifValue;
-        coldValueReturn = rtnValue;
+        coldValueIf = nodeData.value("if", 0.0f);
+        coldValueReturn = nodeData.value("return", 0.0f);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

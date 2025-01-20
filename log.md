@@ -12,3 +12,32 @@ Project Goals
 * Lightweight audio execution (no allocation in audio loop)
 * Modern c++, make library as simple as possible.
 * Set values for nodes from external controls (UI etc)
+
+WORK LOG:
+
+----------
+[issue]
+
+Added ID recycling, but now object ID system does not work if the generated ID is connected from a previous ID.
+
+eg:
+0 [metro]
+1 [cnt]
+2 [if]
+3 [if]
+4 [if]
+5 [if]
+6 [osc]
+7 [osc]
+8 [osc]
+9 [osc]
+11 [env]
+12 [env]
+13 [env]
+14 [aout]
+10 [osc] <-- unreachable
+15 [osc]
+
+[fix]
+Make objectIDMap[finalID] equal the generated node ID
+

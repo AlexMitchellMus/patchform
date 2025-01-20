@@ -12,7 +12,7 @@
 class Volume : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Volume", "vol");
 public:
-    Volume(NodeContext* context) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
+    Volume(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
     {
         addInputPort("A", AudioPort::PortType::Signal);
         addInputPort("B", AudioPort::PortType::Signal);

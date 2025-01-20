@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AudioNodeBase.h"
+
 // AddNode that sums two signals
 class Add : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Add", "add");
@@ -14,12 +15,13 @@ class Add : public AudioNode {
     float coldValue;
 
 public:
-    Add(NodeContext* context, float initValue) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data), coldValue(initValue)
+    explicit Add(NodeContext* context, const json& nodeData)
+        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data, nodeData)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
         addInputPort("B", AudioPort::PortType::Data); // cold port
-                            
-        coldValue = initValue;
+
+        coldValue = nodeData.value("value", 0.0f);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

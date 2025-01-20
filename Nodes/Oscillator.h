@@ -102,13 +102,15 @@ protected:
     }
 
 public:
-    Oscillator(NodeContext* context, std::string waveform, float freq)
-        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal)
-        , waveform(std::move(waveform))
-        , freq(freq)
+    Oscillator(NodeContext* context, const json& nodeData)
+        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
     {
         addInputPort("phase", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Signal);
+
+        waveform = nodeData.value("waveform", "sine");
+        freq = nodeData.value("freq", 440.0f);
+
         initializeWaveformTable(this->waveform, this->useTable);
     }
 

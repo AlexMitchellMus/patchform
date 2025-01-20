@@ -15,6 +15,11 @@
 
 #include "../Graph/Logger.h"
 
+#include "glaze/glaze.hpp"
+
+#include "json.hpp"
+using json = nlohmann::json;
+
 // Helper macro to name and register node (used in derived node class)
 #define DEFINE_AND_REGISTER_NODE(nodeName, shortNodeName)                       \
 public:                                                                         \
@@ -70,13 +75,17 @@ public:
     AudioPort outputPort;
     NodeContext* context;
 
-    AudioNode(std::unique_ptr<StateBase> initialState, NodeContext* context, AudioPort::PortType type)
+    json nodeCreationData;
+
+    AudioNode(std::unique_ptr<StateBase> initialState, NodeContext* context, AudioPort::PortType type, const json& creationData)
         : stateA(std::move(initialState))
         , stateB(stateA->copy())
         , activeState(stateB.get())
         , context(context)
         , outputPort(this, "output", type)
-    {}
+        , nodeCreationData(std::move(creationData))
+    {
+    }
 
     virtual ~AudioNode()
     {

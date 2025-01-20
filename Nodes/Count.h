@@ -17,11 +17,12 @@ class Count : public AudioNode {
     int maxCount;
 
 public:
-    Count(NodeContext* context, int min, int max) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data)
+    Count(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data, nodeData)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
-        countValue = minCount = min;
-        maxCount = max;
+
+        countValue = minCount = nodeData.value("min", 0.0f);
+        maxCount = nodeData.value("max", std::numeric_limits<int>::max());
     }
 
     void processAudio(float* out, unsigned long frameCount) override
