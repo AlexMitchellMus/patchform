@@ -288,6 +288,14 @@ void repl(GraphManager& graphs) {
              if (tokens.size() > 1) {
                 switch (hash(tokens[1]))
                 {
+                case hash("patch"):
+                    {
+                        if (auto file = graphs.getPatchFile(); !file.empty())
+                            std::cout << file << std::endl;
+                        else
+                            std::cerr << "No patch file loaded" << std::endl;
+                    }
+                    break;
                 case hash("g"):
                 case hash("graph"):
                     graphs.printGraph();
@@ -329,9 +337,9 @@ Commands:
 
 [clear]      Clear the active graph
 
-[list]       List the currently loaded graph.
-             Alias: [ls]
+[list]       Alias: [ls]
              Options:
+             [patch]         Print currently loaded patch (if there is one)
              [objects]       Print available nodes that can be added.
                              Alias: [nodes] [obj] [o]
              [connection]    Print the connection layout.
