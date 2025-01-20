@@ -766,7 +766,7 @@ public:
     {
         std::set<unsigned int> usedIDs;
         for (const auto& obj : objects) {
-            usedIDs.insert(obj->nodeID); // Assuming objects have a member nodeID
+            usedIDs.insert(obj->nodeID);
         }
 
         // Find the lowest unused ID starting from 0
