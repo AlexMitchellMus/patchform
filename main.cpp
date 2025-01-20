@@ -227,6 +227,9 @@ void repl(GraphManager& graphs) {
                 }
             }
             break;
+        case hash("save"):
+            std::cout << graphs.graphToJSON().dump(4) << std::endl;
+            break;
         case hash("ls"):
         case hash("list"):
              if (tokens.size() > 1) {

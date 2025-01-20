@@ -303,6 +303,35 @@ public:
         return graph.get();
     }
 
+    const json graphToJSON() const
+    {
+        json nodes = json::array();
+        for (const auto& obj : objects)
+        {
+            auto node = obj->nodeCreationData;
+            node["id"] = obj->nodeID; // Update the id field (as it could have changed)
+            nodes.push_back(node);
+        }
+
+        json conns = json::array();
+        for (const auto& connection : connections)
+        {
+            json conn;
+            conn["sourceNode"] = connection->getoNode();
+            conn["sourcePort"] = connection->getoPort();
+            conn["targetNode"] = connection->getiNode();
+            conn["targetPort"] = connection->getiPort();
+            conns.push_back(conn);
+        }
+
+        json patch = json::array({
+            { "nodes", nodes },
+            { "connections", conns }
+        });
+
+        return patch;
+    }
+
     void loadPatch(const json& patch, bool logVerbose)
     {
         // Create nodes
@@ -978,6 +1007,11 @@ public:
         transitioningGraph->loadPatch(patch, logVerbose);
 
         swapGraph.store(true, std::memory_order_release);
+    }
+
+    const json graphToJSON()
+    {
+        return activeGraph->graphToJSON();
     }
 
     void process(float* buffer, unsigned long frameCount)
