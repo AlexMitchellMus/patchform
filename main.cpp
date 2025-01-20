@@ -346,9 +346,11 @@ Commands:
                              Alias: [conn] [con] [c]
 
 [add]        Add to the currently loaded patch:
+             Alias: [a]
              Options:
-             [objects]       Add an object. After object is key:value pairs
-                             Example: "add obj osc"
+             [objects]       Add an object. Object <name> and <key><value> pairs
+                             Note: Missing <key><value> pairs will be init per object defaults
+                             Example: "add obj osc" (default osc: freq 440, waveform sine)
                              Example: "add obj osc waveform tri"
                              Alias: [nodes] [obj] [o]
              [connection]    Add a connection <outObj> <outPort> <inObj> <inPort>. Example: "add con 0 1 1 0"
