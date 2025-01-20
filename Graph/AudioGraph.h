@@ -743,12 +743,10 @@ public:
         // Find the lowest unused ID starting from 0
         unsigned int idCounter = 0;
         while (usedIDs.find(idCounter) != usedIDs.end()) {
-            ++idCounter; // Increment until an unused ID is found
+            idCounter++; // Increment until an unused ID is found
         }
 
-        unsigned int result = idCounter;
-        ++idCounter;
-        return result;
+        return idCounter;
     }
 
     bool addObject(json node)
