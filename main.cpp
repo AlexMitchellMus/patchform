@@ -218,7 +218,8 @@ void repl(GraphManager& graphs) {
                     nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, true, true);
                     if (!patch.empty()) {
                         bool logVerbose = tokens.size() > 2 && (tokens[2] == "v" || tokens[2] == "verbose");
-                        graphs.setActiveGraph(patch, logVerbose);
+                        auto filePath = std::filesystem::absolute(fullPath).string();
+                        graphs.setActiveGraph(filePath, patch, logVerbose);
                     }
                 }
                 catch (const nlohmann::json::parse_error& ex)
@@ -227,8 +228,60 @@ void repl(GraphManager& graphs) {
                 }
             }
             break;
+        case hash("saveas"):
+            if (tokens.size() > 1) {
+                auto filePath = tokens[1].str() + ".json";
+                auto jsonOutput = graphs.graphToJSON();
+
+                try {
+                    // Open a file stream
+                    std::ofstream outputFile(filePath, std::ios::out | std::ios::trunc);
+
+                    if (!outputFile.is_open()) {
+                        throw std::ios_base::failure("Failed to open the file for writing.");
+                    }
+
+                    // Write the JSON to the file with pretty formatting
+                    outputFile << jsonOutput.dump(4);
+                    outputFile.close();
+
+                    std::cout << "Graph successfully saved to " << std::filesystem::absolute(filePath).string() << std::endl;
+                } catch (const std::exception& e) {
+                    std::cerr << "Error saving graph: " << e.what() << std::endl;
+                }
+
+                if (tokens.size() > 2 && tokens[2] == "v") {
+                    std::cout << graphs.graphToJSON().dump(4) << std::endl;
+                }
+            }
+
+            break;
         case hash("save"):
-            std::cout << graphs.graphToJSON().dump(4) << std::endl;
+            if (auto filePath = graphs.getPatchFile(); !filePath.empty()) {
+                auto jsonOutput = graphs.graphToJSON();
+
+                try {
+                    // Open a file stream
+                    std::ofstream outputFile(filePath, std::ios::out | std::ios::trunc);
+
+                    if (!outputFile.is_open()) {
+                        throw std::ios_base::failure("Failed to open the file for writing.");
+                    }
+
+                    // Write the JSON to the file with pretty formatting
+                    outputFile << jsonOutput.dump(4);
+                    outputFile.close();
+
+                    std::cout << "Graph successfully saved to " << std::filesystem::absolute(filePath).string() << std::endl;
+                } catch (const std::exception& e) {
+                    std::cerr << "Error saving graph: " << e.what() << std::endl;
+                }
+
+                if (tokens.size() > 2 && tokens[2] == "v") {
+                    std::cout << graphs.graphToJSON().dump(4) << std::endl;
+                }
+            }
+
             break;
         case hash("ls"):
         case hash("list"):

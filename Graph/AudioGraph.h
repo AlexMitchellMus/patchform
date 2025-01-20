@@ -324,10 +324,9 @@ public:
             conns.push_back(conn);
         }
 
-        json patch = json::array({
-            { "nodes", nodes },
-            { "connections", conns }
-        });
+        json patch;
+        patch["nodes"] = nodes;
+        patch["connections"] = conns;
 
         return patch;
     }
@@ -997,16 +996,24 @@ public:
         activeGraph->printGraph();
     }
 
-    void setActiveGraph(const json& patch, bool logVerbose) {
+    void setActiveGraph(const std::string& patchPath, const json& patch, bool logVerbose) {
         if (swapGraph.load(std::memory_order_acquire)) {
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
             return;
         }
+
+        filePath = patchPath;
+
         transitioningGraph = std::make_shared<GraphHolder>(ctx);
 
         transitioningGraph->loadPatch(patch, logVerbose);
 
         swapGraph.store(true, std::memory_order_release);
+    }
+
+    const std::string& getPatchFile()
+    {
+        return filePath;
     }
 
     const json graphToJSON()
@@ -1081,6 +1088,8 @@ public:
     }
 
 protected:
+    std::string filePath;
+
     std::shared_ptr<GraphHolder> activeGraph;         // Actively processed graph
     std::shared_ptr<GraphHolder> transitioningGraph;  // New graph prepared for swapping
     std::atomic<bool> swapGraph = false;             // Signal for readiness to swap
