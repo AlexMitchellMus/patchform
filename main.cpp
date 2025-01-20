@@ -272,6 +272,9 @@ Commands:
              Options:
              [verbose]       Print the connection layout.
                              Alias: [v]
+[save]       Save a graph as a file. Example: "save <filename>"
+
+[clear]      Clear the active graph
 
 [list]       List the currently loaded graph.
              Alias: [ls]
