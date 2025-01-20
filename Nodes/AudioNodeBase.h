@@ -32,11 +32,6 @@ public:                                                                         
     const std::string& getName() const override { return name; }                \
     const std::string& getShortName() const override { return shortName; }      \
 
-// Helper macro to populate state copy for state management (used in derived node's state class)
-#define ENABLE_COPY(Derived)                                                    \
-std::unique_ptr<StateBase> copy() const override {                              \
-    return std::make_unique<Derived>(*this);                                    \
-}
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -47,29 +42,6 @@ class AudioGraph;
 // Abstract AudioNode class
 class AudioNode {
 public:
-    class StateBase {
-    public:
-        virtual ~StateBase() = default;
-
-        virtual std::unique_ptr<StateBase> copy() const = 0;
-    };
-
-    class NullState : public StateBase {
-    public:
-        std::unique_ptr<StateBase> copy() const override {
-            return std::make_unique<NullState>();
-        }
-    };
-
-    std::unique_ptr<StateBase> stateA; // Active state
-    std::unique_ptr<StateBase> stateB; // Inactive state
-    StateBase* activeState;            // Pointer to the inactive state
-    bool dirty = false;                // Marks if a state swap is needed
-
-    // old input buffer system (fixed pointer)
-    //std::vector<AudioInputPort> inputPorts;
-
-    // new input buffer system (dynamic - lookup table)
     std::vector<std::unique_ptr<AudioPort>> inputPortBuffers;
 
     AudioPort outputPort;
@@ -77,11 +49,8 @@ public:
 
     json nodeCreationData;
 
-    AudioNode(std::unique_ptr<StateBase> initialState, NodeContext* context, AudioPort::PortType type, const json& creationData)
-        : stateA(std::move(initialState))
-        , stateB(stateA->copy())
-        , activeState(stateB.get())
-        , context(context)
+    AudioNode(NodeContext* context, AudioPort::PortType type, const json& creationData)
+        : context(context)
         , outputPort(this, "output", type)
         , nodeCreationData(std::move(creationData))
     {
@@ -99,19 +68,6 @@ public:
     int getNumOutputs() { return 1; };
 
     int getNumInputs() { return inputPortBuffers.size(); };
-
-    // Mark the node as dirty to trigger a state swap
-    void setDirty() { dirty = true; }
-
-    // Swap the active and inactive states if dirty
-    void swapStatesIfDirty() {
-        if (dirty) {
-            std::cout << "swapping state" << std::endl;
-            stateA.swap(stateB);        // Swap active and inactive states
-            activeState = stateB.get(); // Update the pointer to the inactive state
-            dirty = false;
-        }
-    }
 
     // Add an input port (for dependency)
     void addInputPort(std::string portName, AudioPort::PortType portType)
@@ -131,8 +87,6 @@ public:
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> sumInputBuffers;
 
     uint32_t nodeID;
-
-    int runCount = 0;
 
 private:
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)

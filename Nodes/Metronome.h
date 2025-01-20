@@ -10,11 +10,6 @@
 
 // Sample accurate metronome implementation
 
-struct MetroState : AudioNode::StateBase
-{
-
-};
-
 class Metronome : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Metronome", "metro");
@@ -28,7 +23,7 @@ class Metronome : public AudioNode
 #endif
 
 public:
-    Metronome(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Data, nodeData)
+    Metronome(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::Data, nodeData)
     {
         auto const hz = nodeData.value("hz", 1.0f);
         tickInterval = context->sampleRate / hz;

@@ -22,16 +22,6 @@ using WaveTables = ankerl::unordered_dense::map<std::string, std::vector<float>>
 
 // SineWaveNode that generates sine wave audio
 
-class OscillatorState : public AudioNode::StateBase
-{
-    float phase = 0.0f;
-    std::string waveform;
-    float freq = 0.0f;
-    bool useTable = true;
-
-    ENABLE_COPY(OscillatorState);
-};
-
 class Oscillator : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Oscillator", "osc");
 
@@ -103,7 +93,7 @@ protected:
 
 public:
     Oscillator(NodeContext* context, const json& nodeData)
-        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
+        : AudioNode(context, AudioPort::PortType::Signal, nodeData)
     {
         addInputPort("phase", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Signal);

@@ -16,7 +16,7 @@ class Value : public AudioNode
     float value = 0.0f;
 
 public:
-    Value(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
+    Value(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::Signal, nodeData)
     {
         value = nodeData.value("value", 0.0f);
     }

@@ -8,16 +8,6 @@
 
 #include "AudioNodeBase.h"
 
-class LFOState : public AudioNode::StateBase
-{
-public:
-    LFOState(float val) : frequency(val){};
-    float frequency;
-    float phase = 0.0f;
-
-    ENABLE_COPY(LFOState);
-};
-
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFO : public AudioNode {
     DEFINE_AND_REGISTER_NODE("LFO", "lfo");
@@ -26,7 +16,7 @@ class LFO : public AudioNode {
     float phase = 0.0f;
 
 public:
-    LFO(NodeContext* context, const json& nodeData) : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
+    LFO(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::Signal, nodeData)
     {
         frequency = nodeData.value("rate", 1.0f);
     }

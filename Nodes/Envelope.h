@@ -19,7 +19,7 @@ class Envelope : public AudioNode
 
 public:
     Envelope(NodeContext* context, const json& nodeData)
-        : AudioNode(std::make_unique<NullState>(), context, AudioPort::PortType::Signal, nodeData)
+        : AudioNode(context, AudioPort::PortType::Signal, nodeData)
     {
         addInputPort("Events", AudioPort::PortType::Data);
         addInputPort("Signal", AudioPort::PortType::Signal);
