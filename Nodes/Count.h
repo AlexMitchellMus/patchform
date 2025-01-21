@@ -10,19 +10,19 @@
 
 // AddNode that sums two signals
 class Count : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Count", "cnt");
+    DEFINE_AND_REGISTER_NODE("Count", "cnt", NullParams);
 
     float countValue;
     int minCount;
     int maxCount;
 
 public:
-    Count(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::Data, nodeData)
+    Count(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
 
-        countValue = minCount = nodeData.value("min", 0.0f);
-        maxCount = nodeData.value("max", std::numeric_limits<int>::max());
+        countValue = minCount = objParams.value("min", 0.0f);
+        maxCount = objParams.value("max", std::numeric_limits<int>::max());
     }
 
     void processAudio(float* out, unsigned long frameCount) override

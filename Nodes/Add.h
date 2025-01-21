@@ -10,18 +10,18 @@
 
 // AddNode that sums two signals
 class Add : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Add", "add");
+    DEFINE_AND_REGISTER_NODE("Add", "add", NullParams);
 
     float coldValue;
 
 public:
-    explicit Add(NodeContext* context, const json& nodeData)
-        : AudioNode(context, AudioPort::PortType::Data, nodeData)
+    explicit Add(NodeContext* context, const json& objParams)
+        : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
         addInputPort("B", AudioPort::PortType::Data); // cold port
 
-        coldValue = nodeData.value("value", 0.0f);
+        coldValue = objParams.value("value", 0.0f);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

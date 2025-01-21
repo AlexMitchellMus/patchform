@@ -23,7 +23,14 @@ using WaveTables = ankerl::unordered_dense::map<std::string, std::vector<float>>
 // SineWaveNode that generates sine wave audio
 
 class Oscillator : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Oscillator", "osc");
+
+    struct OscParams {
+        int id = 0;
+        std::string waveform = "sine";
+        float freq = 440.0f;
+    };
+
+    DEFINE_AND_REGISTER_NODE("Oscillator", "osc", OscParams);
 
 protected:
     static constexpr int TABLE_SIZE = 8192;
@@ -92,14 +99,34 @@ protected:
     }
 
 public:
-    Oscillator(NodeContext* context, const json& nodeData)
-        : AudioNode(context, AudioPort::PortType::Signal, nodeData)
+    Oscillator(NodeContext* context, const json& objParams)
+        : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("phase", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Signal);
 
-        waveform = nodeData.value("waveform", "sine");
-        freq = nodeData.value("freq", 440.0f);
+        auto startTime = std::chrono::high_resolution_clock::now();
+
+        waveform = objParams.value("waveform", std::string("sine"));
+        freq = objParams.value("freq", 440.0f);
+
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto callbackTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
+
+        auto paramString = nodeCreationData.dump();
+
+        auto startGTime = std::chrono::high_resolution_clock::now();
+
+        auto result = glz::read<glz::opts{.error_on_unknown_keys = false}>(paramData, paramString);
+        //parseObjectParams(paramData);
+        waveform = paramData.waveform;
+        freq = paramData.freq;
+
+        auto endGTime = std::chrono::high_resolution_clock::now();
+        auto callbackGTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(endGTime - startGTime).count();
+
+        std::cout << "Glaze json took: " << callbackGTimeNs << " nholm took: "<< callbackTimeNs << std::endl;
+
 
         initializeWaveformTable(this->waveform, this->useTable);
     }

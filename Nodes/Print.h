@@ -10,10 +10,10 @@
 
 // AddNode that sums two signals
 class Print : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Print", "pnt");
+    DEFINE_AND_REGISTER_NODE("Print", "pnt", NullParams);
 
 public:
-    Print(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::None, nodeData)
+    Print(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
     }

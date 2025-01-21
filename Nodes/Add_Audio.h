@@ -10,10 +10,10 @@
 
 // AddNode that sums two signals
 class Add_Audio : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Add_Audio", "aadd");
+    DEFINE_AND_REGISTER_NODE("Add_Audio", "aadd", NullParams);
 
 public:
-    Add_Audio(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::Signal, nodeData)
+    Add_Audio(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("A", AudioPort::PortType::Signal);
         addInputPort("B", AudioPort::PortType::Signal);

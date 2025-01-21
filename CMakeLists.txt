@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.30)
-project(PlugPatch)
+project(PlugPatch LANGUAGES CXX)
 
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     set(glaze_ENABLE_AVX2 OFF CACHE BOOL "Disable AVX2 for Glaze in Debug mode" FORCE)
@@ -58,7 +58,7 @@ add_dependencies(PlugPatch linenoise)
 # Apply optimizations for MSVC
 if(MSVC)
     target_compile_options(PlugPatch PRIVATE
-            /std:c++20 # Enable C++20
+            /std:c++latest
             $<$<CONFIG:Debug>:/Od /Z7>
             $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
             $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>

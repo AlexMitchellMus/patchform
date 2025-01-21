@@ -10,15 +10,15 @@
 
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFO : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("LFO", "lfo");
+    DEFINE_AND_REGISTER_NODE("LFO", "lfo", NullParams);
 
     float frequency;
     float phase = 0.0f;
 
 public:
-    LFO(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::Signal, nodeData)
+    LFO(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
-        frequency = nodeData.value("rate", 1.0f);
+        frequency = objParams.value("rate", 1.0f);
     }
 
     void processAudio(float* out, unsigned long frameCount) override {

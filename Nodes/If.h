@@ -10,20 +10,20 @@
 
 // AddNode that sums two signals
 class If : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("If", "if");
+    DEFINE_AND_REGISTER_NODE("If", "if", NullParams);
 
     int coldValueIf;
     float coldValueReturn;
 
 public:
-    If(NodeContext* context, const json& nodeData) : AudioNode(context, AudioPort::PortType::Data, nodeData)
+    If(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
         addInputPort("B", AudioPort::PortType::Data); // cold port
         addInputPort("C", AudioPort::PortType::Data); // cold port
 
-        coldValueIf = nodeData.value("if", 0.0f);
-        coldValueReturn = nodeData.value("return", 0.0f);
+        coldValueIf = objParams.value("if", 0.0f);
+        coldValueReturn = objParams.value("return", 0.0f);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

@@ -10,7 +10,7 @@
 
 class Envelope : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Envelope", "env");
+    DEFINE_AND_REGISTER_NODE("Envelope", "env", NullParams);
 
     float attackVal;
     float decayVal;
@@ -18,14 +18,14 @@ class Envelope : public AudioNode
     bool isAttack = false;  // Track whether the envelope is in attack phase
 
 public:
-    Envelope(NodeContext* context, const json& nodeData)
-        : AudioNode(context, AudioPort::PortType::Signal, nodeData)
+    Envelope(NodeContext* context, const json& objParams)
+        : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("Events", AudioPort::PortType::Data);
         addInputPort("Signal", AudioPort::PortType::Signal);
 
-        attackVal = nodeData.value("attack", 0.0f) * (context->sampleRate / 1000);
-        decayVal = nodeData.value("decay", 0.0f) * (context->sampleRate / 1000);
+        attackVal = objParams.value("attack", 0.0f) * (context->sampleRate / 1000);
+        decayVal = objParams.value("decay", 0.0f) * (context->sampleRate / 1000);
     }
 
     void processAudio(float* out, const unsigned long frameCount) override

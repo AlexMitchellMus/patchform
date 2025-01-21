@@ -308,9 +308,9 @@ public:
         json nodes = json::array();
         for (const auto& obj : objects)
         {
-            auto node = obj->nodeCreationData;
-            node["id"] = obj->nodeID; // Update the id field (as it could have changed)
-            nodes.push_back(node);
+            //auto node = obj->nodeCreationData;
+            //node["id"] = obj->nodeID; // Update the id field (as it could have changed)
+            //nodes.push_back(node);
         }
 
         json conns = json::array();
@@ -759,6 +759,7 @@ public:
         // We do this so we skip using an unordered_map, as we can pre-process
         // all the pointers for the running graph in advance.
         setSummingFunctionForNode(node.get());
+
         objects.push_back(std::move(node));
     };
 
