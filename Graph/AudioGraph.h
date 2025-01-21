@@ -657,7 +657,7 @@ public:
             }
 #else
             // This method uses the adjacency map to look up the connected AudioPort to sum from
-            // It uses an unorerdered map to find the correct AudioPort in realtime
+            // It uses an unordered map to find the correct AudioPort in realtime
             // However, we can do this when we construct the graph, and allow the running graph
             // to use the cached/baked vector
             // Any change to the graph will happen at the 'next' cycle

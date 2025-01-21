@@ -59,6 +59,7 @@ add_dependencies(PlugPatch linenoise)
 if(MSVC)
     target_compile_options(PlugPatch PRIVATE
             /std:c++latest
+            /Zc:preprocessor
             $<$<CONFIG:Debug>:/Od /Z7>
             $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
             $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>

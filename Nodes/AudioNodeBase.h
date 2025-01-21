@@ -64,7 +64,7 @@ public:
     }
 
     template <typename T>
-    T& parseObjectParams(T& paramData)
+    constexpr T& parseObjectParams(T& paramData)
     {
         //std::cout << "parsing data: " << nodeCreationData.dump() << std::endl;
 
@@ -104,7 +104,6 @@ public:
 private:
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
     {
-        //swapStatesIfDirty();
         sumInputBuffers(inputPortBuffers, runningGraph, index);
         outputPort.clear(frameCount);
         processAudio(buffer, frameCount);

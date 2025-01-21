@@ -105,14 +105,6 @@ public:
         addInputPort("phase", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Signal);
 
-        auto startTime = std::chrono::high_resolution_clock::now();
-
-        waveform = objParams.value("waveform", std::string("sine"));
-        freq = objParams.value("freq", 440.0f);
-
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto callbackTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-
         auto paramString = nodeCreationData.dump();
 
         auto startGTime = std::chrono::high_resolution_clock::now();
@@ -124,6 +116,15 @@ public:
 
         auto endGTime = std::chrono::high_resolution_clock::now();
         auto callbackGTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(endGTime - startGTime).count();
+
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+
+        waveform = objParams.value("waveform", std::string("sine"));
+        freq = objParams.value("freq", 440.0f);
+
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto callbackTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
 
         std::cout << "Glaze json took: " << callbackGTimeNs << " nholm took: "<< callbackTimeNs << std::endl;
 
