@@ -103,7 +103,6 @@ void repl(GraphManager& graphs) {
 
         switch (hash(command))
         {
-        case hash("exit"):
         case hash("quit"):
         case hash("q"):
             {
@@ -120,7 +119,6 @@ void repl(GraphManager& graphs) {
                 {
                 case hash("o"):
                 case hash("obj"):
-                case hash("object"):
                     if (tokens.size() > 1)
                     {
                         json j;
@@ -137,8 +135,6 @@ void repl(GraphManager& graphs) {
                     }
                     break;
                 case hash("c"):
-                case hash("con"):
-                case hash("conn"):
                 case hash("connection"):
                     if (tokens.size() == 6)
                     {
@@ -154,8 +150,7 @@ void repl(GraphManager& graphs) {
                 }
             }
             break;
-        case hash("r"):
-        case hash("rem"):
+        case hash("rm"):
         case hash("remove"):
             if (tokens.size() > 1) {
                 auto addType = tokens[1].str();
@@ -163,7 +158,6 @@ void repl(GraphManager& graphs) {
                 {
                 case hash("o"):
                 case hash("obj"):
-                case hash("object"):
                     if (tokens.size() == 3)
                     {
                         int idToRemove;
@@ -176,7 +170,6 @@ void repl(GraphManager& graphs) {
                     }
                     break;
                 case hash("c"):
-                case hash("con"):
                 case hash("connection"):
                 if (tokens.size() == 6) {
                     graphs.disconnect(tokens[2].str(), stoi(tokens[3].str()), tokens[4].str(), stoi(tokens[5].str()));
@@ -288,6 +281,7 @@ void repl(GraphManager& graphs) {
              if (tokens.size() > 1) {
                 switch (hash(tokens[1]))
                 {
+                case hash("p"):
                 case hash("patch"):
                     {
                         if (auto file = graphs.getPatchFile(); !file.empty())
@@ -301,17 +295,13 @@ void repl(GraphManager& graphs) {
                     graphs.printGraph();
                     break;
                 case hash("o"):
-                case hash("node"):
-                case hash("obj"):
-                case hash("objects"):
+                case hash("object"):
                     for (const auto& name : NodeRegistry::getInstance().getNodeNames()) {
                         std::cout << "- " << name << std::endl;
                     }
                     break;
                 case hash("c"):
-                case hash("con"):
-                case hash("conn"):
-                case hash("connections"):
+                case hash("connection"):
                     graphs.printAdjacencyList();
                     break;
                 default:
@@ -327,45 +317,49 @@ PlugPatch is live audio environment, that allows the user to create an audio gra
 
 Commands:
 [quit]       Exit the application.
-             Alias: [q], [exit]
+             Alias: [q]
 
 [load]       Load a graph file. Example: "load graph"
              Options:
              [verbose]       Print the connection layout.
                              Alias: [v]
+
 [save]       Save a graph as a file. Example: "save <filename>"
 
 [clear]      Clear the active graph
 
 [list]       Alias: [ls]
              Options:
-             [patch]         Print currently loaded patch (if there is one)
-             [objects]       Print available nodes that can be added.
-                             Alias: [nodes] [obj] [o]
+             [patch]         Print currently loaded json patch (if there is one)
+                             Alias: [p]
+             [graph]         Print the currently loaded graph objects
+                             Alias: [g]
              [connection]    Print the connection layout.
-                             Alias: [conn] [con] [c]
+                             Alias: [c]
+             [obj]           Print available nodes that can be added.
+                             Alias: [o]
 
 [add]        Add to the currently loaded patch:
              Alias: [a]
              Options:
-             [objects]       Add an object. Object <name> and <key><value> pairs
+             [obj]           Add an object. Object <name> and <key><value> pairs
                              Note: Missing <key><value> pairs will be init per object defaults
                              Example: "add obj osc" (default osc: freq 440, waveform sine)
                              Example: "add obj osc waveform tri"
-                             Alias: [nodes] [obj] [o]
+                             Alias: [o]
              [connection]    Add a connection <outObj> <outPort> <inObj> <inPort>. Example: "add con 0 1 1 0"
-                             Alias: [conn] [con] [c]
+                             Alias: [c]
 
 [remove]     Remove from the currently loaded patch:
-             Alias: [rem] [r]
+             Alias: [rm]
              Options:
-             [objects]       Add an object. After object is key:value pairs
+             [obj]       Add an object. After object is key:value pairs
                              Example: "add obj osc"
                              Example: "add obj osc waveform tri"
-                             Alias: [nodes] [obj] [o]
+                             Alias: [o]
              [connection]    Remove a connection <outObj> <outPort> <inObj> <inPort>.
                              Example: "remove connection 0 1 1 0"
-                             Alias: [conn] [con] [c]
+                             Alias: [c]
 
 [about]      Print credits / OSS libraries
 
