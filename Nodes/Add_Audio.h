@@ -19,12 +19,15 @@ public:
         addInputPort("B", AudioPort::PortType::Signal);
     }
 
-    void processAudio(float* out, unsigned long frameCount) override {
-        const float* buffer1 = inputPortBuffers[0]->getAudioBuffer();
-        const float* buffer2 = inputPortBuffers[1]->getAudioBuffer();
+    void processAudio(float* out, unsigned long frameCount) override
+    {
+        const auto buffer1 = inputPortBuffers[0]->getAudioBuffer();
+        const auto buffer2 = inputPortBuffers[1]->getAudioBuffer();
+
+        auto output = outputPort.getAudioBuffer();
 
         for (unsigned long i = 0; i < frameCount; i++) {
-            outputPort.getAudioBuffer()[i] = buffer1[i] + buffer2[i]; // Directly write to output buffer
+            output[i] = buffer1[i] + buffer2[i];
         }
     }
 };

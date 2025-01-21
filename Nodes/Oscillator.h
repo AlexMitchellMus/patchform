@@ -105,7 +105,8 @@ public:
         initializeWaveformTable(this->waveform, this->useTable);
     }
 
-    void processAudio(float* out, unsigned long frameCount) override {
+    void processAudio(float* out, unsigned long frameCount) override
+    {
         auto events = inputPortBuffers[0]->getEvents();
         auto freqEvents = inputPortBuffers[1]->getEvents();
         // If a signal cable is connected, don't process events, and use the signal instead
