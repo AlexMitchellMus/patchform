@@ -330,13 +330,13 @@ Commands:
 
 [list]       Alias: [ls]
              Options:
-             [patch]         Print currently loaded json patch (if there is one)
+             [patch]         Print directly of loaded patch (if there is one)
                              Alias: [p]
              [graph]         Print the currently loaded graph objects
                              Alias: [g]
              [connection]    Print the connection layout.
                              Alias: [c]
-             [obj]           Print available nodes that can be added.
+             [obj]           Print available objects available to be added.
                              Alias: [o]
 
 [add]        Add to the currently loaded patch:
