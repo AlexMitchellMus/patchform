@@ -23,7 +23,7 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto output = outputPort.getAudioBuffer();
+        const auto output = outputPort.getAudioBuffer();
         std::fill(output, output+frameCount, value);
     }
 };

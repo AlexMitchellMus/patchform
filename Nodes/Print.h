@@ -22,7 +22,7 @@ public:
     {
         auto aEvents = inputPortBuffers[0]->getEvents();
 
-        for (auto event : aEvents)
+        for (const auto event : aEvents)
         {
             Logger::getInstance().logEvent(this, event->getTimeStamp(), event->data);
         }

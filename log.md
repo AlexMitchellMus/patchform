@@ -16,13 +16,10 @@ Project Goals
 WORK LOG:
 
 [issue]
-Remove node state system. I'm quite sure that will not be needed, nor even work
-
-----------
-
-[issue]
 Use glaze for json handling (which will allow compile time etc)
-
+[comments]
+Explored using glaze, however currently glaze takes 2x as long to reflect json std::string to usable data
+I may be doing something wrong, investigate further. Glaze has been left in system to easily hookup
 ----------
 
 [issue]

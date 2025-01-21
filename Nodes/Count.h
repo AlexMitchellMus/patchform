@@ -27,7 +27,7 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPortBuffers[0]->getEvents();
+        const auto aEvents = inputPortBuffers[0]->getEvents();
 
         for (auto event : aEvents)
         {

@@ -26,7 +26,7 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPortBuffers[0]->getEvents();;
+        auto aEvents = inputPortBuffers[0]->getEvents();
         if (auto bEvent = inputPortBuffers[1]->getEvents(); bEvent.size())
             coldValue = bEvent.back()->data;
 
