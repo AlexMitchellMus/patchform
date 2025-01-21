@@ -10,7 +10,7 @@
 
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFO : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("LFO", "lfo", NullParams);
+    DEFINE_AND_REGISTER_NODE("LFO", "lfo");
 
     float frequency;
     float phase = 0.0f;
@@ -21,7 +21,8 @@ public:
         frequency = objParams.value("rate", 1.0f);
     }
 
-    void processAudio(float* out, unsigned long frameCount) override {
+    void processAudio(float* out, unsigned long frameCount) override
+    {
         auto output = outputPort.getAudioBuffer();
 
         for (unsigned int i = 0; i < frameCount; i++) {

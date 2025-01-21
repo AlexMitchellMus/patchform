@@ -10,7 +10,7 @@
 
 class Envelope : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Envelope", "env", NullParams);
+    DEFINE_AND_REGISTER_NODE("Envelope", "env");
 
     float attackVal;
     float decayVal;
@@ -18,8 +18,7 @@ class Envelope : public AudioNode
     bool isAttack = false;  // Track whether the envelope is in attack phase
 
 public:
-    Envelope(NodeContext* context, const json& objParams)
-        : AudioNode(context, AudioPort::PortType::Signal, objParams)
+    Envelope(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("Events", AudioPort::PortType::Data);
         addInputPort("Signal", AudioPort::PortType::Signal);

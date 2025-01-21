@@ -24,13 +24,7 @@ using WaveTables = ankerl::unordered_dense::map<std::string, std::vector<float>>
 
 class Oscillator : public AudioNode {
 
-    struct OscParams {
-        int id = 0;
-        std::string waveform = "sine";
-        float freq = 440.0f;
-    };
-
-    DEFINE_AND_REGISTER_NODE("Oscillator", "osc", OscParams);
+    DEFINE_AND_REGISTER_NODE("Oscillator", "osc");
 
 protected:
     static constexpr int TABLE_SIZE = 8192;
@@ -105,29 +99,8 @@ public:
         addInputPort("phase", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Signal);
 
-        auto paramString = nodeCreationData.dump();
-
-        auto startGTime = std::chrono::high_resolution_clock::now();
-
-        auto result = glz::read<glz::opts{.error_on_unknown_keys = false}>(paramData, paramString);
-        //parseObjectParams(paramData);
-        waveform = paramData.waveform;
-        freq = paramData.freq;
-
-        auto endGTime = std::chrono::high_resolution_clock::now();
-        auto callbackGTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(endGTime - startGTime).count();
-
-
-        auto startTime = std::chrono::high_resolution_clock::now();
-
-        waveform = objParams.value("waveform", std::string("sine"));
+        waveform = objParams.value("waveform", "sine");
         freq = objParams.value("freq", 440.0f);
-
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto callbackTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-
-        std::cout << "Glaze json took: " << callbackGTimeNs << " nholm took: "<< callbackTimeNs << std::endl;
-
 
         initializeWaveformTable(this->waveform, this->useTable);
     }

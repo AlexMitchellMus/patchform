@@ -10,7 +10,7 @@
 
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioOut : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("AudioOut", "aout", NullParams);
+    DEFINE_AND_REGISTER_NODE("AudioOut", "aout");
 public:
     AudioOut(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
     {

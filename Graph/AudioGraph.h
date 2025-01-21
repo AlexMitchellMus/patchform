@@ -308,9 +308,9 @@ public:
         json nodes = json::array();
         for (const auto& obj : objects)
         {
-            //auto node = obj->nodeCreationData;
-            //node["id"] = obj->nodeID; // Update the id field (as it could have changed)
-            //nodes.push_back(node);
+            auto node = obj->nodeCreationData;
+            node["id"] = obj->nodeID; // Update the id field (as it could have changed)
+            nodes.push_back(node);
         }
 
         json conns = json::array();

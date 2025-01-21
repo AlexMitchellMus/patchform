@@ -20,10 +20,8 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-struct NullParams{};
-
 // Helper macro to name and register node (used in derived node class)
-#define DEFINE_AND_REGISTER_NODE(nodeName, shortNodeName, ParamType)            \
+#define DEFINE_AND_REGISTER_NODE(nodeName, shortNodeName)                       \
 public:                                                                         \
     static inline const std::string name = nodeName;                            \
     static inline const std::string shortName = shortNodeName;                  \
@@ -33,7 +31,6 @@ public:                                                                         
     }();                                                                        \
     const std::string& getName() const override { return name; }                \
     const std::string& getShortName() const override { return shortName; }      \
-    ParamType paramData;                                                        \
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -60,14 +57,13 @@ public:
 
     virtual ~AudioNode()
     {
-        std::cout << "destorying audio node: " << nodeID << std::endl;
+        //std::cout << "destorying audio node: " << nodeID << std::endl;
     }
 
+    // Glaze read json as std::string (not connected ATM)
     template <typename T>
     constexpr T& parseObjectParams(T& paramData)
     {
-        //std::cout << "parsing data: " << nodeCreationData.dump() << std::endl;
-
         auto result = glz::read<glz::opts{.error_on_unknown_keys = false}>(paramData, nodeCreationData.dump());
         if (result) {
             std::cerr << "Failed to parse node data: " << format_error(result.ec) << std::endl;

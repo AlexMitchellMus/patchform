@@ -8,23 +8,17 @@
 
 #include "AudioNodeBase.h"
 
-struct ValueData
-{
-    float value = 0.0f;
-};
-
 // ValueNode that provides a constant value (e.g., for frequency modulation)
 class Value : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Value", "val", ValueData);
+    DEFINE_AND_REGISTER_NODE("Value", "val");
 
     float value = 0.0f;
 
 public:
     Value(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
-        parseObjectParams(paramData);
-        value = paramData.value;
+        value = objParams.value("value", 0.0f);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

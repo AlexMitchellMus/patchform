@@ -12,7 +12,7 @@
 
 class Metronome : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Metronome", "metro", NullParams);
+    DEFINE_AND_REGISTER_NODE("Metronome", "metro");
 
     float sampleCounter = 0.0f;
     float tickInterval;
