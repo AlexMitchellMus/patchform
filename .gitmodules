@@ -16,3 +16,9 @@
 [submodule "external/glaze"]
 	path = external/glaze
 	url = https://github.com/stephenberry/glaze.git
+[submodule "external/SDL2"]
+	path = external/SDL2
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "external/nanovg"]
+	path = external/nanovg
+	url = https://github.com/timothyschoen/nanovg

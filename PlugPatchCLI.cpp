@@ -11,7 +11,7 @@
 #include <atomic>
 #include <conio.h>
 
-#include <PortAudio.h>
+#include "PortAudio.h"
 #include "json.hpp"
 using json = nlohmann::json;
 

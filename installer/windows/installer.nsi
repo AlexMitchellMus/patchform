@@ -1,6 +1,6 @@
 !include "MUI2.nsh"
 
-!define APP_NAME "PlugPatch"
+!define APP_NAME "PlugPatchCLI"
 !define APP_VERSION "1.0"
 !define INSTALL_DIR "$PROGRAMFILES64\${APP_NAME}"
 !define MUI_ICON plugpatchicon.ico
@@ -27,15 +27,17 @@ Page custom CustomOptions CustomOptionsLeave
 ; Installer settings
 !insertmacro MUI_LANGUAGE "English"
 
+!define PATCH_DIR "${OUTPUT_DIR}\patches"
+
 Section "Install"
     SetOutPath "$INSTDIR"
-    File "${OUTPUT_DIR}\PlugPatch.exe"
-    File "${OUTPUT_DIR}\count.json5"
-    File "${OUTPUT_DIR}\graph.json"
-    File "${OUTPUT_DIR}\graph1.json"
-    File "${OUTPUT_DIR}\graph2.json"
-    File "${OUTPUT_DIR}\graph3.json"
-    File "${OUTPUT_DIR}\graph4.json5"
+    File "${OUTPUT_DIR}\PlugPatchCLI.exe"
+    File "${PATCH_DIR}\count.json5"
+    File "${PATCH_DIR}\graph.json"
+    File "${PATCH_DIR}\graph1.json"
+    File "${PATCH_DIR}\graph2.json"
+    File "${PATCH_DIR}\graph3.json"
+    File "${PATCH_DIR}\graph4.json5"
     File "plugpatchicon.ico"
 
     ; Write the uninstaller
@@ -43,10 +45,10 @@ Section "Install"
 
     ; Create shortcuts based on user selections
     StrCmp $SHORTCUT_STARTMENU "1" 0 +2
-        CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\PlugPatch.exe" "" "$INSTDIR\plugpatchicon.ico" 0
+        CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\PlugPatchCLI.exe" "" "$INSTDIR\plugpatchicon.ico" 0
 
     StrCmp $SHORTCUT_DESKTOP "1" 0 +2
-        CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\PlugPatch.exe" "" "$INSTDIR\plugpatchicon.ico" 0
+        CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\PlugPatchCLI.exe" "" "$INSTDIR\plugpatchicon.ico" 0
 
     ; Create Start Menu uninstaller shortcut
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall ${APP_NAME}.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\plugpatchicon.ico" 0
