@@ -62,8 +62,11 @@ target_compile_options(linenoise PRIVATE
         $<$<CXX_COMPILER_ID:Clang>:-fno-char8_t>            # Disable char8_t for Clang
 )
 
+# Collect common source files
+file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp")
+
 # PlugPatchStandalone target
-add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES})
+add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
 target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"

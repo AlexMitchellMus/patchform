@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 
     pptk::MouseEventManager mouseEventManager;
 
-    App app;
+    auto app = std::make_unique<App>();
 
     bool running = true;
     SDL_Event event;
@@ -138,13 +138,13 @@ int main(int argc, char* argv[])
                 }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                mouseEventManager.handleMouseButtonDown(&app, event);
+                mouseEventManager.handleMouseButtonDown(app.get(), event);
                 break;
             case SDL_EVENT_MOUSE_BUTTON_UP:
-                mouseEventManager.handleMouseButtonUp(&app, event);
+                mouseEventManager.handleMouseButtonUp(app.get(), event);
                 break;
             case SDL_EVENT_MOUSE_MOTION:
-                mouseEventManager.handleMouseMove(&app, event);
+                mouseEventManager.handleMouseMove(app.get(), event);
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
                 std::cout << "Window resized" << std::endl;
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
         // Begin NanoVG frame
         nvgBeginFrame(nvg, w, h, 1.0f);
 
-        app.renderAll(nvg);
+        app->renderAll(nvg);
 
         nvgGlobalScissor(nvg, 0, 0, w, h);
 

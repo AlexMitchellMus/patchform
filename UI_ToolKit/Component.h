@@ -9,6 +9,8 @@
 #include <memory>
 #include <sstream>
 #include <vector>
+#include "SDL3/SDL.h"
+#include "nanovg.h"
 #include <functional>
 #include <unordered_map>
 
@@ -89,12 +91,16 @@ public:
 
     virtual void render(NVGcontext* vg) { };
 
-    void addComponent(Component* child) {
+    template <typename T>
+    T* addComponent(std::unique_ptr<T> child)
+    {
         child->parent = this;
-        children.push_back(child);
+        auto childPtr = child.get();
+        children.push_back(std::move(child));
+        return childPtr;
     }
 
-    const std::vector<Component*>& getChildren() const
+    const std::vector<std::unique_ptr<Component>>& getChildren() const
     {
         return children;
     }
@@ -166,11 +172,11 @@ public:
         nvgSave(vg);
 
         // Apply translation for this component's position
-        Point offsetPos;
         if (parent != nullptr)
-            offsetPos = parent->getPosition();
-
-        nvgTranslate(vg, offsetPos.x, offsetPos.y);
+        {
+            auto offsetPos = parent->getBounds();
+            nvgTranslate(vg, offsetPos.x, offsetPos.y);
+        }
 
         // Render this component
         render(vg);
@@ -212,7 +218,7 @@ protected:
     float y = 0.0f;
     float width = 0.0f;
     float height = 0.0f;
-    std::vector<Component*> children;
+    std::vector<std::unique_ptr<Component>> children;
     bool isDragging = false;
 
     Component* parent = nullptr;

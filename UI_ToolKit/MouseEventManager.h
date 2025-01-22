@@ -1,7 +1,3 @@
-//
-// Created by alexw on 22/01/2025.
-//
-
 #pragma once
 
 #include "Component.h"
@@ -12,7 +8,6 @@ namespace pptk {
 class MouseEventManager {
 public:
     void handleMouseButtonDown(Component* root, SDL_Event& e) {
-        std::cout << "mouse down event" << std::endl;
         draggingComponent = nullptr; // Reset the dragging state
         propagateMouseButtonDown(root, e);
     }
@@ -46,8 +41,8 @@ private:
     void propagateMouseButtonDown(Component* component, SDL_Event& e) {
         // Traverse children in reverse order
         for (auto it = component->getChildren().rbegin(); it != component->getChildren().rend(); ++it) {
-            Component* child = *it;
-            propagateMouseButtonDown(child, e);
+            auto& child = *it;
+            propagateMouseButtonDown(child.get(), e); // Use raw pointer from unique_ptr
             if (draggingComponent) {
                 return; // Stop propagation if a component starts dragging
             }
@@ -62,20 +57,19 @@ private:
     }
 
     void propagateMouseButtonUp(Component* component, SDL_Event& e) {
-        for (Component* child : component->getChildren()) {
-            propagateMouseButtonUp(child, e);
+        for (auto& child : component->getChildren()) {
+            propagateMouseButtonUp(child.get(), e); // Use raw pointer from unique_ptr
         }
 
         component->mouseButtonUp(e);
     }
 
     void propagateMouseMove(Component* component, SDL_Event& e) {
-        // Copy the children vector to avoid potential modification during iteration
-        auto children = component->getChildren();
+        auto& children = component->getChildren();
 
         for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            Component* child = *it;
-            propagateMouseMove(child, e);
+            auto& child = *it;
+            propagateMouseMove(child.get(), e); // Use raw pointer from unique_ptr
         }
 
         // Handle the current component's mouse move
