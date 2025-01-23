@@ -8,11 +8,14 @@
 
 #include <memory>
 #include <sstream>
+#include <utility>
 #include <vector>
 #include "SDL3/SDL.h"
 #include "nanovg.h"
 #include <functional>
-#include <unordered_map>
+#include <iostream>
+
+#include "unordered_dense.h"
 
 namespace pptk {
 // Event structure
@@ -37,6 +40,10 @@ struct Point {
 
     Point operator+(const Point& other) const {
         return Point(x + other.x, y + other.y);
+    }
+
+    Point operator-(const Point& other) const {
+        return Point(x - other.x, y - other.y);
     }
 };
 
@@ -63,9 +70,15 @@ struct Rect {
     }
 };
 
+class ComponentRegister;
+
 class Component {
 public:
-    virtual ~Component() = default;
+    Component() : rootComponent(this) {};
+
+    explicit Component(Component* parent);
+
+    virtual ~Component();
 
     void setSize(float newWidth, float newHeight)
     {
@@ -89,28 +102,16 @@ public:
     float getWidth() const { return width; }
     float getHeight() const { return height; }
 
-    virtual void render(NVGcontext* vg) { };
+    void addComponent(Component* child);
 
-    template <typename T>
-    T* addComponent(std::unique_ptr<T> child)
-    {
-        child->parent = this;
-        auto childPtr = child.get();
-        children.push_back(std::move(child));
-        return childPtr;
-    }
-
-    const std::vector<std::unique_ptr<Component>>& getChildren() const
+    std::vector<Component*>& getChildren()
     {
         return children;
     }
 
-    // Find the root component
-    Component* getRoot() {
-        if (parent == nullptr) {
-            return this; // This is the root component
-        }
-        return parent->getRoot(); // Recursively find the root
+    Component* getRoot() const
+    {
+        return rootComponent;
     }
 
     // Computes the absolute position of the component
@@ -139,40 +140,94 @@ public:
                py >= absolutePosition.y && py <= absolutePosition.y + height;
     }
 
-    virtual void mouseButtonDown(SDL_Event& e)
-    {
-        for (auto& child : children)
-        {
-            if (child->hitTest(e.button.x, e.button.y))
-                child->mouseButtonDown(e);
+    virtual void mouseButtonDown(SDL_Event& e) {
+        for (auto it = children.begin(); it != children.end(); ) {
+            auto& child = *it;
+
+            if (!isComponentValid(child)) {
+                it = children.erase(it);
+            } else {
+                if (child->hitTest(e.button.x, e.button.y)) {
+                    child->mouseButtonDown(e);
+                }
+                ++it;
+            }
         }
     }
 
     virtual void handleMouseMove(SDL_Event& e)
     {
         if (getBounds().contains(e.button.x, e.button.y))
-            bool isHovered;
-    }
-
-    virtual void mouseButtonUp(SDL_Event& e)
-    {
-        for (auto& child : children)
         {
-            child->isDragging = false;
-            child->mouseButtonUp(e);
         }
     }
+
+    virtual void mouseButtonUp(SDL_Event& e) {
+        for (auto it = children.begin(); it != children.end(); ) {
+            auto& child = *it;
+
+            if (!isComponentValid(child)) {
+                it = children.erase(it);
+            } else {
+                child->isDragging = false;
+                child->mouseButtonUp(e);
+                ++it;
+            }
+        }
+    }
+
+    // Find the component at (x, y), including children
+    Component* findComponentAt(int x, int y) {
+        // Always check children first
+        for (auto it = getChildren().rbegin(); it != getChildren().rend(); ++it) {
+            if (isComponentValid(*it)) {
+                Component* child = (*it)->findComponentAt(x, y);
+                if (child)
+                    return child; // Return the first matching child
+            }
+        }
+
+        // Check the current component only after its children
+        if (hitTest(x, y)) {
+            return this;
+        }
+
+        // No matching component found
+        return nullptr;
+    }
+
+    template <typename T>
+    T* findParentOfClass()
+    {
+        Component* current = this;
+        while (current != nullptr)
+        {
+            T* parent = dynamic_cast<T*>(current);
+            if (parent != nullptr)
+            {
+                return parent; // Found a parent of the specified type
+            }
+            current = current->parent; // Move up to the parent
+        }
+        return nullptr; // No parent of the specified type found
+    }
+
+    virtual void mouseEnter(SDL_Event& e) {}
+
+    virtual void mouseLeave(SDL_Event& e) {}
 
     virtual void mouseMove(const Point& position) {}
 
     virtual void mouseDrag(const Point& position, const Point& delta) {}
 
-    void renderAll(NVGcontext* vg)
+    virtual void render(NVGcontext* vg) { };
+
+    virtual void renderAll(NVGcontext* vg)
     {
         nvgSave(vg);
 
         // Apply translation for this component's position
-        if (parent != nullptr)
+        if (parent)
         {
             auto offsetPos = parent->getBounds();
             nvgTranslate(vg, offsetPos.x, offsetPos.y);
@@ -183,7 +238,8 @@ public:
 
         // Render children
         for (auto& child : children) {
-            child->renderAll(vg);
+            if (isComponentValid(child))
+                child->renderAll(vg);
         }
 
         // Restore previous transformation
@@ -213,16 +269,24 @@ public:
         return Point(x, y);
     }
 
+private:
+    bool isComponentValid(Component* c);
+
 protected:
+
+    std::string name;
+
     float x = 0.0f;
     float y = 0.0f;
     float width = 0.0f;
     float height = 0.0f;
-    std::vector<std::unique_ptr<Component>> children;
+    std::vector<Component*> children;
     bool isDragging = false;
 
-    Component* parent = nullptr;
     Component* draggingComponent = nullptr;
+
+    Component* parent = nullptr;
+    Component* rootComponent = nullptr;
 };
 
 } // namespace ppuitk

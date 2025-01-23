@@ -1,0 +1,34 @@
+//
+// Created by alexw on 23/01/2025.
+//
+
+#include "Component.h"
+#include "ComponentRegister.h"
+
+namespace pptk {
+Component::Component(Component* parentComp)
+    : parent(parentComp)
+    , rootComponent(parent->rootComponent)
+{
+}
+
+Component::~Component()
+{
+    //std::cout << "removing: " << typeid(*this).name() << std::endl;
+    reinterpret_cast<ComponentRegister*>(rootComponent)->unregisterComponent(this);
+}
+
+bool Component::isComponentValid(Component* c)
+{
+    return reinterpret_cast<ComponentRegister*>(rootComponent)->exists(c);
+}
+
+
+void Component::addComponent(Component* child)
+{
+    reinterpret_cast<ComponentRegister*>(rootComponent)->registerComponent(child);
+
+    children.push_back(child);
+}
+
+}

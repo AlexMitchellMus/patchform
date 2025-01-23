@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../UI_ToolKit/Component.h"
+#include "../UI_ToolKit/ComponentRegister.h"
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -13,45 +15,9 @@
 
 using namespace pptk;
 
-class Port : public Component {
-public:
-    explicit Port(int portNum) : portNum(portNum) {
-    }
-
-    void mouseButtonDown(SDL_Event& e) override {
-        auto con = std::make_unique<Connection>();
-        connectionBeingMade = con.get();
-        addComponent<Connection>(std::move(con));
-        connections.push_back(std::move(con));
-    }
-
-    void mouseButtonUp(SDL_Event& e) override {
-        //connections.clear();
-        //connectionBeingMade.reset();
-    }
-
-    void mouseDrag(const Point& currentPosition, const Point& delta) override {
-        if (connectionBeingMade) {
-            connectionBeingMade->setConnectionDest(currentPosition);
-        }
-    }
-
-    void render(NVGcontext* nvg) override {
-        nvgBeginPath(nvg);
-        nvgCircle(nvg, x + 5, y + 5, 5);
-        nvgFillColor(nvg, nvgRGB(0, 0, 255)); // Blue fill for ports
-        nvgFill(nvg);
-    }
-
-private:
-    int portNum;
-    std::vector<std::unique_ptr<Connection>> connections;
-    Connection* connectionBeingMade;
-};
-
 class TopBar : public Component {
 public:
-    TopBar() = default;
+    TopBar(Component* parent) : Component(parent) {}
 
     void render(NVGcontext* nvg) override {
         nvgBeginPath(nvg);
@@ -79,14 +45,19 @@ private:
     bool isHit = false;
 };
 
-class App : public Component {
+class App : public ComponentRegister {
 public:
     App() {
-        auto canvas = addComponent(std::make_unique<Canvas>());
-        canvas->setBounds(0, 0, 1920, 1080);
 
-        auto topBar = addComponent(std::make_unique<TopBar>());
-        topBar->setBounds(0, 0, 1920, 30);
+        canvas = std::make_unique<Canvas>(this);
+        addComponent(canvas.get());
+        canvas->setBounds(0, 45, 1920, 1080 - 45);
+
+        topBar = std::make_unique<TopBar>(this);
+        addComponent(topBar.get());
+        topBar->setBounds(0, 0, 1920, 45);
 
     }
+    std::unique_ptr<Canvas> canvas;
+    std::unique_ptr<TopBar> topBar;
 };

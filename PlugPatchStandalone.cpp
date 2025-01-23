@@ -98,6 +98,8 @@ int main(int argc, char* argv[])
     }
 
     // Set swap interval to v-sync
+    // Set it to zero for now - we are going to need invalidation anyway
+    // so may as well freewheel the event system and repaint when state has changed
     if (SDL_GL_SetSwapInterval(0) == 0)
         std::cerr << "Failed to set swap interval" << std::endl;
 
@@ -115,9 +117,10 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    pptk::MouseEventManager mouseEventManager;
-
     auto app = std::make_unique<App>();
+
+    pptk::MouseEventManager mouseEventManager(app.get());
+
 
     bool running = true;
     SDL_Event event;

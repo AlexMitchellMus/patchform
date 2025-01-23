@@ -4,26 +4,21 @@
 
 #pragma once
 
+#include <iostream>
+#include "../UI_ToolKit/Component.h"
+#include "Port.h"
+
 class Connection : public pptk::Component {
 public:
-    Connection() : dest(x, y) {}
+    Connection(Component* parent);
 
-    void setConnectionDest(const pptk::Point& p) {
-        std::cout << "Setting dest: " << p.toString() << std::endl;
+    void setConnectionDest(const pptk::Point& p)
+    {
         dest = p;
     }
 
-    void render(NVGcontext* nvg) override {
-        nvgBeginPath(nvg);
-        nvgMoveTo(nvg, x, y);
-        auto gPos = getAbsolutePosition();
-        nvgLineTo(nvg, dest.x - gPos.x, dest.y - gPos.y);
-
-        nvgStrokeColor(nvg, nvgRGB(100, 100, 100)); // Set stroke color
-        nvgStrokeWidth(nvg, 1.5f);   // Set line width
-        nvgStroke(nvg);
-    }
-
+    void render(NVGcontext* nvg) override;
 private:
     pptk::Point dest;
+    Port* originPort = nullptr;
 };
