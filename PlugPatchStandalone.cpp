@@ -87,10 +87,13 @@ int main(int argc, char* argv[])
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    int w = 1920;
-    int h = 1080;
+    int windowWidth = 1920;
+    int windowHeight = 1080;
 
-    SDL_Window* window = SDL_CreateWindow("PlugPatch", w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    int newHeight = windowHeight;
+    int newWidth = windowWidth;
+
+    SDL_Window* window = SDL_CreateWindow("PlugPatch", windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!window) {
         SDL_Log("Failed to create window: %s", SDL_GetError());
         SDL_Quit();
@@ -143,7 +146,7 @@ int main(int argc, char* argv[])
 
     SDL_AddEventWatch(resizingEventWatcher, nullptr);
 
-    auto fb = nvgCreateFramebuffer(nvg, w, h, NVG_IMAGE_PREMULTIPLIED);
+    auto fb = nvgCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
 
     int fontHandle = nvgCreateFont(nvg, "sans", "Patches/Inter-VariableFont_opsz,wght.ttf");
     if (fontHandle == -1) {
@@ -169,7 +172,10 @@ int main(int argc, char* argv[])
                 mouseEventManager.handleMouseMove(app.get(), event);
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
-                std::cout << "----> window resized" << std::endl;
+                {
+                    newWidth = event.window.data1;
+                    newHeight = event.window.data2;
+                }
                 break;
             case SDL_EVENT_WINDOW_MOVED:
                 std::cout << "----> window moved" << std::endl;
@@ -179,24 +185,34 @@ int main(int argc, char* argv[])
             }
         }
 
+        // If we resize the window recreate the framebuffer
+        if (newWidth != windowWidth || newHeight != windowHeight)
+        {
+            windowWidth = newWidth;
+            windowHeight = newHeight;
+
+            nvgluDeleteFramebuffer(fb);
+            fb = nvgluCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+        }
+
         nvgBindFramebuffer(fb);
 
-        nvgViewport(0, 0, w, h);
+        nvgViewport(0, 0, windowWidth, windowHeight);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         // Begin NanoVG frame
-        nvgBeginFrame(nvg, w, h, 1.0f);
+        nvgBeginFrame(nvg, windowWidth, windowHeight, 1.0f);
 
         app->renderAll(nvg);
 
-        nvgGlobalScissor(nvg, 0, 0, w, h);
+        nvgGlobalScissor(nvg, 0, 0, windowWidth, windowHeight);
 
         // End NanoVG frame
         nvgEndFrame(nvg);
 
         nvgBindFramebuffer(nullptr);
-        nvgBlitFramebuffer(nvg, fb, 0, 0, w, h);
+        nvgBlitFramebuffer(nvg, fb, 0, 0, windowWidth, windowHeight);
 
         // Swap the SDL buffers to display the frame
         SDL_GL_SwapWindow(window);
