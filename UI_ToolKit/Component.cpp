@@ -23,7 +23,6 @@ bool Component::isComponentValid(Component* c)
     return reinterpret_cast<ComponentRegister*>(rootComponent)->exists(c);
 }
 
-
 void Component::addComponent(Component* child)
 {
     reinterpret_cast<ComponentRegister*>(rootComponent)->registerComponent(child);

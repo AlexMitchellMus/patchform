@@ -1,10 +1,14 @@
 #include "Canvas.h"
 #include "Object.h"
 #include "Connection.h"
+#include "Lasso.h"
 
 Canvas::Canvas(Component* parent) : pptk::Component(parent)
 {
-    for (int i = 0; i < 100; ++i)
+    lasso = std::make_unique<Lasso>(this);
+    addComponent(lasso.get());
+
+    for (int i = 0; i < 30; ++i)
     {
         auto obj = std::make_unique<Object>(this, "obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -16,6 +20,92 @@ Canvas::Canvas(Component* parent) : pptk::Component(parent)
         obj->setPosition(std::rand() % 800, std::rand() % 800);
     }
 }
+
+void Canvas::mouseButtonDown(SDL_Event& e)
+{
+    clearSelection();
+
+    if (e.button.button == SDL_BUTTON_LEFT)
+    {
+        lasso->start({e.button.x, e.button.y});
+    }
+}
+
+void Canvas::mouseButtonUp(SDL_Event& e)
+{
+    lasso->end();
+}
+
+void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta)
+{
+    lasso->update(position);
+
+    auto lassoBounds = lasso->getLassoBounds();
+
+    for (const auto& obj : objects)
+    {
+        if (lassoBounds.intersects(obj->getAbsoluteBounds()))
+        {
+            addToSelection(obj.get());
+        }
+        else
+        {
+            removeFromSelection(obj.get());
+        }
+    }
+}
+
+void Canvas::addToSelection(Object* obj)
+{
+    if (std::find(selected.begin(), selected.end(), obj) == selected.end()) // Avoid duplicates
+    {
+        obj->setSelected(true);
+        selected.push_back(obj);
+    }
+}
+
+void Canvas::removeFromSelection(Object* obj)
+{
+    auto it = std::find(selected.begin(), selected.end(), obj);
+    if (it != selected.end())
+    {
+        obj->setSelected(false);
+        selected.erase(it);
+    }
+}
+
+bool Canvas::areMultiObjectsSelected()
+{
+    return selected.size() > 1;
+}
+
+void Canvas::setMultiObjectPosition(pptk::Point pos)
+{
+    for (auto& obj : selected)
+    {
+        obj->setPosition(obj->getPosition() + pos);
+    }
+}
+
+void Canvas::setSelected(Object* obj)
+{
+    clearSelection();
+
+    obj->setSelected(true);
+
+    selected.push_back(obj);
+}
+
+void Canvas::clearSelection()
+{
+    for (auto& obj : selected)
+    {
+        obj->setSelected(false);
+    }
+
+    selected.clear();
+}
+
 
 void Canvas::render(NVGcontext* nvg)
 {
@@ -49,6 +139,8 @@ void Canvas::renderAll(NVGcontext* nvg)
         // Connections have no child components
         con->render(nvg);
     }
+
+    lasso->render(nvg);
 
     // Restore previous transformation
     nvgRestore(nvg);

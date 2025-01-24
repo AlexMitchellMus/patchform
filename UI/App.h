@@ -11,7 +11,9 @@
 #include "../Nodes/AudioPort.h"
 
 #include "Canvas.h"
+#include "LeftPanel.h"
 #include "Connection.h"
+
 
 using namespace pptk;
 
@@ -28,7 +30,7 @@ public:
         nvgBeginPath(nvg);
         nvgMoveTo(nvg, x, height - 0.5f);
         nvgLineTo(nvg, x + width, height - 0.5f);
-        nvgStrokeColor(nvg, nvgRGB(63, 63, 63));
+        nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
         nvgStrokeWidth(nvg, 1.0f);
         nvgStroke(nvg);
     }
@@ -51,65 +53,6 @@ public:
 
 private:
     bool isHit = false;
-};
-
-class LeftPanel : public Component
-{
-public:
-    LeftPanel(Component* parent) : Component(parent)
-    {
-        setMinMaxSize(200, 400, 0, 0);
-    }
-
-    void render(NVGcontext* nvg) override
-    {
-        nvgFillColor(nvg, nvgRGB(43, 43, 43));
-        nvgFillRect(nvg, x, y, width, height);
-
-        // Vertical edge line
-        nvgBeginPath(nvg);
-        nvgMoveTo(nvg, width - 0.5f, y);
-        nvgLineTo(nvg, width - 0.5f, y + height);
-        nvgStrokeColor(nvg, nvgRGB(63, 63, 63));
-        nvgStrokeWidth(nvg, 1.0f);
-        nvgStroke(nvg);
-    }
-
-    void mouseMove(const Point& position) override
-    {
-        if (position.x > getWidth() - 10 && position.x < getWidth())
-        {
-            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_W_RESIZE));
-        }
-        else
-            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
-    }
-
-    void mouseLeave(SDL_Event& e) override
-    {
-        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
-    }
-
-    void mouseButtonDown(SDL_Event& e) override
-    {
-        if (e.button.button == SDL_BUTTON_LEFT)
-        {
-            if (e.button.x > getWidth() - 10 && e.button.x < getWidth())
-            {
-                isResizingPanel = true;
-            }
-            else
-                isResizingPanel = false;
-        }
-    }
-
-    void mouseDrag(const Point& position, const Point& delta) override
-    {
-        auto currBounds = getBounds();
-        setBounds(currBounds.x, currBounds.y, position.x, currBounds.h);
-    }
-
-    bool isResizingPanel = false;
 };
 
 class RightPanel : public Component
@@ -138,7 +81,7 @@ public:
         addComponent(topBar.get());
         topBar->setBounds(0, 0, 1920, 45);
 
-        leftPanal = std::make_unique<LeftPanel>(this);
+        leftPanal = std::make_unique<LeftPanel>(this, canvas.get());
         addComponent(leftPanal.get());
         leftPanal->setBounds(0, 45, 200, 1080 - 45);
 

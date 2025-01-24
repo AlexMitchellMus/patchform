@@ -118,8 +118,7 @@ int main(int argc, char* argv[])
     }
 
     // Set swap interval to v-sync
-    // Set it to zero for now - we are going to need invalidation anyway
-    // so may as well freewheel the event system and repaint when state has changed
+    // 0 for immediate updates, 1 for updates synchronized with the vertical retrace, -1 for adaptive vsync
     if (SDL_GL_SetSwapInterval(0) == 0)
         std::cerr << "Failed to set swap interval" << std::endl;
 
@@ -153,7 +152,14 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to load font!" << std::endl;
     }
 
+    const int targetFPS = 120;                       // Desired frame rate
+    const int targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
+
+    Uint32 lastFrameTime = 0;                       // Time at the start of the previous frame
+
     while (running) {
+        Uint32 currentFrameTime = SDL_GetTicks();
+
         while (SDL_PollEvent(&event)) {
             switch (event.type)
             {
@@ -184,6 +190,17 @@ int main(int argc, char* argv[])
                 break;
             }
         }
+
+        // Check if the frame time has elapsed
+        const bool timeout = (currentFrameTime - lastFrameTime) >= targetFrameTime;
+
+        if (!timeout) {
+            // If not enough time has passed, skip drawing
+            continue;
+        }
+
+        // Update last frame time for the next frame
+        lastFrameTime = currentFrameTime;
 
         // If we resize the window recreate the framebuffer
         if (newWidth != windowWidth || newHeight != windowHeight)
@@ -218,6 +235,8 @@ int main(int argc, char* argv[])
 
         // Swap the SDL buffers to display the frame
         SDL_GL_SwapWindow(window);
+
+        SDL_Delay(1);
     }
     nvgDeleteGL3(nvg);
     SDL_GL_DestroyContext(glContext);

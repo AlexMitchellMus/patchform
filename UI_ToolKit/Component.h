@@ -71,7 +71,38 @@ struct Rect {
         return contains(Point(px, py));
     }
 
-    std::string toString() const {
+    bool contains(const Rect& other) const
+    {
+        // Ensure dimensions are valid (non-negative)
+        if (w < 0 || h < 0 || other.w < 0 || other.h < 0)
+            return false;
+
+        // Use epsilon for floating-point comparisons
+        const float epsilon = 0.0001f;
+
+        return (other.x + epsilon >= x &&
+                other.x + other.w - epsilon <= x + w &&
+                other.y + epsilon >= y &&
+                other.y + other.h - epsilon <= y + h);
+    }
+
+    bool intersects(const Rect& other) const
+    {
+        // Ensure dimensions are valid (non-negative)
+        if (w < 0 || h < 0 || other.w < 0 || other.h < 0)
+            return false;
+
+        // Check if there is no overlap
+        bool noOverlap = (x + w <= other.x ||       // This rect is to the left of the other
+                          other.x + other.w <= x || // Other rect is to the left of this
+                          y + h <= other.y ||       // This rect is above the other
+                          other.y + other.h <= y);  // Other rect is above this
+
+        return !noOverlap; // Rectangles intersect if there is overlap
+    }
+
+    std::string toString() const
+    {
         std::ostringstream oss;
         oss << "Rect(x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << ")";
         return oss.str();
@@ -131,16 +162,17 @@ public:
         return Point(x, y); // Root component
     }
 
+    Rect getAbsoluteBounds() const {
+        Point absolutePosition = getAbsolutePosition();
+        return pptk::Rect{absolutePosition.x, absolutePosition.y, width, height};
+    }
+
     //void removeComponent(Component* child)
     //{
     //    children.erase(std::remove(children.begin(), children.end(), child), children.end());
     //}
 
-    /*
-    virtual bool hitTest(float x, float y)
-    {
-        return (getBounds().contains(x, y));
-    }*/
+
     // Hit test that accounts for parent position
     virtual bool hitTest(float px, float py) const {
         Point absolutePosition = getAbsolutePosition();
