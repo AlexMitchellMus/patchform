@@ -43,6 +43,8 @@ public:
 
     void renderAll(NVGcontext* nvg) override;
 
+    void removeObject(Object* obj);
+
     std::unique_ptr<Connection> newConnection;
 
 private:

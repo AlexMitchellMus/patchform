@@ -249,6 +249,8 @@ public:
 
     virtual void mouseDrag(const Point& position, const Point& delta) { }
 
+    virtual void keyPressed(SDL_Event& e) { }
+
     virtual void render(NVGcontext* vg) { };
 
     virtual void resized() { };

@@ -145,3 +145,21 @@ void Canvas::renderAll(NVGcontext* nvg)
     // Restore previous transformation
     nvgRestore(nvg);
 }
+
+void Canvas::removeObject(Object* obj)
+{
+    // Remove the object from the `selected` list if it exists there
+    auto it = std::find(selected.begin(), selected.end(), obj);
+    if (it != selected.end()) {
+        selected.erase(it);
+    }
+
+    // Remove the object from the `objects` list by comparing raw pointers
+    auto objIt = std::find_if(objects.begin(), objects.end(),
+        [obj](const std::unique_ptr<Object>& uniqueObj) {
+            return uniqueObj.get() == obj;
+        });
+    if (objIt != objects.end()) {
+        objects.erase(objIt);
+    }
+}

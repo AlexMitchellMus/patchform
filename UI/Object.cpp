@@ -47,6 +47,15 @@ void Object::mouseButtonDown(SDL_Event& e)
     }
 }
 
+void Object::keyPressed(SDL_Event& e)
+{
+    if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
+    {
+        if (auto cnv = findParentOfClass<Canvas>())
+            cnv->removeObject(this);
+    }
+}
+
 void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta)
 {
     if (multiSelected)

@@ -41,12 +41,10 @@ public:
 
     void handleKeyDown(Component* root, SDL_Event& e)
     {
-        std::cout << "key down: " << e.key.key << std::endl;
-    }
-
-    void handleKeyUp(Component* root, SDL_Event& e)
-    {
-        std::cout << "key up: " << e.key.key << std::endl;
+        if (isComponentValid(clickedComponent))
+        {
+            clickedComponent->keyPressed(e);
+        }
     }
 
 private:

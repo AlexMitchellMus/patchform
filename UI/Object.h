@@ -28,6 +28,8 @@ public:
         isHovered = false;
     }
 
+    void keyPressed(SDL_Event& e) override;
+
     void render(NVGcontext* nvg) override;
 
     std::string& getName() { return name; }
