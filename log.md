@@ -15,6 +15,16 @@ Project Goals
 
 WORK LOG:
 
+[UI TODO]
+
+* correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)
+* scale / position canvas - make a way for the canvas to have a viewport - per component scaling
+* scrollbars - needed for canavs and side panels etc
+* Icons - simple icons to start with 
+* Load patch etc
+* Desktop scale etc
+
+
 [issue]
 Use glaze for json handling (which will allow compile time etc)
 [comments]
