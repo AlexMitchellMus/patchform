@@ -34,7 +34,11 @@ public:
 
     void render(NVGcontext* nvg) override;
 
-    std::string& getName() { return name; }
+    [[nodiscard]] const std::string& getName() const { return name; }
+
+    [[nodiscard]] uint8_t getNumInputs() const { return inPorts.size(); };
+
+    [[nodiscard]] uint8_t getNumOutputs() const { return outPorts.size(); };
 
     bool getIsSelected() { return isSelected; }
 

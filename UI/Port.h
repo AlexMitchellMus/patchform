@@ -20,7 +20,12 @@
 
 class Port : public pptk::Component {
 public:
-    explicit Port(Component* parent, int portNum) : Component(parent), portNum(portNum) { }
+    enum class Direction {Input, Output};
+
+    explicit Port(Component* parent, int portNum, Direction dir = Direction::Input)
+        : Component(parent)
+        , portNum(portNum)
+        , direction(dir) { };
 
     void mouseButtonDown(SDL_Event& e) override;
 
@@ -31,16 +36,19 @@ public:
     void mouseEnter(SDL_Event& e) override
     {
         isHovered = true;
-    }
+    };
 
     void mouseLeave(SDL_Event& e) override
     {
         isHovered = false;
-    }
+    };
 
     void render(NVGcontext* nvg) override;
 
+    [[nodiscard]] bool isOutput() const { return direction == Direction::Output; };
+
 private:
+    Direction direction;
     int portNum;
 
     Port* foundPort = nullptr;

@@ -49,13 +49,19 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
             auto c = rootComponent->findComponentAt(currentPosition.x, currentPosition.y);
             if (auto* port = dynamic_cast<Port*>(c))
             {
-                if (port != foundPort)
+                // Only connect once for a new port, and if the port directions are correct: input->output or output->input
+                if ((direction != port->direction) && (port != foundPort))
                 {
                     foundPort = port;
                     foundPort->isHoveredFromCable = true;
                     std::cout << "found PORT!" << port->portNum << std::endl;
                 }
             }
+            // TODO: Make it so a cable dragged over an object will connect to closest port
+            //else if (auto* object = dynamic_cast<Object*>(c))
+            //{
+            //        std::cout << "found object!" << object->getName() << std::endl;
+            //}
             else
             {
                 if (foundPort)

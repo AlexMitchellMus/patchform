@@ -34,7 +34,7 @@ Object::Object(Component* parent, const std::string& name) : Component(parent), 
         inPorts.push_back(std::move(port));
     }
 
-    auto port = std::make_unique<Port>(this, 0);
+    auto port = std::make_unique<Port>(this, 0, Port::Direction::Output);
     port->setBounds(1.0f, height - portDiam - 1.0f, portDiam, portDiam);
     addComponent(port.get());
     outPorts.push_back(std::move(port));
