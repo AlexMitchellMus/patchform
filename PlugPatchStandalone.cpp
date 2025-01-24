@@ -2,8 +2,6 @@
 #include <sstream>
 #include <iostream>
 
-//#include "SDL3/SDL_opengl.h"
-
 #define GLAD_GL_IMPLEMENTATION
 #include "Glad/gl.h"
 
@@ -44,6 +42,25 @@ void AdjustWindowSize(SDL_Window *window) {
         SDL_SetWindowSize(window, newWidth, newHeight);
     } else {
         std::cerr << "HWND pointer is invalid" << std::endl;
+    }
+}
+
+bool resizingEventWatcher(void* data, SDL_Event* event) {
+    // TODO: put callback to our own thread safe queue here - moody camel
+    // This event watcher will be called from the system/OS thread itself!
+    // https://stackoverflow.com/questions/32294913/getting-continuous-window-resize-event-in-sdl-2
+
+    // This is fine, as we will want to have our own event queue anyway to make PlugPatch portable
+    switch (event->type)
+    {
+    case SDL_EVENT_WINDOW_MOVED:
+        std::cout << "window moved" << std::endl;
+        return true;
+    case SDL_EVENT_WINDOW_RESIZED:
+        std::cout << "window resized" << std::endl;
+        return true;
+    default:
+        return false;
     }
 }
 
@@ -121,9 +138,11 @@ int main(int argc, char* argv[])
 
     pptk::MouseEventManager mouseEventManager(app.get());
 
-
     bool running = true;
     SDL_Event event;
+
+    SDL_AddEventWatch(resizingEventWatcher, nullptr);
+
     auto fb = nvgCreateFramebuffer(nvg, w, h, NVG_IMAGE_PREMULTIPLIED);
 
     int fontHandle = nvgCreateFont(nvg, "sans", "Patches/Inter-VariableFont_opsz,wght.ttf");
@@ -150,7 +169,10 @@ int main(int argc, char* argv[])
                 mouseEventManager.handleMouseMove(app.get(), event);
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
-                std::cout << "Window resized" << std::endl;
+                std::cout << "----> window resized" << std::endl;
+                break;
+            case SDL_EVENT_WINDOW_MOVED:
+                std::cout << "----> window moved" << std::endl;
                 break;
             default:
                 break;
