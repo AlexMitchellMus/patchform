@@ -23,6 +23,7 @@ WORK LOG:
 * Icons - simple icons to start with 
 * Load patch etc
 * Desktop scale etc
+* Text entry (for object/nodes mainly)
 
 
 [issue]
