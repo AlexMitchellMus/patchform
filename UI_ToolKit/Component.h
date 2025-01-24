@@ -241,15 +241,17 @@ public:
         return nullptr; // No parent of the specified type found
     }
 
-    virtual void mouseEnter(SDL_Event& e) {}
+    virtual void mouseEnter(SDL_Event& e) { }
 
-    virtual void mouseLeave(SDL_Event& e) {}
+    virtual void mouseLeave(SDL_Event& e) { }
 
-    virtual void mouseMove(const Point& position) {}
+    virtual void mouseMove(const Point& position) { }
 
-    virtual void mouseDrag(const Point& position, const Point& delta) {}
+    virtual void mouseDrag(const Point& position, const Point& delta) { }
 
     virtual void render(NVGcontext* vg) { };
+
+    virtual void resized() { };
 
     virtual void renderAll(NVGcontext* vg)
     {
@@ -280,11 +282,6 @@ public:
         return Rect{ x, y, width, height };
     }
 
-    void setBounds(const Rect& bounds)
-    {
-        setBounds(bounds.x, bounds.y, bounds.w, bounds.h);
-    }
-
     void setMinSize(const float width, const float height)
     {
         minWidth = width;
@@ -303,6 +300,11 @@ public:
         setMaxSize(newMaxWidth, newMaxHeight);
     }
 
+    void setBounds(const Rect& bounds)
+    {
+        setBounds(bounds.x, bounds.y, bounds.w, bounds.h);
+    }
+
     void setBounds(const float newX, const float newY, const float newW, const float newH)
     {
         x = newX;
@@ -318,6 +320,8 @@ public:
 
         width = clampedW;
         height = clampedH;
+
+        resized();
     }
 
     Point getPosition()

@@ -75,20 +75,27 @@ public:
 
         canvas = std::make_unique<Canvas>(this);
         addComponent(canvas.get());
-        canvas->setBounds(0, 45, 1920, 1080 - 45);
 
         topBar = std::make_unique<TopBar>(this);
         addComponent(topBar.get());
-        topBar->setBounds(0, 0, 1920, 45);
 
         leftPanal = std::make_unique<LeftPanel>(this, canvas.get());
         addComponent(leftPanal.get());
-        leftPanal->setBounds(0, 45, 200, 1080 - 45);
 
         rightPanel = std::make_unique<RightPanel>(this);
         addComponent(rightPanel.get());
-        rightPanel->setBounds(1920 - 200, 45, 200, 1080 - 45);
+
+        App::resized();
     }
+
+    void resized() override
+    {
+        topBar->setBounds(0, 0, getWidth(), 45);
+        canvas->setBounds(0, 45, getWidth(), getHeight() - 45);
+        leftPanal->setBounds(0, 45, 200, getWidth() - 45);
+        rightPanel->setBounds(getWidth() - 200, 45, 200, getHeight() - 45);
+    }
+
     std::unique_ptr<Canvas> canvas;
     std::unique_ptr<TopBar> topBar;
     std::unique_ptr<LeftPanel> leftPanal;

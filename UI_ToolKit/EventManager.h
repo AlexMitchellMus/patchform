@@ -39,6 +39,16 @@ public:
         updateHoveredComponent(root, e); // Update hovered component
     }
 
+    void handleKeyDown(Component* root, SDL_Event& e)
+    {
+        std::cout << "key down: " << e.key.key << std::endl;
+    }
+
+    void handleKeyUp(Component* root, SDL_Event& e)
+    {
+        std::cout << "key up: " << e.key.key << std::endl;
+    }
+
 private:
     Component* draggingComponent = nullptr;
     Component* hoveredComponent = nullptr; // Track currently hovered component

@@ -8,7 +8,7 @@ Canvas::Canvas(Component* parent) : pptk::Component(parent)
     lasso = std::make_unique<Lasso>(this);
     addComponent(lasso.get());
 
-    for (int i = 0; i < 30; ++i)
+    for (int i = 0; i < 400; ++i)
     {
         auto obj = std::make_unique<Object>(this, "obj_" + std::to_string(i));
         addComponent(obj.get());

@@ -13,7 +13,7 @@
 #include "nanovg_gl_utils.h"
 
 #include "UI/App.h"
-#include "UI_ToolKit/MouseEventManager.h"
+#include "UI_ToolKit/EventManager.h"
 
 // Remove window titlebar- more work to do
 void AdjustWindowSize(SDL_Window *window) {
@@ -137,8 +137,10 @@ int main(int argc, char* argv[])
     }
 
     auto app = std::make_unique<App>();
+    // FIXME: hack to make the app have a starting size!
+    app->setBounds(0, 0, newWidth, newHeight);
 
-    pptk::MouseEventManager mouseEventManager(app.get());
+    pptk::MouseEventManager eventManager(app.get());
 
     bool running = true;
     SDL_Event event;
@@ -169,18 +171,25 @@ int main(int argc, char* argv[])
                 }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                mouseEventManager.handleMouseButtonDown(app.get(), event);
+                eventManager.handleMouseButtonDown(app.get(), event);
                 break;
             case SDL_EVENT_MOUSE_BUTTON_UP:
-                mouseEventManager.handleMouseButtonUp(app.get(), event);
+                eventManager.handleMouseButtonUp(app.get(), event);
                 break;
             case SDL_EVENT_MOUSE_MOTION:
-                mouseEventManager.handleMouseMove(app.get(), event);
+                eventManager.handleMouseMove(app.get(), event);
                 break;
+            case SDL_EVENT_KEY_DOWN:
+                eventManager.handleKeyDown(app.get(), event);
+                break;
+            //case SDL_EVENT_KEY_UP:
+            //    eventManager.handleKeyUp(app.get(), event);
+            //    break;
             case SDL_EVENT_WINDOW_RESIZED:
                 {
                     newWidth = event.window.data1;
                     newHeight = event.window.data2;
+                    app->setBounds(0, 0, newWidth, newHeight);
                 }
                 break;
             case SDL_EVENT_WINDOW_MOVED:
@@ -217,7 +226,7 @@ int main(int argc, char* argv[])
         nvgBindFramebuffer(invalidFB);
 
         nvgViewport(0, 0, windowWidth, windowHeight);
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         // Begin NanoVG frame
