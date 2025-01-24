@@ -66,6 +66,14 @@ public:
     {
         nvgFillColor(nvg, nvgRGB(43, 43, 43));
         nvgFillRect(nvg, x, y, width, height);
+
+        // Vertical edge line (on left)
+        nvgBeginPath(nvg);
+        nvgMoveTo(nvg, x + 0.5f, y);
+        nvgLineTo(nvg, x + 0.5f, y + height);
+        nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
+        nvgStrokeWidth(nvg, 1.0f);
+        nvgStroke(nvg);
     }
 };
 

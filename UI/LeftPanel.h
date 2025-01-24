@@ -25,6 +25,6 @@ public:
 
 private:
     Canvas* cnv;
-    std::vector<std::string> objectList;
+    std::vector<std::tuple<std::string, bool>> objectList;
     bool isResizingPanel = false;
 };

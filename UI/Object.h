@@ -34,6 +34,8 @@ public:
 
     std::string& getName() { return name; }
 
+    bool getIsSelected() { return isSelected; }
+
 private:
     std::string name;
     std::vector<std::unique_ptr<Port>> inPorts;

@@ -8,7 +8,7 @@ Canvas::Canvas(Component* parent) : pptk::Component(parent)
     lasso = std::make_unique<Lasso>(this);
     addComponent(lasso.get());
 
-    for (int i = 0; i < 400; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         auto obj = std::make_unique<Object>(this, "obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -61,6 +61,8 @@ void Canvas::addToSelection(Object* obj)
     {
         obj->setSelected(true);
         selected.push_back(obj);
+
+        callOjbectChangedListeners();
     }
 }
 
@@ -71,6 +73,8 @@ void Canvas::removeFromSelection(Object* obj)
     {
         obj->setSelected(false);
         selected.erase(it);
+
+        callOjbectChangedListeners();
     }
 }
 
@@ -94,6 +98,8 @@ void Canvas::setSelected(Object* obj)
     obj->setSelected(true);
 
     selected.push_back(obj);
+
+    callOjbectChangedListeners();
 }
 
 void Canvas::clearSelection()
@@ -104,6 +110,8 @@ void Canvas::clearSelection()
     }
 
     selected.clear();
+
+    callOjbectChangedListeners();
 }
 
 
@@ -161,5 +169,32 @@ void Canvas::removeObject(Object* obj)
         });
     if (objIt != objects.end()) {
         objects.erase(objIt);
+    }
+
+    callOjbectChangedListeners();
+}
+
+void Canvas::addObjectChangedListener(std::function<void()> callback)
+{
+    objectChangedListeners.push_back(std::move(callback));
+}
+
+void Canvas::removeObjectChangedListener(std::function<void()> callback)
+{
+    auto it = std::find_if(objectChangedListeners.begin(), objectChangedListeners.end(),
+        [&callback](const std::function<void()>& listener) {
+            return listener.target_type() == callback.target_type();
+        });
+
+    if (it != objectChangedListeners.end()) {
+        objectChangedListeners.erase(it);
+    }
+}
+
+void Canvas::callOjbectChangedListeners()
+{
+    for (auto& objChangeListener : objectChangedListeners)
+    {
+        objChangeListener();
     }
 }

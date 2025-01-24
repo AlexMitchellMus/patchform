@@ -8,6 +8,8 @@ class Connection;
 
 class Canvas : public pptk::Component {
 public:
+    using ObjectChangedListeners = std::vector<std::function<void()>>;
+
     Canvas(Component* parent);
 
     const std::vector<Object*> getObjects() const
@@ -47,11 +49,18 @@ public:
 
     std::unique_ptr<Connection> newConnection;
 
+    void addObjectChangedListener(std::function<void()> callback);
+
+    void removeObjectChangedListener(std::function<void()> callback);
+
+    void callOjbectChangedListeners();
+
 private:
     std::vector<std::unique_ptr<Object>> objects;
     std::vector<std::unique_ptr<Connection>> connections;
-
     std::vector<Object*> selected;
+
+    ObjectChangedListeners objectChangedListeners;
 
     std::unique_ptr<Lasso> lasso;
 

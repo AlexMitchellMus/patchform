@@ -6,20 +6,29 @@
 LeftPanel::LeftPanel(Component* parent, Canvas* canvas)
     : Component(parent), cnv(canvas)
 {
-    setMinMaxSize(200, 400, 0, 0);
+    setMinMaxSize(100, 400, 0, 0);
+
+    cnv->addObjectChangedListener([this]()
+    {
+        updateCanvasObjectList();
+    });
+
     updateCanvasObjectList();
 }
 
 void LeftPanel::updateCanvasObjectList()
 {
+    objectList.clear();
+
     for (auto obj : cnv->getObjects())
     {
-        objectList.push_back(obj->getName());
+        objectList.push_back( { obj->getName(), obj->getIsSelected() } );
     }
 }
 
 void LeftPanel::render(NVGcontext* nvg)
 {
+    auto selectedCol = nvgRGB(50, 50, 50);
     nvgFillColor(nvg, nvgRGB(43, 43, 43));
     nvgFillRect(nvg, x, y, width, height);
 
@@ -32,8 +41,12 @@ void LeftPanel::render(NVGcontext* nvg)
     nvgFontFace(nvg, "sans");
     nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
 
-    for (const auto& objectName : objectList)
+    for (const auto& [objectName, isSelected]: objectList)
     {
+        if (isSelected)
+            nvgDrawRoundedRect(nvg, textX - 10, textY - 18, width - 40, 26, selectedCol, selectedCol, 6.0f);
+
+        nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
         nvgText(nvg, textX, textY, objectName.c_str(), nullptr);
         textY += lineHeight; // Move to the next line
     }
