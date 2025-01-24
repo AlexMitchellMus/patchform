@@ -1,3 +1,9 @@
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #include "Canvas.h"
 #include "Object.h"
 
@@ -6,27 +12,30 @@
 Object::Object(Component* parent, const std::string& name) : Component(parent), name(name)
 {
     int width = 120;
+    int height = 40;
+
+    int portDiam = 10;
 
     setBounds(0, 0, width, 40);
 
+    width -= 2.0f;
+
     int numInputs = 2;
 
-    int diam = 10;
-
-    int totalDiam = diam * numInputs;
+    int totalDiam = portDiam * numInputs;
 
     float spacing = (width - totalDiam)  / (numInputs - 1);
 
     for (int i = 0; i < numInputs; ++i)
     {
         auto port = std::make_unique<Port>(this, i);
-        port->setBounds((i * spacing) + (i * diam), 0, diam, diam);
+        port->setBounds((i * spacing) + (i * portDiam) + 1.0f, 1.0f, portDiam, portDiam);
         addComponent(port.get());
         inPorts.push_back(std::move(port));
     }
 
     auto port = std::make_unique<Port>(this, 0);
-    port->setBounds(0, 30, 10, 10);
+    port->setBounds(1.0f, height - portDiam - 1.0f, portDiam, portDiam);
     addComponent(port.get());
     outPorts.push_back(std::move(port));
 }
@@ -52,7 +61,7 @@ void Object::keyPressed(SDL_Event& e)
     if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
     {
         if (auto cnv = findParentOfClass<Canvas>())
-            cnv->removeObject(this);
+            cnv->deleteSelectedObjects();
     }
 }
 

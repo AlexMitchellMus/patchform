@@ -1,6 +1,9 @@
-//
-// Created by alexw on 23/01/2025.
-//
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #include <iostream>
 #include "../UI_ToolKit/Component.h"
 

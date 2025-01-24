@@ -1,3 +1,9 @@
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #include "Canvas.h"
 #include "Object.h"
 #include "Connection.h"
@@ -8,7 +14,7 @@ Canvas::Canvas(Component* parent) : pptk::Component(parent)
     lasso = std::make_unique<Lasso>(this);
     addComponent(lasso.get());
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 30; ++i)
     {
         auto obj = std::make_unique<Object>(this, "obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -20,6 +26,19 @@ Canvas::Canvas(Component* parent) : pptk::Component(parent)
         obj->setPosition(std::rand() % 800, std::rand() % 800);
     }
 }
+
+std::vector<Object*> Canvas::getObjects() const
+{
+    std::vector<Object*> objs;
+    objs.reserve(objects.size());
+
+    for (auto& obj : objects)
+    {
+        objs.push_back(obj.get());
+    }
+
+    return objs;
+};
 
 void Canvas::mouseButtonDown(SDL_Event& e)
 {
@@ -53,6 +72,27 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta)
             removeFromSelection(obj.get());
         }
     }
+}
+
+void Canvas::keyPressed(SDL_Event& e)
+{
+    if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
+    {
+        deleteSelectedObjects();
+    }
+}
+
+void Canvas::deleteSelectedObjects()
+{
+    selected.clear();
+
+    objects.erase(std::remove_if(objects.begin(), objects.end(),
+        [](const std::unique_ptr<Object>& obj) {
+            return obj->getIsSelected(); // Mark selected objects for removal
+        }),
+        objects.end());
+
+    callOjbectChangedListeners();
 }
 
 void Canvas::addToSelection(Object* obj)
@@ -152,26 +192,6 @@ void Canvas::renderAll(NVGcontext* nvg)
 
     // Restore previous transformation
     nvgRestore(nvg);
-}
-
-void Canvas::removeObject(Object* obj)
-{
-    // Remove the object from the `selected` list if it exists there
-    auto it = std::find(selected.begin(), selected.end(), obj);
-    if (it != selected.end()) {
-        selected.erase(it);
-    }
-
-    // Remove the object from the `objects` list by comparing raw pointers
-    auto objIt = std::find_if(objects.begin(), objects.end(),
-        [obj](const std::unique_ptr<Object>& uniqueObj) {
-            return uniqueObj.get() == obj;
-        });
-    if (objIt != objects.end()) {
-        objects.erase(objIt);
-    }
-
-    callOjbectChangedListeners();
 }
 
 void Canvas::addObjectChangedListener(std::function<void()> callback)

@@ -1,6 +1,8 @@
-//
-// Created by alexw on 23/01/2025.
-//
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
 
 #pragma once
 
@@ -37,6 +39,13 @@ public:
     bool getIsSelected() { return isSelected; }
 
 private:
+
+    void setSelected(bool shouldBeSelected)
+    {
+        if (isSelected != shouldBeSelected)
+            isSelected = shouldBeSelected;
+    }
+
     std::string name;
     std::vector<std::unique_ptr<Port>> inPorts;
     std::vector<std::unique_ptr<Port>> outPorts;
@@ -46,12 +55,6 @@ private:
     bool isHovered = false;
 
     friend class Canvas;
-
-    void setSelected(bool shouldBeSelected)
-    {
-        if (isSelected != shouldBeSelected)
-            isSelected = shouldBeSelected;
-    }
 
     bool multiSelected = false;
 };

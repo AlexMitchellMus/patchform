@@ -1,3 +1,9 @@
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #pragma once
 
 #include "../UI_Toolkit/Component.h"
@@ -12,24 +18,17 @@ public:
 
     Canvas(Component* parent);
 
-    const std::vector<Object*> getObjects() const
-    {
-        std::vector<Object*> objs;
-        objs.reserve(objects.size());
-
-        for (auto& obj : objects)
-        {
-            objs.push_back(obj.get());
-        }
-
-        return objs;
-    };
+    std::vector<Object*> getObjects() const;
 
     void mouseButtonDown(SDL_Event& e) override;
 
     void mouseButtonUp(SDL_Event& e) override;
 
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta) override;
+
+    void keyPressed(SDL_Event& e) override;
+
+    void deleteSelectedObjects();
 
     void setSelected(Object* obj);
 
@@ -44,8 +43,6 @@ public:
     void render(NVGcontext* nvg) override;
 
     void renderAll(NVGcontext* nvg) override;
-
-    void removeObject(Object* obj);
 
     std::unique_ptr<Connection> newConnection;
 

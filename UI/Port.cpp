@@ -1,6 +1,8 @@
-//
-// Created by alexw on 23/01/2025.
-//
+/*
+// Copyright (c) 2024-2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
 
 #include "Object.h"
 #include "Port.h"
@@ -64,5 +66,30 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
                 }
             }
         }
+    }
+}
+
+void Port::render(NVGcontext* nvg)
+{
+    nvgBeginPath(nvg);
+
+    auto radius = getWidth() / 2;
+    nvgCircle(nvg, x + radius, y + radius, radius);
+    //https://colorkit.co/color/1c4977/
+    //nvgRGB(119, 28, 118)
+    auto orange = nvgRGB(120, 74, 28);
+    auto blue = nvgRGB(28, 73, 119);
+    auto portCol = portNum == 0 ? blue : orange;
+    nvgFillColor(nvg, portCol); // Blue fill for ports
+    nvgFill(nvg);
+
+    if (isHovered | isHoveredFromCable)
+    {
+        nvgBeginPath(nvg);
+        nvgCircle(nvg, x + 5, y + 5, 10);
+        auto alphaCol = portCol;
+        portCol.a = 120;
+        nvgFillColor(nvg, portCol);
+        nvgFill(nvg);
     }
 }
