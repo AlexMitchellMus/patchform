@@ -42,6 +42,7 @@ public:
 private:
     Component* draggingComponent = nullptr;
     Component* hoveredComponent = nullptr; // Track currently hovered component
+    Component* clickedComponent = nullptr;
 
     void updateHoveredComponent(Component* root, SDL_Event& e) {
         Component* newHovered = root->findComponentAt(e.motion.x, e.motion.y);
@@ -87,28 +88,23 @@ private:
         if (component->hitTest(e.button.x, e.button.y) && !draggingComponent) {
             if (e.button.button == SDL_BUTTON_LEFT) {
                 draggingComponent = component;
+                clickedComponent = component; // Store the clicked component
                 component->mouseButtonDown(e);
             }
         }
     }
 
+
     void propagateMouseButtonUp(Component* component, SDL_Event& e) {
-        if (!isComponentValid(component)) return;
-
-        for (auto it = component->getChildren().begin(); it != component->getChildren().end();) {
-            auto& child = *it;
-
-            if (!isComponentValid(child)) {
-                it = component->getChildren().erase(it); // Remove invalid child
-                continue;
-            }
-
-            propagateMouseButtonUp(child, e);
-            ++it;
+        // Only handle the clicked component
+        if (clickedComponent && isComponentValid(clickedComponent)) {
+            clickedComponent->mouseButtonUp(e);
         }
 
-        component->mouseButtonUp(e);
+        // Reset the clicked component after handling the event
+        clickedComponent = nullptr;
     }
+
 
     bool isComponentValid(Component* component) const {
         return component == registry ? true : registry->exists(component);

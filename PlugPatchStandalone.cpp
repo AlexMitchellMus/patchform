@@ -90,8 +90,8 @@ int main(int argc, char* argv[])
     int windowWidth = 1920;
     int windowHeight = 1080;
 
-    int newHeight = windowHeight;
     int newWidth = windowWidth;
+    int newHeight = windowHeight;
 
     SDL_Window* window = SDL_CreateWindow("PlugPatch", windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!window) {
@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 
     SDL_AddEventWatch(resizingEventWatcher, nullptr);
 
-    auto fb = nvgCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+    auto* invalidFB = nvgluCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);;
 
     int fontHandle = nvgCreateFont(nvg, "sans", "Patches/Inter-VariableFont_opsz,wght.ttf");
     if (fontHandle == -1) {
@@ -191,11 +191,13 @@ int main(int argc, char* argv[])
             windowWidth = newWidth;
             windowHeight = newHeight;
 
-            nvgluDeleteFramebuffer(fb);
-            fb = nvgluCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+            if (invalidFB)
+                nvgluDeleteFramebuffer(invalidFB);
+
+            invalidFB = nvgluCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
         }
 
-        nvgBindFramebuffer(fb);
+        nvgBindFramebuffer(invalidFB);
 
         nvgViewport(0, 0, windowWidth, windowHeight);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
@@ -212,7 +214,7 @@ int main(int argc, char* argv[])
         nvgEndFrame(nvg);
 
         nvgBindFramebuffer(nullptr);
-        nvgBlitFramebuffer(nvg, fb, 0, 0, windowWidth, windowHeight);
+        nvgBlitFramebuffer(nvg, invalidFB, 0, 0, windowWidth, windowHeight);
 
         // Swap the SDL buffers to display the frame
         SDL_GL_SwapWindow(window);

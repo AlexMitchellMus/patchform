@@ -17,6 +17,14 @@
 
 #include "unordered_dense.h"
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 namespace pptk {
 // Event structure
 struct Event {
@@ -159,22 +167,11 @@ public:
     {
         if (getBounds().contains(e.button.x, e.button.y))
         {
+            mouseMove(Point(e.button.x, e.button.y));
         }
     }
 
-    virtual void mouseButtonUp(SDL_Event& e) {
-        for (auto it = children.begin(); it != children.end(); ) {
-            auto& child = *it;
-
-            if (!isComponentValid(child)) {
-                it = children.erase(it);
-            } else {
-                child->isDragging = false;
-                child->mouseButtonUp(e);
-                ++it;
-            }
-        }
-    }
+    virtual void mouseButtonUp(SDL_Event& e) {}
 
     // Find the component at (x, y), including children
     Component* findComponentAt(int x, int y) {
@@ -256,12 +253,39 @@ public:
         setBounds(bounds.x, bounds.y, bounds.w, bounds.h);
     }
 
-    void setBounds(const float newX, const float newY, float newW, float newH)
+    void setMinSize(const float width, const float height)
+    {
+        minWidth = width;
+        minHeight = height;
+    }
+
+    void setMaxSize(const float width, const float height)
+    {
+        maxWidth = width;
+        maxHeight = height;
+    }
+
+    void setMinMaxSize(const float newMinWidth, const float newMaxWidth, const float newMinHeight, const float newMaxHeight)
+    {
+        setMinSize(newMinWidth, newMinHeight);
+        setMaxSize(newMaxWidth, newMaxHeight);
+    }
+
+    void setBounds(const float newX, const float newY, const float newW, const float newH)
     {
         x = newX;
         y = newY;
-        width = newW;
-        height = newH;
+
+        float clampedW = newW;
+        float clampedH = newH;
+
+        if (minWidth > 0) clampedW = std::max(minWidth, clampedW);
+        if (minHeight > 0) clampedH = std::max(minHeight, clampedH);
+        if (maxWidth > 0) clampedW = std::min(maxWidth, clampedW);
+        if (maxHeight > 0) clampedH = std::min(maxHeight, clampedH);
+
+        width = clampedW;
+        height = clampedH;
     }
 
     Point getPosition()
@@ -280,6 +304,13 @@ protected:
     float y = 0.0f;
     float width = 0.0f;
     float height = 0.0f;
+
+    float minWidth = -1;
+    float minHeight = -1;
+
+    float maxWidth = -1;
+    float maxHeight = -1;
+
     std::vector<Component*> children;
     bool isDragging = false;
 
