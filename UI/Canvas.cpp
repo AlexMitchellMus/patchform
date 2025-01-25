@@ -88,7 +88,7 @@ void Canvas::deleteSelectedObjects()
 
     objects.erase(std::remove_if(objects.begin(), objects.end(),
         [](const std::unique_ptr<Object>& obj) {
-            return obj->getIsSelected(); // Mark selected objects for removal
+            return obj->getIsSelected(); // Only remove the objects that are currently selected
         }),
         objects.end());
 

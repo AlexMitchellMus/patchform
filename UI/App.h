@@ -49,7 +49,7 @@ public:
 
     void render(NVGcontext* nvg) override {
         nvgBeginPath(nvg);
-        nvgFillColor(nvg, isHit ? nvgRGB(255, 0, 0) : nvgRGB(43, 43, 43));
+        nvgFillColor(nvg, nvgRGB(43, 43, 43));
         nvgFillRect(nvg, x, y, width, height);
 
         // Horizontal line
@@ -92,7 +92,7 @@ public:
 
     void render(NVGcontext* nvg) override
     {
-        nvgFillColor(nvg, nvgRGB(43, 43, 43));
+        nvgFillColor(nvg, nvgRGB(33, 33, 33));
         nvgFillRect(nvg, x, y, width, height);
 
         // Vertical edge line (on left)

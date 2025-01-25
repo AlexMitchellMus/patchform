@@ -34,8 +34,8 @@ void LeftPanel::updateCanvasObjectList()
 
 void LeftPanel::render(NVGcontext* nvg)
 {
-    auto selectedCol = nvgRGB(50, 50, 50);
-    nvgFillColor(nvg, nvgRGB(43, 43, 43));
+    auto selectedCol = nvgRGB(43, 43, 43);
+    nvgFillColor(nvg, nvgRGB(33, 33, 33));
     nvgFillRect(nvg, x, y, width, height);
 
     // Draw the object list
