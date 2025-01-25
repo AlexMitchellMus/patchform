@@ -81,6 +81,10 @@ private:
     void propagateMouseButtonDown(Component* component, SDL_Event& e) {
         if (!isComponentValid(component)) return;
 
+        if (!component->isVisible()) {
+            return;
+        }
+
         // Traverse children in reverse order
         auto& children = component->getChildren();
         for (auto it = children.rbegin(); it != children.rend();) {
@@ -91,9 +95,12 @@ private:
                 continue;
             }
 
-            propagateMouseButtonDown(child, e);
-            if (draggingComponent) {
-                return; // Stop propagation if a component starts dragging
+            if (child->isVisible())
+            {
+                propagateMouseButtonDown(child, e);
+                if (draggingComponent) {
+                    return; // Stop propagation if a component starts dragging
+                }
             }
 
             ++it;

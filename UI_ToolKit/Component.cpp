@@ -20,6 +20,11 @@ Component::~Component()
     reinterpret_cast<ComponentRegister*>(rootComponent)->unregisterComponent(this);
 }
 
+void Component::setVisible(bool shouldBeVisible)
+{
+    visible = shouldBeVisible;
+};
+
 bool Component::isComponentValid(Component* c)
 {
     return reinterpret_cast<ComponentRegister*>(rootComponent)->exists(c);

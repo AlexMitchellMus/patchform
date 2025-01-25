@@ -151,7 +151,12 @@ int main(int argc, char* argv[])
 
     int fontHandle = nvgCreateFont(nvg, "sans", "Patches/Inter-VariableFont_opsz,wght.ttf");
     if (fontHandle == -1) {
-        std::cerr << "Failed to load font!" << std::endl;
+        std::cerr << "Failed to load inter font!" << std::endl;
+    }
+
+    int iconFontHandle = nvgCreateFont(nvg, "icons", "Icons/IconFontPlugPatch.ttf");
+    if (iconFontHandle == -1) {
+        std::cerr << "Failed to load icon font!" << std::endl;
     }
 
     const int targetFPS = 120;                       // Desired frame rate

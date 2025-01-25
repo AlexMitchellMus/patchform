@@ -104,7 +104,7 @@ if (WIN32)
     target_sources(PlugPatchStandalone PRIVATE ${APP_ICON_RESOURCE})
 endif ()
 
-# JSON files to copy
+# files to copy
 set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Patches/graph.json"
         "${CMAKE_SOURCE_DIR}/Patches/graph1.json"
@@ -113,6 +113,7 @@ set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Patches/graph4.json5"
         "${CMAKE_SOURCE_DIR}/Patches/count.json5"
         "${CMAKE_SOURCE_DIR}/Patches/Inter-VariableFont_opsz,wght.ttf"
+        "${CMAKE_SOURCE_DIR}/Assets/Icons/IconFontPlugPatch.ttf"
 )
 
 # Define a custom target to copy the Patches directory
@@ -123,9 +124,17 @@ add_custom_target(copy_patches
         COMMENT "Copying Patches directory to the output directory"
 )
 
+# FIXME: Do not copy the whole icon dir, but just for now to test
+add_custom_target(copy_fonts
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/Assets/Icons"
+        "$<TARGET_FILE_DIR:PlugPatchStandalone>/Icons"
+        COMMENT "Copying Patches directory to the output directory"
+)
+
 # Add dependencies to ensure the directory is copied whenever these targets are built
 add_dependencies(PlugPatchCLI copy_patches)
-add_dependencies(PlugPatchStandalone copy_patches)
+add_dependencies(PlugPatchStandalone copy_patches copy_fonts)
 
 # Installer configuration for CLI
 if(CMAKE_BUILD_TYPE STREQUAL "Release")

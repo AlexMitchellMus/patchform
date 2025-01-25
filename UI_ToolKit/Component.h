@@ -121,6 +121,10 @@ public:
 
     virtual ~Component();
 
+    void setVisible(bool shouldBeVisible);
+
+    bool isVisible() const { return visible; };
+
     void setSize(float newWidth, float newHeight)
     {
         width = newWidth;
@@ -169,10 +173,10 @@ public:
         return pptk::Rect{absolutePosition.x, absolutePosition.y, width, height};
     }
 
-    //void removeComponent(Component* child)
-    //{
-    //    children.erase(std::remove(children.begin(), children.end(), child), children.end());
-    //}
+    void removeComponent(Component* child)
+    {
+        children.erase(std::remove(children.begin(), children.end(), child), children.end());
+    }
 
 
     // Hit test that accounts for parent position
@@ -211,9 +215,9 @@ public:
     Component* findComponentAt(int x, int y) {
         // Always check children first
         for (auto it = getChildren().rbegin(); it != getChildren().rend(); ++it) {
-            if (isComponentValid(*it)) {
+            if (isComponentValid(*it) && isVisible()) {
                 Component* child = (*it)->findComponentAt(x, y);
-                if (child)
+                if (child && child->isVisible())
                     return child; // Return the first matching child
             }
         }
@@ -274,7 +278,10 @@ public:
         // Render children
         for (auto& child : children) {
             if (isComponentValid(child))
-                child->renderAll(vg);
+            {
+                if (child->isVisible())
+                    child->renderAll(vg);
+            }
         }
 
         // Restore previous transformation
@@ -350,6 +357,8 @@ protected:
 
     float maxWidth = -1;
     float maxHeight = -1;
+
+    bool visible = true;
 
     std::vector<Component*> children;
     bool isDragging = false;

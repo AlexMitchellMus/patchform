@@ -17,15 +17,35 @@
 #include "../Nodes/AudioPort.h"
 
 #include "Canvas.h"
+#include "ToolDock.h"
 #include "LeftPanel.h"
 #include "Connection.h"
 
+#include "../UI_ToolKit/ToggleButton.h"
 
 using namespace pptk;
 
 class TopBar : public Component {
 public:
-    TopBar(Component* parent) : Component(parent) {}
+    std::function<void(bool)> hideShowPanels = [](bool){};
+
+    TopBar(Component* parent) : Component(parent)
+    {
+        hideSidePanelsToggle = std::make_unique<ToggleButton>(this, "D", "D");
+        addComponent(hideSidePanelsToggle.get());
+        TopBar::resized();
+
+        hideSidePanelsToggle->onChange = [this](const bool state)
+        {
+            hideShowPanels(state);
+        };
+    }
+
+    void resized() override
+    {
+        auto centreY = (getHeight() / 2) - (35 / 2);
+        hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, 35);
+    }
 
     void render(NVGcontext* nvg) override {
         nvgBeginPath(nvg);
@@ -59,6 +79,8 @@ public:
 
 private:
     bool isHit = false;
+
+    std::unique_ptr<ToggleButton> hideSidePanelsToggle;
 };
 
 class RightPanel : public Component
@@ -93,11 +115,20 @@ public:
         topBar = std::make_unique<TopBar>(this);
         addComponent(topBar.get());
 
-        leftPanal = std::make_unique<LeftPanel>(this, canvas.get());
-        addComponent(leftPanal.get());
+        toolDock = std::make_unique<ToolDock>(this);
+        addComponent(toolDock.get());
+
+        leftPanel = std::make_unique<LeftPanel>(this, canvas.get());
+        addComponent(leftPanel.get());
 
         rightPanel = std::make_unique<RightPanel>(this);
         addComponent(rightPanel.get());
+
+        topBar->hideShowPanels = [this](bool state)
+        {
+            leftPanel->setVisible(!state);
+            rightPanel->setVisible(!state);
+        };
 
         App::resized();
     }
@@ -106,12 +137,18 @@ public:
     {
         topBar->setBounds(0, 0, getWidth(), 45);
         canvas->setBounds(0, 45, getWidth(), getHeight() - 45);
-        leftPanal->setBounds(0, 45, 200, getWidth() - 45);
+        leftPanel->setBounds(0, 45, 200, getWidth() - 45);
+
+        int toolDockWidth = 400;
+        float toolDockOffset = (canvas->getWidth() / 2.0f) - (toolDockWidth / 2.0f);
+        toolDock->setBounds(toolDockOffset, getHeight() - 60, toolDockWidth, 50);
+
         rightPanel->setBounds(getWidth() - 200, 45, 200, getHeight() - 45);
     }
 
     std::unique_ptr<Canvas> canvas;
     std::unique_ptr<TopBar> topBar;
-    std::unique_ptr<LeftPanel> leftPanal;
+    std::unique_ptr<ToolDock> toolDock;
+    std::unique_ptr<LeftPanel> leftPanel;
     std::unique_ptr<RightPanel> rightPanel;
 };
