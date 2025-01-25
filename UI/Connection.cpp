@@ -84,7 +84,7 @@ void Connection::render(NVGcontext* nvg) {
 
     // Ball at the end of a new connection
     nvgBeginPath(nvg);
-    nvgCircle(nvg, end.x, end.y, 5.0f);
+    nvgCircle(nvg, relativeDest.x, relativeDest.y, 5.0f);
     nvgFillColor(nvg, nvgRGBA(90, 90, 90, 100));
     nvgFill(nvg);
 }
