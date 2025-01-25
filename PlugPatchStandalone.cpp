@@ -263,7 +263,8 @@ int main(int argc, char* argv[])
         // Swap the SDL buffers to display the frame
         SDL_GL_SwapWindow(window);
 
-        SDL_Delay(1);
+        // DO we even need this delay? Doesn't sound like a good idea to have it!
+        //SDL_Delay(1);
     }
     nvgDeleteGL3(nvg);
     SDL_GL_DestroyContext(glContext);
