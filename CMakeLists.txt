@@ -66,7 +66,7 @@ target_compile_options(linenoise PRIVATE
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
 # PlugPatchStandalone target
-add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
+add_executable(PlugPatchStandalone WIN32 PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
 target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
@@ -78,14 +78,14 @@ target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/SDL2/include"
 )
 target_link_libraries(PlugPatchStandalone PRIVATE
-        SDL3-static
+        SDL3::SDL3-static
         portaudio
         moodycamel_concurrentqueue
         unordered_dense
         glaze::glaze
         nanovg
 )
-target_compile_definitions(PlugPatchStandalone PRIVATE SDL_MAIN_HANDLED)
+target_compile_definitions(PlugPatchStandalone PRIVATE)
 
 # Apply optimizations for MSVC
 if (MSVC)

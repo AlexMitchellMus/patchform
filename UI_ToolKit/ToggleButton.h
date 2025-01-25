@@ -6,7 +6,7 @@
 
 class ToggleButton : public pptk::Component {
 public:
-    std::function<void(bool)> onChange = [](bool){};
+    std::function<void(bool)> onToggle = [](bool){};
 
     explicit ToggleButton(Component* parent, std::string off, std::string on, std::string font = "icons")
         : Component(parent)
@@ -18,7 +18,7 @@ public:
     void mouseButtonDown(SDL_Event& e) override
     {
         state = !state;
-        onChange(state);
+        onToggle(state);
     }
 
     void mouseEnter(SDL_Event& e) override { hovered = true; };

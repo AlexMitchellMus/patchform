@@ -31,20 +31,40 @@ public:
 
     TopBar(Component* parent) : Component(parent)
     {
+        mainMenu = std::make_unique<ToggleButton>(this, "A", "A");
+        addComponent(mainMenu.get());
+
+        undo = std::make_unique<ToggleButton>(this, "B", "B");
+        addComponent(undo.get());
+
+        redo = std::make_unique<ToggleButton>(this, "C", "C");
+        addComponent(redo.get());
+
         hideSidePanelsToggle = std::make_unique<ToggleButton>(this, "D", "D");
         addComponent(hideSidePanelsToggle.get());
-        TopBar::resized();
 
-        hideSidePanelsToggle->onChange = [this](const bool state)
+        hideSidePanelsToggle->onToggle = [this](const bool state)
         {
             hideShowPanels(state);
         };
+
+        TopBar::resized();
     }
 
     void resized() override
     {
         auto centreY = (getHeight() / 2) - (35 / 2);
-        hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, 35);
+        int offset = 10;
+        mainMenu->setBounds(offset, centreY, 35, 35);
+        offset += 50;
+
+        undo->setBounds(offset, centreY, 35, 35);
+        offset += 50;
+        redo->setBounds(offset, centreY, 35, 35);
+        offset += 50;
+
+        hideSidePanelsToggle->setBounds(getWidth() - 45, centreY, 35, 35);
+
     }
 
     void render(NVGcontext* nvg) override {
@@ -79,6 +99,11 @@ public:
 
 private:
     bool isHit = false;
+
+    std::unique_ptr<ToggleButton> mainMenu;
+
+    std::unique_ptr<ToggleButton> undo;
+    std::unique_ptr<ToggleButton> redo;
 
     std::unique_ptr<ToggleButton> hideSidePanelsToggle;
 };

@@ -6,6 +6,7 @@
 #include "Glad/gl.h"
 
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_main.h"
 
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg.h"
@@ -94,6 +95,7 @@ int main(int argc, char* argv[])
     int newHeight = windowHeight;
 
     SDL_Window* window = SDL_CreateWindow("PlugPatch", windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    SDL_SetWindowMinimumSize(window, 800, 600);
     if (!window) {
         SDL_Log("Failed to create window: %s", SDL_GetError());
         SDL_Quit();
