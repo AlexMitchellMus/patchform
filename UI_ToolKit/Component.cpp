@@ -37,4 +37,9 @@ void Component::addComponent(Component* child)
     children.push_back(child);
 }
 
+void Component::registerTimer(std::function<void()> callback)
+{
+    reinterpret_cast<ComponentRegister*>(rootComponent)->registerTimerCallback(this, callback);
+}
+
 }

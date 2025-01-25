@@ -65,8 +65,8 @@ target_compile_options(linenoise PRIVATE
 # Collect common source files
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
-# PlugPatchStandalone target
-add_executable(PlugPatchStandalone WIN32 PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
+# PlugPatchStandalone target - use WIN32 to hide terminal
+add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
 target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"

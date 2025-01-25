@@ -20,6 +20,11 @@ public:
 
     std::vector<Object*> getObjects() const;
 
+    void mouseMove(const pptk::Point& position) override
+    {
+        std::cout << "mouseMove: " << position.toString() << std::endl;
+    }
+
     void mouseButtonDown(SDL_Event& e) override;
 
     void mouseButtonUp(SDL_Event& e) override;

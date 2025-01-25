@@ -153,9 +153,43 @@ public:
         {
             leftPanel->setVisible(!state);
             rightPanel->setVisible(!state);
+
+//#define AUTO_HIDE_DOCK
+#ifdef AUTO_HIDE_DOCK
+            if (state)
+            {
+                resizeToolDock(true);
+                registerTimer([this]()
+                {
+                    resizeToolDock(false);
+                });
+            } else
+            {
+                unregisterTimerCallback(this);
+                resizeToolDock(true);
+            }
+#endif
         };
 
         App::resized();
+    }
+
+    void mouseMove(const Point& position) override
+    {
+        if (position.y > getHeight() - 100)
+        {
+            toolDockAnimator = 1.0f;
+        }
+    }
+
+    void resizeToolDock(bool reset)
+    {
+        int toolDockWidth = 300;
+
+        toolDockPosY = reset ? (getHeight() - 60) : toolDockPosY + 0.5f;
+
+        float toolDockOffset = (canvas->getWidth() / 2.0f) - (toolDockWidth / 2.0f);
+        toolDock->setBounds(toolDockOffset, toolDockPosY, toolDockWidth, 45);
     }
 
     void resized() override
@@ -164,9 +198,7 @@ public:
         canvas->setBounds(0, 45, getWidth(), getHeight() - 45);
         leftPanel->setBounds(0, 45, 200, getWidth() - 45);
 
-        int toolDockWidth = 400;
-        float toolDockOffset = (canvas->getWidth() / 2.0f) - (toolDockWidth / 2.0f);
-        toolDock->setBounds(toolDockOffset, getHeight() - 60, toolDockWidth, 50);
+        resizeToolDock(true);
 
         rightPanel->setBounds(getWidth() - 200, 45, 200, getHeight() - 45);
     }
@@ -176,4 +208,9 @@ public:
     std::unique_ptr<ToolDock> toolDock;
     std::unique_ptr<LeftPanel> leftPanel;
     std::unique_ptr<RightPanel> rightPanel;
+
+    float toolDockAnimator = 1.0f;
+    bool animateToolDock = false;
+
+    float toolDockPosY;
 };

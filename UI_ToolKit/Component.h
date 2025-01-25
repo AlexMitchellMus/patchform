@@ -340,6 +340,8 @@ public:
         return Point(x, y);
     }
 
+    void registerTimer(std::function<void()> callback);
+
 private:
     bool isComponentValid(Component* c);
 

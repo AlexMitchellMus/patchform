@@ -8,6 +8,8 @@
 
 #include "Component.h"
 #include <iostream>
+#include <glaze/core/seek.hpp>
+
 #include "ComponentRegister.h"
 
 namespace pptk {

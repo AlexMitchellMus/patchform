@@ -36,8 +36,6 @@ public:
         nvgFontSize(nvg, 24.0f);
         nvgFontFace(nvg, font.c_str());
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
-
-        nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
         nvgText(nvg, x + 5, y + 24, !state ? offCharacter.c_str() : onCharacter.c_str(), nullptr);
     }
 

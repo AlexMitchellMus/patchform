@@ -65,11 +65,20 @@ bool resizingEventWatcher(void* data, SDL_Event* event) {
     }
 }
 
+static Uint32 timerEventType = 0;
+
 int main(int argc, char* argv[])
 {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("Failed to initialize SDL2: %s", SDL_GetError());
         return -1;
+    }
+
+    // Reserve a unique event type for timer notifications
+    timerEventType = SDL_RegisterEvents(1);
+    if (timerEventType == (Uint32)-1) {
+        SDL_Log("Failed to register custom event type.\n");
+        return 1;
     }
 
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL,      1);
@@ -214,6 +223,8 @@ int main(int argc, char* argv[])
             // If not enough time has passed, skip drawing
             continue;
         }
+
+        app->handleTime(currentFrameTime);
 
         // Update last frame time for the next frame
         lastFrameTime = currentFrameTime;

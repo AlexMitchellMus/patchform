@@ -13,17 +13,34 @@ Project Goals
 * Modern c++, make library as simple as possible.
 * Set values for nodes from external controls (UI etc)
 
-WORK LOG:
-
 [UI TODO]
 
-* correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)
-* scale / position canvas - make a way for the canvas to have a viewport - per component scaling
-* scrollbars - needed for canavs and side panels etc
-* Icons - simple icons to start with 
-* Load patch etc
-* Desktop scale etc
-* Text entry (for object/nodes mainly)
+* [DONE] correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)
+*        scale / position canvas - make a way for the canvas to have a viewport - per component scaling
+*        scrollbars - needed for canavs and side panels etc
+* [DONE] Icons - simple icons to start with
+*        Load patch etc
+*        Desktop scale etc
+*        Text entry (for object/nodes mainly)
+
+NOTES
+
+[ICONS]
+https://fluenticons.co/outlined/
+
+[BUILD]
+
+adding WIN32 will make the app build without terminal (for debugging)
+# PlugPatchStandalone target - use WIN32 to hide terminal
+add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
+
+
+
+
+
+
+WORK LOG:
+
 
 
 [issue]
