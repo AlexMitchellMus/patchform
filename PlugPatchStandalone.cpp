@@ -187,16 +187,16 @@ int main(int argc, char* argv[])
                 }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                eventManager.handleMouseButtonDown(app.get(), event);
+                eventManager.handleMouseButtonDown(event);
                 break;
             case SDL_EVENT_MOUSE_BUTTON_UP:
-                eventManager.handleMouseButtonUp(app.get(), event);
+                eventManager.handleMouseButtonUp(event);
                 break;
             case SDL_EVENT_MOUSE_MOTION:
-                eventManager.handleMouseMove(app.get(), event);
+                eventManager.handleMouseMove(event);
                 break;
             case SDL_EVENT_KEY_DOWN:
-                eventManager.handleKeyDown(app.get(), event);
+                eventManager.handleKeyDown(event);
                 break;
             //case SDL_EVENT_KEY_UP:
             //    eventManager.handleKeyUp(app.get(), event);

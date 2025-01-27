@@ -17,22 +17,22 @@ class MouseEventManager {
 public:
     MouseEventManager(Component* reg) : registry(reinterpret_cast<ComponentRegister*>(reg)) {}
 
-    void handleMouseButtonDown(Component* root, SDL_Event& e) {
+    void handleMouseButtonDown(SDL_Event& e) {
         registry->setDraggingComponent(nullptr); // Reset dragging state
-        propagateMouseButtonDown(root, e);
+        propagateMouseButtonDown(registry, e);
     }
 
-    void handleMouseButtonUp(Component* root, SDL_Event& e) {
+    void handleMouseButtonUp(SDL_Event& e) {
         if (auto draggedComp = registry->getDraggingComponent()) {
             draggedComp->mouseButtonUp(e);
-            updateHoveredComponent(root, e);
+            updateHoveredComponent(registry, e);
             registry->setDraggingComponent(nullptr); // Reset dragging state
         } else {
-            propagateMouseButtonUp(root, e);
+            propagateMouseButtonUp(registry, e);
         }
     }
 
-    void handleMouseMove(Component* root, SDL_Event& e) {
+    void handleMouseMove(SDL_Event& e) {
         const Point currentPosition(e.motion.x, e.motion.y);
         const Point delta(e.motion.xrel, e.motion.yrel);
 
@@ -43,10 +43,10 @@ public:
             }
         }
 
-        updateHoveredComponent(root, e); // Update hovered component
+        updateHoveredComponent(registry, e); // Update hovered component
     }
 
-    void handleKeyDown(Component* root, SDL_Event& e)
+    void handleKeyDown(SDL_Event& e)
     {
         if (auto clickedComp = registry->getClickedComponent())
         {
