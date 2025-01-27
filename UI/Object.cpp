@@ -9,7 +9,7 @@
 
 #include <glaze/reflection/get_name.hpp>
 
-Object::Object(Component* parent, const std::string& name) : Component(parent), name(name)
+Object::Object(const std::string& name) : name(name)
 {
     int width = 120;
     int height = 40;
@@ -28,13 +28,13 @@ Object::Object(Component* parent, const std::string& name) : Component(parent), 
 
     for (int i = 0; i < numInputs; ++i)
     {
-        auto port = std::make_unique<Port>(this, i);
+        auto port = std::make_unique<Port>(i);
         port->setBounds((i * spacing) + (i * portDiam) + 1.0f, 1.0f, portDiam, portDiam);
         addComponent(port.get());
         inPorts.push_back(std::move(port));
     }
 
-    auto port = std::make_unique<Port>(this, 0, Port::Direction::Output);
+    auto port = std::make_unique<Port>(0, Port::Direction::Output);
     port->setBounds(1.0f, height - portDiam - 1.0f, portDiam, portDiam);
     addComponent(port.get());
     outPorts.push_back(std::move(port));

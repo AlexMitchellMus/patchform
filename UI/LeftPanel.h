@@ -15,7 +15,7 @@
 class LeftPanel : public pptk::Component
 {
 public:
-    LeftPanel(Component* parent, Canvas* canvas);
+    LeftPanel(Canvas* canvas);
 
     void updateCanvasObjectList();
 

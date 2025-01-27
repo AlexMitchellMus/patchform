@@ -9,8 +9,7 @@
 #include "nanovg.h"
 #include "Object.h"
 
-LeftPanel::LeftPanel(Component* parent, Canvas* canvas)
-    : Component(parent), cnv(canvas)
+LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
 {
     setMinMaxSize(100, 400, 0, 0);
 

@@ -12,7 +12,7 @@
 
 class Connection : public pptk::Component {
 public:
-    Connection(Component* parent);
+    Connection(Port* port);
 
     void setConnectionDest(const pptk::Point& p)
     {

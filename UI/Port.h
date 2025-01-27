@@ -22,9 +22,8 @@ class Port : public pptk::Component {
 public:
     enum class Direction {Input, Output};
 
-    explicit Port(Component* parent, int portNum, Direction dir = Direction::Input)
-        : Component(parent)
-        , portNum(portNum)
+    explicit Port(int portNum, Direction dir = Direction::Input)
+        : portNum(portNum)
         , direction(dir) { };
 
     void mouseButtonDown(SDL_Event& e) override;

@@ -8,9 +8,8 @@ class ToggleButton : public pptk::Component {
 public:
     std::function<void(bool)> onToggle = [](bool){};
 
-    explicit ToggleButton(Component* parent, std::string off, std::string on, std::string font = "icons")
-        : Component(parent)
-        , offCharacter(std::move(off))
+    explicit ToggleButton(std::string off, std::string on, std::string font = "icons")
+        : offCharacter(std::move(off))
         , onCharacter(std::move(on))
         , font(std::move(font))
     {};

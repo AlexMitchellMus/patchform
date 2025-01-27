@@ -8,16 +8,34 @@
 #include "ComponentRegister.h"
 
 namespace pptk {
-Component::Component(Component* parentComp)
-    : parent(parentComp)
-    , rootComponent(parent->rootComponent)
-{
-}
 
 Component::~Component()
 {
     //std::cout << "removing: " << typeid(*this).name() << std::endl;
-    reinterpret_cast<ComponentRegister*>(rootComponent)->unregisterComponent(this);
+
+    // Find the root component FIRST before we remove the parent!
+    // We want to remove all saved state (hovered/dragged/etc) pointers to this component
+    reinterpret_cast<ComponentRegister*>(findRootComponent())->clearReferencesTo(this);
+
+    // Then! Remove component
+    removeFromParent();
+
+    for (auto* child : children)
+    {
+        child->parent = nullptr;
+    }
+    children.clear();
+}
+
+void Component::addComponent(Component* child)
+{
+    if (child->parent)
+    {
+        child->removeFromParent();
+    }
+
+    child->parent = this;
+    children.push_back(child);
 }
 
 void Component::setVisible(bool shouldBeVisible)
@@ -25,21 +43,20 @@ void Component::setVisible(bool shouldBeVisible)
     visible = shouldBeVisible;
 };
 
-bool Component::isComponentValid(Component* c)
+void Component::removeFromParent()
 {
-    return reinterpret_cast<ComponentRegister*>(rootComponent)->exists(c);
-}
+    if (parent)
+    {
+        auto& siblings = parent->children;
 
-void Component::addComponent(Component* child)
-{
-    reinterpret_cast<ComponentRegister*>(rootComponent)->registerComponent(child);
-
-    children.push_back(child);
+        siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
+        parent = nullptr;
+    }
 }
 
 void Component::registerTimer(std::function<void()> callback)
 {
-    reinterpret_cast<ComponentRegister*>(rootComponent)->registerTimerCallback(this, callback);
+    reinterpret_cast<ComponentRegister*>(findRootComponent())->registerTimerCallback(this, callback);
 }
 
 }

@@ -9,14 +9,14 @@
 #include "Connection.h"
 #include "Lasso.h"
 
-Canvas::Canvas(Component* parent) : pptk::Component(parent)
+Canvas::Canvas()
 {
-    lasso = std::make_unique<Lasso>(this);
+    lasso = std::make_unique<Lasso>();
     addComponent(lasso.get());
 
-    for (int i = 0; i < 30; ++i)
+    for (int i = 0; i < 1000; ++i)
     {
-        auto obj = std::make_unique<Object>(this, "obj_" + std::to_string(i));
+        auto obj = std::make_unique<Object>("obj_" + std::to_string(i));
         addComponent(obj.get());
         objects.push_back(std::move(obj));
     }

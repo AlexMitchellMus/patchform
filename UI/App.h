@@ -29,18 +29,18 @@ class TopBar : public Component {
 public:
     std::function<void(bool)> hideShowPanels = [](bool){};
 
-    TopBar(Component* parent) : Component(parent)
+    TopBar()
     {
-        mainMenu = std::make_unique<ToggleButton>(this, "A", "A");
+        mainMenu = std::make_unique<ToggleButton>("A", "A");
         addComponent(mainMenu.get());
 
-        undo = std::make_unique<ToggleButton>(this, "B", "B");
+        undo = std::make_unique<ToggleButton>("B", "B");
         addComponent(undo.get());
 
-        redo = std::make_unique<ToggleButton>(this, "C", "C");
+        redo = std::make_unique<ToggleButton>("C", "C");
         addComponent(redo.get());
 
-        hideSidePanelsToggle = std::make_unique<ToggleButton>(this, "D", "D");
+        hideSidePanelsToggle = std::make_unique<ToggleButton>("D", "D");
         addComponent(hideSidePanelsToggle.get());
 
         hideSidePanelsToggle->onToggle = [this](const bool state)
@@ -111,9 +111,7 @@ private:
 class RightPanel : public Component
 {
 public:
-    RightPanel(Component* parent) : Component(parent)
-    {
-    }
+    RightPanel() = default;
 
     void render(NVGcontext* nvg) override
     {
@@ -134,19 +132,19 @@ class App : public ComponentRegister {
 public:
     App() {
 
-        canvas = std::make_unique<Canvas>(this);
+        canvas = std::make_unique<Canvas>();
         addComponent(canvas.get());
 
-        topBar = std::make_unique<TopBar>(this);
+        topBar = std::make_unique<TopBar>();
         addComponent(topBar.get());
 
-        toolDock = std::make_unique<ToolDock>(this);
+        toolDock = std::make_unique<ToolDock>();
         addComponent(toolDock.get());
 
-        leftPanel = std::make_unique<LeftPanel>(this, canvas.get());
+        leftPanel = std::make_unique<LeftPanel>(canvas.get());
         addComponent(leftPanel.get());
 
-        rightPanel = std::make_unique<RightPanel>(this);
+        rightPanel = std::make_unique<RightPanel>();
         addComponent(rightPanel.get());
 
         topBar->hideShowPanels = [this](bool state)

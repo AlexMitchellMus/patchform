@@ -11,9 +11,8 @@
 #include "Port.h"
 #include "Object.h"
 
-Connection::Connection(Component* parent) : Component(parent)
+Connection::Connection(Port* port) : originPort(port)
 {
-    originPort = dynamic_cast<Port*>(parent);
 
     // FIXME: Horrible hack, we add the originPort position when first making the connection!
     dest = originPort->getAbsolutePosition() + pptk::Point(5,5) + originPort->findParentOfClass<Port>()->getAbsolutePosition();

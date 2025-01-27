@@ -16,6 +16,7 @@ void Port::mouseButtonDown(SDL_Event& e)
     {
         cnv->newConnection = std::make_unique<Connection>(this);
         cnv->addComponent(cnv->newConnection.get());
+        std::cout << "adding new connection to cnv" << std::endl;
     }
 }
 
@@ -45,8 +46,9 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
         if (cnv->newConnection)
         {
             cnv->newConnection->setConnectionDest(currentPosition + getAbsolutePosition());
-
-            auto c = rootComponent->findComponentAt(currentPosition.x, currentPosition.y);
+            //if (!rootComponent)
+            //    return;
+            auto c = findRootComponent()->findComponentAt(currentPosition.x, currentPosition.y);
             if (auto* port = dynamic_cast<Port*>(c))
             {
                 // Only connect once for a new port, and if the port directions are correct: input->output or output->input

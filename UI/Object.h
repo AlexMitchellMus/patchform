@@ -14,7 +14,7 @@
 class Canvas;
 class Object : public pptk::Component {
 public:
-    explicit Object(Component* parent, const std::string& name);
+    explicit Object(const std::string& name);
 
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta) override;
 

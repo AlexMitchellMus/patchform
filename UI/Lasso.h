@@ -13,7 +13,7 @@
 class Lasso : public pptk::Component
 {
 public:
-    Lasso(Component* parent);
+    Lasso();
 
     // Start the lasso at a specific position
     void start(const pptk::Point& startPoint);

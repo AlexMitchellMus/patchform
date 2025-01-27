@@ -13,9 +13,7 @@
 class ZoomSlider : public pptk::Component
 {
 public:
-    explicit ZoomSlider(Component* parent) : Component(parent)
-    {
-    }
+    explicit ZoomSlider() = default;
 
     void render(NVGcontext* nvg) override
     {
@@ -30,21 +28,21 @@ public:
 
 class ToolDock : public pptk::Component {
 public:
-    explicit ToolDock(Component* parent) : Component(parent)
+    explicit ToolDock()
     {
-        editButton = std::make_unique<ToggleButton>(parent, "E", "F", "icons");
+        editButton = std::make_unique<ToggleButton>("E", "F", "icons");
         addComponent(editButton.get());
 
-        addObjectButton = std::make_unique<ToggleButton>(parent, "G", "G", "icons");
+        addObjectButton = std::make_unique<ToggleButton>("G", "G", "icons");
         addComponent(addObjectButton.get());
 
-        viewButton = std::make_unique<ToggleButton>(parent, "H", "H", "icons");
+        viewButton = std::make_unique<ToggleButton>("H", "H", "icons");
         addComponent(viewButton.get());
 
-        resizeToFit = std::make_unique<ToggleButton>(parent, "I", "I", "icons");
+        resizeToFit = std::make_unique<ToggleButton>("I", "I", "icons");
         addComponent(resizeToFit.get());
 
-        zoomSlider = std::make_unique<ZoomSlider>(parent);
+        zoomSlider = std::make_unique<ZoomSlider>();
         addComponent(zoomSlider.get());
 
         ToolDock::resized();
@@ -53,15 +51,15 @@ public:
     void resized() override
     {
         int offset = 15;
-        editButton->setBounds(x + offset, y + 5, 35, 35);
+        editButton->setBounds(offset, 5, 35, 35);
         offset += 50;
-        addObjectButton->setBounds(x + offset, y + 5, 35, 35);
+        addObjectButton->setBounds(offset, 5, 35, 35);
         offset += 50;
-        viewButton->setBounds(x + offset, y + 5, 35, 35);
+        viewButton->setBounds(offset, 5, 35, 35);
         offset += 50;
-        resizeToFit->setBounds(x + offset, y + 5, 35, 35);
+        resizeToFit->setBounds(offset, 5, 35, 35);
         offset += 50;
-        zoomSlider->setBounds(x + offset, y + 5, 35, 60);
+        zoomSlider->setBounds(offset, 5, 35, 60);
     }
 
     void render(NVGcontext* nvg) override

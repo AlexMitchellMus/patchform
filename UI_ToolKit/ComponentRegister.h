@@ -17,28 +17,6 @@ namespace pptk {
 
 class ComponentRegister : public Component {
 public:
-    using Registry = ankerl::unordered_dense::set<Component*>;
-
-    // Register a component
-    void registerComponent(Component* component) {
-        if (component)
-        {
-            registry.insert(component);
-        }
-    }
-
-    // Unregister a component
-    void unregisterComponent(Component* component) {
-        if (component)
-        {
-            registry.erase(component);
-        }
-    }
-
-    // Check if a component exists in the registry
-    bool exists(Component* component) const {
-        return registry.contains(component);
-    }
 
     void handleTime(uint32_t time)
     {
@@ -66,8 +44,31 @@ public:
         );
     }
 
+    void clearReferencesTo(Component* c)
+    {
+        for (Component** tracked : { &draggingComponent, &hoveredComponent, &clickedComponent })
+        {
+            if (*tracked == c)
+            {
+                *tracked = nullptr;
+            }
+        }
+    }
+
+    Component* getDraggingComponent() const       { return draggingComponent; }
+    void       setDraggingComponent(Component* c) { draggingComponent = c;    }
+
+    Component* getHoveredComponent() const        { return hoveredComponent; }
+    void       setHoveredComponent(Component* c)  { hoveredComponent = c;     }
+
+    Component* getClickedComponent() const        { return clickedComponent; }
+    void       setClickedComponent(Component* c)  { clickedComponent = c;     }
+
 protected:
-    Registry registry;
+
+    Component* draggingComponent = nullptr;
+    Component* hoveredComponent = nullptr;
+    Component* clickedComponent = nullptr;
 
     std::vector<std::tuple<Component*, std::function<void()>>> timerCallbacks;
 };

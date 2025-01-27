@@ -115,9 +115,7 @@ class ComponentRegister;
 
 class Component {
 public:
-    Component() : rootComponent(this) {};
-
-    explicit Component(Component* parent);
+    explicit Component() = default;
 
     virtual ~Component();
 
@@ -149,14 +147,9 @@ public:
 
     void addComponent(Component* child);
 
-    std::vector<Component*>& getChildren()
+    const std::vector<Component*>& getChildren() const
     {
         return children;
-    }
-
-    Component* getRoot() const
-    {
-        return rootComponent;
     }
 
     // Computes the absolute position of the component
@@ -190,14 +183,10 @@ public:
         for (auto it = children.begin(); it != children.end(); ) {
             auto& child = *it;
 
-            if (!isComponentValid(child)) {
-                it = children.erase(it);
-            } else {
-                if (child->hitTest(e.button.x, e.button.y)) {
-                    child->mouseButtonDown(e);
-                }
-                ++it;
+            if (child->hitTest(e.button.x, e.button.y)) {
+                child->mouseButtonDown(e);
             }
+            ++it;
         }
     }
 
@@ -214,8 +203,8 @@ public:
     // Find the component at (x, y), including children
     Component* findComponentAt(int x, int y) {
         // Always check children first
-        for (auto it = getChildren().rbegin(); it != getChildren().rend(); ++it) {
-            if (isComponentValid(*it) && isVisible()) {
+        for (auto it = children.rbegin(); it != children.rend(); ++it) {
+            if (isVisible()) {
                 Component* child = (*it)->findComponentAt(x, y);
                 if (child && child->isVisible())
                     return child; // Return the first matching child
@@ -245,6 +234,17 @@ public:
             current = current->parent; // Move up to the parent
         }
         return nullptr; // No parent of the specified type found
+    }
+
+    Component* findRootComponent()
+    {
+        // Find the root component, because we can assign components inside constructors, so root can't be set
+        Component* current = this;
+        while (current->parent)
+        {
+            current = current->parent;
+        }
+        return current;
     }
 
     virtual void mouseEnter(SDL_Event& e) { }
@@ -277,11 +277,8 @@ public:
 
         // Render children
         for (auto& child : children) {
-            if (isComponentValid(child))
-            {
-                if (child->isVisible())
-                    child->renderAll(vg);
-            }
+            if (child->isVisible())
+                child->renderAll(vg);
         }
 
         // Restore previous transformation
@@ -343,7 +340,7 @@ public:
     void registerTimer(std::function<void()> callback);
 
 private:
-    bool isComponentValid(Component* c);
+    void removeFromParent();
 
 protected:
 
@@ -368,7 +365,6 @@ protected:
     Component* draggingComponent = nullptr;
 
     Component* parent = nullptr;
-    Component* rootComponent = nullptr;
 };
 
 } // namespace ppuitk

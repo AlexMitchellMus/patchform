@@ -16,13 +16,12 @@ class Canvas : public pptk::Component {
 public:
     using ObjectChangedListeners = std::vector<std::function<void()>>;
 
-    Canvas(Component* parent);
+    Canvas();
 
     std::vector<Object*> getObjects() const;
 
     void mouseMove(const pptk::Point& position) override
     {
-        std::cout << "mouseMove: " << position.toString() << std::endl;
     }
 
     void mouseButtonDown(SDL_Event& e) override;
@@ -49,7 +48,7 @@ public:
 
     void renderAll(NVGcontext* nvg) override;
 
-    std::unique_ptr<Connection> newConnection;
+    std::unique_ptr<Connection> newConnection = nullptr;
 
     void addObjectChangedListener(std::function<void()> callback);
 

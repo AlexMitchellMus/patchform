@@ -6,8 +6,8 @@
 
 #include "Lasso.h"
 
-Lasso::Lasso(Component* parent)
-    : Component(parent), active(false)
+Lasso::Lasso()
+    : active(false)
 {
 }
 

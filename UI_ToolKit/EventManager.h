@@ -8,7 +8,6 @@
 
 #include "Component.h"
 #include <iostream>
-#include <glaze/core/seek.hpp>
 
 #include "ComponentRegister.h"
 
@@ -19,15 +18,15 @@ public:
     MouseEventManager(Component* reg) : registry(reinterpret_cast<ComponentRegister*>(reg)) {}
 
     void handleMouseButtonDown(Component* root, SDL_Event& e) {
-        draggingComponent = nullptr; // Reset dragging state
+        registry->setDraggingComponent(nullptr); // Reset dragging state
         propagateMouseButtonDown(root, e);
     }
 
     void handleMouseButtonUp(Component* root, SDL_Event& e) {
-        if (draggingComponent) {
-            draggingComponent->mouseButtonUp(e);
+        if (auto draggedComp = registry->getDraggingComponent()) {
+            draggedComp->mouseButtonUp(e);
             updateHoveredComponent(root, e);
-            draggingComponent = nullptr; // Reset dragging state
+            registry->setDraggingComponent(nullptr); // Reset dragging state
         } else {
             propagateMouseButtonUp(root, e);
         }
@@ -38,8 +37,8 @@ public:
         const Point delta(e.motion.xrel, e.motion.yrel);
 
         if (e.motion.state & SDL_BUTTON_LMASK) {
-            if (draggingComponent) {
-                draggingComponent->mouseDrag(currentPosition, delta);
+            if (auto draggedComp = registry->getDraggingComponent()) {
+                draggedComp->mouseDrag(currentPosition, delta);
                 return;
             }
         }
@@ -49,39 +48,48 @@ public:
 
     void handleKeyDown(Component* root, SDL_Event& e)
     {
-        if (isComponentValid(clickedComponent))
+        if (auto clickedComp = registry->getClickedComponent())
         {
-            clickedComponent->keyPressed(e);
+            clickedComp->keyPressed(e);
         }
     }
 
 private:
-    Component* draggingComponent = nullptr;
-    Component* hoveredComponent = nullptr; // Track currently hovered component
-    Component* clickedComponent = nullptr;
 
     void updateHoveredComponent(Component* root, SDL_Event& e) {
+        // Find which component (if any) is under the mouse
         Component* newHovered = root->findComponentAt(e.motion.x, e.motion.y);
 
-        // Update hover state if the hovered component changes
-        if (newHovered != hoveredComponent) {
-            if (hoveredComponent) {
-                hoveredComponent->mouseLeave(e); // Notify old hovered component
+        // Get the currently hovered component from the registry
+        Component* oldHovered = registry->getHoveredComponent();
+
+        // If the hovered component changed (including from some component to null, or null to some component)
+        if (newHovered != oldHovered)
+        {
+            // Unhover the old component (if any)
+            if (oldHovered)
+            {
+                oldHovered->mouseLeave(e);
             }
-            if (newHovered) {
-                newHovered->mouseEnter(e); // Notify new hovered component
+
+            // Hover the new component (if any)
+            if (newHovered)
+            {
+                newHovered->mouseEnter(e);
             }
-            hoveredComponent = newHovered; // Update hovered component
+
+            // Update the registry to track the new hovered component (which can be nullptr)
+            registry->setHoveredComponent(newHovered);
         }
 
-        // Forward mouse move to the currently hovered component
-        if (hoveredComponent) {
-            hoveredComponent->handleMouseMove(e);
+        // Forward the mouse-move event to the currently hovered component
+        if (auto hovered = registry->getHoveredComponent())
+        {
+            hovered->handleMouseMove(e);
         }
     }
 
     void propagateMouseButtonDown(Component* component, SDL_Event& e) {
-        if (!isComponentValid(component)) return;
 
         if (!component->isVisible()) {
             return;
@@ -92,15 +100,10 @@ private:
         for (auto it = children.rbegin(); it != children.rend();) {
             auto& child = *it;
 
-            if (!isComponentValid(child)) {
-                it = std::make_reverse_iterator(children.erase((it + 1).base()));
-                continue;
-            }
-
             if (child->isVisible())
             {
                 propagateMouseButtonDown(child, e);
-                if (draggingComponent) {
+                if (registry->getDraggingComponent()) {
                     return; // Stop propagation if a component starts dragging
                 }
             }
@@ -108,10 +111,10 @@ private:
             ++it;
         }
 
-        if (component->hitTest(e.button.x, e.button.y) && !draggingComponent) {
+        if (component->hitTest(e.button.x, e.button.y) && !registry->getDraggingComponent()) {
             if (e.button.button == SDL_BUTTON_LEFT) {
-                draggingComponent = component;
-                clickedComponent = component; // Store the clicked component
+                registry->setDraggingComponent(component);
+                registry->setClickedComponent(component); // Store the clicked component
                 component->mouseButtonDown(e);
             }
         }
@@ -120,17 +123,12 @@ private:
 
     void propagateMouseButtonUp(Component* component, SDL_Event& e) {
         // Only handle the clicked component
-        if (clickedComponent && isComponentValid(clickedComponent)) {
-            clickedComponent->mouseButtonUp(e);
+        if (auto clickedComp = registry->getClickedComponent()) {
+            clickedComp->mouseButtonUp(e);
         }
 
         // Reset the clicked component after handling the event
-        clickedComponent = nullptr;
-    }
-
-
-    bool isComponentValid(Component* component) const {
-        return component == registry ? true : registry->exists(component);
+        registry->setClickedComponent(nullptr);
     }
 
 protected:
