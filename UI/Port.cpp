@@ -40,37 +40,40 @@ void Port::mouseButtonUp(SDL_Event& e)
     }
 }
 
-void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta) {
-    if (auto cnv = findParentOfClass<Canvas>())
+void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button button) {
+    if (button == pptk::Button::LEFT)
     {
-        if (cnv->newConnection)
+        if (auto cnv = findParentOfClass<Canvas>())
         {
-            cnv->newConnection->setConnectionDest(currentPosition + getAbsolutePosition());
-            //if (!rootComponent)
-            //    return;
-            auto c = findRootComponent()->findComponentAt(currentPosition.x, currentPosition.y);
-            if (auto* port = dynamic_cast<Port*>(c))
+            if (cnv->newConnection)
             {
-                // Only connect once for a new port, and if the port directions are correct: input->output or output->input
-                if ((direction != port->direction) && (port != foundPort))
+                cnv->newConnection->setConnectionDest(currentPosition + getAbsolutePosition());
+                //if (!rootComponent)
+                //    return;
+                auto c = findRootComponent()->findComponentAt(currentPosition.x, currentPosition.y);
+                if (auto* port = dynamic_cast<Port*>(c))
                 {
-                    foundPort = port;
-                    foundPort->isHoveredFromCable = true;
-                    std::cout << "found PORT!" << port->portNum << std::endl;
+                    // Only connect once for a new port, and if the port directions are correct: input->output or output->input
+                    if ((direction != port->direction) && (port != foundPort))
+                    {
+                        foundPort = port;
+                        foundPort->isHoveredFromCable = true;
+                        std::cout << "found PORT!" << port->portNum << std::endl;
+                    }
                 }
-            }
-            // TODO: Make it so a cable dragged over an object will connect to closest port
-            //else if (auto* object = dynamic_cast<Object*>(c))
-            //{
-            //        std::cout << "found object!" << object->getName() << std::endl;
-            //}
-            else
-            {
-                if (foundPort)
+                // TODO: Make it so a cable dragged over an object will connect to closest port
+                //else if (auto* object = dynamic_cast<Object*>(c))
+                //{
+                //        std::cout << "found object!" << object->getName() << std::endl;
+                //}
+                else
                 {
-                    foundPort->isHoveredFromCable = false;
-                    foundPort = nullptr;
-                    std::cout << "not over a port" << std::endl;
+                    if (foundPort)
+                    {
+                        foundPort->isHoveredFromCable = false;
+                        foundPort = nullptr;
+                        std::cout << "not over a port" << std::endl;
+                    }
                 }
             }
         }
@@ -82,7 +85,7 @@ void Port::render(NVGcontext* nvg)
     nvgBeginPath(nvg);
 
     auto radius = getWidth() / 2;
-    nvgCircle(nvg, x + radius, y + radius, radius);
+    nvgCircle(nvg, radius, radius, radius);
     //https://colorkit.co/color/1c4977/
     //nvgRGB(119, 28, 118)
     auto orange = nvgRGB(120, 74, 28);
@@ -94,7 +97,7 @@ void Port::render(NVGcontext* nvg)
     if (isHovered | isHoveredFromCable)
     {
         nvgBeginPath(nvg);
-        nvgCircle(nvg, x + 5, y + 5, 10);
+        nvgCircle(nvg, 5, 5, 10);
         auto alphaCol = portCol;
         portCol.a = 120;
         nvgFillColor(nvg, portCol);

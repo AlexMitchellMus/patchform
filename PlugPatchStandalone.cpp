@@ -226,6 +226,8 @@ int main(int argc, char* argv[])
 
         app->handleTime(currentFrameTime);
 
+        app->updateLayout();
+
         // Update last frame time for the next frame
         lastFrameTime = currentFrameTime;
 

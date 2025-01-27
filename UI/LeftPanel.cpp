@@ -35,11 +35,11 @@ void LeftPanel::render(NVGcontext* nvg)
 {
     auto selectedCol = nvgRGB(43, 43, 43);
     nvgFillColor(nvg, nvgRGB(33, 33, 33));
-    nvgFillRect(nvg, x, y, width, height);
+    nvgFillRect(nvg, 0, 0, width, height);
 
     // Draw the object list
-    float textX = x + 30; // Padding from the left edge
-    float textY = y + 40; // Starting Y position with padding from the top
+    float textX = 30; // Padding from the left edge
+    float textY = 40; // Starting Y position with padding from the top
     const float lineHeight = 30; // Line spacing
 
     nvgFontSize(nvg, 14.0f);
@@ -58,8 +58,8 @@ void LeftPanel::render(NVGcontext* nvg)
 
     // Vertical edge line
     nvgBeginPath(nvg);
-    nvgMoveTo(nvg, width - 0.5f, y);
-    nvgLineTo(nvg, width - 0.5f, y + height);
+    nvgMoveTo(nvg, width - 0.5f, 0);
+    nvgLineTo(nvg, width - 0.5f, height);
     nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
     nvgStrokeWidth(nvg, 1.0f);
     nvgStroke(nvg);
@@ -97,8 +97,11 @@ void LeftPanel::mouseButtonDown(SDL_Event& e)
     }
 }
 
-void LeftPanel::mouseDrag(const pptk::Point& position, const pptk::Point& delta)
+void LeftPanel::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button)
 {
-    auto currBounds = getBounds();
-    setBounds(currBounds.x, currBounds.y, position.x, currBounds.h);
+    if (button == pptk::Button::LEFT)
+    {
+        auto currBounds = getBounds();
+        setBounds(currBounds.x, currBounds.y, position.x, currBounds.h);
+    }
 }

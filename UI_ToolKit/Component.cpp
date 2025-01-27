@@ -54,6 +54,15 @@ void Component::removeFromParent()
     }
 }
 
+void Component::updateLayout()
+{
+    finalX = parent->finalX + x;
+    finalY = parent->finalY + y;
+
+    for (auto& child : children)
+        child->updateLayout();
+}
+
 void Component::registerTimer(std::function<void()> callback)
 {
     reinterpret_cast<ComponentRegister*>(findRootComponent())->registerTimerCallback(this, callback);

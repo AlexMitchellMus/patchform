@@ -19,12 +19,14 @@ Connection::Connection(Port* port) : originPort(port)
 }
 
 void Connection::render(NVGcontext* nvg) {
+    nvgSave(nvg);
+
     nvgBeginPath(nvg);
 
     // Calculate the global position of the origin port
-    auto originPos = originPort->getAbsolutePosition() + pptk::Point(5, 5);
+    auto originPos = originPort->getGlobalPosition() + pptk::Point(5, 5);
     // Convert dest into the same relative coordinate system
-    auto relativeDest = dest - originPort->findParentOfClass<Port>()->getAbsolutePosition();
+    auto relativeDest = dest - originPort->findParentOfClass<Port>()->getGlobalPosition();
 
     Point start = relativeDest;
     Point end = originPos;
@@ -86,4 +88,6 @@ void Connection::render(NVGcontext* nvg) {
     nvgCircle(nvg, relativeDest.x, relativeDest.y, 5.0f);
     nvgFillColor(nvg, nvgRGBA(90, 90, 90, 100));
     nvgFill(nvg);
+
+    nvgRestore(nvg);
 }

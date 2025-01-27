@@ -36,11 +36,27 @@ public:
         const Point currentPosition(e.motion.x, e.motion.y);
         const Point delta(e.motion.xrel, e.motion.yrel);
 
-        if (e.motion.state & SDL_BUTTON_LMASK) {
-            if (auto draggedComp = registry->getDraggingComponent()) {
-                draggedComp->mouseDrag(currentPosition, delta);
-                return;
-            }
+        Button buttonPressed;
+
+        switch (e.motion.state)
+        {
+            case SDL_BUTTON_LMASK:
+                buttonPressed = Button::LEFT;
+                    break;
+
+            case SDL_BUTTON_RMASK:
+                buttonPressed = Button::RIGHT;
+                    break;
+
+            case SDL_BUTTON_MMASK:
+                buttonPressed = Button::MIDDLE;
+                    break;
+        }
+
+        if (auto draggedComp = registry->getDraggingComponent())
+        {
+            draggedComp->mouseDrag(currentPosition, delta, buttonPressed);
+            return;
         }
 
         updateHoveredComponent(registry, e); // Update hovered component
@@ -112,11 +128,9 @@ private:
         }
 
         if (component->hitTest(e.button.x, e.button.y) && !registry->getDraggingComponent()) {
-            if (e.button.button == SDL_BUTTON_LEFT) {
                 registry->setDraggingComponent(component);
                 registry->setClickedComponent(component); // Store the clicked component
                 component->mouseButtonDown(e);
-            }
         }
     }
 

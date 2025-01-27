@@ -29,13 +29,13 @@ public:
         if (hovered)
         {
             auto bgCol = nvgRGBA(0, 0, 0, 30);
-            nvgDrawRoundedRect(nvg, x, y, width, height, bgCol, bgCol, 8);
+            nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, bgCol, 8);
         }
 
         nvgFontSize(nvg, 24.0f);
         nvgFontFace(nvg, font.c_str());
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
-        nvgText(nvg, x + 5, y + 24, !state ? offCharacter.c_str() : onCharacter.c_str(), nullptr);
+        nvgText(nvg, 5, 24, !state ? offCharacter.c_str() : onCharacter.c_str(), nullptr);
     }
 
 private:

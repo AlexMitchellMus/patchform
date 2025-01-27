@@ -30,7 +30,7 @@ public:
 
     void mouseButtonUp(SDL_Event& e) override;
 
-    void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta) override;
+    void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
 
     void mouseEnter(SDL_Event& e) override
     {

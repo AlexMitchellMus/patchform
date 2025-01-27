@@ -70,12 +70,12 @@ public:
     void render(NVGcontext* nvg) override {
         nvgBeginPath(nvg);
         nvgFillColor(nvg, nvgRGB(43, 43, 43));
-        nvgFillRect(nvg, x, y, width, height);
+        nvgFillRect(nvg, 0, 0, width, height);
 
         // Horizontal line
         nvgBeginPath(nvg);
-        nvgMoveTo(nvg, x, height - 0.5f);
-        nvgLineTo(nvg, x + width, height - 0.5f);
+        nvgMoveTo(nvg, 0, height - 0.5f);
+        nvgLineTo(nvg, 0 + width, height - 0.5f);
         nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
         nvgStrokeWidth(nvg, 1.0f);
         nvgStroke(nvg);
@@ -116,12 +116,12 @@ public:
     void render(NVGcontext* nvg) override
     {
         nvgFillColor(nvg, nvgRGB(33, 33, 33));
-        nvgFillRect(nvg, x, y, width, height);
+        nvgFillRect(nvg, 0, 0, width, height);
 
         // Vertical edge line (on left)
         nvgBeginPath(nvg);
-        nvgMoveTo(nvg, x + 0.5f, y);
-        nvgLineTo(nvg, x + 0.5f, y + height);
+        nvgMoveTo(nvg, 0.5f, 0);
+        nvgLineTo(nvg, 0.5f, height);
         nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
         nvgStrokeWidth(nvg, 1.0f);
         nvgStroke(nvg);
@@ -152,7 +152,7 @@ public:
             leftPanel->setVisible(!state);
             rightPanel->setVisible(!state);
 
-//#define AUTO_HIDE_DOCK
+#define AUTO_HIDE_DOCK
 #ifdef AUTO_HIDE_DOCK
             if (state)
             {
@@ -174,9 +174,11 @@ public:
 
     void mouseMove(const Point& position) override
     {
+        // FIXME: Mouse move is not registering ATM, we need to add a listener or think about a better solution
         if (position.y > getHeight() - 100)
         {
-            toolDockAnimator = 1.0f;
+            unregisterTimerCallback(this);
+            resizeToolDock(true);
         }
     }
 
@@ -194,7 +196,7 @@ public:
     {
         topBar->setBounds(0, 0, getWidth(), 45);
         canvas->setBounds(0, 45, getWidth(), getHeight() - 45);
-        leftPanel->setBounds(0, 45, 200, getWidth() - 45);
+        leftPanel->setBounds(0, 45, 200, getHeight() - 45);
 
         resizeToolDock(true);
 

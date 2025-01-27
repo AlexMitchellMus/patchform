@@ -27,7 +27,7 @@ public:
 
     void mouseButtonDown(SDL_Event& e) override;
 
-    void mouseDrag(const pptk::Point& position, const pptk::Point& delta) override;
+    void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button) override;
 
 private:
     Canvas* cnv;

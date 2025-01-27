@@ -28,6 +28,9 @@
 #endif
 
 namespace pptk {
+
+enum class Button { LEFT, RIGHT, MIDDLE };
+
 // Event structure
 struct Event {
     SDL_Event sdlEvent;
@@ -152,6 +155,12 @@ public:
         return children;
     }
 
+    Point getGlobalPosition() const
+    {
+        return {finalX, finalY};
+    }
+
+
     // Computes the absolute position of the component
     Point getAbsolutePosition() const {
         if (parent) {
@@ -160,6 +169,7 @@ public:
         }
         return Point(x, y); // Root component
     }
+
 
     Rect getAbsoluteBounds() const {
         Point absolutePosition = getAbsolutePosition();
@@ -205,7 +215,7 @@ public:
         // Always check children first
         for (auto it = children.rbegin(); it != children.rend(); ++it) {
             if (isVisible()) {
-                Component* child = (*it)->findComponentAt(x, y);
+                Component* child = (*it)->findComponentAt(x - viewportX, y - viewportY);
                 if (child && child->isVisible())
                     return child; // Return the first matching child
             }
@@ -253,7 +263,7 @@ public:
 
     virtual void mouseMove(const Point& position) { }
 
-    virtual void mouseDrag(const Point& position, const Point& delta) { }
+    virtual void mouseDrag(const Point& position, const Point& delta, Button button) { }
 
     virtual void keyPressed(SDL_Event& e) { }
 
@@ -266,23 +276,18 @@ public:
         nvgSave(vg);
 
         // Apply translation for this component's position
-        if (parent)
-        {
-            auto offsetPos = parent->getBounds();
-            nvgTranslate(vg, offsetPos.x, offsetPos.y);
-        }
+        nvgTranslate(vg, finalX, finalY);
 
         // Render this component
         render(vg);
+
+        nvgRestore(vg);
 
         // Render children
         for (auto& child : children) {
             if (child->isVisible())
                 child->renderAll(vg);
         }
-
-        // Restore previous transformation
-        nvgRestore(vg);
     }
 
     Rect getBounds() const
@@ -338,6 +343,14 @@ public:
     }
 
     void registerTimer(std::function<void()> callback);
+
+    virtual void updateLayout();
+
+    float finalX = 0.0f;
+    float finalY = 0.0f;
+
+    float viewportX = 0.0f;
+    float viewportY = 0.0f;
 
 private:
     void removeFromParent();

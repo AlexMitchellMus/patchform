@@ -28,7 +28,7 @@ public:
 
     void mouseButtonUp(SDL_Event& e) override;
 
-    void mouseDrag(const pptk::Point& position, const pptk::Point& delta) override;
+    void mouseDrag(const pptk::Point& position, const pptk::Point& delta, const pptk::Button button) override;
 
     void keyPressed(SDL_Event& e) override;
 
@@ -55,6 +55,8 @@ public:
     void removeObjectChangedListener(std::function<void()> callback);
 
     void callOjbectChangedListeners();
+
+    void updateLayout() override;
 
 private:
     std::vector<std::unique_ptr<Object>> objects;

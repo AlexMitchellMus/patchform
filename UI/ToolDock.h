@@ -22,7 +22,7 @@ public:
         nvgFontSize(nvg, 18.0f);
         nvgFontFace(nvg, "sans");
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
-        nvgText(nvg, x + 5, y + 24, "100 %", nullptr);
+        nvgText(nvg, 5, 24, "100 %", nullptr);
     }
 };
 
@@ -71,8 +71,8 @@ public:
         auto outLineCol = nvgRGB(53, 53, 53);
         auto cornerRadius = getHeight() / 2;
 
-        nvgDrawRoundedRect(nvg, x - 3, y - 3, width + 6, height + 6, dropShadowCol, dropShadowCol, dropShadowCornerRadius);
-        nvgDrawRoundedRect(nvg, x, y, width, height, bgCol, outLineCol, cornerRadius);
+        nvgDrawRoundedRect(nvg, - 3,  - 3, width + 6, height + 6, dropShadowCol, dropShadowCol, dropShadowCornerRadius);
+        nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, cornerRadius);
     }
 
     std::unique_ptr<ToggleButton> editButton;

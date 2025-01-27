@@ -65,8 +65,9 @@ void Object::keyPressed(SDL_Event& e)
     }
 }
 
-void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta)
+void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button button)
 {
+    if (button == pptk::Button::LEFT)
     if (multiSelected)
     {
         if (auto cnv = findParentOfClass<Canvas>())
@@ -85,12 +86,12 @@ void Object::render(NVGcontext* nvg)
     auto outLineCol = nvgRGB(45, 45, 45);
     if (isHovered) bgCol = outLineCol;
     if (isSelected) outLineCol = nvgRGB(28, 73, 119);
-    nvgDrawRoundedRect(nvg, x, y, width, height, bgCol, outLineCol, 6.0f);
+    nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
 
     nvgFontSize(nvg, 18.0f);
     nvgFontFace(nvg, "sans");
     nvgFillColor(nvg, nvgRGB(190, 190, 190));
     nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-    nvgText(nvg, x + 10, y + height / 2, name.c_str(), nullptr);
+    nvgText(nvg, 10, height / 2, name.c_str(), nullptr);
 }

@@ -16,7 +16,7 @@ class Object : public pptk::Component {
 public:
     explicit Object(const std::string& name);
 
-    void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta) override;
+    void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
 
     void mouseButtonDown(SDL_Event& e) override;
 

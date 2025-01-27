@@ -55,22 +55,32 @@ void Canvas::mouseButtonUp(SDL_Event& e)
     lasso->end();
 }
 
-void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta)
+void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button)
 {
-    lasso->update(position);
-
-    auto lassoBounds = lasso->getLassoBounds();
-
-    for (const auto& obj : objects)
+    if (button == pptk::Button::LEFT)
     {
-        if (lassoBounds.intersects(obj->getAbsoluteBounds()))
+        std::cout << "left:" << std::endl;
+        lasso->update(position);
+
+        auto lassoBounds = lasso->getLassoBounds();
+
+        for (const auto& obj : objects)
         {
-            addToSelection(obj.get());
+            if (lassoBounds.intersects(obj->getAbsoluteBounds()))
+            {
+                addToSelection(obj.get());
+            }
+            else
+            {
+                removeFromSelection(obj.get());
+            }
         }
-        else
-        {
-            removeFromSelection(obj.get());
-        }
+    }
+    else if (button == pptk::Button::MIDDLE)
+    {
+        std::cout << "middle: " << position.x << ", " << position.y << std::endl;
+        viewportX += delta.x;
+        viewportY += delta.y;
     }
 }
 
@@ -159,18 +169,19 @@ void Canvas::render(NVGcontext* nvg)
 {
     nvgBeginPath(nvg);
     nvgFillColor(nvg, nvgRGB(23, 23, 23));
-    nvgFillRect(nvg, x, y, width, height);
+    nvgFillRect(nvg, 0, 0, width, height);
 }
 
 void Canvas::renderAll(NVGcontext* nvg)
 {
     nvgSave(nvg);
 
-    auto offsetPos = parent->getBounds();
-    nvgTranslate(nvg, offsetPos.x, offsetPos.y);
+    nvgTranslate(nvg, finalX, finalY);
 
     // Render the background
     render(nvg);
+
+    nvgRestore(nvg);
 
     for (auto const& obj : objects)
     {
@@ -191,7 +202,7 @@ void Canvas::renderAll(NVGcontext* nvg)
     lasso->render(nvg);
 
     // Restore previous transformation
-    nvgRestore(nvg);
+
 }
 
 void Canvas::addObjectChangedListener(std::function<void()> callback)
@@ -217,4 +228,26 @@ void Canvas::callOjbectChangedListeners()
     {
         objChangeListener();
     }
+}
+
+void Canvas::updateLayout()
+{
+    finalX = parent->finalX + x + viewportX;
+    finalY = parent->finalY + y + viewportY;
+
+    for (auto& obj : objects)
+    {
+        // If obj is also derived from Component, it may do
+        //   obj->finalX = this->finalX + obj->x;
+        //   obj->finalY = this->finalY + obj->y;
+        // inside obj->updateLayout(). So just call it:
+        if (obj)
+            obj->updateLayout();
+    }
+
+    if (newConnection)
+        newConnection->updateLayout();
+
+    if (lasso)
+        lasso->updateLayout();
 }
