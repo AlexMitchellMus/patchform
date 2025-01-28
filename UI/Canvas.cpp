@@ -11,7 +11,7 @@
 
 Canvas::Canvas()
 {
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0; i < 1000; ++i)
     {
         auto obj = std::make_unique<Object>("obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -20,7 +20,7 @@ Canvas::Canvas()
 
     for (const auto& obj : objects)
     {
-        obj->setPosition((std::rand() % 800) + canvasOrigin, (std::rand() % 800) + canvasOrigin);
+        obj->setPosition((std::rand() % 8000) + canvasOrigin, (std::rand() % 8000) + canvasOrigin);
     }
 }
 
@@ -86,8 +86,30 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
 
 void Canvas::mouseWheel(SDL_Event& e)
 {
-    scale += e.wheel.y * 0.125f;
-    scale = std::min(std::max(scale, 0.0f), 3.0f);
+    float mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+
+    std::cout << "mouse pos: " << mouseX << ", " << mouseY << std::endl;
+
+    auto localMouse = globalToLocal(mouseX, mouseY);
+
+    // Translate mouse position to canvas coordinates
+    float canvasMouseX = (mouseX - x) / scale;
+    float canvasMouseY = (mouseY - y) / scale;
+
+    // Adjust scale with constraints
+    float newScale = scale + e.wheel.y * 0.125f;
+    newScale = std::min(std::max(newScale, 0.1f), 3.0f);
+
+    // Adjust canvas offset to scale around the mouse point
+    x -= canvasMouseX * (newScale - scale);
+    y -= canvasMouseY * (newScale - scale);
+
+    // Apply the new scale
+    scale = newScale;
+
+    //scale += e.wheel.y * 0.125f;
+    //scale = std::min(std::max(scale, 0.0f), 3.0f);
 
     if (e.wheel.y > 0.0f)
     {
@@ -229,6 +251,7 @@ void Canvas::renderAll(NVGcontext* nvg)
     nvgSave(nvg);
 
     nvgTranslate(nvg, x, y);
+    nvgScale(nvg, scale, scale);
 
     // Render the background
     render(nvg);

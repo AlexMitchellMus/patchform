@@ -370,8 +370,8 @@ public:
         globalY -= viewportY;
 
         // Optionally apply scaling (uncomment if scaling is used)
-        // globalX /= scale;
-        // globalY /= scale;
+        globalX /= scale;
+        globalY /= scale;
 
         return Point(globalX, globalY);
     }
@@ -382,8 +382,8 @@ public:
         localY += viewportY;
 
         // Optionally apply scaling (uncomment if scaling is used)
-        // localX *= scale;
-        // localY *= scale;
+        localX *= scale;
+        localY *= scale;
 
         // Recursively transform to parent's global coordinates
         if (parent) {
