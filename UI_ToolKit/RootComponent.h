@@ -8,8 +8,6 @@
 
 #include <iostream>
 #include <memory>
-#include <mutex>
-#include "ankerl/unordered_dense.h" // Include unordered_dense map
 
 #include "Component.h"
 
