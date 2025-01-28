@@ -152,7 +152,7 @@ public:
             leftPanel->setVisible(!state);
             rightPanel->setVisible(!state);
 
-#define AUTO_HIDE_DOCK
+//#define AUTO_HIDE_DOCK
 #ifdef AUTO_HIDE_DOCK
             if (state)
             {
@@ -188,14 +188,14 @@ public:
 
         toolDockPosY = reset ? (getHeight() - 60) : toolDockPosY + 0.5f;
 
-        float toolDockOffset = (canvas->getWidth() / 2.0f) - (toolDockWidth / 2.0f);
+        float toolDockOffset = (getWidth() / 2.0f) - (toolDockWidth / 2.0f);
         toolDock->setBounds(toolDockOffset, toolDockPosY, toolDockWidth, 45);
     }
 
     void resized() override
     {
         topBar->setBounds(0, 0, getWidth(), 45);
-        canvas->setBounds(0, 45, getWidth(), getHeight() - 45);
+        canvas->setBounds(-canvas->canvasOrigin, - canvas->canvasOrigin + 45, canvas->infinteCanvasSize, canvas->infinteCanvasSize);
         leftPanel->setBounds(0, 45, 200, getHeight() - 45);
 
         resizeToolDock(true);

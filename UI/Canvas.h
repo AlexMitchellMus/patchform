@@ -58,6 +58,9 @@ public:
 
     void updateLayout() override;
 
+    const int infinteCanvasSize = 120000;
+    const int canvasOrigin = 64000;
+
 private:
     std::vector<std::unique_ptr<Object>> objects;
     std::vector<std::unique_ptr<Connection>> connections;

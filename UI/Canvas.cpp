@@ -23,7 +23,7 @@ Canvas::Canvas()
 
     for (const auto& obj : objects)
     {
-        obj->setPosition(std::rand() % 4000, std::rand() % 4000);
+        obj->setPosition((std::rand() % 8000) + canvasOrigin, (std::rand() % 8000) + canvasOrigin);
     }
 }
 
@@ -47,6 +47,9 @@ void Canvas::mouseButtonDown(SDL_Event& e)
     if (e.button.button == SDL_BUTTON_LEFT)
     {
         lasso->start({e.button.x, e.button.y});
+    }
+    else if (e.button.button == SDL_BUTTON_MIDDLE) {
+        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
     }
 }
 
@@ -79,7 +82,6 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
     }
     else if (button == pptk::Button::MIDDLE)
     {
-        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
         viewportX += delta.x;
         viewportY += delta.y;
     }
@@ -168,9 +170,46 @@ void Canvas::clearSelection()
 
 void Canvas::render(NVGcontext* nvg)
 {
+    // Draw Background color
     nvgBeginPath(nvg);
     nvgFillColor(nvg, nvgRGB(23, 23, 23));
     nvgFillRect(nvg, 0, 0, width, height);
+
+    // Draw bg lines
+    nvgBeginPath(nvg);
+    nvgLineStyle(nvg, NVG_SOLID);
+    nvgStrokeColor(nvg, nvgRGB(33, 33, 33)); // Set stroke color
+
+    // Draw vertical dashed lines
+    for (float x = 0; x <= infinteCanvasSize; x += 100)
+    {
+        nvgMoveTo(nvg, x, 0);
+        nvgLineTo(nvg, x, infinteCanvasSize);
+    }
+
+    // Draw horizontal dashed lines
+    for (float y = 0; y <= infinteCanvasSize; y += 100)
+    {
+        nvgMoveTo(nvg, 0, y);
+        nvgLineTo(nvg, infinteCanvasSize, y);
+    }
+
+    nvgStroke(nvg);
+
+    // Draw dashed origin lines
+    nvgBeginPath(nvg);
+
+    nvgMoveTo(nvg, canvasOrigin, canvasOrigin);
+    nvgLineTo(nvg, infinteCanvasSize, canvasOrigin);
+
+    nvgMoveTo(nvg, canvasOrigin, canvasOrigin);
+    nvgLineTo(nvg, canvasOrigin, infinteCanvasSize);
+
+    nvgStrokeColor(nvg, nvgRGB(43, 43, 43)); // Set stroke color
+    nvgStrokeWidth(nvg, 2.0f);   // Set line width
+    nvgDashLength(nvg, 10.0f);
+    nvgLineStyle(nvg, NVG_LINE_DASHED);
+    nvgStroke(nvg);
 }
 
 void Canvas::renderAll(NVGcontext* nvg)
