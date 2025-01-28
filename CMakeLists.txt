@@ -114,6 +114,7 @@ set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Patches/count.json5"
         "${CMAKE_SOURCE_DIR}/Patches/Inter-VariableFont_opsz,wght.ttf"
         "${CMAKE_SOURCE_DIR}/Assets/Icons/IconFontPlugPatch.ttf"
+        "${CMAKE_SOURCE_DIR}/Assets/Icons/IconFontPlugPatch_google.ttf"
 )
 
 # Define a custom target to copy the Patches directory
