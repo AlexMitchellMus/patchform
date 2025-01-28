@@ -13,9 +13,8 @@
 
 Connection::Connection(Port* port) : originPort(port)
 {
-
-    // FIXME: Horrible hack, we add the originPort position when first making the connection!
-    dest = originPort->getGlobalPosition() + pptk::Point(5,5);
+    auto centre = port->getWidth() / 2;
+    dest = { centre, centre };
 }
 
 void Connection::setConnectionDest(const pptk::Point& p)
@@ -29,18 +28,18 @@ void Connection::render(NVGcontext* nvg) {
     nvgBeginPath(nvg);
 
     // Calculate the global position of the origin port
-    auto originPos = originPort->getGlobalPosition() + pptk::Point(5, 5);
+    auto originPos = originPort->getAbsolutePosition() + pptk::Point(5, 5);
     // Convert dest into the same relative coordinate system
     auto relativeDest = dest;
 
-    Point start = relativeDest;
-    Point end = originPos;
+    Point start = {4.5f, 6.5f};
+    Point end = dest;
 
     Point control1;
     Point control2;
 
-    if (originPort->isOutput())
-        std::swap(end, start);
+    if (!originPort->isOutput())
+        std::swap(start, end);
 
     nvgMoveTo(nvg, end.x, end.y);
 
@@ -90,7 +89,7 @@ void Connection::render(NVGcontext* nvg) {
 
     // Ball at the end of a new connection
     nvgBeginPath(nvg);
-    nvgCircle(nvg, relativeDest.x, relativeDest.y, 5.0f);
+    nvgCircle(nvg, dest.x, dest.y, 5.0f);
     nvgFillColor(nvg, nvgRGBA(90, 90, 90, 100));
     nvgFill(nvg);
 

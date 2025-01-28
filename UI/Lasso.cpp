@@ -6,72 +6,49 @@
 
 #include "Lasso.h"
 
-Lasso::Lasso()
-    : active(false)
+Lasso::Lasso(pptk::Point canvasPos)
+    : startPoint(canvasPos), endPoint(canvasPos)
 {
-}
-
-void Lasso::start(const pptk::Point& startPoint)
-{
-    this->startPoint = localToGlobal(startPoint.x, startPoint.y);
-    this->endPoint = this->startPoint;
-    active = true;
-}
-
-void Lasso::end()
-{
-    active = false;
+    setPosition(canvasPos);
+    setSize(0, 0);
 }
 
 void Lasso::update(const pptk::Point& currentPoint)
 {
-    if (active)
-    {
-        endPoint = currentPoint;
-    }
-}
+    endPoint = currentPoint; // Update endpoint for the lasso
 
-std::pair<pptk::Point, pptk::Point> Lasso::finish()
-{
-    active = false;
-    return {startPoint, endPoint};
-}
-
-void Lasso::render(NVGcontext* nvg)
-{
-    if (active)
-    {
-        float x = std::min(startPoint.x, endPoint.x);
-        float y = std::min(startPoint.y, endPoint.y);
-        float w = std::abs(endPoint.x - startPoint.x);
-        float h = std::abs(endPoint.y - startPoint.y);
-
-        auto outerCol = nvgRGB(28, 73, 119);
-        auto innerCol = outerCol;
-        innerCol.a *= 0.1f;
-
-        nvgBeginPath(nvg);
-        nvgDrawRoundedRect(nvg, x, y, w, h, innerCol, outerCol, 0.0f);
-    }
-}
-
-pptk::Rect Lasso::getLassoBounds() const
-{
-    float left = std::min(startPoint.x, endPoint.x);
-    float top = std::min(startPoint.y, endPoint.y);
-    float width = std::max(startPoint.x, endPoint.x) - left;
-    float height = std::max(startPoint.y, endPoint.y) - top;
-
-    return {left, top, width, height};
-}
-
-bool Lasso::isInside(const pptk::Point& objectPosition) const
-{
     float x1 = std::min(startPoint.x, endPoint.x);
     float y1 = std::min(startPoint.y, endPoint.y);
     float x2 = std::max(startPoint.x, endPoint.x);
     float y2 = std::max(startPoint.y, endPoint.y);
 
-    return objectPosition.x >= x1 && objectPosition.x <= x2 &&
-           objectPosition.y >= y1 && objectPosition.y <= y2;
+    setPosition({x1, y1});
+    setSize(x2 - x1, y2 - y1);
+}
+
+void Lasso::render(NVGcontext* nvg)
+{
+    auto outerCol = nvgRGB(28, 73, 119);
+    auto innerCol = outerCol;
+    innerCol.a *= 0.1f;
+
+    nvgBeginPath(nvg);
+    nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), innerCol, outerCol, 0.0f);
+}
+
+pptk::Rect Lasso::getLassoBounds() const
+{
+    float x1 = std::min(startPoint.x, endPoint.x);
+    float y1 = std::min(startPoint.y, endPoint.y);
+    float width = std::abs(endPoint.x - startPoint.x);
+    float height = std::abs(endPoint.y - startPoint.y);
+
+    return {x1, y1, width, height};
+}
+
+bool Lasso::isInside(const pptk::Point& objectPosition) const
+{
+    pptk::Rect bounds = getLassoBounds();
+    return objectPosition.x >= bounds.x && objectPosition.x <= bounds.x + bounds.w &&
+           objectPosition.y >= bounds.y && objectPosition.y <= bounds.y + bounds.h;
 }

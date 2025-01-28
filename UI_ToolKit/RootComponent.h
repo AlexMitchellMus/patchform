@@ -64,12 +64,6 @@ public:
     Component* getClickedComponent() const        { return clickedComponent; }
     void       setClickedComponent(Component* c)  { clickedComponent = c;     }
 
-    void updateLayout() override
-    {
-        for (auto& child : children)
-            child->updateLayout();
-    }
-
 protected:
 
     Component* draggingComponent = nullptr;

@@ -15,8 +15,10 @@ void Port::mouseButtonDown(SDL_Event& e)
     if (auto cnv = findParentOfClass<Canvas>())
     {
         cnv->newConnection = std::make_unique<Connection>(this);
+        auto conpos = getPositionInParent(cnv);
         cnv->addComponent(cnv->newConnection.get());
-        std::cout << "adding new connection to cnv" << std::endl;
+        cnv->newConnection->setPosition(conpos);
+        std::cout << "adding new connection to cnv - pos: " << conpos.toString() << std::endl;
     }
 }
 
@@ -47,9 +49,9 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
         {
             if (cnv->newConnection)
             {
-                cnv->newConnection->setConnectionDest(currentPosition);
-                //if (!rootComponent)
-                //    return;
+                auto position = currentPosition - getAbsolutePosition();
+                cnv->newConnection->setConnectionDest(position);
+
                 auto c = findRootComponent()->findComponentAt(currentPosition.x, currentPosition.y);
                 if (auto* port = dynamic_cast<Port*>(c))
                 {

@@ -4,8 +4,7 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
-#include "Component.h"
-#include "ComponentRegister.h"
+#include "RootComponent.h"
 
 namespace pptk {
 
@@ -54,13 +53,43 @@ void Component::removeFromParent()
     }
 }
 
-void Component::updateLayout()
+void Component::renderAll(NVGcontext* vg)
 {
-    finalX = parent->finalX + x;
-    finalY = parent->finalY + y;
+    nvgSave(vg);
 
+    // Apply translation for this component's position
+    nvgTranslate(vg, x, y);
+
+    // Render this component
+    render(vg);
+
+    // Render children
     for (auto& child : children)
-        child->updateLayout();
+    {
+        if (child->isVisible())
+            child->renderAll(vg);
+    }
+
+    nvgRestore(vg);
+}
+
+void Component::setBounds(const float newX, const float newY, const float newW, const float newH)
+{
+    x = newX;
+    y = newY;
+
+    float clampedW = newW;
+    float clampedH = newH;
+
+    if (minWidth > 0) clampedW = std::max(minWidth, clampedW);
+    if (minHeight > 0) clampedH = std::max(minHeight, clampedH);
+    if (maxWidth > 0) clampedW = std::min(maxWidth, clampedW);
+    if (maxHeight > 0) clampedH = std::min(maxHeight, clampedH);
+
+    width = clampedW;
+    height = clampedH;
+
+    resized();
 }
 
 void Component::registerTimer(std::function<void()> callback)

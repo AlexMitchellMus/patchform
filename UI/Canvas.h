@@ -46,8 +46,6 @@ public:
     void removeObjectChangedListener(std::function<void()> callback);
     void callOjbectChangedListeners();
 
-    void updateLayout() override;
-
     const int infinteCanvasSize = 120000;
     const int canvasOrigin = 64000;
 

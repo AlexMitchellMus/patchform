@@ -9,7 +9,7 @@
 #include "Component.h"
 #include <iostream>
 
-#include "ComponentRegister.h"
+#include "RootComponent.h"
 
 namespace pptk {
 

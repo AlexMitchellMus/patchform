@@ -13,20 +13,12 @@
 class Lasso : public pptk::Component
 {
 public:
-    Lasso();
-
-    // Start the lasso at a specific position
-    void start(const pptk::Point& startPoint);
-
-    void end();
+    Lasso(pptk::Point startPoint);
 
     // Update the lasso as the mouse moves
     void update(const pptk::Point& currentPoint);
 
     pptk::Rect getLassoBounds() const;
-
-    // Finish the lasso and return the selection bounds
-    std::pair<pptk::Point, pptk::Point> finish();
 
     // Render the lasso rectangle
     void render(NVGcontext* nvg) override;
@@ -37,5 +29,4 @@ public:
 private:
     pptk::Point startPoint;
     pptk::Point endPoint;
-    bool active;
 };

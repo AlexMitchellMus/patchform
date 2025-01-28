@@ -7,7 +7,7 @@
 #pragma once
 
 #include "../UI_ToolKit/Component.h"
-#include "../UI_ToolKit/ComponentRegister.h"
+#include "../UI_ToolKit/RootComponent.h"
 
 #include <memory>
 #include <vector>

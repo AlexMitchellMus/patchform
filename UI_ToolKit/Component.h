@@ -31,12 +31,6 @@ namespace pptk {
 
 enum class Button { LEFT, RIGHT, MIDDLE };
 
-// Event structure
-struct Event {
-    SDL_Event sdlEvent;
-    std::string type;
-};
-
 struct Point {
     float x = 0.0f;
     float y = 0.0f;
@@ -155,12 +149,6 @@ public:
         return children;
     }
 
-    Point getGlobalPosition() const
-    {
-        return {finalX, finalY};
-    }
-
-
     // Computes the absolute position of the component
     Point getAbsolutePosition() const {
         if (parent) {
@@ -168,6 +156,26 @@ public:
             return Point(parentPosition.x + x, parentPosition.y + y);
         }
         return Point(x, y); // Root component
+    }
+
+    Point getPositionInParent(Component* specificParent) const
+    {
+        Point relativePosition(0, 0);
+
+        const Component* current = this;
+
+        while (current && current != specificParent)
+        {
+            relativePosition.x += current->x;
+            relativePosition.y += current->y;
+            current = current->parent;
+        }
+
+        if (!current) {
+            throw std::runtime_error("Specified parent is not an ancestor of this component.");
+        }
+
+        return relativePosition;
     }
 
 
@@ -272,24 +280,7 @@ public:
 
     virtual void render(NVGcontext* vg) { };
     virtual void resized() { };
-    virtual void renderAll(NVGcontext* vg)
-    {
-        nvgSave(vg);
-
-        // Apply translation for this component's position
-        nvgTranslate(vg, finalX, finalY);
-
-        // Render this component
-        render(vg);
-
-        nvgRestore(vg);
-
-        // Render children
-        for (auto& child : children) {
-            if (child->isVisible())
-                child->renderAll(vg);
-        }
-    }
+    virtual void renderAll(NVGcontext* vg);
 
     Rect getBounds() const
     {
@@ -319,24 +310,7 @@ public:
         setBounds(bounds.x, bounds.y, bounds.w, bounds.h);
     }
 
-    void setBounds(const float newX, const float newY, const float newW, const float newH)
-    {
-        x = newX;
-        y = newY;
-
-        float clampedW = newW;
-        float clampedH = newH;
-
-        if (minWidth > 0) clampedW = std::max(minWidth, clampedW);
-        if (minHeight > 0) clampedH = std::max(minHeight, clampedH);
-        if (maxWidth > 0) clampedW = std::min(maxWidth, clampedW);
-        if (maxHeight > 0) clampedH = std::min(maxHeight, clampedH);
-
-        width = clampedW;
-        height = clampedH;
-
-        resized();
-    }
+    void setBounds(const float newX, const float newY, const float newW, const float newH);
 
     Point getPosition()
     {
@@ -345,7 +319,25 @@ public:
 
     void registerTimer(std::function<void()> callback);
 
-    virtual void updateLayout();
+    Point globalToLocal2(float globalX, float globalY) const {
+        // Recursively transform to parent's local coordinates
+        if (parent) {
+            Point parentLocal = parent->globalToLocal(globalX, globalY);
+            globalX = parentLocal.x;
+            globalY = parentLocal.y;
+        }
+
+        // Optionally handle viewport and scaling (if applicable)
+        globalX -= x;
+        globalY -= y;
+
+        // Optionally apply scaling (uncomment if scaling is used)
+        // globalX /= scale;
+        // globalY /= scale;
+
+        return Point(globalX, globalY);
+    }
+
 
     Point globalToLocal(float globalX, float globalY) const {
         // Recursively transform to parent's local coordinates
@@ -355,7 +347,11 @@ public:
             globalY = parentLocal.y;
         }
 
-        // Apply this component's viewport offset
+        // Offset by this component's position
+        //globalX -= x;
+        //globalY -= y;
+
+        // Optionally handle viewport and scaling (if applicable)
         globalX -= viewportX;
         globalY -= viewportY;
 

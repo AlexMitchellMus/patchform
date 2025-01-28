@@ -11,10 +11,7 @@
 
 Canvas::Canvas()
 {
-    lasso = std::make_unique<Lasso>();
-    addComponent(lasso.get());
-
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         auto obj = std::make_unique<Object>("obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -23,7 +20,7 @@ Canvas::Canvas()
 
     for (const auto& obj : objects)
     {
-        obj->setPosition((std::rand() % 8000) + canvasOrigin, (std::rand() % 8000) + canvasOrigin);
+        obj->setPosition((std::rand() % 800) + canvasOrigin, (std::rand() % 800) + canvasOrigin);
     }
 }
 
@@ -46,7 +43,8 @@ void Canvas::mouseButtonDown(SDL_Event& e)
 
     if (e.button.button == SDL_BUTTON_LEFT)
     {
-        lasso->start({e.button.x, e.button.y});
+        lasso = std::make_unique<Lasso>(globalToLocal2(e.button.x, e.button.y));   //lasso->start({e.button.x, e.button.y});
+        addComponent(lasso.get());
     }
     else if (e.button.button == SDL_BUTTON_MIDDLE) {
         SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
@@ -56,21 +54,20 @@ void Canvas::mouseButtonDown(SDL_Event& e)
 void Canvas::mouseButtonUp(SDL_Event& e)
 {
     SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
-    lasso->end();
+    lasso.reset();
 }
 
 void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button)
 {
     if (button == pptk::Button::LEFT)
     {
-        std::cout << "left:" << std::endl;
-        lasso->update(position);
+        lasso->update(globalToLocal2(position.x, position.y));
 
         auto lassoBounds = lasso->getLassoBounds();
 
         for (const auto& obj : objects)
         {
-            if (lassoBounds.intersects(obj->getAbsoluteBounds()))
+            if (lassoBounds.intersects(obj->getBounds()))
             {
                 addToSelection(obj.get());
             }
@@ -82,8 +79,8 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
     }
     else if (button == pptk::Button::MIDDLE)
     {
-        viewportX += delta.x;
-        viewportY += delta.y;
+        x += delta.x;
+        y += delta.y;
     }
 }
 
@@ -231,12 +228,10 @@ void Canvas::renderAll(NVGcontext* nvg)
 {
     nvgSave(nvg);
 
-    nvgTranslate(nvg, finalX, finalY);
+    nvgTranslate(nvg, x, y);
 
     // Render the background
     render(nvg);
-
-    nvgRestore(nvg);
 
     for (auto const& obj : objects)
     {
@@ -246,7 +241,14 @@ void Canvas::renderAll(NVGcontext* nvg)
     }
 
     if (newConnection)
+    {
+        nvgSave(nvg);
+        nvgTranslate(nvg, newConnection->getX(), newConnection->getY());
+
         newConnection->render(nvg);
+
+        nvgRestore(nvg);
+    }
 
     for (auto const& con : connections)
     {
@@ -254,7 +256,17 @@ void Canvas::renderAll(NVGcontext* nvg)
         con->render(nvg);
     }
 
-    lasso->render(nvg);
+    if (lasso)
+    {
+        nvgSave(nvg);
+        nvgTranslate(nvg, lasso->getX(), lasso->getY());
+
+        lasso->render(nvg);
+
+        nvgRestore(nvg);
+    }
+
+    nvgRestore(nvg);
 
     // Restore previous transformation
 
@@ -283,26 +295,4 @@ void Canvas::callOjbectChangedListeners()
     {
         objChangeListener();
     }
-}
-
-void Canvas::updateLayout()
-{
-    finalX = parent->finalX + x + viewportX;
-    finalY = parent->finalY + y + viewportY;
-
-    for (auto& obj : objects)
-    {
-        // If obj is also derived from Component, it may do
-        //   obj->finalX = this->finalX + obj->x;
-        //   obj->finalY = this->finalY + obj->y;
-        // inside obj->updateLayout(). So just call it:
-        if (obj)
-            obj->updateLayout();
-    }
-
-    if (newConnection)
-        newConnection->updateLayout();
-
-    if (lasso)
-        lasso->updateLayout();
 }
