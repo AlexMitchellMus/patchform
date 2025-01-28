@@ -18,7 +18,6 @@ void Port::mouseButtonDown(SDL_Event& e)
         auto conpos = getPositionInParent(cnv);
         cnv->addComponent(cnv->newConnection.get());
         cnv->newConnection->setPosition(conpos);
-        std::cout << "adding new connection to cnv - pos: " << conpos.toString() << std::endl;
     }
 }
 
