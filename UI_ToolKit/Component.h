@@ -271,11 +271,17 @@ public:
     Component* findRootComponent()
     {
         // Find the root component, because we can assign components inside constructors, so root can't be set
+        if (rootCoponent)
+            return rootCoponent;
+
         Component* current = this;
         while (current->parent)
         {
             current = current->parent;
         }
+
+        rootCoponent = current;
+
         return current;
     }
 
@@ -423,6 +429,8 @@ protected:
     Component* draggingComponent = nullptr;
 
     Component* parent = nullptr;
+
+    Component* rootCoponent = nullptr;
 };
 
 } // namespace ppuitk
