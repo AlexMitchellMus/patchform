@@ -23,7 +23,7 @@ Canvas::Canvas()
 
     for (const auto& obj : objects)
     {
-        obj->setPosition(std::rand() % 800, std::rand() % 800);
+        obj->setPosition(std::rand() % 4000, std::rand() % 4000);
     }
 }
 
@@ -52,6 +52,7 @@ void Canvas::mouseButtonDown(SDL_Event& e)
 
 void Canvas::mouseButtonUp(SDL_Event& e)
 {
+    SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
     lasso->end();
 }
 
@@ -78,7 +79,7 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
     }
     else if (button == pptk::Button::MIDDLE)
     {
-        std::cout << "middle: " << position.x << ", " << position.y << std::endl;
+        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
         viewportX += delta.x;
         viewportY += delta.y;
     }

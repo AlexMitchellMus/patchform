@@ -13,8 +13,8 @@ Lasso::Lasso()
 
 void Lasso::start(const pptk::Point& startPoint)
 {
-    this->startPoint = startPoint;
-    this->endPoint = startPoint;
+    this->startPoint = localToGlobal(startPoint.x, startPoint.y);
+    this->endPoint = this->startPoint;
     active = true;
 }
 
@@ -48,7 +48,7 @@ void Lasso::render(NVGcontext* nvg)
 
         auto outerCol = nvgRGB(28, 73, 119);
         auto innerCol = outerCol;
-        innerCol.a *= 0.05f;
+        innerCol.a *= 0.1f;
 
         nvgBeginPath(nvg);
         nvgDrawRoundedRect(nvg, x, y, w, h, innerCol, outerCol, 0.0f);

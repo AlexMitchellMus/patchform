@@ -15,20 +15,20 @@ namespace pptk {
 
 class MouseEventManager {
 public:
-    MouseEventManager(Component* reg) : registry(reinterpret_cast<ComponentRegister*>(reg)) {}
+    MouseEventManager(Component* reg) : rootComponent(reinterpret_cast<ComponentRegister*>(reg)) {}
 
     void handleMouseButtonDown(SDL_Event& e) {
-        registry->setDraggingComponent(nullptr); // Reset dragging state
-        propagateMouseButtonDown(registry, e);
+        rootComponent->setDraggingComponent(nullptr); // Reset dragging state
+        propagateMouseButtonDown(rootComponent, e);
     }
 
     void handleMouseButtonUp(SDL_Event& e) {
-        if (auto draggedComp = registry->getDraggingComponent()) {
+        if (auto draggedComp = rootComponent->getDraggingComponent()) {
             draggedComp->mouseButtonUp(e);
-            updateHoveredComponent(registry, e);
-            registry->setDraggingComponent(nullptr); // Reset dragging state
+            updateHoveredComponent(rootComponent, e);
+            rootComponent->setDraggingComponent(nullptr); // Reset dragging state
         } else {
-            propagateMouseButtonUp(registry, e);
+            propagateMouseButtonUp(rootComponent, e);
         }
     }
 
@@ -53,18 +53,18 @@ public:
                     break;
         }
 
-        if (auto draggedComp = registry->getDraggingComponent())
+        if (auto draggedComp = rootComponent->getDraggingComponent())
         {
             draggedComp->mouseDrag(currentPosition, delta, buttonPressed);
             return;
         }
 
-        updateHoveredComponent(registry, e); // Update hovered component
+        updateHoveredComponent(rootComponent, e); // Update hovered component
     }
 
     void handleKeyDown(SDL_Event& e)
     {
-        if (auto clickedComp = registry->getClickedComponent())
+        if (auto clickedComp = rootComponent->getClickedComponent())
         {
             clickedComp->keyPressed(e);
         }
@@ -73,34 +73,31 @@ public:
 private:
 
     void updateHoveredComponent(Component* root, SDL_Event& e) {
-        // Find which component (if any) is under the mouse
-        Component* newHovered = root->findComponentAt(e.motion.x, e.motion.y);
+        Point globalMouse(e.motion.x, e.motion.y);
 
-        // Get the currently hovered component from the registry
-        Component* oldHovered = registry->getHoveredComponent();
+        // Use findComponentAt with global coordinates
+        Component* newHovered = root->findComponentAt(globalMouse.x, globalMouse.y);
 
-        // If the hovered component changed (including from some component to null, or null to some component)
-        if (newHovered != oldHovered)
-        {
-            // Unhover the old component (if any)
-            if (oldHovered)
-            {
+        Component* oldHovered = rootComponent->getHoveredComponent();
+
+        if (newHovered != oldHovered) {
+            if (oldHovered) {
                 oldHovered->mouseLeave(e);
             }
-
-            // Hover the new component (if any)
-            if (newHovered)
-            {
+            if (newHovered) {
                 newHovered->mouseEnter(e);
             }
 
-            // Update the registry to track the new hovered component (which can be nullptr)
-            registry->setHoveredComponent(newHovered);
+            rootComponent->setHoveredComponent(newHovered);
         }
 
-        // Forward the mouse-move event to the currently hovered component
-        if (auto hovered = registry->getHoveredComponent())
-        {
+        // Forward the mouse move event to the hovered component
+        if (auto hovered = rootComponent->getHoveredComponent()) {
+            // Use global-to-local transformation for the hovered component
+            Point localMouse = hovered->globalToLocal(globalMouse.x, globalMouse.y);
+            e.motion.x = localMouse.x;
+            e.motion.y = localMouse.y;
+
             hovered->handleMouseMove(e);
         }
     }
@@ -111,6 +108,8 @@ private:
             return;
         }
 
+        Point localPos = component->globalToLocal(e.button.x, e.button.y);
+
         // Traverse children in reverse order
         auto& children = component->getChildren();
         for (auto it = children.rbegin(); it != children.rend();) {
@@ -119,7 +118,7 @@ private:
             if (child->isVisible())
             {
                 propagateMouseButtonDown(child, e);
-                if (registry->getDraggingComponent()) {
+                if (rootComponent->getDraggingComponent()) {
                     return; // Stop propagation if a component starts dragging
                 }
             }
@@ -127,26 +126,30 @@ private:
             ++it;
         }
 
-        if (component->hitTest(e.button.x, e.button.y) && !registry->getDraggingComponent()) {
-                registry->setDraggingComponent(component);
-                registry->setClickedComponent(component); // Store the clicked component
-                component->mouseButtonDown(e);
+        if (component->hitTest(localPos.x, localPos.y) && !rootComponent->getDraggingComponent()) {
+            rootComponent->setDraggingComponent(component);
+            rootComponent->setClickedComponent(component); // Store the clicked component
+
+            e.button.x = localPos.x;
+            e.button.y = localPos.y;
+
+            component->mouseButtonDown(e);
         }
     }
 
 
     void propagateMouseButtonUp(Component* component, SDL_Event& e) {
         // Only handle the clicked component
-        if (auto clickedComp = registry->getClickedComponent()) {
+        if (auto clickedComp = rootComponent->getClickedComponent()) {
             clickedComp->mouseButtonUp(e);
         }
 
         // Reset the clicked component after handling the event
-        registry->setClickedComponent(nullptr);
+        rootComponent->setClickedComponent(nullptr);
     }
 
 protected:
-    ComponentRegister* registry;
+    ComponentRegister* rootComponent;
 };
 
 } // namespace pptk

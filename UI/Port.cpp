@@ -47,7 +47,7 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
         {
             if (cnv->newConnection)
             {
-                cnv->newConnection->setConnectionDest(currentPosition + getAbsolutePosition());
+                cnv->newConnection->setConnectionDest(currentPosition);
                 //if (!rootComponent)
                 //    return;
                 auto c = findRootComponent()->findComponentAt(currentPosition.x, currentPosition.y);

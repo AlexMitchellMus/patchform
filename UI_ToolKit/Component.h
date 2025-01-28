@@ -211,18 +211,24 @@ public:
     virtual void mouseButtonUp(SDL_Event& e) {}
 
     // Find the component at (x, y), including children
-    Component* findComponentAt(int x, int y) {
-        // Always check children first
+    Component* findComponentAt(int globalX, int globalY) {
+        // Transform the global coordinates to local coordinates for this component
+        Point localPos = globalToLocal(globalX, globalY);
+
+        // Always check children first, in reverse order for topmost components
         for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            if (isVisible()) {
-                Component* child = (*it)->findComponentAt(x - viewportX, y - viewportY);
-                if (child && child->isVisible())
-                    return child; // Return the first matching child
+            Component* child = *it;
+            if (child->isVisible()) {
+                // Pass the original global coordinates to the child
+                Component* found = child->findComponentAt(globalX, globalY);
+                if (found) {
+                    return found; // Return the first matching child
+                }
             }
         }
 
-        // Check the current component only after its children
-        if (hitTest(x, y)) {
+        // Check this component only after its children
+        if (hitTest(localPos.x, localPos.y)) {
             return this;
         }
 
@@ -351,6 +357,44 @@ public:
 
     float viewportX = 0.0f;
     float viewportY = 0.0f;
+
+    Point globalToLocal(float globalX, float globalY) const {
+        // Recursively transform to parent's local coordinates
+        if (parent) {
+            Point parentLocal = parent->globalToLocal(globalX, globalY);
+            globalX = parentLocal.x;
+            globalY = parentLocal.y;
+        }
+
+        // Apply this component's viewport offset
+        globalX -= viewportX;
+        globalY -= viewportY;
+
+        // Optionally apply scaling (uncomment if scaling is used)
+        // globalX /= scale;
+        // globalY /= scale;
+
+        return Point(globalX, globalY);
+    }
+
+    Point localToGlobal(float localX, float localY) const {
+        // Apply this component's viewport offset
+        localX += viewportX;
+        localY += viewportY;
+
+        // Optionally apply scaling (uncomment if scaling is used)
+        // localX *= scale;
+        // localY *= scale;
+
+        // Recursively transform to parent's global coordinates
+        if (parent) {
+            Point parentGlobal = parent->localToGlobal(localX, localY);
+            localX = parentGlobal.x;
+            localY = parentGlobal.y;
+        }
+
+        return Point(localX, localY);
+    }
 
 private:
     void removeFromParent();

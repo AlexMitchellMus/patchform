@@ -14,10 +14,7 @@ class Connection : public pptk::Component {
 public:
     Connection(Port* port);
 
-    void setConnectionDest(const pptk::Point& p)
-    {
-        dest = p;
-    }
+    void setConnectionDest(const pptk::Point& p);
 
     void render(NVGcontext* nvg) override;
 private:

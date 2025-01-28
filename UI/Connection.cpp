@@ -15,7 +15,12 @@ Connection::Connection(Port* port) : originPort(port)
 {
 
     // FIXME: Horrible hack, we add the originPort position when first making the connection!
-    dest = originPort->getAbsolutePosition() + pptk::Point(5,5) + originPort->findParentOfClass<Port>()->getAbsolutePosition();
+    dest = originPort->getGlobalPosition() + pptk::Point(5,5);
+}
+
+void Connection::setConnectionDest(const pptk::Point& p)
+{
+    dest = p;
 }
 
 void Connection::render(NVGcontext* nvg) {
@@ -26,7 +31,7 @@ void Connection::render(NVGcontext* nvg) {
     // Calculate the global position of the origin port
     auto originPos = originPort->getGlobalPosition() + pptk::Point(5, 5);
     // Convert dest into the same relative coordinate system
-    auto relativeDest = dest - originPort->findParentOfClass<Port>()->getGlobalPosition();
+    auto relativeDest = dest;
 
     Point start = relativeDest;
     Point end = originPos;
