@@ -52,7 +52,7 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
                 auto position = currentPosition - getAbsolutePosition();
                 cnv->newConnection->setConnectionDest(position);
 
-                auto c = findRootComponent()->findComponentAt(currentPosition.x, currentPosition.y);
+                auto c = cnv->newConnection->findComponentAt(currentPosition.x, currentPosition.y);
                 if (auto* port = dynamic_cast<Port*>(c))
                 {
                     // Only connect once for a new port, and if the port directions are correct: input->output or output->input

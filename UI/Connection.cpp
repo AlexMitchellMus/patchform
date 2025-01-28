@@ -20,6 +20,8 @@ Connection::Connection(Port* port) : originPort(port)
 void Connection::setConnectionDest(const pptk::Point& p)
 {
     dest = p;
+    // FIXME: We do want a size eventually - but this causes findcomponent to find itself!
+    setSize(abs(p.x), abs(p.y));
 }
 
 void Connection::render(NVGcontext* nvg) {
@@ -74,8 +76,8 @@ void Connection::render(NVGcontext* nvg) {
     nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(120, 120, 120, 20), nvgRGBA(120, 120, 120, 20), nvgRGB(120, 120, 120), 3, false, false, 0.0f));
     nvgStroke(nvg);
 
-//#define DEBUG_PATH
-#ifdef DEBUG_PATH
+//#define DEBUG_PATH1
+#ifdef DEBUG_PATH1
     nvgBeginPath(nvg);
     nvgCircle(nvg, control1.x, control1.y, 5.0f);  // Circle at first control point
     nvgFillColor(nvg, nvgRGBA(255, 0, 0, 150));  // Red for control1
@@ -85,6 +87,12 @@ void Connection::render(NVGcontext* nvg) {
     nvgCircle(nvg, control2.x, control2.y, 5.0f);  // Circle at second control point
     nvgFillColor(nvg, nvgRGBA(0, 0, 255, 150));  // Blue for control2
     nvgFill(nvg);
+#endif
+
+//#define DEBUG_PATH2
+#ifdef DEBUG_PATH2
+    nvgBeginPath(nvg);
+    nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(),nvgRGBA(0,0,0,0), nvgRGBA(255,0,0, 255), 0);
 #endif
 
     // Ball at the end of a new connection

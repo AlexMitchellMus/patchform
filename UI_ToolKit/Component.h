@@ -218,8 +218,16 @@ public:
 
     virtual void mouseButtonUp(SDL_Event& e) {}
 
+    // Finds the component at global coordinate.
+    // Disregards self, so make sure to call it from the Component you want to disregard from
+    Component* findComponentAt(int globalX, int globalY)
+    {
+        return (findRootComponent())->findComponentAt(globalX, globalY, this);
+    }
+
     // Find the component at (x, y), including children
-    Component* findComponentAt(int globalX, int globalY) {
+    Component* findComponentAt(int globalX, int globalY, Component* selfComponent) {
+
         // Transform the global coordinates to local coordinates for this component
         Point localPos = globalToLocal(globalX, globalY);
 
@@ -228,8 +236,8 @@ public:
             Component* child = *it;
             if (child->isVisible()) {
                 // Pass the original global coordinates to the child
-                Component* found = child->findComponentAt(globalX, globalY);
-                if (found) {
+                Component* found = child->findComponentAt(globalX, globalY, selfComponent);
+                if (found && found != selfComponent) {
                     return found; // Return the first matching child
                 }
             }
