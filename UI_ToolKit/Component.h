@@ -222,7 +222,7 @@ public:
     // Disregards self, so make sure to call it from the Component you want to disregard from
     Component* findComponentAt(int globalX, int globalY)
     {
-        return (findRootComponent())->findComponentAt(globalX, globalY, this);
+        return (getRootComponent())->findComponentAt(globalX, globalY, this);
     }
 
     // Find the component at (x, y), including children
@@ -268,7 +268,7 @@ public:
         return nullptr; // No parent of the specified type found
     }
 
-    Component* findRootComponent()
+    Component* getRootComponent()
     {
         // Find the root component, because we can assign components inside constructors, so root can't be set
         if (rootCoponent)

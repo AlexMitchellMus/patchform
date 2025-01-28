@@ -14,7 +14,7 @@ Component::~Component()
 
     // Find the root component FIRST before we remove the parent!
     // We want to remove all saved state (hovered/dragged/etc) pointers to this component
-    reinterpret_cast<ComponentRegister*>(findRootComponent())->clearReferencesTo(this);
+    reinterpret_cast<ComponentRegister*>(getRootComponent())->clearReferencesTo(this);
 
     // Then! Remove component
     removeFromParent();
@@ -94,7 +94,7 @@ void Component::setBounds(const float newX, const float newY, const float newW, 
 
 void Component::registerTimer(std::function<void()> callback)
 {
-    reinterpret_cast<ComponentRegister*>(findRootComponent())->registerTimerCallback(this, callback);
+    reinterpret_cast<ComponentRegister*>(getRootComponent())->registerTimerCallback(this, callback);
 }
 
 }
