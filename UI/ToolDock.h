@@ -20,7 +20,7 @@ public:
         nvgBeginPath(nvg);
 
         nvgFontSize(nvg, 18.0f);
-        nvgFontFace(nvg, "sans");
+        nvgFontFace(nvg, "Regular");
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
         nvgText(nvg, 5, 24, "100 %", nullptr);
     }

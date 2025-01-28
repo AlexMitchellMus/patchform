@@ -160,12 +160,18 @@ int main(int argc, char* argv[])
 
     auto* invalidFB = nvgluCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);;
 
-    int fontHandle = nvgCreateFont(nvg, "sans", "Patches/Inter-VariableFont_opsz,wght.ttf");
-    if (fontHandle == -1) {
+    int regularFont = nvgCreateFont(nvg, "Regular", "Assets/Fonts/Inter_18pt-Regular.ttf");
+    if (regularFont == -1) {
         std::cerr << "Failed to load inter font!" << std::endl;
     }
 
-    int iconFontHandle = nvgCreateFont(nvg, "icons", "Icons/IconFontPlugPatch_google.ttf");
+    int semiBold = nvgCreateFont(nvg, "SemiBold", "Assets/Fonts/Inter_18pt-SemiBold.ttf");
+    if (semiBold == -1) {
+        std::cerr << "Failed to load inter font!" << std::endl;
+    }
+
+
+    int iconFontHandle = nvgCreateFont(nvg, "icons", "Assets/Icons/IconFontPlugPatch_google.ttf");
     if (iconFontHandle == -1) {
         std::cerr << "Failed to load icon font!" << std::endl;
     }

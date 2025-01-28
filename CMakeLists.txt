@@ -128,8 +128,8 @@ add_custom_target(copy_patches
 # FIXME: Do not copy the whole icon dir, but just for now to test
 add_custom_target(copy_fonts
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_SOURCE_DIR}/Assets/Icons"
-        "$<TARGET_FILE_DIR:PlugPatchStandalone>/Icons"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
+        "$<TARGET_FILE_DIR:PlugPatchStandalone>/Assets"
         COMMENT "Copying Patches directory to the output directory"
 )
 

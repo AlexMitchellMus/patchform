@@ -89,7 +89,7 @@ void Object::render(NVGcontext* nvg)
     nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
 
     nvgFontSize(nvg, 18.0f);
-    nvgFontFace(nvg, "sans");
+    nvgFontFace(nvg, "Regular");
     nvgFillColor(nvg, nvgRGB(190, 190, 190));
     nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 

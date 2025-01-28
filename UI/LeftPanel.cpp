@@ -38,18 +38,24 @@ void LeftPanel::render(NVGcontext* nvg)
     nvgFillRect(nvg, 0, 0, width, height);
 
     // Draw the object list
-    float textX = 30; // Padding from the left edge
+    float textX = 24; // Padding from the left edge
     float textY = 40; // Starting Y position with padding from the top
     const float lineHeight = 30; // Line spacing
 
     nvgFontSize(nvg, 14.0f);
-    nvgFontFace(nvg, "sans");
+    nvgFontFace(nvg, "SemiBold");
+    nvgTextAlign(nvg, NVG_ALIGN_LEFT);
     nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
+
+    nvgText(nvg, textX, textY, "Layers", nullptr);
+    textY += 40;
+
+    nvgFontFace(nvg, "Regular");
 
     for (const auto& [objectName, isSelected]: objectList)
     {
         if (isSelected)
-            nvgDrawRoundedRect(nvg, textX - 10, textY - 18, width - 40, 26, selectedCol, selectedCol, 6.0f);
+            nvgDrawRoundedRect(nvg, textX - 10, textY - 18, width - 30, 26, selectedCol, selectedCol, 6.0f);
 
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
         nvgText(nvg, textX, textY, objectName.c_str(), nullptr);

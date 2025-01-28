@@ -39,10 +39,10 @@ std::vector<Object*> Canvas::getObjects() const
 
 void Canvas::mouseButtonDown(SDL_Event& e)
 {
-    clearSelection();
-
     if (e.button.button == SDL_BUTTON_LEFT)
     {
+        clearSelection();
+
         lasso = std::make_unique<Lasso>(globalToLocal2(e.button.x, e.button.y));   //lasso->start({e.button.x, e.button.y});
         addComponent(lasso.get());
     }

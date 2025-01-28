@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "../UI_ToolKit/Component.h"
 #include "../UI_ToolKit/RootComponent.h"
 
 #include <memory>
@@ -54,16 +53,15 @@ public:
     void resized() override
     {
         auto centreY = (getHeight() / 2) - (35 / 2);
-        int offset = 10;
+        int offset = 16;
         mainMenu->setBounds(offset, centreY, 35, 35);
         offset += 50;
 
         undo->setBounds(offset, centreY, 35, 35);
         offset += 50;
         redo->setBounds(offset, centreY, 35, 35);
-        offset += 50;
 
-        hideSidePanelsToggle->setBounds(getWidth() - 45, centreY, 35, 35);
+        hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, 35);
 
     }
 
