@@ -195,6 +195,9 @@ int main(int argc, char* argv[])
             case SDL_EVENT_MOUSE_MOTION:
                 eventManager.handleMouseMove(event);
                 break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                eventManager.handleMouseWheel(event);
+                break;
             case SDL_EVENT_KEY_DOWN:
                 eventManager.handleKeyDown(event);
                 break;

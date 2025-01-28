@@ -264,19 +264,14 @@ public:
     }
 
     virtual void mouseEnter(SDL_Event& e) { }
-
     virtual void mouseLeave(SDL_Event& e) { }
-
     virtual void mouseMove(const Point& position) { }
-
     virtual void mouseDrag(const Point& position, const Point& delta, Button button) { }
-
+    virtual void mouseWheel(SDL_Event& e) { }
     virtual void keyPressed(SDL_Event& e) { }
 
     virtual void render(NVGcontext* vg) { };
-
     virtual void resized() { };
-
     virtual void renderAll(NVGcontext* vg)
     {
         nvgSave(vg);
@@ -352,12 +347,6 @@ public:
 
     virtual void updateLayout();
 
-    float finalX = 0.0f;
-    float finalY = 0.0f;
-
-    float viewportX = 0.0f;
-    float viewportY = 0.0f;
-
     Point globalToLocal(float globalX, float globalY) const {
         // Recursively transform to parent's local coordinates
         if (parent) {
@@ -395,6 +384,14 @@ public:
 
         return Point(localX, localY);
     }
+
+    float finalX = 0.0f;
+    float finalY = 0.0f;
+
+    float viewportX = 0.0f;
+    float viewportY = 0.0f;
+
+    float scale = 1.0f;
 
 private:
     void removeFromParent();

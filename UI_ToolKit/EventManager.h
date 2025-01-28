@@ -62,6 +62,14 @@ public:
         updateHoveredComponent(rootComponent, e); // Update hovered component
     }
 
+    void handleMouseWheel(SDL_Event& e)
+    {
+        if (auto hoveredComp = rootComponent->getHoveredComponent())
+        {
+            hoveredComp->mouseWheel(e);
+        }
+    }
+
     void handleKeyDown(SDL_Event& e)
     {
         if (auto clickedComp = rootComponent->getClickedComponent())

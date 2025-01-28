@@ -25,35 +25,25 @@ public:
     }
 
     void mouseButtonDown(SDL_Event& e) override;
-
     void mouseButtonUp(SDL_Event& e) override;
-
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, const pptk::Button button) override;
-
+    void mouseWheel(SDL_Event& e) override;
     void keyPressed(SDL_Event& e) override;
 
     void deleteSelectedObjects();
-
     void setSelected(Object* obj);
-
     bool areMultiObjectsSelected();
-
     void setMultiObjectPosition(pptk::Point pos);
-
     void addToSelection(Object* obj);
-
     void removeFromSelection(Object* obj);
 
     void render(NVGcontext* nvg) override;
-
     void renderAll(NVGcontext* nvg) override;
 
     std::unique_ptr<Connection> newConnection = nullptr;
 
     void addObjectChangedListener(std::function<void()> callback);
-
     void removeObjectChangedListener(std::function<void()> callback);
-
     void callOjbectChangedListeners();
 
     void updateLayout() override;

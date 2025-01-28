@@ -87,6 +87,21 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
     }
 }
 
+void Canvas::mouseWheel(SDL_Event& e)
+{
+    scale += e.wheel.y * 0.125f;
+    scale = std::min(std::max(scale, 0.0f), 3.0f);
+
+    if (e.wheel.y > 0.0f)
+    {
+        std::cout << "wheel up: " << scale << std::endl;
+    }
+    else
+    {
+        std::cout << "wheel down: " << scale << std::endl;
+    }
+}
+
 void Canvas::keyPressed(SDL_Event& e)
 {
     if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
