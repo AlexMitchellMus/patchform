@@ -48,10 +48,13 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
         {
             if (cnv->newConnection)
             {
-                auto position = currentPosition - getAbsolutePosition();
-                cnv->newConnection->setConnectionDest(position);
+                cnv->newConnection->setConnectionDest(currentPosition);
 
-                auto c = cnv->newConnection->findComponentAt(currentPosition.x, currentPosition.y);
+                auto globalPos = localToGlobal(currentPosition.x, currentPosition.y);
+
+                std::cout << "global pos: " << globalPos.toString() << " local pos: " << currentPosition.toString() << std::endl;
+
+                auto c = cnv->newConnection->findComponentAt(globalPos.x, globalPos.y);
                 if (auto* port = dynamic_cast<Port*>(c))
                 {
                     // Only connect once for a new port, and if the port directions are correct: input->output or output->input

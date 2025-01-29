@@ -398,19 +398,17 @@ public:
     }
 
     Point localToGlobal(float localX, float localY) const {
-        // Apply this component's viewport offset
-        localX += viewportX;
-        localY += viewportY;
-
-        // Optionally apply scaling (uncomment if scaling is used)
+        // Apply scaling before translation
         localX *= scale;
         localY *= scale;
 
+        // Apply this component's viewport offset (translation)
+        localX += x + viewportX;
+        localY += y + viewportY;
+
         // Recursively transform to parent's global coordinates
         if (parent) {
-            Point parentGlobal = parent->localToGlobal(localX, localY);
-            localX = parentGlobal.x;
-            localY = parentGlobal.y;
+            return parent->localToGlobal(localX, localY);
         }
 
         return Point(localX, localY);
