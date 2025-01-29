@@ -11,7 +11,7 @@
 
 Canvas::Canvas()
 {
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         auto obj = std::make_unique<Object>("obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -20,7 +20,7 @@ Canvas::Canvas()
 
     for (const auto& obj : objects)
     {
-        obj->setPosition((std::rand() % 8000) + canvasOrigin, (std::rand() % 8000) + canvasOrigin);
+        obj->setPosition((std::rand() % 8) + canvasOrigin, (std::rand() % 8) + canvasOrigin);
     }
 }
 
@@ -108,6 +108,8 @@ void Canvas::mouseWheel(SDL_Event& e)
     // Apply the new scale
     scale = newScale;
 
+    onScaleChange(scale);
+
     //scale += e.wheel.y * 0.125f;
     //scale = std::min(std::max(scale, 0.0f), 3.0f);
 
@@ -119,6 +121,21 @@ void Canvas::mouseWheel(SDL_Event& e)
     {
         std::cout << "wheel down: " << scale << std::endl;
     }
+}
+
+void Canvas::setScale(float offset)
+{
+    float newScale = scale + (offset * 0.001f);
+    newScale = std::min(std::max(newScale, 0.1f), 3.0f);
+    scale = newScale;
+
+    onScaleChange(scale);
+}
+
+void Canvas::resetScale()
+{
+    scale = 1.0f;
+    onScaleChange(scale);
 }
 
 void Canvas::keyPressed(SDL_Event& e)

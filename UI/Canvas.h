@@ -14,6 +14,8 @@ class Connection;
 
 class Canvas : public pptk::Component {
 public:
+    std::function<void(float)> onScaleChange = [](float){};
+
     using ObjectChangedListeners = std::vector<std::function<void()>>;
 
     Canvas();
@@ -45,6 +47,9 @@ public:
     void addObjectChangedListener(std::function<void()> callback);
     void removeObjectChangedListener(std::function<void()> callback);
     void callOjbectChangedListeners();
+
+    void setScale(float scale);
+    void resetScale();
 
     const int infinteCanvasSize = 120000;
     const int canvasOrigin = 64000;

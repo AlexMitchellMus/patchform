@@ -136,7 +136,7 @@ public:
         topBar = std::make_unique<TopBar>();
         addComponent(topBar.get());
 
-        toolDock = std::make_unique<ToolDock>();
+        toolDock = std::make_unique<ToolDock>(canvas.get());
         addComponent(toolDock.get());
 
         leftPanel = std::make_unique<LeftPanel>(canvas.get());

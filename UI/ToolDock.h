@@ -13,22 +13,63 @@
 class ZoomSlider : public pptk::Component
 {
 public:
+    std::function<void(float)> onChange = [](float){};
+
+    std::function<void()> onClick = [](){};
+
     explicit ZoomSlider() = default;
+
+    void setZoomValue(float value)
+    {
+        zoomValue = value * 100;
+    }
+
+    void mouseEnter(SDL_Event& e) override
+    {
+        isHovered = true;
+    }
+
+    void mouseLeave(SDL_Event& e) override
+    {
+        isHovered = false;
+    }
+
+    void mouseButtonDown(SDL_Event& e) override
+    {
+        onClick();
+    }
+
+    void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button) override
+    {
+        onChange(delta.y);
+    }
 
     void render(NVGcontext* nvg) override
     {
         nvgBeginPath(nvg);
+        if (isHovered)
+        {
+            auto bgCol = nvgRGBA(0, 0, 0, 30);
+            nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, bgCol, 8);
+        }
+
+        nvgBeginPath(nvg);
 
         nvgFontSize(nvg, 18.0f);
         nvgFontFace(nvg, "Regular");
+        nvgTextAlign(nvg, NVG_ALIGN_RIGHT);
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
-        nvgText(nvg, 5, 24, "100 %", nullptr);
+        nvgText(nvg, 60, 24, std::string(std::to_string(zoomValue) + " %").c_str(), nullptr);
     }
+
+private:
+    int zoomValue = 100;
+    bool isHovered = false;
 };
 
 class ToolDock : public pptk::Component {
 public:
-    explicit ToolDock()
+    explicit ToolDock(Canvas* canvas) : cnv(canvas)
     {
         editButton = std::make_unique<ToggleButton>("E", "F", "icons");
         addComponent(editButton.get());
@@ -45,6 +86,21 @@ public:
         zoomSlider = std::make_unique<ZoomSlider>();
         addComponent(zoomSlider.get());
 
+        cnv->onScaleChange = [this](float scale)
+        {
+            zoomSlider->setZoomValue(scale);
+        };
+
+        zoomSlider->onChange = [this](float value)
+        {
+            cnv->setScale(value);
+        };
+
+        zoomSlider->onClick = [this]()
+        {
+            cnv->resetScale();
+        };
+
         ToolDock::resized();
     };
 
@@ -59,7 +115,7 @@ public:
         offset += 50;
         resizeToFit->setBounds(offset, 5, 35, 35);
         offset += 50;
-        zoomSlider->setBounds(offset, 5, 35, 60);
+        zoomSlider->setBounds(offset, 5, 70, 35);
     }
 
     void render(NVGcontext* nvg) override
@@ -74,6 +130,9 @@ public:
         nvgDrawRoundedRect(nvg, - 3,  - 3, width + 6, height + 6, dropShadowCol, dropShadowCol, dropShadowCornerRadius);
         nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, cornerRadius);
     }
+
+private:
+    Canvas* cnv;
 
     std::unique_ptr<ToggleButton> editButton;
     std::unique_ptr<ToggleButton> addObjectButton;
