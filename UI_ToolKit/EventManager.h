@@ -15,9 +15,10 @@ namespace pptk {
 
 class MouseEventManager {
 public:
-    MouseEventManager(Component* reg) : rootComponent(reinterpret_cast<ComponentRegister*>(reg)) {}
+    MouseEventManager(Component* rootComp) : rootComponent(reinterpret_cast<ComponentRegister*>(rootComp)) {}
 
     void handleMouseButtonDown(SDL_Event& e) {
+        std::cout << "==================== mouse down enter =================" << std::endl;
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state
         propagateMouseButtonDown(rootComponent, e);
     }
@@ -38,42 +39,37 @@ public:
 
         Button buttonPressed;
 
-        switch (e.motion.state)
-        {
+        switch (e.motion.state) {
             case SDL_BUTTON_LMASK:
                 buttonPressed = Button::LEFT;
-                    break;
-
+                break;
             case SDL_BUTTON_RMASK:
                 buttonPressed = Button::RIGHT;
-                    break;
-
+                break;
             case SDL_BUTTON_MMASK:
                 buttonPressed = Button::MIDDLE;
-                    break;
+                break;
         }
 
-        if (auto draggedComp = rootComponent->getDraggingComponent())
-        {
-            draggedComp->mouseDrag(currentPosition, delta, buttonPressed);
+        if (auto draggedComp = rootComponent->getDraggingComponent()) {
+            auto posLocal = draggedComp->globalToLocalWithScale(currentPosition.x, currentPosition.y);
+            auto accScale = draggedComp->getAccumulatedScale();
+            auto localDelta = Point(delta.x / accScale, delta.y / accScale);
+            draggedComp->mouseDrag(posLocal, localDelta, buttonPressed);
             return;
         }
 
         updateHoveredComponent(rootComponent, e); // Update hovered component
     }
 
-    void handleMouseWheel(SDL_Event& e)
-    {
-        if (auto hoveredComp = rootComponent->getHoveredComponent())
-        {
+    void handleMouseWheel(SDL_Event& e) {
+        if (auto hoveredComp = rootComponent->getHoveredComponent()) {
             hoveredComp->mouseWheel(e);
         }
     }
 
-    void handleKeyDown(SDL_Event& e)
-    {
-        if (auto clickedComp = rootComponent->getClickedComponent())
-        {
+    void handleKeyDown(SDL_Event& e) {
+        if (auto clickedComp = rootComponent->getClickedComponent()) {
             clickedComp->keyPressed(e);
         }
     }
@@ -101,50 +97,47 @@ private:
 
         // Forward the mouse move event to the hovered component
         if (auto hovered = rootComponent->getHoveredComponent()) {
-            // Use global-to-local transformation for the hovered component
-            Point localMouse = hovered->globalToLocal(globalMouse.x, globalMouse.y);
-            e.motion.x = localMouse.x;
-            e.motion.y = localMouse.y;
+            // Use global-to-local transformation including scaling
+            Point localMouse = hovered->globalToLocalWithScale(globalMouse.x, globalMouse.y);
+            e.motion.x = static_cast<int>(localMouse.x);
+            e.motion.y = static_cast<int>(localMouse.y);
 
             hovered->handleMouseMove(e);
         }
     }
 
     void propagateMouseButtonDown(Component* component, SDL_Event& e) {
-
         if (!component->isVisible()) {
             return;
         }
 
-        Point localPos = component->globalToLocal(e.button.x, e.button.y);
+        // Use scaled coordinate transformation
+        Point localPos = component->globalToLocalWithScale(e.button.x, e.button.y);
 
-        // Traverse children in reverse order
+        // Traverse children in reverse order (for z-order handling)
         auto& children = component->getChildren();
-        for (auto it = children.rbegin(); it != children.rend();) {
+        for (auto it = children.rbegin(); it != children.rend(); ++it) {
             auto& child = *it;
 
-            if (child->isVisible())
-            {
+            if (child->isVisible()) {
                 propagateMouseButtonDown(child, e);
                 if (rootComponent->getDraggingComponent()) {
-                    return; // Stop propagation if a component starts dragging
+                    return; // Stop propagation if a component is dragging
                 }
             }
-
-            ++it;
         }
 
         if (component->hitTest(localPos.x, localPos.y) && !rootComponent->getDraggingComponent()) {
             rootComponent->setDraggingComponent(component);
             rootComponent->setClickedComponent(component); // Store the clicked component
 
-            e.button.x = localPos.x;
-            e.button.y = localPos.y;
+            // Adjust event coordinates before passing it to the component
+            e.button.x = static_cast<int>(localPos.x);
+            e.button.y = static_cast<int>(localPos.y);
 
             component->mouseButtonDown(e);
         }
     }
-
 
     void propagateMouseButtonUp(Component* component, SDL_Event& e) {
         // Only handle the clicked component

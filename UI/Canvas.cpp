@@ -11,7 +11,7 @@
 
 Canvas::Canvas()
 {
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 1000; ++i)
     {
         auto obj = std::make_unique<Object>("obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -20,7 +20,7 @@ Canvas::Canvas()
 
     for (const auto& obj : objects)
     {
-        obj->setPosition((std::rand() % 8) + canvasOrigin, (std::rand() % 8) + canvasOrigin);
+        obj->setPosition((std::rand() % 8000) + canvasOrigin, (std::rand() % 8000) + canvasOrigin);
     }
 }
 
@@ -43,7 +43,7 @@ void Canvas::mouseButtonDown(SDL_Event& e)
     {
         clearSelection();
 
-        lasso = std::make_unique<Lasso>(globalToLocal2(e.button.x, e.button.y));   //lasso->start({e.button.x, e.button.y});
+        lasso = std::make_unique<Lasso>(Point(e.button.x, e.button.y));   //lasso->start({e.button.x, e.button.y});
         addComponent(lasso.get());
     }
     else if (e.button.button == SDL_BUTTON_MIDDLE) {
@@ -61,7 +61,7 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
 {
     if (button == pptk::Button::LEFT)
     {
-        lasso->update(globalToLocal2(position.x, position.y));
+        lasso->update(position);
 
         auto lassoBounds = lasso->getLassoBounds();
 
@@ -79,8 +79,9 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
     }
     else if (button == pptk::Button::MIDDLE)
     {
-        x += delta.x;
-        y += delta.y;
+        auto scale = getAccumulatedScale();
+        x += delta.x * scale;
+        y += delta.y * scale;
     }
 }
 

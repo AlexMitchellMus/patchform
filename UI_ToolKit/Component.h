@@ -190,11 +190,10 @@ public:
     }
 
 
-    // Hit test that accounts for parent position
+    // Hit test in local coords
     virtual bool hitTest(float px, float py) const {
-        Point absolutePosition = getAbsolutePosition();
-        return px >= absolutePosition.x && px <= absolutePosition.x + width &&
-               py >= absolutePosition.y && py <= absolutePosition.y + height;
+        return px >= 0 && px <= width &&
+               py >= 0 && py <= height;
     }
 
     virtual void mouseButtonDown(SDL_Event& e) {
@@ -229,7 +228,7 @@ public:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent) {
 
         // Transform the global coordinates to local coordinates for this component
-        Point localPos = globalToLocal(globalX, globalY);
+        Point localPos = globalToLocalWithScale(globalX, globalY);
 
         // Always check children first, in reverse order for topmost components
         for (auto it = children.rbegin(); it != children.rend(); ++it) {
@@ -333,6 +332,28 @@ public:
 
     void registerTimer(std::function<void()> callback);
 
+    Point globalToLocalWithScale(float globalX, float globalY) const {
+        // If there's a parent, first convert to the parent's local space
+        if (parent) {
+            // First, transform into parent's coordinate space
+            Point parentLocal = parent->globalToLocalWithScale(globalX, globalY);
+            globalX = parentLocal.x;
+            globalY = parentLocal.y;
+        }
+
+        // Offset by this component's position
+        globalX -= x;
+        globalY -= y;
+
+        // **Apply parent's scale recursively**
+        if (scale != 1.0f && scale > 0.0f) {
+            globalX /= scale;
+            globalY /= scale;
+        }
+
+        return Point(globalX, globalY);
+    }
+
     Point globalToLocal2(float globalX, float globalY) const {
         // Recursively transform to parent's local coordinates
         if (parent) {
@@ -395,6 +416,9 @@ public:
         return Point(localX, localY);
     }
 
+    void setName(const std::string& newName) { name = newName;; };
+    std::string& getName() { return name; };
+
     float finalX = 0.0f;
     float finalY = 0.0f;
 
@@ -402,6 +426,19 @@ public:
     float viewportY = 0.0f;
 
     float scale = 1.0f;
+
+    Component* getParent() const { return parent; };
+
+    // Compute accumulated scale from root to this component
+    float getAccumulatedScale() const {
+        float accumulatedScale = 1.0f;
+        const Component* current = this;
+        while (current) {
+            accumulatedScale *= current->scale; // Multiply each parent's scale
+            current = current->getParent();
+        }
+        return accumulatedScale;
+    }
 
 private:
     void removeFromParent();

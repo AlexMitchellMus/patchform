@@ -16,6 +16,7 @@ public:
 
     void mouseButtonDown(SDL_Event& e) override
     {
+        std::cout << " ===== ToggleButton::mouseButtonDown ====" << std::endl;
         state = !state;
         onToggle(state);
     }

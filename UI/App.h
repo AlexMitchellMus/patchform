@@ -31,15 +31,19 @@ public:
     TopBar()
     {
         mainMenu = std::make_unique<ToggleButton>("A", "A");
+        mainMenu->setName("MainMenu");
         addComponent(mainMenu.get());
 
         undo = std::make_unique<ToggleButton>("B", "B");
+        undo->setName("Undo");
         addComponent(undo.get());
 
         redo = std::make_unique<ToggleButton>("C", "C");
+        redo->setName("Redo");
         addComponent(redo.get());
 
         hideSidePanelsToggle = std::make_unique<ToggleButton>("D", "D");
+        hideSidePanelsToggle->setName("HidePanels");
         addComponent(hideSidePanelsToggle.get());
 
         hideSidePanelsToggle->onToggle = [this](const bool state)
@@ -131,18 +135,23 @@ public:
     App() {
 
         canvas = std::make_unique<Canvas>();
+        canvas->setName("canvas");
         addComponent(canvas.get());
 
         topBar = std::make_unique<TopBar>();
+        topBar->setName("topBar");
         addComponent(topBar.get());
 
         toolDock = std::make_unique<ToolDock>(canvas.get());
+        toolDock->setName("toolDock");
         addComponent(toolDock.get());
 
         leftPanel = std::make_unique<LeftPanel>(canvas.get());
+        leftPanel->setName("leftPanel");
         addComponent(leftPanel.get());
 
         rightPanel = std::make_unique<RightPanel>();
+        rightPanel->setName("rightPanel");
         addComponent(rightPanel.get());
 
         topBar->hideShowPanels = [this](bool state)
