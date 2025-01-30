@@ -443,6 +443,8 @@ public:
 
     float scale = 1.0f;
 
+    float opacity = 1.0f;
+
     Component* getParent() const { return parent; };
 
     // Compute accumulated scale from root to this component

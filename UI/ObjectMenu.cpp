@@ -37,6 +37,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             {
                 dndObject = std::make_unique<Object>(name);
                 dndObject->scale = cnv->scale;
+                dndObject->opacity = 0.7f;
                 getRootComponent()->addComponent(dndObject.get());
                 setVisible(false);
             }
