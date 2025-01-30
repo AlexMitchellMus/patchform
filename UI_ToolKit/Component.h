@@ -151,6 +151,11 @@ public:
         return Point(x, y); // Root component
     }
 
+    Point getPositionInParent()
+    {
+        return getPositionInParent(parent);
+    }
+
     Point getPositionInParent(Component* specificParent) const
     {
         Point relativePosition(0, 0);
@@ -325,6 +330,10 @@ public:
 
     void registerTimer(std::function<void()> callback);
 
+    void registerGlobalMouseListener(std::function<void(Component*)> callback);
+
+    void unregisterGlobalMouseListener();
+
     Point globalToLocalWithScale(float globalX, float globalY) const {
         // If there's a parent, first convert to the parent's local space
         if (parent) {
@@ -405,6 +414,22 @@ public:
         }
 
         return Point(localX, localY);
+    }
+
+    bool isOrHasChild(Component* target) {
+        if (!target) return false;
+
+        // Direct match
+        if (this == target) return true;
+
+        // Recursively check all child components
+        for (auto* child : getChildren()) {
+            if (child && child->isOrHasChild(target)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void setName(const std::string& newName) { name = newName;; };

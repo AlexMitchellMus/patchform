@@ -130,7 +130,7 @@ public:
     }
 };
 
-class App : public ComponentRegister {
+class App : public RootComponent {
 public:
     App() {
 

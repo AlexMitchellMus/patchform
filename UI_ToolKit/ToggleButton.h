@@ -7,6 +7,7 @@
 class ToggleButton : public pptk::Component {
 public:
     std::function<void(bool)> onToggle = [](bool){};
+    std::function<void()> onClick = [](){};
 
     explicit ToggleButton(std::string off, std::string on, std::string font = "icons")
         : offCharacter(std::move(off))
@@ -19,6 +20,15 @@ public:
         state = !state;
         onToggle(state);
 
+        onClick();
+
+        repaint();
+    }
+
+    void setActive(bool active)
+    {
+        std::cout << "setting button to : " << active << std::endl;
+        isActive = active;
         repaint();
     }
 
@@ -36,7 +46,7 @@ public:
 
     void render(NVGcontext* nvg) override
     {
-        if (hovered)
+        if (hovered || isActive)
         {
             auto bgCol = nvgRGBA(0, 0, 0, 30);
             nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, bgCol, 8);
@@ -53,5 +63,6 @@ private:
     std::string offCharacter;
     std::string font;
     bool hovered = false;
+    bool isActive = false;
     bool state = false;
 };

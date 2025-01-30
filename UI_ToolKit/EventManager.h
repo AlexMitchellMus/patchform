@@ -15,7 +15,7 @@ namespace pptk {
 
 class MouseEventManager {
 public:
-    MouseEventManager(Component* rootComp) : rootComponent(reinterpret_cast<ComponentRegister*>(rootComp)) {}
+    MouseEventManager(Component* rootComp) : rootComponent(reinterpret_cast<RootComponent*>(rootComp)) {}
 
     void handleMouseButtonDown(SDL_Event& e) {
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state
@@ -135,6 +135,11 @@ private:
             e.button.y = static_cast<int>(localPos.y);
 
             component->mouseButtonDown(e);
+
+            for (auto& [c, handler] : rootComponent->globalMouseHandlers)
+            {
+                handler(component);
+            }
         }
     }
 
@@ -149,7 +154,7 @@ private:
     }
 
 protected:
-    ComponentRegister* rootComponent;
+    RootComponent* rootComponent;
 };
 
 } // namespace pptk

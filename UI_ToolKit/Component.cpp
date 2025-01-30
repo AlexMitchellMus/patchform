@@ -4,6 +4,8 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
+#include <utility>
+
 #include "RootComponent.h"
 
 namespace pptk {
@@ -54,6 +56,7 @@ void Component::renderAll(NVGcontext* vg)
 
     // Apply translation for this component's position
     nvgTranslate(vg, x, y);
+    nvgScale(vg, scale, scale);
 
     // Render this component
     render(vg);
@@ -130,7 +133,18 @@ void Component::setPosition(const Point& point)
 
 void Component::registerTimer(std::function<void()> callback)
 {
-    reinterpret_cast<ComponentRegister*>(getRootComponent())->registerTimerCallback(this, callback);
+    reinterpret_cast<RootComponent*>(getRootComponent())->registerTimerCallback(this, std::move(callback));
 }
+
+void Component::registerGlobalMouseListener(std::function<void(Component*)> callback)
+{
+    reinterpret_cast<RootComponent*>(getRootComponent())->registerGlobalMouse(this, std::move(callback));
+}
+
+void Component::unregisterGlobalMouseListener()
+{
+    reinterpret_cast<RootComponent*>(getRootComponent())->unregisterGlobalMouse(this);
+}
+
 
 }

@@ -9,6 +9,7 @@
 #include "../UI_ToolKit/Component.h"
 
 #include "../UI_ToolKit/ToggleButton.h"
+#include "ObjectMenu.h"
 
 class ZoomSlider : public pptk::Component
 {
@@ -77,6 +78,36 @@ public:
         addObjectButton = std::make_unique<ToggleButton>("G", "G", "icons");
         addComponent(addObjectButton.get());
 
+        addObjectButton->onClick = [this]()
+        {
+            if (addObjectMenu && addObjectMenu->isVisible())
+            {
+                unregisterGlobalMouseListener();
+                addObjectMenu.reset();
+                addObjectButton->setActive(false);
+                return false;
+            }
+
+            if (addObjectMenu)
+                unregisterGlobalMouseListener();
+
+            addObjectMenu = std::make_unique<ObjectMenu>(cnv, this);
+            getRootComponent()->addComponent(addObjectMenu.get());
+            addObjectMenu->setBounds((getRootComponent()->getWidth() / 2) - 308, getRootComponent()->getHeight() - 225, 616, 150);
+            addObjectButton->setActive(true);
+
+            registerGlobalMouseListener([this](Component* comp) {
+                if (!(addObjectMenu->isOrHasChild(comp) || comp == addObjectButton.get()))
+                {
+                    std::cout << "removing object menu" << std::endl;
+                    unregisterGlobalMouseListener();
+                    addObjectMenu.reset();
+                    addObjectButton->setActive(false);
+                }
+            });
+            return true;
+        };
+
         viewButton = std::make_unique<ToggleButton>("H", "H", "icons");
         addComponent(viewButton.get());
 
@@ -116,6 +147,10 @@ public:
         resizeToFit->setBounds(offset, 5, 35, 35);
         offset += 50;
         zoomSlider->setBounds(offset, 5, 70, 35);
+
+        if (addObjectMenu)
+            addObjectMenu->setBounds((getRootComponent()->getWidth() / 2) - 308, getRootComponent()->getHeight() - 225, 616, 150);
+
     }
 
     void render(NVGcontext* nvg) override
@@ -131,6 +166,13 @@ public:
         nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, cornerRadius);
     }
 
+    void removeAddObjectMenu()
+    {
+        unregisterGlobalMouseListener();
+        addObjectMenu.reset();
+        addObjectButton->setActive(false);
+    }
+
 private:
     Canvas* cnv;
 
@@ -139,4 +181,6 @@ private:
     std::unique_ptr<ToggleButton> viewButton;
     std::unique_ptr<ToggleButton> resizeToFit;
     std::unique_ptr<ZoomSlider> zoomSlider;
+
+    std::unique_ptr<ObjectMenu> addObjectMenu;
 };

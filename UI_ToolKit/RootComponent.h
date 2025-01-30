@@ -14,7 +14,7 @@
 
 namespace pptk {
 
-class ComponentRegister : public Component {
+class RootComponent : public Component {
 public:
 
     void handleTime(uint32_t time)
@@ -25,7 +25,7 @@ public:
         }
     }
 
-    void registerTimerCallback(Component* c, std::function<void()> callback)
+    void registerTimerCallback(Component* c, const std::function<void()>& callback)
     {
         timerCallbacks.emplace_back(c, callback);
     }
@@ -51,6 +51,28 @@ public:
 
     Component* getClickedComponent() const        { return clickedComponent.get(); }
     void       setClickedComponent(Component* c)  { clickedComponent = makeSafePointer(c);     }
+
+    void registerGlobalMouse(Component* c, const std::function<void(pptk::Component*)>& callback)
+    {
+        globalMouseHandlers.emplace_back(c, callback);
+    }
+
+    void unregisterGlobalMouse(Component* component)
+    {
+        {
+            // Remove all tuples whose first element (Component*) equals cPtr
+            globalMouseHandlers.erase(
+                std::remove_if(globalMouseHandlers.begin(), globalMouseHandlers.end(),
+                               [component](auto& tup)
+                               {
+                                   return std::get<0>(tup) == component;
+                               }),
+                globalMouseHandlers.end()
+            );
+        }
+    }
+
+    std::vector<std::tuple<Component*, std::function<void(Component*)>>> globalMouseHandlers;
 
 protected:
 
