@@ -16,6 +16,8 @@ class Object : public pptk::Component {
 public:
     explicit Object(const std::string& name);
 
+    ~Object();
+
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
 
     void mouseButtonDown(SDL_Event& e) override;
@@ -23,11 +25,13 @@ public:
     void mouseEnter(SDL_Event& e) override
     {
         isHovered = true;
+        repaint();
     }
 
     void mouseLeave(SDL_Event& e) override
     {
         isHovered = false;
+        repaint();
     }
 
     void keyPressed(SDL_Event& e) override;

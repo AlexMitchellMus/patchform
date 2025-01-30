@@ -40,6 +40,14 @@ Object::Object(const std::string& name) : name(name)
     outPorts.push_back(std::move(port));
 }
 
+Object::~Object()
+{
+    if (auto* cnv = findParentOfClass<Canvas>())
+    {
+        cnv->removeConnectionsFor(this);
+    }
+}
+
 void Object::mouseButtonDown(SDL_Event& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
@@ -52,7 +60,9 @@ void Object::mouseButtonDown(SDL_Event& e)
         multiSelected = cnv->areMultiObjectsSelected();
 
         if (!multiSelected)
+        {
             cnv->setSelected(this);
+        }
     }
 }
 
@@ -68,15 +78,18 @@ void Object::keyPressed(SDL_Event& e)
 void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button button)
 {
     if (button == pptk::Button::LEFT)
-    if (multiSelected)
     {
         if (auto cnv = findParentOfClass<Canvas>())
         {
-            cnv->setMultiObjectPosition(delta);
+            if (multiSelected)
+                cnv->setMultiObjectPosition(delta);
+            else
+            {
+                setPosition(getPosition() + delta);
+                cnv->updateConnectionsPosition();
+            }
         }
     }
-    else
-        setPosition(getPosition() + delta);
 }
 
 void Object::render(NVGcontext* nvg)

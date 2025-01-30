@@ -18,7 +18,6 @@ public:
     MouseEventManager(Component* rootComp) : rootComponent(reinterpret_cast<ComponentRegister*>(rootComp)) {}
 
     void handleMouseButtonDown(SDL_Event& e) {
-        std::cout << "==================== mouse down enter =================" << std::endl;
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state
         propagateMouseButtonDown(rootComponent, e);
     }

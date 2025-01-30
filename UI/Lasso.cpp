@@ -13,6 +13,12 @@ Lasso::Lasso(pptk::Point canvasPos)
     setSize(0, 0);
 }
 
+Lasso::~Lasso()
+{
+    repaint();
+}
+
+
 void Lasso::update(const pptk::Point& currentPoint)
 {
     endPoint = currentPoint; // Update endpoint for the lasso
@@ -24,6 +30,7 @@ void Lasso::update(const pptk::Point& currentPoint)
 
     setPosition({x1, y1});
     setSize(x2 - x1, y2 - y1);
+    repaint();
 }
 
 void Lasso::render(NVGcontext* nvg)

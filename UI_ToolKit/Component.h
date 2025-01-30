@@ -124,18 +124,12 @@ public:
     {
         width = newWidth;
         height = newHeight;
+
+        repaint();
     }
 
-    void setPosition(float newX, float newY)
-    {
-        x = newX;
-        y = newY;
-    }
-
-    void setPosition(const Point& point)
-    {
-        setPosition(point.x, point.y);
-    }
+    void setPosition(float newX, float newY);
+    void setPosition(const Point& point);
 
     float getX() const { return x; }
     float getY() const { return y; }
@@ -438,12 +432,17 @@ public:
         return accumulatedScale;
     }
 
+    bool needsRepaint();
+
+    void repaint();
+
 private:
     void removeFromParent();
 
 protected:
-
     std::string name;
+
+    bool isDirty = true;
 
     float x = 0.0f;
     float y = 0.0f;

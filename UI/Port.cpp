@@ -15,6 +15,7 @@ void Port::mouseButtonDown(SDL_Event& e)
     if (auto cnv = findParentOfClass<Canvas>())
     {
         cnv->newConnection = std::make_unique<Connection>(this);
+        // We get the position of the port in the canvas
         auto conpos = getPositionInParent(cnv);
         cnv->addComponent(cnv->newConnection.get());
         cnv->newConnection->setPosition(conpos);
@@ -26,17 +27,19 @@ void Port::mouseButtonUp(SDL_Event& e)
     if (auto cnv = findParentOfClass<Canvas>())
     {
         cnv->newConnection.reset();
-    }
-    if (foundPort)
-    {
-        foundPort->isHoveredFromCable = false;
 
-        auto thisObj = findParentOfClass<Object>();
-        auto otherObj = foundPort->findParentOfClass<Object>();
-
-        if (thisObj && otherObj && (thisObj != otherObj))
+        if (foundPort)
         {
-            std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
+            foundPort->isHoveredFromCable = false;
+
+            auto thisObj = findParentOfClass<Object>();
+            auto otherObj = foundPort->findParentOfClass<Object>();
+
+            if (thisObj && otherObj && (thisObj != otherObj))
+            {
+                cnv->addConnection(this, foundPort);
+                std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
+            }
         }
     }
 }
@@ -51,8 +54,6 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
                 cnv->newConnection->setConnectionDest(currentPosition);
 
                 auto globalPos = localToGlobal(currentPosition.x, currentPosition.y);
-
-                std::cout << "global pos: " << globalPos.toString() << " local pos: " << currentPosition.toString() << std::endl;
 
                 auto c = cnv->newConnection->findComponentAt(globalPos.x, globalPos.y);
                 if (auto* port = dynamic_cast<Port*>(c))

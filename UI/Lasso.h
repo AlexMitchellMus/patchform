@@ -15,6 +15,8 @@ class Lasso : public pptk::Component
 public:
     Lasso(pptk::Point startPoint);
 
+    ~Lasso();
+
     // Update the lasso as the mouse moves
     void update(const pptk::Point& currentPoint);
 

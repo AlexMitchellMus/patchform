@@ -73,11 +73,30 @@ void Component::renderAll(NVGcontext* vg)
     nvgRestore(vg);
 }
 
+void Component::repaint()
+{
+    isDirty = true;
+
+    // Set all parents dirty in this branch
+    if (parent)
+    {
+        parent->repaint();
+    }
+}
+
+bool Component::needsRepaint()
+{
+    auto root = getRootComponent();
+    if (root->isDirty)
+    {
+        root->isDirty = false;
+        return true;
+    }
+    return false;
+}
+
 void Component::setBounds(const float newX, const float newY, const float newW, const float newH)
 {
-    x = newX;
-    y = newY;
-
     float clampedW = newW;
     float clampedH = newH;
 
@@ -86,10 +105,32 @@ void Component::setBounds(const float newX, const float newY, const float newW, 
     if (maxWidth > 0) clampedW = std::min(maxWidth, clampedW);
     if (maxHeight > 0) clampedH = std::min(maxHeight, clampedH);
 
-    width = clampedW;
-    height = clampedH;
+    if (width != clampedW || height != clampedH || x != newX || y != newY)
+    {
+        width = clampedW;
+        height = clampedH;
+        x = newX;
+        y = newY;
 
-    resized();
+        resized();
+        repaint();
+    }
+}
+
+void Component::setPosition(float newX, float newY)
+{
+    if (x != newX || y != newY)
+    {
+        x = newX;
+        y = newY;
+
+        repaint();
+    }
+}
+
+void Component::setPosition(const Point& point)
+{
+    setPosition(point.x, point.y);
 }
 
 void Component::registerTimer(std::function<void()> callback)

@@ -12,12 +12,24 @@
 
 class Connection : public pptk::Component {
 public:
-    Connection(Port* port);
+    Connection(Port* origin, Port* destPos = nullptr);
+
+    ~Connection();
+
+    void updateConnectionGeometry();
 
     void setConnectionDest(const pptk::Point& p);
 
     void render(NVGcontext* nvg) override;
+
+    Port* getOriginPort() { return originPort; };
+    Port* getDestPort() { return destPort; };
+
 private:
-    pptk::Point dest;
     Port* originPort = nullptr;
+    Port* destPort = nullptr;
+
+    pptk::Point destPos;
+
+    bool connectionBeingCreated = false;
 };

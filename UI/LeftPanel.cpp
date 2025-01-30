@@ -19,6 +19,8 @@ LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
     });
 
     updateCanvasObjectList();
+
+    repaint();
 }
 
 void LeftPanel::updateCanvasObjectList()
@@ -29,6 +31,8 @@ void LeftPanel::updateCanvasObjectList()
     {
         objectList.push_back( { obj->getName(), obj->getIsSelected() } );
     }
+
+    repaint();
 }
 
 void LeftPanel::render(NVGcontext* nvg)

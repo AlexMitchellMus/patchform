@@ -11,15 +11,40 @@
 #include "Port.h"
 #include "Object.h"
 
-Connection::Connection(Port* port) : originPort(port)
+Connection::Connection(Port* port, Port* dest) : originPort(port), destPort(dest), connectionBeingCreated(!dest)
 {
     auto centre = port->getWidth() / 2;
-    dest = { centre, centre };
+
+    destPos = { centre, centre };
+}
+
+Connection::~Connection()
+{
+    repaint();
+}
+
+void Connection::updateConnectionGeometry()
+{
+    if (destPort)
+    {
+        if (auto cnv = findParentOfClass<Canvas>())
+        {
+            auto centre = destPort->getWidth() / 2;
+            // We get the position of the ports in the canvas
+
+            auto inputPortPos = originPort->getPositionInParent(cnv);
+            auto outputPortPos  = destPort->getPositionInParent(cnv) + Point(centre, centre);
+
+            setPosition(inputPortPos);
+
+            destPos = outputPortPos - inputPortPos;
+        }
+    }
 }
 
 void Connection::setConnectionDest(const pptk::Point& p)
 {
-    dest = p;
+    destPos = p;
     setSize(abs(p.x), abs(p.y));
 }
 
@@ -31,10 +56,10 @@ void Connection::render(NVGcontext* nvg) {
     // Calculate the global position of the origin port
     auto originPos = originPort->getAbsolutePosition() + pptk::Point(5, 5);
     // Convert dest into the same relative coordinate system
-    auto relativeDest = dest;
+    auto relativeDest = destPos;
 
     Point start = {4.5f, 6.5f};
-    Point end = dest;
+    Point end = destPos;
 
     Point control1;
     Point control2;
@@ -72,7 +97,7 @@ void Connection::render(NVGcontext* nvg) {
 
     nvgStrokeColor(nvg, nvgRGB(100, 100, 100)); // Set stroke color
     nvgStrokeWidth(nvg, 6.0f);   // Set line width
-    nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(120, 120, 120, 20), nvgRGBA(120, 120, 120, 20), nvgRGB(120, 120, 120), 3, false, false, 0.0f));
+    nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), nvgRGB(90, 90, 90), 3, false, false, 0.0f));
     nvgStroke(nvg);
 
 //#define DEBUG_PATH
@@ -95,10 +120,13 @@ void Connection::render(NVGcontext* nvg) {
 #endif
 
     // Ball at the end of a new connection
-    nvgBeginPath(nvg);
-    nvgCircle(nvg, dest.x, dest.y, 5.0f);
-    nvgFillColor(nvg, nvgRGBA(90, 90, 90, 100));
-    nvgFill(nvg);
+    if (connectionBeingCreated)
+    {
+        nvgBeginPath(nvg);
+        nvgCircle(nvg, destPos.x, destPos.y, 5.0f);
+        nvgFillColor(nvg, nvgRGBA(90, 90, 90, 100));
+        nvgFill(nvg);
+    }
 
     nvgRestore(nvg);
 }

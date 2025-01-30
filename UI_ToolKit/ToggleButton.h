@@ -16,14 +16,23 @@ public:
 
     void mouseButtonDown(SDL_Event& e) override
     {
-        std::cout << " ===== ToggleButton::mouseButtonDown ====" << std::endl;
         state = !state;
         onToggle(state);
+
+        repaint();
     }
 
-    void mouseEnter(SDL_Event& e) override { hovered = true; };
+    void mouseEnter(SDL_Event& e) override
+    {
+        hovered = true;
+        repaint();
+    };
 
-    void mouseLeave(SDL_Event& e) override { hovered = false; };
+    void mouseLeave(SDL_Event& e) override
+    {
+        hovered = false;
+        repaint();
+    };
 
     void render(NVGcontext* nvg) override
     {

@@ -11,7 +11,7 @@
 
 Canvas::Canvas()
 {
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 20; ++i)
     {
         auto obj = std::make_unique<Object>("obj_" + std::to_string(i));
         addComponent(obj.get());
@@ -20,7 +20,7 @@ Canvas::Canvas()
 
     for (const auto& obj : objects)
     {
-        obj->setPosition((std::rand() % 8000) + canvasOrigin, (std::rand() % 8000) + canvasOrigin);
+        obj->setPosition((std::rand() % 800) + canvasOrigin, (std::rand() % 800) + canvasOrigin);
     }
 }
 
@@ -82,6 +82,8 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
         auto scale = getAccumulatedScale();
         x += delta.x * scale;
         y += delta.y * scale;
+
+        repaint();
     }
 }
 
@@ -89,10 +91,6 @@ void Canvas::mouseWheel(SDL_Event& e)
 {
     float mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
-
-    std::cout << "mouse pos: " << mouseX << ", " << mouseY << std::endl;
-
-    auto localMouse = globalToLocal(mouseX, mouseY);
 
     // Translate mouse position to canvas coordinates
     float canvasMouseX = (mouseX - x) / scale;
@@ -111,17 +109,7 @@ void Canvas::mouseWheel(SDL_Event& e)
 
     onScaleChange(scale);
 
-    //scale += e.wheel.y * 0.125f;
-    //scale = std::min(std::max(scale, 0.0f), 3.0f);
-
-    if (e.wheel.y > 0.0f)
-    {
-        std::cout << "wheel up: " << scale << std::endl;
-    }
-    else
-    {
-        std::cout << "wheel down: " << scale << std::endl;
-    }
+    repaint();
 }
 
 void Canvas::setScale(float offset)
@@ -131,12 +119,14 @@ void Canvas::setScale(float offset)
     scale = newScale;
 
     onScaleChange(scale);
+    repaint();
 }
 
 void Canvas::resetScale()
 {
     scale = 1.0f;
     onScaleChange(scale);
+    repaint();
 }
 
 void Canvas::keyPressed(SDL_Event& e)
@@ -158,6 +148,8 @@ void Canvas::deleteSelectedObjects()
         objects.end());
 
     callOjbectChangedListeners();
+
+    repaint();
 }
 
 void Canvas::addToSelection(Object* obj)
@@ -169,6 +161,8 @@ void Canvas::addToSelection(Object* obj)
 
         callOjbectChangedListeners();
     }
+
+    repaint();
 }
 
 void Canvas::removeFromSelection(Object* obj)
@@ -181,6 +175,8 @@ void Canvas::removeFromSelection(Object* obj)
 
         callOjbectChangedListeners();
     }
+
+    repaint();
 }
 
 bool Canvas::areMultiObjectsSelected()
@@ -194,6 +190,34 @@ void Canvas::setMultiObjectPosition(pptk::Point pos)
     {
         obj->setPosition(obj->getPosition() + pos);
     }
+
+    updateConnectionsPosition();
+}
+
+void Canvas::updateConnectionsPosition() const
+{
+    for (auto& con : connections)
+    {
+        con->updateConnectionGeometry();
+    }
+}
+
+void Canvas::removeConnectionsFor(Object* target)
+{
+    // TODO: Implement a SmartPointer system so we can give each object a list of connections, which will become null when removed
+    auto it = connections.begin();
+    while (it != connections.end())
+    {
+        if ((*it)->getOriginPort()->getParent() == target ||
+            (*it)->getDestPort()->getParent() == target)
+        {
+            it = connections.erase(it); // Erases and moves iterator to next element
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 void Canvas::setSelected(Object* obj)
@@ -205,6 +229,8 @@ void Canvas::setSelected(Object* obj)
     selected.push_back(obj);
 
     callOjbectChangedListeners();
+
+    repaint();
 }
 
 void Canvas::clearSelection()
@@ -217,6 +243,8 @@ void Canvas::clearSelection()
     selected.clear();
 
     callOjbectChangedListeners();
+
+    repaint();
 }
 
 
@@ -294,7 +322,12 @@ void Canvas::renderAll(NVGcontext* nvg)
     for (auto const& con : connections)
     {
         // Connections have no child components
+        nvgSave(nvg);
+        nvgTranslate(nvg, con->getX(), con->getY());
+
         con->render(nvg);
+
+        nvgRestore(nvg);
     }
 
     if (lasso)
@@ -307,10 +340,19 @@ void Canvas::renderAll(NVGcontext* nvg)
         nvgRestore(nvg);
     }
 
-    nvgRestore(nvg);
-
     // Restore previous transformation
+    nvgRestore(nvg);
+}
 
+void Canvas::addConnection(Port* origin, Port* dest)
+{
+    auto connection = std::make_unique<Connection>(origin, dest);
+
+    addComponent(connection.get());
+
+    connection->updateConnectionGeometry();
+
+    connections.push_back(std::move(connection));
 }
 
 void Canvas::addObjectChangedListener(std::function<void()> callback)

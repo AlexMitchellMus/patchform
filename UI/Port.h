@@ -34,11 +34,13 @@ public:
     void mouseEnter(SDL_Event& e) override
     {
         isHovered = true;
+        repaint();
     };
 
     void mouseLeave(SDL_Event& e) override
     {
         isHovered = false;
+        repaint();
     };
 
     void render(NVGcontext* nvg) override;

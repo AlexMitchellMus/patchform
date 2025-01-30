@@ -181,7 +181,8 @@ int main(int argc, char* argv[])
 
     Uint32 lastFrameTime = 0;                       // Time at the start of the previous frame
 
-    while (running) {
+    while (running)
+    {
         Uint32 currentFrameTime = SDL_GetTicks();
 
         while (SDL_PollEvent(&event)) {
@@ -207,9 +208,9 @@ int main(int argc, char* argv[])
             case SDL_EVENT_KEY_DOWN:
                 eventManager.handleKeyDown(event);
                 break;
-            //case SDL_EVENT_KEY_UP:
-            //    eventManager.handleKeyUp(app.get(), event);
-            //    break;
+                //case SDL_EVENT_KEY_UP:
+                //    eventManager.handleKeyUp(app.get(), event);
+                //    break;
             case SDL_EVENT_WINDOW_RESIZED:
                 {
                     newWidth = event.window.data1;
@@ -230,6 +231,11 @@ int main(int argc, char* argv[])
 
         if (!timeout) {
             // If not enough time has passed, skip drawing
+            continue;
+        }
+
+        if (!app->needsRepaint()){
+            SDL_Delay(1);
             continue;
         }
 
