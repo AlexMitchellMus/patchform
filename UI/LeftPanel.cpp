@@ -13,10 +13,13 @@ LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
 {
     setMinMaxSize(100, 400, 0, 0);
 
-    cnv->addObjectChangedListener([this]()
+    if (cnv)
     {
-        updateCanvasObjectList();
-    });
+        cnv->addObjectChangedListener([this]()
+        {
+            updateCanvasObjectList();
+        });
+    }
 
     updateCanvasObjectList();
 
@@ -27,9 +30,12 @@ void LeftPanel::updateCanvasObjectList()
 {
     objectList.clear();
 
-    for (auto obj : cnv->getObjects())
+    if (cnv)
     {
-        objectList.push_back( { obj->getName(), obj->getIsSelected() } );
+        for (auto obj : cnv->getObjects())
+        {
+            objectList.push_back({obj->getName(), obj->getIsSelected()});
+        }
     }
 
     repaint();

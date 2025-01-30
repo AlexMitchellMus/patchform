@@ -10,12 +10,6 @@ namespace pptk {
 
 Component::~Component()
 {
-    //std::cout << "removing: " << typeid(*this).name() << std::endl;
-
-    // Find the root component FIRST before we remove the parent!
-    // We want to remove all saved state (hovered/dragged/etc) pointers to this component
-    reinterpret_cast<ComponentRegister*>(getRootComponent())->clearReferencesTo(this);
-
     // Then! Remove component
     removeFromParent();
 
@@ -23,6 +17,7 @@ Component::~Component()
     {
         child->parent = nullptr;
     }
+
     children.clear();
 }
 

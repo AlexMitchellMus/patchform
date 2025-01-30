@@ -51,7 +51,7 @@ private:
     Direction direction;
     int portNum;
 
-    Port* foundPort = nullptr;
+    pptk::SafePointer<Port> foundPort;
 
     bool isHovered = false;
     bool isHoveredFromCable = false;

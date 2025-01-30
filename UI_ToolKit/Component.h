@@ -16,6 +16,7 @@
 #include "nanovg.h"
 #include <functional>
 #include <iostream>
+#include "SafePointer.h"
 
 #include "unordered_dense.h"
 
@@ -108,9 +109,7 @@ struct Rect {
     }
 };
 
-class ComponentRegister;
-
-class Component {
+class Component : public SafeObject {
 public:
     explicit Component() = default;
 

@@ -30,7 +30,7 @@ public:
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button) override;
 
 private:
-    Canvas* cnv;
+    pptk::SafePointer<Canvas> cnv;
     std::vector<std::tuple<std::string, bool>> objectList;
     bool isResizingPanel = false;
 };

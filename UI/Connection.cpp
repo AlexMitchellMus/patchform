@@ -25,7 +25,7 @@ Connection::~Connection()
 
 void Connection::updateConnectionGeometry()
 {
-    if (destPort)
+    if (originPort && destPort)
     {
         if (auto cnv = findParentOfClass<Canvas>())
         {

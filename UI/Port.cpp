@@ -37,7 +37,7 @@ void Port::mouseButtonUp(SDL_Event& e)
 
             if (thisObj && otherObj && (thisObj != otherObj))
             {
-                cnv->addConnection(this, foundPort);
+                cnv->addConnection(this, foundPort.get());
                 std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
             }
         }
@@ -59,7 +59,7 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
                 if (auto* port = dynamic_cast<Port*>(c))
                 {
                     // Only connect once for a new port, and if the port directions are correct: input->output or output->input
-                    if ((direction != port->direction) && (port != foundPort))
+                    if ((direction != port->direction) && (port != foundPort.get()))
                     {
                         foundPort = port;
                         foundPort->isHoveredFromCable = true;
@@ -76,8 +76,7 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
                     if (foundPort)
                     {
                         foundPort->isHoveredFromCable = false;
-                        foundPort = nullptr;
-                        std::cout << "not over a port" << std::endl;
+                        foundPort.reset();
                     }
                 }
             }

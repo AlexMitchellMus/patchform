@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 
+
 #include "Component.h"
 
 namespace pptk {
@@ -42,31 +43,20 @@ public:
         );
     }
 
-    void clearReferencesTo(Component* c)
-    {
-        for (Component** tracked : { &draggingComponent, &hoveredComponent, &clickedComponent })
-        {
-            if (*tracked == c)
-            {
-                *tracked = nullptr;
-            }
-        }
-    }
+    Component* getDraggingComponent() const       { return draggingComponent.get(); }
+    void       setDraggingComponent(Component* c) { draggingComponent = makeSafePointer(c);    }
 
-    Component* getDraggingComponent() const       { return draggingComponent; }
-    void       setDraggingComponent(Component* c) { draggingComponent = c;    }
+    Component* getHoveredComponent() const        { return hoveredComponent.get(); }
+    void       setHoveredComponent(Component* c)  { hoveredComponent = makeSafePointer(c);     }
 
-    Component* getHoveredComponent() const        { return hoveredComponent; }
-    void       setHoveredComponent(Component* c)  { hoveredComponent = c;     }
-
-    Component* getClickedComponent() const        { return clickedComponent; }
-    void       setClickedComponent(Component* c)  { clickedComponent = c;     }
+    Component* getClickedComponent() const        { return clickedComponent.get(); }
+    void       setClickedComponent(Component* c)  { clickedComponent = makeSafePointer(c);     }
 
 protected:
 
-    Component* draggingComponent = nullptr;
-    Component* hoveredComponent = nullptr;
-    Component* clickedComponent = nullptr;
+    SafePointer<Component> draggingComponent;
+    SafePointer<Component> hoveredComponent;
+    SafePointer<Component> clickedComponent;
 
     std::vector<std::tuple<Component*, std::function<void()>>> timerCallbacks;
 };

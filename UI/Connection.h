@@ -22,12 +22,12 @@ public:
 
     void render(NVGcontext* nvg) override;
 
-    Port* getOriginPort() { return originPort; };
-    Port* getDestPort() { return destPort; };
+    Port* getOriginPort() { return originPort.get(); };
+    Port* getDestPort() { return destPort.get(); };
 
 private:
-    Port* originPort = nullptr;
-    Port* destPort = nullptr;
+    pptk::SafePointer<Port> originPort;
+    pptk::SafePointer<Port> destPort;
 
     pptk::Point destPos;
 
