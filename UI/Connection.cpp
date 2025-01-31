@@ -175,6 +175,20 @@ void Connection::mouseLeave(SDL_Event& e)
     }
 }
 
+void Connection::mouseButtonDown(SDL_Event& e)
+{
+    findParentOfClass<Canvas>()->setSelected(this);
+}
+
+void Connection::keyPressed(SDL_Event& e)
+{
+    if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
+    {
+        if (auto cnv = findParentOfClass<Canvas>())
+            cnv->deleteSelectedObjects();
+    }
+}
+
 void Connection::render(NVGcontext* nvg) {
     nvgSave(nvg);
 
@@ -188,7 +202,7 @@ void Connection::render(NVGcontext* nvg) {
     //nvgStrokeColor(nvg, nvgRGB(100, 100, 100));
 
     nvgStrokeWidth(nvg, 6.0f);   // Set line width
-    nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), isHovered ? highlightCol : conCol, 3, false, false, 0.0f));
+    nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), isHovered || isSelected ? highlightCol : conCol, 3, false, false, 0.0f));
     nvgStroke(nvg);
 
 //#define DEBUG_PATH_HIT_TEST

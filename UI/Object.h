@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "../UI_Toolkit/Component.h"
+#include "CanvasItem.h"
 
 #include "App.h"
 #include "Port.h"
 
 class Canvas;
-class Object : public pptk::Component {
+class Object : public CanvasItem {
 public:
     explicit Object(const std::string& name);
 
@@ -44,8 +44,6 @@ public:
 
     [[nodiscard]] uint8_t getNumOutputs() const { return outPorts.size(); };
 
-    bool getIsSelected() { return isSelected; }
-
     std::string& getObjectDefinition()
     {
         return definition;
@@ -53,18 +51,10 @@ public:
 
 private:
 
-    void setSelected(bool shouldBeSelected)
-    {
-        if (isSelected != shouldBeSelected)
-            isSelected = shouldBeSelected;
-    }
-
     std::string name;
     std::string definition;
     std::vector<std::unique_ptr<Port>> inPorts;
     std::vector<std::unique_ptr<Port>> outPorts;
-
-    bool isSelected = false;
 
     bool isHovered = false;
 

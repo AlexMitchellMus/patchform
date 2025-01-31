@@ -13,6 +13,7 @@ class Lasso;
 class Object;
 class Connection;
 class Port;
+class CanvasItem;
 
 class Canvas : public pptk::Component {
 public:
@@ -35,7 +36,7 @@ public:
     void keyPressed(SDL_Event& e) override;
 
     void deleteSelectedObjects();
-    void setSelected(Object* obj);
+    void setSelected(CanvasItem* obj);
     bool areMultiObjectsSelected();
     void setMultiObjectPosition(pptk::Point pos);
     void addToSelection(Object* obj);
@@ -64,7 +65,7 @@ public:
 private:
     std::vector<std::unique_ptr<Object>> objects;
     std::vector<std::unique_ptr<Connection>> connections;
-    std::vector<Object*> selected;
+    std::vector<CanvasItem*> selected;
 
     ObjectChangedListeners objectChangedListeners;
 

@@ -8,6 +8,7 @@
 #include "Object.h"
 #include "Connection.h"
 #include "Lasso.h"
+#include "CanvasItem.h"
 
 Canvas::Canvas()
 {
@@ -138,6 +139,12 @@ void Canvas::deleteSelectedObjects()
 
     callOjbectChangedListeners();
 
+    connections.erase(std::remove_if(connections.begin(), connections.end(),
+    [](const std::unique_ptr<Connection>& con) {
+        return con->getIsSelected(); // Only remove the objects that are currently selected
+    }),
+    connections.end());
+
     repaint();
 }
 
@@ -209,7 +216,7 @@ void Canvas::removeConnectionsFor(Object* target)
     }
 }
 
-void Canvas::setSelected(Object* obj)
+void Canvas::setSelected(CanvasItem* obj)
 {
     clearSelection();
 

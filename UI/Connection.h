@@ -7,10 +7,10 @@
 #pragma once
 
 #include <iostream>
-#include "../UI_ToolKit/Component.h"
+#include "CanvasItem.h"
 #include "Port.h"
 
-class Connection : public pptk::Component {
+class Connection : public CanvasItem {
 public:
     Connection(Port* origin, Port* destPos = nullptr);
 
@@ -20,6 +20,8 @@ public:
 
     void mouseEnter(SDL_Event& e) override;
     void mouseLeave(SDL_Event& e) override;
+    void mouseButtonDown(SDL_Event& e) override;
+    void keyPressed(SDL_Event& e) override;
     bool hitTest(float px, float py) const override;
 
     void setConnectionDest(const pptk::Point& p);
