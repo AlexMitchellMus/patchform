@@ -11,6 +11,12 @@ using namespace pptk;
 class Object;
 class Canvas;
 
+struct ObjectDef
+{
+    std::string name;
+    std::string icon;
+};
+
 class Item : public pptk::Component
 {
     public:
@@ -19,7 +25,7 @@ class Item : public pptk::Component
     std::function<void()> onMouseUp = [](){};
 
 
-    Item(std::string& name) : name(std::move(name))
+    Item(ObjectDef def) : name(def.name), icon(def.icon)
     {
         bg = nvgRGB(48, 48, 48);
         highlight = nvgRGB(38, 38, 38);
@@ -55,16 +61,18 @@ class Item : public pptk::Component
         auto col = hovered ? highlight : bg ;
         nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), col, col, 6.0f);
 
-        nvgFontSize(vg, 24.0f);
-        nvgFontFace(vg, "icons");
+        nvgFontSize(vg, 34.0f);
+        nvgFontFace(vg, "object_icons");
+        nvgTextAlign(vg, NVG_ALIGN_CENTER);
         nvgFillColor(vg, nvgRGB(220, 220, 220)); // Text color
-        nvgText(vg, 5, 24, "G", nullptr);
+        nvgText(vg, getWidth() / 2, 32, icon.c_str(), nullptr);
     }
 
 private:
     bool hovered = false;
 
     std::string name;
+    std::string icon;
 
     NVGcolor bg;
     NVGcolor highlight;

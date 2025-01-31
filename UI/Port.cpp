@@ -102,7 +102,6 @@ void Port::render(NVGcontext* nvg)
     {
         nvgBeginPath(nvg);
         nvgCircle(nvg, 5, 5, 10);
-        auto alphaCol = portCol;
         portCol.a = 120;
         nvgFillColor(nvg, portCol);
         nvgFill(nvg);

@@ -176,6 +176,11 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to load icon font!" << std::endl;
     }
 
+    int objectIconFontHandle = nvgCreateFont(nvg, "object_icons", "Assets/Icons/ObjectIconFont.ttf");
+    if (objectIconFontHandle == -1) {
+        std::cerr << "Failed to load icon font!" << std::endl;
+    }
+
     const int targetFPS = 120;                       // Desired frame rate
     const int targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
 

@@ -57,6 +57,7 @@ void Component::renderAll(NVGcontext* vg)
     // Apply translation for this component's position
     nvgTranslate(vg, x, y);
     nvgScale(vg, scale, scale);
+
     nvgGlobalAlpha(vg, opacity);
 
     // Render this component

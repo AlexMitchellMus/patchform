@@ -5,17 +5,26 @@
 #include "Object.h"
 #include "Canvas.h"
 #include "ToolDock.h"
+#include "Constants.h"
 
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
     bg = nvgRGB(43, 43, 43);
     outline = nvgRGB(53, 53, 53);
 
-    std::string names[10] = {"osc", "env", "if", "aout", "value", "value", "value", "value", "value", "value"};
+    ObjectDef objectDef[10] = {
+        {"metro", ICONS::Metro},
+        {"osc", ICONS::Osc},
+        {"lfo", ICONS::Lfo},
+        {"adsr", ICONS::Adsr},
+        {"count", ICONS::Count},
+        {"print", ICONS::Print},
+        {"aout", ICONS::Aout}
+    };
 
     for (int i = 0; i < 10; i++)
     {
-        auto item = std::make_unique<Item>(names[i]);
+        auto item = std::make_unique<Item>(objectDef[i]);
         item->setBounds(16 + (i * (44 + 16)), 16, 44, 44);
 
         item->onMouseUp = [this]() mutable {
@@ -37,7 +46,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             {
                 dndObject = std::make_unique<Object>(name);
                 dndObject->scale = cnv->scale;
-                dndObject->opacity = 0.7f;
+                dndObject->opacity = 0.4f;
                 getRootComponent()->addComponent(dndObject.get());
                 setVisible(false);
             }
