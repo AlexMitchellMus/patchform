@@ -18,6 +18,10 @@ public:
 
     void updateConnectionGeometry();
 
+    void mouseEnter(SDL_Event& e) override;
+    void mouseLeave(SDL_Event& e) override;
+    bool hitTest(float px, float py) const override;
+
     void setConnectionDest(const pptk::Point& p);
 
     void render(NVGcontext* nvg) override;
@@ -30,6 +34,11 @@ private:
     pptk::SafePointer<Port> destPort;
 
     pptk::Point destPos;
+
+    pptk::Point startPoint;
+    pptk::Point controlPoint1;
+    pptk::Point controlPoint2;
+    pptk::Point endPoint;
 
     bool connectionBeingCreated = false;
 };

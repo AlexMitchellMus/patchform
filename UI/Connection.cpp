@@ -48,15 +48,26 @@ void Connection::setConnectionDest(const pptk::Point& p)
     setSize(abs(p.x), abs(p.y));
 }
 
+bool Connection::hitTest(float px, float py) const
+{
+    std::cout << "hit testing connection: " <<  px << ", " << py << std::endl;
+    return false;
+}
+
+void Connection::mouseEnter(SDL_Event& e)
+{
+    std::cout << "mouse enter connection: " << std::endl;
+}
+
+void Connection::mouseLeave(SDL_Event& e)
+{
+    std::cout << "mouse leave connection: " << std::endl;
+}
+
 void Connection::render(NVGcontext* nvg) {
     nvgSave(nvg);
 
     nvgBeginPath(nvg);
-
-    // Calculate the global position of the origin port
-    auto originPos = originPort->getAbsolutePosition() + pptk::Point(5, 5);
-    // Convert dest into the same relative coordinate system
-    auto relativeDest = destPos;
 
     Point start = {4.5f, 6.5f};
     Point end = destPos;
@@ -113,7 +124,7 @@ void Connection::render(NVGcontext* nvg) {
     nvgFill(nvg);
 #endif
 
-//#define DEBUG_PATH_BOUNDING_BOX
+#define DEBUG_PATH_BOUNDING_BOX
 #ifdef DEBUG_PATH_BOUNDING_BOX
     nvgBeginPath(nvg);
     nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(),nvgRGBA(0,0,0,0), nvgRGBA(255,0,0, 255), 0);
