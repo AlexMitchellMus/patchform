@@ -13,10 +13,6 @@
 #include <string>
 #include <iostream>
 
-#include "../Nodes/AudioPort.h"
-
-#include "Canvas.h"
-
 class Port : public pptk::Component {
 public:
     enum class Direction {Input, Output};

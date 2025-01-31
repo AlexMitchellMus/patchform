@@ -6,17 +6,19 @@
 
 #pragma once
 
-#include "Port.h"
 #include "../UI_Toolkit/Component.h"
+
+#include "Connection.h"
 
 class Lasso;
 class Object;
-class Connection;
 class Port;
 class CanvasItem;
 
 class Canvas : public pptk::Component {
 public:
+    enum class DisplayMode { Edit, Lock };
+
     std::function<void(float)> onScaleChange = [](float){};
 
     using ObjectChangedListeners = std::vector<std::function<void()>>;
@@ -59,6 +61,15 @@ public:
     void setScale(float scale);
     void resetScale();
 
+    void setMode(DisplayMode newMode)
+    {
+        if (mode != newMode)
+        {
+            mode = newMode;
+            repaint();
+        }
+    };
+
     static constexpr int infinteCanvasSize = 120000;
     static constexpr int canvasOrigin = 64000;
 
@@ -70,6 +81,8 @@ private:
     ObjectChangedListeners objectChangedListeners;
 
     std::unique_ptr<Lasso> lasso;
+
+    DisplayMode mode = DisplayMode::Edit;
 
     void clearSelection();
 };

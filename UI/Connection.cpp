@@ -7,8 +7,8 @@
 #include <iostream>
 #include "../UI_ToolKit/Component.h"
 
-#include "Connection.h"
 #include "Port.h"
+#include "Connection.h"
 #include "Object.h"
 
 Connection::Connection(Port* port, Port* dest) : originPort(port), destPort(dest), connectionBeingCreated(!dest)

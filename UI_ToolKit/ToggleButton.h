@@ -25,6 +25,11 @@ public:
         repaint();
     }
 
+    bool getState()
+    {
+        return state;
+    }
+
     void setActive(bool active)
     {
         std::cout << "setting button to : " << active << std::endl;

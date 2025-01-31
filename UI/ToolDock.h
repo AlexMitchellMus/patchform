@@ -75,6 +75,14 @@ public:
         editButton = std::make_unique<ToggleButton>("E", "F", "icons");
         addComponent(editButton.get());
 
+        editButton->onClick = [this]()
+        {
+            if (cnv)
+            {
+                cnv->setMode(editButton->getState() ? Canvas::DisplayMode::Lock : Canvas::DisplayMode::Edit);
+            }
+        };
+
         addObjectButton = std::make_unique<ToggleButton>("G", "G", "icons");
         addComponent(addObjectButton.get());
 

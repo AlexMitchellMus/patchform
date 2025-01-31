@@ -251,26 +251,29 @@ void Canvas::render(NVGcontext* nvg)
     nvgFillColor(nvg, nvgRGB(23, 23, 23));
     nvgFillRect(nvg, 0, 0, width, height);
 
-    // Draw bg lines
-    nvgBeginPath(nvg);
-    nvgLineStyle(nvg, NVG_SOLID);
-    nvgStrokeColor(nvg, nvgRGB(33, 33, 33)); // Set stroke color
-
-    // Draw vertical dashed lines
-    for (float x = 0; x <= infinteCanvasSize; x += 100)
+    if (mode == Canvas::DisplayMode::Edit)
     {
-        nvgMoveTo(nvg, x, 0);
-        nvgLineTo(nvg, x, infinteCanvasSize);
-    }
+        // Draw bg lines
+        nvgBeginPath(nvg);
+        nvgLineStyle(nvg, NVG_SOLID);
+        nvgStrokeColor(nvg, nvgRGB(33, 33, 33)); // Set stroke color
 
-    // Draw horizontal dashed lines
-    for (float y = 0; y <= infinteCanvasSize; y += 100)
-    {
-        nvgMoveTo(nvg, 0, y);
-        nvgLineTo(nvg, infinteCanvasSize, y);
-    }
+        // Draw vertical dashed lines
+        for (float x = 0; x <= infinteCanvasSize; x += 100)
+        {
+            nvgMoveTo(nvg, x, 0);
+            nvgLineTo(nvg, x, infinteCanvasSize);
+        }
 
-    nvgStroke(nvg);
+        // Draw horizontal dashed lines
+        for (float y = 0; y <= infinteCanvasSize; y += 100)
+        {
+            nvgMoveTo(nvg, 0, y);
+            nvgLineTo(nvg, infinteCanvasSize, y);
+        }
+
+        nvgStroke(nvg);
+    }
 
     // Draw dashed origin lines
     nvgBeginPath(nvg);

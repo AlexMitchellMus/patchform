@@ -18,8 +18,6 @@
 #include <iostream>
 #include "SafePointer.h"
 
-#include "unordered_dense.h"
-
 #ifdef min
 #undef min
 #endif

@@ -16,17 +16,25 @@ Project Goals
 [UI TODO]
 
 * [DONE] correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)
-*        scale / position canvas - make a way for the canvas to have a viewport - per component scaling
+* [DONE] scale / position canvas - make a way for the canvas to have a viewport - per component scaling
 *        scrollbars - needed for canavs and side panels etc
 * [DONE] Icons - simple icons to start with
 *        Load patch etc
 *        Desktop scale etc
 *        Text entry (for object/nodes mainly)
+*        Selected connections via lasso
+*        Select multiple objects/connections with shift-click
+
 
 
 
 
 NOTES
+
+[UI]
+make delete work from a key pressed listener on the canvas itself
+We need to implement a 'focused' component, which stays set even when children components become active
+OR- we can add register a key listener for the canvas, so it can be informed directly of any key events even if it's not focuses?
 
 [ICONS]
 https://fluenticons.co/outlined/
