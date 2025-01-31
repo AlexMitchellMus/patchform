@@ -19,6 +19,11 @@ public:
     {
         mainMenu = std::make_unique<ToggleButton>("A", "A");
         mainMenu->setName("MainMenu");
+        mainMenu->onClick = [this]()
+        {
+            std::cout << "main menu clicked" << std::endl;
+        };
+
         addComponent(mainMenu.get());
 
         undo = std::make_unique<ToggleButton>("B", "B");

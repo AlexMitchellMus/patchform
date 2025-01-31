@@ -93,7 +93,7 @@ public:
                 unregisterGlobalMouseListener();
                 addObjectMenu.reset();
                 addObjectButton->setActive(false);
-                return false;
+                return;
             }
 
             if (addObjectMenu)
@@ -113,7 +113,6 @@ public:
                     addObjectButton->setActive(false);
                 }
             });
-            return true;
         };
 
         viewButton = std::make_unique<ToggleButton>("H", "H", "icons");

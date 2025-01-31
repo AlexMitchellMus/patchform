@@ -70,6 +70,9 @@ public:
         }
     };
 
+    bool isInEditMode() const { return mode == DisplayMode::Edit; };
+    bool isInLockedMode() const { return mode == DisplayMode::Lock; };
+
     static constexpr int infinteCanvasSize = 120000;
     static constexpr int canvasOrigin = 64000;
 

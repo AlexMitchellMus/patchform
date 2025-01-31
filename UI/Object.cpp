@@ -48,6 +48,18 @@ Object::~Object()
     }
 }
 
+void Object::mouseEnter(SDL_Event& e)
+{
+    isHovered = true;
+    repaint();
+}
+
+void Object::mouseLeave(SDL_Event& e)
+{
+    isHovered = false;
+    repaint();
+}
+
 void Object::mouseButtonDown(SDL_Event& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
@@ -81,13 +93,7 @@ void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& de
     {
         if (auto cnv = findParentOfClass<Canvas>())
         {
-            if (multiSelected)
-                cnv->setMultiObjectPosition(delta);
-            else
-            {
-                setPosition(getPosition() + delta);
-                cnv->updateConnectionsPosition();
-            }
+            cnv->setMultiObjectPosition(delta);
         }
     }
 }

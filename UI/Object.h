@@ -19,21 +19,9 @@ public:
     ~Object();
 
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
-
     void mouseButtonDown(SDL_Event& e) override;
-
-    void mouseEnter(SDL_Event& e) override
-    {
-        isHovered = true;
-        repaint();
-    }
-
-    void mouseLeave(SDL_Event& e) override
-    {
-        isHovered = false;
-        repaint();
-    }
-
+    void mouseEnter(SDL_Event& e) override;
+    void mouseLeave(SDL_Event& e) override;
     void keyPressed(SDL_Event& e) override;
 
     void render(NVGcontext* nvg) override;

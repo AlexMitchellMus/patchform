@@ -129,6 +129,9 @@ void Canvas::keyPressed(SDL_Event& e)
 
 void Canvas::deleteSelectedObjects()
 {
+    if (isInLockedMode())
+        return;
+
     selected.clear();
 
     objects.erase(std::remove_if(objects.begin(), objects.end(),
@@ -182,6 +185,9 @@ bool Canvas::areMultiObjectsSelected()
 
 void Canvas::setMultiObjectPosition(pptk::Point pos)
 {
+    if (isInLockedMode())
+        return;
+
     for (auto& obj : selected)
     {
         obj->setPosition(obj->getPosition() + pos);

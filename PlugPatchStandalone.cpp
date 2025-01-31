@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
     int newWidth = windowWidth;
     int newHeight = windowHeight;
 
-    SDL_Window* window = SDL_CreateWindow("PlugPatch", windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow("Patchform", windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     SDL_SetWindowMinimumSize(window, 800, 600);
     if (!window) {
         SDL_Log("Failed to create window: %s", SDL_GetError());
