@@ -235,7 +235,7 @@ void Connection::render(NVGcontext* nvg) {
     nvgMoveTo(nvg, endPoint.x, endPoint.y);
     nvgBezierTo(nvg, controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, startPoint.x, startPoint.y);
 
-    // Stright cable style (not used atm)
+    // Straight cable style (not used atm)
     //nvgLineTo(nvg, originPos.x, originPos.y);
     //nvgStrokeColor(nvg, nvgRGB(100, 100, 100));
 
