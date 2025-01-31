@@ -23,6 +23,57 @@ Connection::~Connection()
     repaint();
 }
 
+float Connection::pointToSegmentDistance(const pptk::Point& p,
+                             const pptk::Point& a,
+                             const pptk::Point& b)
+{
+    pptk::Point ab = { b.x - a.x, b.y - a.y };
+    pptk::Point ap = { p.x - a.x, p.y - a.y };
+
+    float abLengthSq = ab.x * ab.x + ab.y * ab.y;
+    float t = (ap.x * ab.x + ap.y * ab.y) / abLengthSq;
+    t = std::max(0.0f, std::min(1.0f, t)); // Clamp t between 0 and 1
+
+    // Closest point on segment
+    pptk::Point closest = {
+        a.x + t * ab.x,
+        a.y + t * ab.y
+    };
+
+    return p.length(closest); // Return distance to the closest point on the segment
+}
+
+bool Connection::isPointNearBezier(const pptk::Point& p,
+                                   const pptk::Point& start,
+                                   const pptk::Point& c1,
+                                   const pptk::Point& c2,
+                                   const pptk::Point& end,
+                                   float threshold,
+                                   int segments)
+{
+    pptk::Point prevPoint = start; // Start point of the curve
+
+    for (int i = 1; i <= segments; ++i)
+    {
+        float t = i / static_cast<float>(segments);
+        float u = 1.0f - t;
+
+        // Compute the Bezier point at t
+        pptk::Point bezierPoint = {
+            u * u * u * start.x + 3 * u * u * t * c2.x + 3 * u * t * t * c1.x + t * t * t * end.x,
+            u * u * u * start.y + 3 * u * u * t * c2.y + 3 * u * t * t * c1.y + t * t * t * end.y
+        };
+
+        // Check if mouse is near the segment between prevPoint and bezierPoint
+        if (pointToSegmentDistance(p, prevPoint, bezierPoint) < threshold)
+            return true;
+
+        prevPoint = bezierPoint; // Move to next segment
+    }
+
+    return false;
+}
+
 void Connection::updateConnectionGeometry()
 {
     if (!originPort)
@@ -87,18 +138,41 @@ void Connection::setConnectionDest(const pptk::Point& p)
 
 bool Connection::hitTest(float px, float py) const
 {
-    std::cout << "hit testing connection: " <<  px << ", " << py << std::endl;
-    return false;
+    const float exclusionSize = 10.0f; // Adjust this size as needed
+
+    // Define start and end exclusion rectangles
+    pptk::Point startMin = { startPoint.x - exclusionSize, startPoint.y - exclusionSize };
+    pptk::Point startMax = { startPoint.x + exclusionSize, startPoint.y + exclusionSize };
+
+    pptk::Point endMin = { endPoint.x - exclusionSize, endPoint.y - exclusionSize };
+    pptk::Point endMax = { endPoint.x + exclusionSize, endPoint.y + exclusionSize };
+
+    // If mouse is inside start or end exclusion zones, return false
+    if ((px >= startMin.x && px <= startMax.x && py >= startMin.y && py <= startMax.y) ||
+        (px >= endMin.x && px <= endMax.x && py >= endMin.y && py <= endMax.y))
+    {
+        return false;
+    }
+
+    return isPointNearBezier(Point(px, py), startPoint, controlPoint1, controlPoint2, endPoint);
 }
 
 void Connection::mouseEnter(SDL_Event& e)
 {
-    std::cout << "mouse enter connection: " << std::endl;
+    if (!isHovered)
+    {
+        isHovered = true;
+        repaint();
+    }
 }
 
 void Connection::mouseLeave(SDL_Event& e)
 {
-    std::cout << "mouse leave connection: " << std::endl;
+    if (isHovered)
+    {
+        isHovered = false;
+        repaint();
+    }
 }
 
 void Connection::render(NVGcontext* nvg) {
@@ -109,24 +183,52 @@ void Connection::render(NVGcontext* nvg) {
     nvgMoveTo(nvg, endPoint.x, endPoint.y);
     nvgBezierTo(nvg, controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, startPoint.x, startPoint.y);
 
-    // Move to the origin position
+    // Stright cable style (not used atm)
     //nvgLineTo(nvg, originPos.x, originPos.y);
+    //nvgStrokeColor(nvg, nvgRGB(100, 100, 100));
 
-    nvgStrokeColor(nvg, nvgRGB(100, 100, 100)); // Set stroke color
     nvgStrokeWidth(nvg, 6.0f);   // Set line width
-    nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), nvgRGB(90, 90, 90), 3, false, false, 0.0f));
+    nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), isHovered ? highlightCol : conCol, 3, false, false, 0.0f));
     nvgStroke(nvg);
 
-//#define DEBUG_PATH
-#ifdef DEBUG_PATH1
+//#define DEBUG_PATH_HIT_TEST
+#ifdef DEBUG_PATH_HIT_TEST
+    for (int i = 0; i <= 30; ++i) {
+        float t = i / static_cast<float>(30);
+        float u = 1.0f - t;
+
+        float bx = u * u * u * startPoint.x + 3 * u * u * t * controlPoint2.x + 3 * u * t * t * controlPoint1.x + t * t * t * endPoint.x;
+        float by = u * u * u * startPoint.y + 3 * u * u * t * controlPoint2.y + 3 * u * t * t * controlPoint1.y + t * t * t * endPoint.y;
+
+        // Draw small circles along the computed Bezier curve
+        nvgBeginPath(nvg);
+        nvgCircle(nvg, bx, by, 2.0f);
+        nvgFillColor(nvg, nvgRGB(255, 0, 0)); // Red: computed Bezier points
+        nvgFill(nvg);
+    }
+
+#endif
+
+//#define DEBUG_CONTROL_POINTS
+#ifdef DEBUG_CONTROL_POINTS
     nvgBeginPath(nvg);
-    nvgCircle(nvg, control1.x, control1.y, 5.0f);  // Circle at first control point
-    nvgFillColor(nvg, nvgRGBA(255, 0, 0, 150));  // Red for control1
+    nvgCircle(nvg, startPoint.x, startPoint.y, 5);
+    nvgFillColor(nvg, nvgRGB(255, 255, 0)); // Yellow: Start
     nvgFill(nvg);
 
     nvgBeginPath(nvg);
-    nvgCircle(nvg, control2.x, control2.y, 5.0f);  // Circle at second control point
-    nvgFillColor(nvg, nvgRGBA(0, 0, 255, 150));  // Blue for control2
+    nvgCircle(nvg, controlPoint1.x, controlPoint1.y, 5);
+    nvgFillColor(nvg, nvgRGB(255, 0, 0)); // Red: Control Point 1
+    nvgFill(nvg);
+
+    nvgBeginPath(nvg);
+    nvgCircle(nvg, controlPoint2.x, controlPoint2.y, 5);
+    nvgFillColor(nvg, nvgRGB(0, 255, 0)); // Green: Control Point 2
+    nvgFill(nvg);
+
+    nvgBeginPath(nvg);
+    nvgCircle(nvg, endPoint.x, endPoint.y, 5);
+    nvgFillColor(nvg, nvgRGB(0, 0, 255)); // Blue: End
     nvgFill(nvg);
 #endif
 

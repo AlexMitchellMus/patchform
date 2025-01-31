@@ -53,6 +53,13 @@ struct Point {
     Point operator-(const Point& other) const {
         return Point(x - other.x, y - other.y);
     }
+
+    [[nodiscard]] float length(const pptk::Point& other) const
+    {
+        float dx = x - other.x;
+        float dy = y - other.y;
+        return std::sqrt(dx * dx + dy * dy);
+    }
 };
 
 struct Rect {

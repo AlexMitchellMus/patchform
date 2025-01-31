@@ -30,6 +30,18 @@ public:
     Port* getDestPort() { return destPort.get(); };
 
 private:
+    static inline bool isPointNearBezier(const pptk::Point& p,
+                                         const pptk::Point& start,
+                                         const pptk::Point& c1,
+                                         const pptk::Point& c2,
+                                         const pptk::Point& end,
+                                         float threshold = 5.0f,
+                                         int segments = 20);
+
+    static inline float pointToSegmentDistance(const pptk::Point& p,
+                                               const pptk::Point& a,
+                                               const pptk::Point& b);
+
     pptk::SafePointer<Port> originPort;
     pptk::SafePointer<Port> destPort;
 
@@ -41,4 +53,9 @@ private:
     pptk::Point endPoint;
 
     bool connectionBeingCreated = false;
+
+    NVGcolor conCol = nvgRGB(90, 90, 90);
+    NVGcolor highlightCol = nvgRGB(28, 73, 119);
+
+    bool isHovered = false;
 };
