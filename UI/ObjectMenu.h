@@ -100,8 +100,8 @@ public:
     }
 
 private:
-    NVGcolor bg;
-    NVGcolor outline;
+    NVGcolor bg = nvgRGB(43, 43, 43);
+    NVGcolor outline = nvgRGB(53, 53, 53);
     NVGcolor dropShadowCol = nvgRGBA(0, 0, 0, 30);
 
     Canvas* cnv;

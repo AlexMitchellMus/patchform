@@ -9,9 +9,6 @@
 
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
-    bg = nvgRGB(43, 43, 43);
-    outline = nvgRGB(53, 53, 53);
-
     ObjectDef objectDef[10] = {
         {"metro", ICONS::Metro},
         {"osc", ICONS::Osc},
