@@ -23,52 +23,56 @@ Connection::~Connection()
     repaint();
 }
 
-float Connection::pointToSegmentDistance(const pptk::Point& p,
-                             const pptk::Point& a,
-                             const pptk::Point& b)
+float Connection::pointToSegmentDistance(const Point& p,
+                             const Point& a,
+                             const Point& b)
 {
-    pptk::Point ab = { b.x - a.x, b.y - a.y };
-    pptk::Point ap = { p.x - a.x, p.y - a.y };
+    float abX = b.x - a.x, abY = b.y - a.y;
+    float apX = p.x - a.x, apY = p.y - a.y;
 
-    float abLengthSq = ab.x * ab.x + ab.y * ab.y;
-    float t = (ap.x * ab.x + ap.y * ab.y) / abLengthSq;
-    t = std::max(0.0f, std::min(1.0f, t)); // Clamp t between 0 and 1
+    float abLengthSq = abX * abX + abY * abY; // Avoid computing sqrt
+    if (abLengthSq == 0.0f) return std::hypot(apX, apY); // A and B are the same point
 
-    // Closest point on segment
-    pptk::Point closest = {
-        a.x + t * ab.x,
-        a.y + t * ab.y
-    };
+    float t = (apX * abX + apY * abY) / abLengthSq;
+    t = std::clamp(t, 0.0f, 1.0f); // Clamping
 
-    return p.length(closest); // Return distance to the closest point on the segment
+    // Compute closest point coordinates
+    float closestX = a.x + t * abX;
+    float closestY = a.y + t * abY;
+
+    return std::hypot(p.x - closestX, p.y - closestY); // Compute Euclidean distance
 }
 
-bool Connection::isPointNearBezier(const pptk::Point& p,
-                                   const pptk::Point& start,
-                                   const pptk::Point& c1,
-                                   const pptk::Point& c2,
-                                   const pptk::Point& end,
+bool Connection::isPointNearBezier(const Point& p,
+                                   const Point& start,
+                                   const Point& c1,
+                                   const Point& c2,
+                                   const Point& end,
                                    float threshold,
                                    int segments)
 {
-    pptk::Point prevPoint = start; // Start point of the curve
+    float invSegments = 1.0f / segments;
+
+    Point prevPoint = start; // Start point of the curve
 
     for (int i = 1; i <= segments; ++i)
     {
-        float t = i / static_cast<float>(segments);
+        float t = i * invSegments;
         float u = 1.0f - t;
 
-        // Compute the Bezier point at t
-        pptk::Point bezierPoint = {
-            u * u * u * start.x + 3 * u * u * t * c2.x + 3 * u * t * t * c1.x + t * t * t * end.x,
-            u * u * u * start.y + 3 * u * u * t * c2.y + 3 * u * t * t * c1.y + t * t * t * end.y
+        float tt = t * t, uu = u * u;
+        float uuu = uu * u, ttt = tt * t;
+
+        Point bezierPoint = {
+            uuu * start.x + 3 * uu * t * c2.x + 3 * u * tt * c1.x + ttt * end.x,
+            uuu * start.y + 3 * uu * t * c2.y + 3 * u * tt * c1.y + ttt * end.y
         };
 
-        // Check if mouse is near the segment between prevPoint and bezierPoint
+        // Fast rejection: check squared distance to avoid sqrt
         if (pointToSegmentDistance(p, prevPoint, bezierPoint) < threshold)
             return true;
 
-        prevPoint = bezierPoint; // Move to next segment
+        prevPoint = bezierPoint;
     }
 
     return false;
