@@ -65,9 +65,21 @@ public:
 
     MainMenu()
     {
-        setSize(150, 75);
+        setSize(150, 6 * 35 + 5);
 
-        aboutApplication = std::make_unique<MenuItem>("About");
+        loadPatch = std::make_unique<MenuItem>("Open patch...");
+        addComponent(loadPatch.get());
+
+        savePatch = std::make_unique<MenuItem>("Save patch...");
+        addComponent(savePatch.get());
+
+        saveAsPatch = std::make_unique<MenuItem>("Save patch as...");
+        addComponent(saveAsPatch.get());
+
+        applicationSettings = std::make_unique<MenuItem>("Settings...");
+        addComponent(applicationSettings.get());
+
+        aboutApplication = std::make_unique<MenuItem>("About...");
         addComponent(aboutApplication.get());
         aboutApplication->onClick = [this]()
         {
@@ -92,6 +104,14 @@ public:
         b.x = 5;
         b.y = 5;
         b.w = getWidth() - 10;
+        loadPatch->setBounds(b);
+        b.y += 35;
+        savePatch->setBounds(b);
+        b.y += 35;
+        saveAsPatch->setBounds(b);
+        b.y += 35;
+        applicationSettings->setBounds(b);
+        b.y += 35;
         aboutApplication->setBounds(b);
         b.y += 35;
         quitApplication->setBounds(b);
@@ -105,6 +125,10 @@ public:
     }
 
 private:
+    std::unique_ptr<MenuItem> loadPatch;
+    std::unique_ptr<MenuItem> savePatch;
+    std::unique_ptr<MenuItem> saveAsPatch;
+    std::unique_ptr<MenuItem> applicationSettings;
     std::unique_ptr<MenuItem> aboutApplication;
     std::unique_ptr<MenuItem> quitApplication;
 

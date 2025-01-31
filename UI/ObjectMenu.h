@@ -27,10 +27,6 @@ class Item : public pptk::Component
 
     Item(ObjectDef def) : name(def.name), icon(def.icon)
     {
-        bg = nvgRGB(48, 48, 48);
-        highlight = nvgRGB(38, 38, 38);
-        outline = nvgRGB(53, 53, 53);
-        repaint();
     };
 
     void mouseDrag(const Point& position, const Point& delta, Button button) override
@@ -79,9 +75,9 @@ private:
     std::string name;
     std::string icon;
 
-    NVGcolor bg;
-    NVGcolor highlight;
-    NVGcolor outline;
+    NVGcolor bg = nvgRGB(46, 46, 46);
+    NVGcolor highlight = nvgRGB(38, 38, 38);
+    NVGcolor outline = nvgRGB(53, 53, 53);
 };
 
 class ToolDock;
