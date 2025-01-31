@@ -84,8 +84,6 @@ bool Connection::isPointNearBezier(const Point& p,
     // Determine segment count dynamically
     int segments = std::max(5, static_cast<int>(lengthEstimate / 100.0f));
 
-    std::cout << "using: " << segments << " segments" << std::endl;
-
     // Fall back to full Bézier hit test
     Point prevPoint = start;
     float invSegments = 1.0f / segments;
