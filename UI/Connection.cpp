@@ -48,18 +48,54 @@ bool Connection::isPointNearBezier(const Point& p,
                                    const Point& c1,
                                    const Point& c2,
                                    const Point& end,
-                                   float threshold,
-                                   int segments)
+                                   float threshold)
 {
-    float invSegments = 1.0f / segments;
+    float thresholdSq = threshold * threshold; // Avoid sqrt later
+    const float epsilon = 0.0001f; // Tolerance for detecting a straight line
 
-    Point prevPoint = start; // Start point of the curve
+    // Compute bounding box with padding
+    const float padding = std::max(5.0f, threshold * 0.5f);
+    float minX = std::min({start.x, c1.x, c2.x, end.x}) - padding;
+    float maxX = std::max({start.x, c1.x, c2.x, end.x}) + padding;
+    float minY = std::min({start.y, c1.y, c2.y, end.y}) - padding;
+    float maxY = std::max({start.y, c1.y, c2.y, end.y}) + padding;
+
+    // Quick bounding box test
+    if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY)
+    {
+        return false;
+    }
+
+    // Check if control points are nearly on the line segment using point-to-line distance
+    float lineDist1 = pointToSegmentDistance(c1, start, end);
+    float lineDist2 = pointToSegmentDistance(c2, start, end);
+
+    if (lineDist1 < threshold && lineDist2 < threshold)
+    {
+        return pointToSegmentDistance(p, start, end) < threshold;
+    }
+
+    // Estimate curve length (approximation using control points)
+    float lengthEstimate =
+        std::hypot(c1.x - start.x, c1.y - start.y) +
+        std::hypot(c2.x - c1.x, c2.y - c1.y) +
+        std::hypot(end.x - c2.x, end.y - c2.y);
+
+    // Determine segment count dynamically
+    int segments = std::max(5, static_cast<int>(lengthEstimate / 100.0f));
+
+    std::cout << "using: " << segments << " segments" << std::endl;
+
+    // Fall back to full Bézier hit test
+    Point prevPoint = start;
+    float invSegments = 1.0f / segments;
 
     for (int i = 1; i <= segments; ++i)
     {
         float t = i * invSegments;
         float u = 1.0f - t;
 
+        // Compute cubic Bézier point
         float tt = t * t, uu = u * u;
         float uuu = uu * u, ttt = tt * t;
 
@@ -68,7 +104,6 @@ bool Connection::isPointNearBezier(const Point& p,
             uuu * start.y + 3 * uu * t * c2.y + 3 * u * tt * c1.y + ttt * end.y
         };
 
-        // Fast rejection: check squared distance to avoid sqrt
         if (pointToSegmentDistance(p, prevPoint, bezierPoint) < threshold)
             return true;
 
@@ -142,7 +177,7 @@ void Connection::setConnectionDest(const pptk::Point& p)
 
 bool Connection::hitTest(float px, float py) const
 {
-    const float exclusionSize = 10.0f;
+    const float exclusionSize = 5.0f;
 
     // Define start and end exclusion rectangles
     // We use this so the connection does not block the port mouse interaction
@@ -155,18 +190,6 @@ bool Connection::hitTest(float px, float py) const
     // If mouse is inside start or end exclusion zones, return false
     if ((px >= startMin.x && px <= startMax.x && py >= startMin.y && py <= startMax.y) ||
         (px >= endMin.x && px <= endMax.x && py >= endMin.y && py <= endMax.y))
-    {
-        return false;
-    }
-
-    // Compute bounding box of the Bézier curve
-    float minX = std::min({startPoint.x, controlPoint1.x, controlPoint2.x, endPoint.x});
-    float maxX = std::max({startPoint.x, controlPoint1.x, controlPoint2.x, endPoint.x});
-    float minY = std::min({startPoint.y, controlPoint1.y, controlPoint2.y, endPoint.y});
-    float maxY = std::max({startPoint.y, controlPoint1.y, controlPoint2.y, endPoint.y});
-
-    // Quick bounding box test
-    if (px < minX || px > maxX || py < minY || py > maxY)
     {
         return false;
     }

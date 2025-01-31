@@ -37,8 +37,7 @@ private:
                                          const pptk::Point& c1,
                                          const pptk::Point& c2,
                                          const pptk::Point& end,
-                                         float threshold = 5.0f,
-                                         int segments = 20);
+                                         float threshold = 5.0f);
 
     static inline float pointToSegmentDistance(const pptk::Point& p,
                                                const pptk::Point& a,
