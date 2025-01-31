@@ -138,18 +138,31 @@ void Connection::setConnectionDest(const pptk::Point& p)
 
 bool Connection::hitTest(float px, float py) const
 {
-    const float exclusionSize = 10.0f; // Adjust this size as needed
+    const float exclusionSize = 10.0f;
 
     // Define start and end exclusion rectangles
-    pptk::Point startMin = { startPoint.x - exclusionSize, startPoint.y - exclusionSize };
-    pptk::Point startMax = { startPoint.x + exclusionSize, startPoint.y + exclusionSize };
+    // We use this so the connection does not block the port mouse interaction
+    Point startMin = { startPoint.x - exclusionSize, startPoint.y - exclusionSize };
+    Point startMax = { startPoint.x + exclusionSize, startPoint.y + exclusionSize };
 
-    pptk::Point endMin = { endPoint.x - exclusionSize, endPoint.y - exclusionSize };
-    pptk::Point endMax = { endPoint.x + exclusionSize, endPoint.y + exclusionSize };
+    Point endMin = { endPoint.x - exclusionSize, endPoint.y - exclusionSize };
+    Point endMax = { endPoint.x + exclusionSize, endPoint.y + exclusionSize };
 
     // If mouse is inside start or end exclusion zones, return false
     if ((px >= startMin.x && px <= startMax.x && py >= startMin.y && py <= startMax.y) ||
         (px >= endMin.x && px <= endMax.x && py >= endMin.y && py <= endMax.y))
+    {
+        return false;
+    }
+
+    // Compute bounding box of the Bézier curve
+    float minX = std::min({startPoint.x, controlPoint1.x, controlPoint2.x, endPoint.x});
+    float maxX = std::max({startPoint.x, controlPoint1.x, controlPoint2.x, endPoint.x});
+    float minY = std::min({startPoint.y, controlPoint1.y, controlPoint2.y, endPoint.y});
+    float maxY = std::max({startPoint.y, controlPoint1.y, controlPoint2.y, endPoint.y});
+
+    // Quick bounding box test
+    if (px < minX || px > maxX || py < minY || py > maxY)
     {
         return false;
     }
