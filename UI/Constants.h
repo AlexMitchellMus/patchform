@@ -7,11 +7,11 @@
 
 namespace ICONS
 {
-    constexpr std::string Metro = "A";
-    constexpr std::string Osc = "B";
-    constexpr std::string Adsr = "C";
-    constexpr std::string Lfo = "D";
-    constexpr std::string Print = "E";
-    constexpr std::string Aout = "F";
-    constexpr std::string Count = "G";
+    static constexpr std::string_view Metro = "A";
+    static constexpr std::string_view  Osc = "B";
+    static constexpr std::string_view Adsr = "C";
+    static constexpr std::string_view Lfo = "D";
+    static constexpr std::string_view Print = "E";
+    static constexpr std::string_view Aout = "F";
+    static constexpr std::string_view Count = "G";
 }

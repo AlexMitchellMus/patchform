@@ -46,6 +46,11 @@ public:
 
     bool getIsSelected() { return isSelected; }
 
+    std::string& getObjectDefinition()
+    {
+        return definition;
+    };
+
 private:
 
     void setSelected(bool shouldBeSelected)
@@ -55,6 +60,7 @@ private:
     }
 
     std::string name;
+    std::string definition;
     std::vector<std::unique_ptr<Port>> inPorts;
     std::vector<std::unique_ptr<Port>> outPorts;
 

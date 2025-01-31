@@ -14,7 +14,7 @@ class Canvas;
 struct ObjectDef
 {
     std::string name;
-    std::string icon;
+    std::string_view icon;
 };
 
 class Item : public pptk::Component
@@ -22,7 +22,7 @@ class Item : public pptk::Component
     public:
 
     std::function<void(Point, std::string, Point)> onMouseDrag = [](Point, std::string, Point){};
-    std::function<void()> onMouseUp = [](){};
+    std::function<void(Point)> onMouseUp = [](Point){};
 
 
     Item(ObjectDef def) : name(def.name), icon(def.icon)
@@ -52,7 +52,7 @@ class Item : public pptk::Component
 
     void mouseButtonUp(SDL_Event& e) override
     {
-        onMouseUp();
+        onMouseUp(Point(e.button.x, e.button.y));
     }
 
     void render(NVGcontext* vg) override
@@ -66,6 +66,11 @@ class Item : public pptk::Component
         nvgTextAlign(vg, NVG_ALIGN_CENTER);
         nvgFillColor(vg, nvgRGB(220, 220, 220)); // Text color
         nvgText(vg, getWidth() / 2, 32, icon.c_str(), nullptr);
+    }
+
+    std::string& getObjectDefinition()
+    {
+        return name;
     }
 
 private:
@@ -90,16 +95,18 @@ public:
     void render(NVGcontext* vg) override
     {
         nvgBeginPath(vg);
+        nvgDrawRoundedRect(vg, - 3,  - 3, getWidth() + 6, getHeight() + 6, dropShadowCol, dropShadowCol, 13);
         nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), bg, outline, 10.0f);
     }
 
 private:
     NVGcolor bg;
     NVGcolor outline;
+    NVGcolor dropShadowCol = nvgRGBA(0, 0, 0, 30);
 
     Canvas* cnv;
     ToolDock* td;
 
-    std::unique_ptr<Component> dndObject;
+    std::unique_ptr<Object> dndObject;
     std::vector<std::unique_ptr<Item>> items;
 };

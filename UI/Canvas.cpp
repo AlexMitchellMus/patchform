@@ -344,6 +344,18 @@ void Canvas::renderAll(NVGcontext* nvg)
     nvgRestore(nvg);
 }
 
+void Canvas::addObject(Object* toAdd, Point position)
+{
+    auto object = std::make_unique<Object>(toAdd->getName());
+
+    addComponent(object.get());
+    object->setPosition(position);
+
+    objects.push_back(std::move(object));
+
+    callOjbectChangedListeners();
+}
+
 void Canvas::addConnection(Port* origin, Port* dest)
 {
     auto connection = std::make_unique<Connection>(origin, dest);

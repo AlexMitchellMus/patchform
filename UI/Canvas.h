@@ -44,6 +44,8 @@ public:
     void render(NVGcontext* nvg) override;
     void renderAll(NVGcontext* nvg) override;
 
+    void addObject(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
+
     std::unique_ptr<Connection> newConnection = nullptr;
     void addConnection(Port* port, Port* otherPort);
     void updateConnectionsPosition() const;
@@ -56,8 +58,8 @@ public:
     void setScale(float scale);
     void resetScale();
 
-    const int infinteCanvasSize = 120000;
-    const int canvasOrigin = 64000;
+    static constexpr int infinteCanvasSize = 120000;
+    static constexpr int canvasOrigin = 64000;
 
 private:
     std::vector<std::unique_ptr<Object>> objects;

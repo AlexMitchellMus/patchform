@@ -27,11 +27,16 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         auto item = std::make_unique<Item>(objectDef[i]);
         item->setBounds(16 + (i * (44 + 16)), 16, 44, 44);
 
-        item->onMouseUp = [this]() mutable {
-            std::cout << "deleting object menu" << std::endl;
-            dndObject.reset();
-            repaint();
-            td->removeAddObjectMenu();
+        item->onMouseUp = [this](Point position) mutable {
+            if (dndObject)
+            {
+                auto droppedPos = cnv->globalToLocalWithScale(position.x, position.y);
+                std::cout << "dropping object at: " << droppedPos.toString() << std::endl;
+                cnv->addObject(dndObject.get(), droppedPos);
+                dndObject.reset();
+                repaint();
+                td->removeAddObjectMenu();
+            }
         };
 
         item->onMouseDrag = [this](Point position, const std::string& name, Point offset)
