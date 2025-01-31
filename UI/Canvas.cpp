@@ -340,6 +340,8 @@ void Canvas::addObject(Object* toAdd, Point position)
     addComponent(object.get());
     object->setPosition(position);
 
+    setSelected(object.get());
+
     objects.push_back(std::move(object));
 
     callOjbectChangedListeners();
