@@ -25,19 +25,55 @@ Connection::~Connection()
 
 void Connection::updateConnectionGeometry()
 {
-    if (originPort && destPort)
+    if (!originPort)
+        return;
+
+    if (auto cnv = findParentOfClass<Canvas>())
     {
-        if (auto cnv = findParentOfClass<Canvas>())
+        auto inputPortPos = originPort->getPositionInParent(cnv);
+
+        if (destPort)
         {
             auto centre = destPort->getWidth() / 2;
-            // We get the position of the ports in the canvas
-
-            auto inputPortPos = originPort->getPositionInParent(cnv);
-            auto outputPortPos  = destPort->getPositionInParent(cnv) + Point(centre, centre);
-
-            setPosition(inputPortPos);
-
+            // Get the positions of the ports in the canvas
+            auto outputPortPos = destPort->getPositionInParent(cnv) + Point(centre, centre);
             destPos = outputPortPos - inputPortPos;
+        }
+
+        setPosition(inputPortPos);
+
+        // Store final points
+        startPoint = {4.5f, 6.5f}; // Offset the start position slightly
+        endPoint = destPos;
+
+        if (!originPort->isOutput())
+            std::swap(startPoint, endPoint);
+
+        // Compute control points
+        float xDifference = fabsf(startPoint.x - endPoint.x);
+        float factor = fminf(xDifference / 100.0f, 1.0f);
+        float controlOffset = abs(endPoint.y - startPoint.y) / 2 * factor;
+
+        if (endPoint.y < startPoint.y)
+        {
+            // Destination is above the origin; create an S shape with transition to straight
+            controlPoint1 = {
+                endPoint.x + (startPoint.x - endPoint.x) * 0.5f * (1 - factor),
+                // Bring closer to the center horizontally
+                endPoint.y - controlOffset // Hook above
+            };
+
+            controlPoint2 = {
+                startPoint.x - (startPoint.x - endPoint.x) * 0.5f * (1 - factor),
+                // Bring closer to the center horizontally
+                startPoint.y + controlOffset // Hook below
+            };
+        }
+        else
+        {
+            // Destination is below the origin; create a downward curve with transition to straight
+            controlPoint1 = {endPoint.x, (endPoint.y + startPoint.y) / 2};
+            controlPoint2 = {startPoint.x, (endPoint.y + startPoint.y) / 2};
         }
     }
 }
@@ -46,6 +82,7 @@ void Connection::setConnectionDest(const pptk::Point& p)
 {
     destPos = p;
     setSize(abs(p.x), abs(p.y));
+    updateConnectionGeometry();
 }
 
 bool Connection::hitTest(float px, float py) const
@@ -69,39 +106,8 @@ void Connection::render(NVGcontext* nvg) {
 
     nvgBeginPath(nvg);
 
-    Point start = {4.5f, 6.5f};
-    Point end = destPos;
-
-    Point control1;
-    Point control2;
-
-    if (!originPort->isOutput())
-        std::swap(start, end);
-
-    nvgMoveTo(nvg, end.x, end.y);
-
-    float xDifference = fabsf(start.x - end.x);
-    float factor = fminf(xDifference / 100.0f, 1.0f);
-    float controlOffset = abs(end.y - start.y) / 2 * factor;
-
-    if (end.y < start.y) {
-        // Destination is above the origin; create an S shape with transition to straight
-        control1 = {
-            end.x + (start.x - end.x) * 0.5f * (1 - factor),  // Bring closer to the center horizontally
-            end.y - controlOffset                             // Hook above
-        };
-
-        control2 = {
-            start.x - (start.x - end.x) * 0.5f * (1 - factor), // Bring closer to the center horizontally
-            start.y + controlOffset                            // Hook below
-        };
-        nvgBezierTo(nvg, control1.x, control1.y, control2.x, control2.y, start.x, start.y);
-    } else {
-        // Destination is below the origin; create a downward curve with transition to straight
-        control1 = {end.x, (end.y + start.y) / 2};
-        control2 = {start.x, (end.y + start.y) / 2};
-        nvgBezierTo(nvg, control1.x, control1.y, control2.x, control2.y, start.x, start.y);
-    }
+    nvgMoveTo(nvg, endPoint.x, endPoint.y);
+    nvgBezierTo(nvg, controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, startPoint.x, startPoint.y);
 
     // Move to the origin position
     //nvgLineTo(nvg, originPos.x, originPos.y);
@@ -124,7 +130,7 @@ void Connection::render(NVGcontext* nvg) {
     nvgFill(nvg);
 #endif
 
-#define DEBUG_PATH_BOUNDING_BOX
+//#define DEBUG_PATH_BOUNDING_BOX
 #ifdef DEBUG_PATH_BOUNDING_BOX
     nvgBeginPath(nvg);
     nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(),nvgRGBA(0,0,0,0), nvgRGBA(255,0,0, 255), 0);
