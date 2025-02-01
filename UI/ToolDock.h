@@ -88,31 +88,35 @@ public:
 
         addObjectButton->onClick = [this]()
         {
+            // Close existing popup safely before opening a new one
             if (addObjectMenu && addObjectMenu->isVisible())
             {
-                unregisterGlobalMouseListener();
-                addObjectMenu.reset();
+                if (addObjectMenu) {
+                    addObjectMenu->close(); // Ensure cleanup
+                    addObjectMenu.reset();
+                }
+                setPopupComponent(nullptr);
                 addObjectButton->setActive(false);
                 return;
             }
 
-            if (addObjectMenu)
-                unregisterGlobalMouseListener();
+            // Create a new popup
+            auto popup = std::make_unique<ObjectMenu>(cnv, this);
 
-            addObjectMenu = std::make_unique<ObjectMenu>(cnv, this);
+            // Ensure SafePointer is used safely
+            addObjectMenu = SafePointer(popup.get());
+
+            // Swap the popup safely (prevents issues if an old one was lingering)
+            setPopupComponent(std::move(popup));
             getRootComponent()->addComponent(addObjectMenu.get());
-            addObjectMenu->setBounds((getRootComponent()->getWidth() / 2) - 308, getRootComponent()->getHeight() - 225, 616, 150);
-            addObjectButton->setActive(true);
+            addObjectMenu->registerMouseListener(addObjectButton.get());
+            addObjectMenu->setBounds(
+                (getRootComponent()->getWidth() / 2) - 308,
+                getRootComponent()->getHeight() - 225,
+                616, 150
+            );
 
-            registerGlobalMouseListener([this](Component* comp) {
-                if (!(addObjectMenu->isOrHasChild(comp) || comp == addObjectButton.get()))
-                {
-                    std::cout << "removing object menu" << std::endl;
-                    unregisterGlobalMouseListener();
-                    addObjectMenu.reset();
-                    addObjectButton->setActive(false);
-                }
-            });
+            addObjectButton->setActive(true);
         };
 
         viewButton = std::make_unique<ToggleButton>("H", "H", "icons");
@@ -189,5 +193,5 @@ private:
     std::unique_ptr<ToggleButton> resizeToFit;
     std::unique_ptr<ZoomSlider> zoomSlider;
 
-    std::unique_ptr<ObjectMenu> addObjectMenu;
+    SafePointer<ObjectMenu> addObjectMenu;
 };

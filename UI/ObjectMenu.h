@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../UI_ToolKit/Component.h"
+#include "../UI_ToolKit/PopupComponent.h"
 
 #include "json.hpp"
 using json = nlohmann::json;
@@ -87,7 +87,7 @@ private:
 
 class ToolDock;
 
-class ObjectMenu : public pptk::Component {
+class ObjectMenu : public pptk::PopupComponent {
 public:
     ObjectMenu(Canvas* canvas, ToolDock* toolDock);
 

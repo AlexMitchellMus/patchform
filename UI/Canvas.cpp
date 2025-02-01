@@ -371,6 +371,8 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
 
     // DnD objects are semi-transparent
     toAdd->opacity = 1.0f;
+    // Reset the scale to 1, as the canvas itself now takes care of the object's scale!
+    toAdd->scale = 1.0f;
 
     addComponent(toAdd);
     toAdd->setPosition(position);

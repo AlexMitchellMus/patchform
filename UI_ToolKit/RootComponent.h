@@ -9,8 +9,7 @@
 #include <iostream>
 #include <memory>
 
-
-#include "Component.h"
+#include "PopupComponent.h"
 
 namespace pptk {
 
@@ -73,6 +72,8 @@ public:
     }
 
     std::vector<std::tuple<Component*, std::function<void(Component*)>>> globalMouseHandlers;
+
+    std::unique_ptr<PopupComponent> popupWindow;
 
 protected:
 

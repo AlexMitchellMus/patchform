@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "RootComponent.h"
+#include "PopupComponent.h"
 
 namespace pptk {
 
@@ -140,12 +141,22 @@ void Component::registerTimer(std::function<void()> callback)
 
 void Component::registerGlobalMouseListener(std::function<void(Component*)> callback)
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->registerGlobalMouse(this, std::move(callback));
+    reinterpret_cast<RootComponent*>(getRootComponent())->registerGlobalMouse(this, callback);
 }
 
 void Component::unregisterGlobalMouseListener()
 {
     reinterpret_cast<RootComponent*>(getRootComponent())->unregisterGlobalMouse(this);
+}
+
+PopupComponent* Component::getPopupComponent()
+{
+    return reinterpret_cast<RootComponent*>(getRootComponent())->popupWindow.get();
+}
+
+void Component::setPopupComponent(std::unique_ptr<PopupComponent> popupWindow)
+{
+    reinterpret_cast<RootComponent*>(getRootComponent())->popupWindow = std::move(popupWindow);
 }
 
 

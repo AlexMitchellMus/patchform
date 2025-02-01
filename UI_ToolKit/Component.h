@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <iostream>
+
 #include "SafePointer.h"
 
 #ifdef min
@@ -121,6 +122,7 @@ struct Rect {
     }
 };
 
+class PopupComponent;
 class Component : public SafeObject {
 public:
     explicit Component() = default;
@@ -149,6 +151,9 @@ public:
     float getHeight() const { return height; }
 
     void addComponent(Component* child);
+
+    PopupComponent* getPopupComponent();
+    void setPopupComponent(std::unique_ptr<PopupComponent> popupComponent);
 
     const std::vector<Component*>& getChildren() const
     {

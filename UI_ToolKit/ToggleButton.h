@@ -32,7 +32,6 @@ public:
 
     void setActive(bool active)
     {
-        std::cout << "setting button to : " << active << std::endl;
         isActive = active;
         repaint();
     }

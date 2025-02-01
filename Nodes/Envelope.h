@@ -30,19 +30,53 @@ public:
 
         void render(NVGcontext* nvg) override
         {
+            auto drawStar = [](NVGcontext* vg, float x, float y, float width, float height) {
+                float cx = x + width / 2;
+                float cy = y + height / 2;
+                float radius = std::min(width, height) / 2;
+
+                constexpr int points = 5;
+                constexpr float angleStep = NVG_PI * 2 / points;
+
+                // Compute star points
+                nvgBeginPath(vg);
+
+                for (int i = 0; i < points * 2; ++i) {
+                    float angle = NVG_PI / 2 + i * angleStep / 2;
+                    float r = (i % 2 == 0) ? radius : radius / 2.5f;
+                    float px = cx + cos(angle) * r;
+                    float py = cy - sin(angle) * r;
+
+                    if (i == 0)
+                        nvgMoveTo(vg, px, py);
+                    else
+                        nvgLineTo(vg, px, py);
+                }
+
+                nvgClosePath(vg);
+                nvgFillColor(vg, nvgRGBA(255, 215, 0, 255)); // Gold color
+                nvgFill(vg);
+                nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 255)); // Black outline
+                nvgStrokeWidth(vg, 2);
+                nvgStroke(vg);
+            };
+
             nvgBeginPath(nvg);
             auto bgCol = nvgRGB(33, 33, 33);
             auto outLineCol = nvgRGB(45, 45, 45);
             if (getIsHovered()) bgCol = outLineCol;
             if (getIsSelected()) outLineCol = nvgRGB(28, 73, 119);
-            nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
+
+            // Test for REALLY custom drawing! :-)
+            drawStar(nvg, 0, 0, width, height);
+            //nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
 
             nvgFontSize(nvg, 18.0f);
             nvgFontFace(nvg, "Regular");
-            nvgFillColor(nvg, nvgRGB(190, 190, 190));
-            nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            nvgFillColor(nvg, nvgRGB(10, 10, 10));
+            nvgTextAlign(nvg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-            nvgText(nvg, 10, height / 2, "env", nullptr);
+            nvgText(nvg, width/2, height / 2, "env", nullptr);
         }
     };
 

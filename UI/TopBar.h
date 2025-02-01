@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "../UI_ToolKit/Component.h"
+#include "../UI_ToolKit/PopupComponent.h"
 #include "../UI_ToolKit/ToggleButton.h"
 
 using namespace pptk;
 
-class MainMenu : public Component
+class MainMenu : public PopupComponent
 {
 public:
     class MenuItem : public Component
@@ -156,32 +156,18 @@ public:
             if (mainMenu && mainMenu->isVisible()
             )
             {
-                unregisterGlobalMouseListener();
-                mainMenu.reset();
+                setPopupComponent(nullptr);
                 mainMenuButton->setActive(false);
                 return;
             }
 
-            if (mainMenu)
-                unregisterGlobalMouseListener();
-
-            std::cout << "adding main menu" << std::endl;
-            mainMenu = std::make_unique<MainMenu>();
+            auto popup = std::make_unique<MainMenu>();
+            mainMenu = popup.get();
+            setPopupComponent(std::move(popup));
             getRootComponent()->addComponent(mainMenu.get());
+            mainMenu->registerMouseListener(mainMenuButton.get());
             mainMenu->setPosition(18, 50);
             mainMenuButton->setActive(true);
-
-            registerGlobalMouseListener([this](Component* comp)
-            {
-                if (!(mainMenu->isOrHasChild(comp) || comp == mainMenuButton.get()))
-                {
-                    std::cout << "removing main menu" << std::endl;
-                    unregisterGlobalMouseListener();
-                    mainMenu.reset();
-                    mainMenuButton->setActive(false);
-                }
-            });
-
         };
 
         addComponent(mainMenuButton.get());
@@ -255,7 +241,7 @@ private:
     bool isHit = false;
 
     std::unique_ptr<ToggleButton> mainMenuButton;
-    std::unique_ptr<MainMenu> mainMenu;
+    SafePointer<MainMenu> mainMenu;
 
     std::unique_ptr<ToggleButton> undo;
     std::unique_ptr<ToggleButton> redo;

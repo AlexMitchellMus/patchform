@@ -67,5 +67,5 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
 
 ObjectMenu::~ObjectMenu()
 {
-    std::cout << "deleting object menu" << std::endl;
+
 }
