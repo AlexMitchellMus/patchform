@@ -113,13 +113,14 @@ public:
 
     void resized() override
     {
-        topBar->setBounds(0, 0, getWidth(), 45);
-        canvas->setBounds(-canvas->canvasOrigin, - canvas->canvasOrigin + 45, canvas->infinteCanvasSize, canvas->infinteCanvasSize);
-        leftPanel->setBounds(0, 45, 200, getHeight() - 45);
+        const auto topBarHeight = 40;
+        topBar->setBounds(0, 0, getWidth(), topBarHeight);
+        canvas->setBounds(-canvas->canvasOrigin, - canvas->canvasOrigin + topBarHeight, canvas->infinteCanvasSize, canvas->infinteCanvasSize);
+        leftPanel->setBounds(0, topBarHeight, 200, getHeight() - topBarHeight);
 
         resizeToolDock(true);
 
-        rightPanel->setBounds(getWidth() - 200, 45, 200, getHeight() - 45);
+        rightPanel->setBounds(getWidth() - 200, topBarHeight, 200, getHeight() - topBarHeight);
     }
 
     std::unique_ptr<Canvas> canvas;
