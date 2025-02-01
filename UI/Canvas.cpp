@@ -133,18 +133,32 @@ void Canvas::deleteSelectedObjects()
     if (isInLockedMode())
         return;
 
-    selected.clear();
-
     objects.erase(std::remove_if(objects.begin(), objects.end(),
         [](const Object* obj) {
             return obj->getIsSelected(); // Only remove the objects that are currently selected
         }),
         objects.end());
 
+    std::vector<int> idsToDelete;
+
+    for (auto obj : selected)
+    {
+        auto objPtr = reinterpret_cast<Object*>(obj);
+        idsToDelete.push_back(objPtr->nodeID);
+        removeConnectionsFor(objPtr);
+    }
+
+    auto graphManager = reinterpret_cast<App*>(getRootComponent())->graphManager;
+
+    graphManager->removeObjects(idsToDelete);
+
+    selected.clear();
+
     callOjbectChangedListeners();
 
     connections.erase(std::remove_if(connections.begin(), connections.end(),
     [](const std::unique_ptr<Connection>& con) {
+
         return con->getIsSelected(); // Only remove the objects that are currently selected
     }),
     connections.end());
@@ -350,6 +364,24 @@ void Canvas::renderAll(NVGcontext* nvg)
     nvgRestore(nvg);
 }
 
+void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
+{
+    if (toAdd == nullptr)
+        return;
+
+    // DnD objects are semi-transparent
+    toAdd->opacity = 1.0f;
+
+    addComponent(toAdd);
+    toAdd->setPosition(position);
+
+    setSelected(toAdd);
+
+    objects.push_back(toAdd);
+
+    callOjbectChangedListeners();
+}
+
 void Canvas::addObject(Object* toAdd, Point position)
 {
     std::cout << "adding object into graph: " << toAdd->getObjectDefinition() << std::endl;
@@ -359,7 +391,7 @@ void Canvas::addObject(Object* toAdd, Point position)
     if (audioObject == nullptr)
         return;
 
-    auto object = audioObject->createUI(audioObject->getName(), audioObject->nodeID);
+    auto object = audioObject->createUI();
 
     addComponent(object);
     object->setPosition(position);

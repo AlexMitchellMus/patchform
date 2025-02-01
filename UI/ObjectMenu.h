@@ -108,6 +108,6 @@ private:
     Canvas* cnv;
     ToolDock* td;
 
-    std::unique_ptr<Object> dndObject;
+    SafePointer<Object> dndObject;
     std::vector<std::unique_ptr<Item>> items;
 };

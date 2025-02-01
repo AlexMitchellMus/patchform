@@ -9,7 +9,7 @@
 #include "AudioNodeBase.h"
 #include "Print.h"
 
-class Envelope : public AudioNode
+class Envelope final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Envelope", "env");
 
@@ -19,10 +19,11 @@ class Envelope : public AudioNode
     bool isAttack = false;  // Track whether the envelope is in attack phase
 
 public:
-    class EnvelopeUI : public UI
+#ifdef PATCHFORM_WITH_GUI
+    class UI final : public AudioNode::UI
     {
     public:
-        explicit EnvelopeUI(const std::string& objectName, int ID) : UI(objectName, ID)
+        explicit UI(const AudioNode* node) : AudioNode::UI(node)
         {
             setSize(100, 100);
         };
@@ -41,16 +42,15 @@ public:
             nvgFillColor(nvg, nvgRGB(190, 190, 190));
             nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-            nvgText(nvg, 10, height / 2, "SuperEnv", nullptr);
+            nvgText(nvg, 10, height / 2, "env", nullptr);
         }
     };
 
-    EnvelopeUI* createUI_Raw(const std::string& objectName, int ID) override
+    UI* createUI_Raw() override
     {
-        return new EnvelopeUI(objectName, ID);
+        return new UI(this);
     };
-
-
+#endif
     Envelope(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("Events", AudioPort::PortType::Data);

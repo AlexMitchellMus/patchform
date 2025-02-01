@@ -17,8 +17,6 @@
 
 #include "glaze/glaze.hpp"
 
-#define PATCHFORM_WITH_GUI
-
 #ifdef PATCHFORM_WITH_GUI
 #include "../UI/Object.h"
 #endif
@@ -53,7 +51,7 @@ public:
     class UI : public Object
     {
     public:
-        explicit UI(const std::string& objectName, int ID) : Object(objectName, ID) {  };
+        explicit UI(const AudioNode* node) : Object(node) {  };
     };
 #endif
 
@@ -77,15 +75,17 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    virtual UI* createUI_Raw(const std::string& objectName, int ID)
+    virtual UI* createUI_Raw()
     {
-        return new UI(objectName, ID);
+        return new UI(this);
     };
 
-    UI* createUI(std::string objectName, int ID)
+    UI* createUI()
     {
         // The default factory method creates a DefaultUI instance.
-        ui = std::unique_ptr<UI>(createUI_Raw(objectName, ID));
+        if (!ui)
+            ui = std::unique_ptr<UI>(createUI_Raw());
+
         return ui.get();
     }
 #endif

@@ -11,10 +11,11 @@
 #include "App.h"
 #include "Port.h"
 
+class AudioNode;
 class Canvas;
 class Object : public CanvasItem {
 public:
-    explicit Object(const std::string& name, int ID = -1);
+    explicit Object(const AudioNode* node);
 
     ~Object();
 

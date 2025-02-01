@@ -104,17 +104,23 @@ public:
         b.x = 5;
         b.y = 5;
         b.w = getWidth() - 10;
-        loadPatch->setBounds(b);
+        if (loadPatch)
+            loadPatch->setBounds(b);
         b.y += 35;
-        savePatch->setBounds(b);
+        if (savePatch)
+            savePatch->setBounds(b);
         b.y += 35;
-        saveAsPatch->setBounds(b);
+        if (saveAsPatch)
+            saveAsPatch->setBounds(b);
         b.y += 35;
-        applicationSettings->setBounds(b);
+        if (applicationSettings)
+            applicationSettings->setBounds(b);
         b.y += 35;
-        aboutApplication->setBounds(b);
+        if (aboutApplication)
+            aboutApplication->setBounds(b);
         b.y += 35;
-        quitApplication->setBounds(b);
+        if (quitApplication)
+            quitApplication->setBounds(b);
     }
 
     void render(NVGcontext* vg) override

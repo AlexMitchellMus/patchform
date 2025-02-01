@@ -6,6 +6,7 @@
 #include "Canvas.h"
 #include "ToolDock.h"
 #include "Constants.h"
+#include "../Graph/AudioGraph.h"
 
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
@@ -32,8 +33,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             {
                 auto droppedPos = cnv->globalToLocalWithScale(position.x, position.y);
                 std::cout << "dropping object at: " << droppedPos.toString() << std::endl;
-                cnv->addObject(dndObject.get(), droppedPos);
-                dndObject.reset();
+                cnv->addFromDnDMenu(dndObject.get(), droppedPos);
                 repaint();
                 td->removeAddObjectMenu();
             }
@@ -49,8 +49,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             }
             else
             {
-                dndObject = std::make_unique<Object>(name);
-                dndObject->setObjectDefinition(itemDef);
+                auto newAudioNode = reinterpret_cast<App*>(getRootComponent())->graphManager->addObject(itemDef);
+                dndObject = newAudioNode->createUI_Raw();
                 dndObject->scale = cnv->scale;
                 dndObject->opacity = 0.4f;
                 getRootComponent()->addComponent(dndObject.get());

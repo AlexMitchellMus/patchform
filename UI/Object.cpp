@@ -6,38 +6,31 @@
 
 #include "Canvas.h"
 #include "Object.h"
+#include "../Nodes/AudioNodeBase.h"
 
 #include <glaze/reflection/get_name.hpp>
 
-Object::Object(const std::string& name, int ID) : name(name), nodeID(ID)
+Object::Object(const AudioNode* node) : name(node->getName()), nodeID(node->nodeID)
 {
-    int width = 120;
-    int height = 40;
+    setBounds(0, 0, 120, 40);
 
-    int portDiam = 10;
+    auto convertPortType = [](const AudioPort::PortType& type) {
+        return (type == AudioPort::Signal) ? Port::PortType::Audio :
+               (type == AudioPort::Data) ? Port::PortType::Event : Port::PortType::None;
+    };
 
-    setBounds(0, 0, width, 40);
-
-    width -= 2.0f;
-
-    int numInputs = 2;
-
-    int totalDiam = portDiam * numInputs;
-
-    float spacing = (width - totalDiam)  / (numInputs - 1);
-
-    for (int i = 0; i < numInputs; ++i)
+    for (int i = 0; i < node->inputPortBuffers.size(); ++i)
     {
-        auto port = std::make_unique<Port>(i);
-        port->setBounds((i * spacing) + (i * portDiam) + 1.0f, 1.0f, portDiam, portDiam);
-        addComponent(port.get());
-        inPorts.push_back(std::move(port));
+        inPorts.push_back(std::make_unique<Port>(i, convertPortType(node->inputPortBuffers[i]->getPortType())));
+        addComponent(inPorts.back().get());
     }
 
-    auto port = std::make_unique<Port>(0, Port::Direction::Output);
-    port->setBounds(1.0f, height - portDiam - 1.0f, portDiam, portDiam);
-    addComponent(port.get());
-    outPorts.push_back(std::move(port));
+    if (convertPortType(node->outputPort.getPortType()) != Port::PortType::None)
+    {
+        outPorts.push_back(std::make_unique<Port>(0, convertPortType(node->outputPort.getPortType()), Port::Direction::Output));
+        addComponent(outPorts.back().get());
+    }
+    Object::resized();
 }
 
 Object::~Object()
@@ -50,14 +43,19 @@ Object::~Object()
 
 void Object::resized()
 {
+    int portDiam = 10;
+    int numInputs = static_cast<int>(inPorts.size());
+    float spacing = (getWidth() - 2 - (numInputs * portDiam)) / std::max(1, numInputs - 1);
+
     for (int i = 0; i < inPorts.size(); ++i)
     {
-        auto port = std::make_unique<Port>(i);
-        port->setBounds((i * 10) + (i * 10) + 1.0f, 1.0f, 10, 10);
+        inPorts[i]->setBounds(i * (spacing + portDiam) + 1, 1, portDiam, portDiam);
     }
 
-    if (outPorts.size())
-        outPorts.at(0)->setBounds(1.0f, height - 10 - 1.0f, 10, 10);
+    if (!outPorts.empty())
+    {
+        outPorts[0]->setBounds(1, getHeight() - portDiam - 1, portDiam, portDiam);
+    }
 }
 
 void Object::mouseEnter(SDL_Event& e)

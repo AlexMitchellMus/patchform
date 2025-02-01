@@ -94,7 +94,7 @@ void Port::render(NVGcontext* nvg)
     //nvgRGB(119, 28, 118)
     auto orange = nvgRGB(120, 74, 28);
     auto blue = nvgRGB(28, 73, 119);
-    auto portCol = portNum == 0 ? blue : orange;
+    auto portCol = portType == PortType::Event ? blue : orange;
     nvgFillColor(nvg, portCol); // Blue fill for ports
     nvgFill(nvg);
 

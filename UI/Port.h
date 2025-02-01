@@ -15,11 +15,14 @@
 
 class Port : public pptk::Component {
 public:
-    enum class Direction {Input, Output};
+    enum class Direction { Input, Output };
+    enum class PortType { None, Audio, Event, ImEvent };
 
-    explicit Port(int portNum, Direction dir = Direction::Input)
+    explicit Port(int portNum, PortType type = PortType::Audio, Direction dir = Direction::Input)
         : portNum(portNum)
-        , direction(dir) { };
+        , direction(dir)
+        , portType(type)
+    {};
 
     void mouseButtonDown(SDL_Event& e) override;
 
@@ -48,6 +51,7 @@ public:
 private:
     Direction direction;
     int portNum;
+    PortType portType;
 
     pptk::SafePointer<Port> foundPort;
 

@@ -336,7 +336,7 @@ public:
         // Create nodes
         for (const auto& node : patch["nodes"])
         {
-            addObject(node);
+            createObject(node);
         }
 
         // Create connections
@@ -741,8 +741,8 @@ public:
     }
 
     template <typename NodeType>
-    AudioNode* addNode(const std::optional<std::string>& idString, json& nodeCreationData) {
-
+    AudioNode* addNode(const std::optional<std::string>& idString, json& nodeCreationData)
+    {
         auto node = std::make_unique<NodeType>(context, nodeCreationData);
 
         auto rawNode = node.get();
@@ -752,7 +752,8 @@ public:
         node->nodeID = nodeID;
 
         // Determine the ID to use for the object ID map
-        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);  // Fallback to node ID
+        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);
+        // Fallback to node ID
 
         objectIDMap[finalID] = nodeID;
 
@@ -785,7 +786,7 @@ public:
         return idCounter;
     }
 
-    AudioNode* addObject(json node)
+    AudioNode* createObject(json node, bool addToGraph = true)
     {
         auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
 
@@ -890,7 +891,7 @@ public:
         Logger::getInstance().stopProcessingThread();
     }
 
-    AudioNode* addObject(const std::string& objName)
+    AudioNode* addObject(const std::string& objName, bool addToGraph = true)
     {
         if (!activeGraph)
         {
@@ -901,7 +902,7 @@ public:
 
         json object;
         object["obj"] = objName;
-        return activeGraph->addObject(object);
+        return activeGraph->createObject(object, addToGraph);
     }
 
     AudioNode* addObject(const json& jsonObj)
@@ -913,7 +914,7 @@ public:
 
         // TODO: Lock the graph, or communicate via a queue
 
-        return activeGraph->addObject(jsonObj);
+        return activeGraph->createObject(jsonObj);
     }
 
     void removeObject(int id)
@@ -924,6 +925,24 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
 
         transitioningGraph->removeObject(id);
+
+        transitioningGraph->updateConnections();
+        transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+    }
+
+    void removeObjects(std::vector<int>& ids)
+    {
+        if (!activeGraph)
+            return;
+
+        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
+
+        for (auto id : ids)
+            transitioningGraph->removeObject(id);
 
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
