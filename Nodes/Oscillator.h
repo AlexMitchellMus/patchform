@@ -28,8 +28,8 @@ class Oscillator : public AudioNode {
 
 protected:
     static constexpr int TABLE_SIZE = 8192;
-    static WaveTables waveformTables;
-    static bool initialized;
+    inline static WaveTables waveformTables;
+    inline static bool initialized;
 
     // TODO: move to state management
     float phase = 0.0f;
@@ -169,5 +169,5 @@ public:
 };
 
 // Static member definitions
-WaveTables Oscillator::waveformTables;
-bool Oscillator::initialized = false;
+//WaveTables Oscillator::waveformTables;
+//bool Oscillator::initialized = false;

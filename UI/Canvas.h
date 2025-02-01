@@ -14,6 +14,7 @@ class Lasso;
 class Object;
 class Port;
 class CanvasItem;
+class GraphManager;
 
 class Canvas : public pptk::Component {
 public:
@@ -23,7 +24,7 @@ public:
 
     using ObjectChangedListeners = std::vector<std::function<void()>>;
 
-    Canvas();
+    Canvas(GraphManager* gm);
 
     std::vector<Object*> getObjects() const;
 
@@ -77,7 +78,9 @@ public:
     static constexpr int canvasOrigin = 64000;
 
 private:
-    std::vector<std::unique_ptr<Object>> objects;
+    GraphManager* graphManager;
+
+    std::vector<Object*> objects;
     std::vector<std::unique_ptr<Connection>> connections;
     std::vector<CanvasItem*> selected;
 

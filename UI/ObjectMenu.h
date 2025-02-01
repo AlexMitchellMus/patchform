@@ -6,6 +6,9 @@
 
 #include "../UI_ToolKit/Component.h"
 
+#include "json.hpp"
+using json = nlohmann::json;
+
 using namespace pptk;
 
 class Object;
@@ -13,7 +16,7 @@ class Canvas;
 
 struct ObjectDef
 {
-    std::string name;
+    json definition;
     std::string_view icon;
 };
 
@@ -25,8 +28,9 @@ class Item : public pptk::Component
     std::function<void(Point)> onMouseUp = [](Point){};
 
 
-    Item(ObjectDef def) : name(def.name), icon(def.icon)
+    Item(ObjectDef def) : definition(def.definition), icon(def.icon)
     {
+        name = !definition.empty() ? definition.value<std::string>("obj", "empty") : "empty";
     };
 
     void mouseDrag(const Point& position, const Point& delta, Button button) override
@@ -64,14 +68,15 @@ class Item : public pptk::Component
         nvgText(vg, getWidth() / 2, 32, icon.c_str(), nullptr);
     }
 
-    std::string& getObjectDefinition()
+    json getObjectDefinition()
     {
-        return name;
+        return definition;
     }
 
 private:
     bool hovered = false;
 
+    json definition;
     std::string name;
     std::string icon;
 

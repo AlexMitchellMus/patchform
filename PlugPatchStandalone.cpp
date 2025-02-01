@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "PortAudio.h"
+
 #include "Graph/AudioGraph.h"
 
 #define GLAD_GL_IMPLEMENTATION
@@ -18,6 +19,7 @@
 
 #include "UI/App.h"
 #include "UI_ToolKit/EventManager.h"
+
 
 // Remove window titlebar- more work to do
 void AdjustWindowSize(SDL_Window *window) {
@@ -92,6 +94,43 @@ static int audioCallback(const void* input, void* output,
 
 int main(int argc, char* argv[])
 {
+    //===================== SETUP PORTAUDIO =====================
+    PaError err;
+    unsigned long frameCount = 64;
+    float sampleRate = 44100.0f;
+
+    // Initialize PortAudio
+    err = Pa_Initialize();
+    if (err != paNoError) {
+        std::cerr << "PortAudio initialization failed: " << Pa_GetErrorText(err) << std::endl;
+        return 1;
+    }
+
+    //===================== AUDIO ENGINE =====================
+
+    auto context = std::make_unique<NodeContext>(sampleRate, frameCount);
+
+    GraphManager graphs(context.get());
+
+    // Set up PortAudio stream
+    PaStream* stream;
+    err = Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, sampleRate, frameCount, audioCallback, &graphs);
+    if (err != paNoError) {
+        std::cerr << "PortAudio stream setup failed: " << Pa_GetErrorText(err) << std::endl;
+        return 1;
+    }
+
+    // Start stream
+    err = Pa_StartStream(stream);
+    if (err != paNoError) {
+        std::cerr << "PortAudio stream start failed: " << Pa_GetErrorText(err) << std::endl;
+        return 1;
+    }
+
+    auto streamInfo = Pa_GetStreamInfo(stream);
+
+    //===================== SETUP SDL =====================
+
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("Failed to initialize SDL2: %s", SDL_GetError());
         return -1;
@@ -170,7 +209,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    auto app = std::make_unique<App>();
+    auto app = std::make_unique<App>(&graphs);
     // FIXME: hack to make the app have a starting size!
     app->setBounds(0, 0, newWidth, newHeight);
 

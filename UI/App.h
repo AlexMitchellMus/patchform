@@ -41,12 +41,12 @@ public:
         nvgStroke(nvg);
     }
 };
-
+class GraphManager;
 class App : public RootComponent {
 public:
-    App() {
+    App(GraphManager* gm) : graphManager(gm) {
 
-        canvas = std::make_unique<Canvas>();
+        canvas = std::make_unique<Canvas>(graphManager);
         canvas->setName("canvas");
         addComponent(canvas.get());
 
@@ -122,6 +122,10 @@ public:
 
         rightPanel->setBounds(getWidth() - 200, topBarHeight, 200, getHeight() - topBarHeight);
     }
+
+    GraphManager* graphManager;
+
+private:
 
     std::unique_ptr<Canvas> canvas;
     std::unique_ptr<TopBar> topBar;

@@ -9,7 +9,7 @@
 
 #include <glaze/reflection/get_name.hpp>
 
-Object::Object(const std::string& name) : name(name)
+Object::Object(const std::string& name, int ID) : name(name), nodeID(ID)
 {
     int width = 120;
     int height = 40;
@@ -46,6 +46,18 @@ Object::~Object()
     {
         cnv->removeConnectionsFor(this);
     }
+}
+
+void Object::resized()
+{
+    for (int i = 0; i < inPorts.size(); ++i)
+    {
+        auto port = std::make_unique<Port>(i);
+        port->setBounds((i * 10) + (i * 10) + 1.0f, 1.0f, 10, 10);
+    }
+
+    if (outPorts.size())
+        outPorts.at(0)->setBounds(1.0f, height - 10 - 1.0f, 10, 10);
 }
 
 void Object::mouseEnter(SDL_Event& e)

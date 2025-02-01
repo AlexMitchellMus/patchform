@@ -43,6 +43,8 @@ public:
 
     [[nodiscard]] bool isOutput() const { return direction == Direction::Output; };
 
+    int getPortNum() const { return portNum; };
+
 private:
     Direction direction;
     int portNum;

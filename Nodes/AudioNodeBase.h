@@ -17,6 +17,12 @@
 
 #include "glaze/glaze.hpp"
 
+#define PATCHFORM_WITH_GUI
+
+#ifdef PATCHFORM_WITH_GUI
+#include "../UI/Object.h"
+#endif
+
 #include "json.hpp"
 using json = nlohmann::json;
 
@@ -31,6 +37,7 @@ public:                                                                         
     }();                                                                        \
     const std::string& getName() const override { return name; }                \
     const std::string& getShortName() const override { return shortName; }      \
+    private:                                                                    \
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -41,6 +48,15 @@ class AudioGraph;
 // Abstract AudioNode class
 class AudioNode {
 public:
+
+#ifdef PATCHFORM_WITH_GUI
+    class UI : public Object
+    {
+    public:
+        explicit UI(const std::string& objectName, int ID) : Object(objectName, ID) {  };
+    };
+#endif
+
     std::vector<std::unique_ptr<AudioPort>> inputPortBuffers;
 
     AudioPort outputPort;
@@ -59,6 +75,20 @@ public:
     {
         //std::cout << "destorying audio node: " << nodeID << std::endl;
     }
+
+#ifdef PATCHFORM_WITH_GUI
+    virtual UI* createUI_Raw(const std::string& objectName, int ID)
+    {
+        return new UI(objectName, ID);
+    };
+
+    UI* createUI(std::string objectName, int ID)
+    {
+        // The default factory method creates a DefaultUI instance.
+        ui = std::unique_ptr<UI>(createUI_Raw(objectName, ID));
+        return ui.get();
+    }
+#endif
 
     // Glaze read json as std::string (not connected ATM)
     template <typename T>
@@ -104,6 +134,8 @@ private:
         outputPort.clear(frameCount);
         processAudio(buffer, frameCount);
     }
-
+#ifdef PATCHFORM_WITH_GUI
+    std::unique_ptr<UI> ui = nullptr;
+#endif
     friend class AudioGraph;
 };

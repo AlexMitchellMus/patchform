@@ -12,8 +12,15 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+
 #include "SDL3/SDL.h"
+
+#ifndef NANOVG_GL3_IMPLEMENTATION
+#define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg.h"
+#endif
+
+
 #include <functional>
 #include <iostream>
 #include "SafePointer.h"
@@ -129,6 +136,7 @@ public:
         width = newWidth;
         height = newHeight;
 
+        resized();
         repaint();
     }
 

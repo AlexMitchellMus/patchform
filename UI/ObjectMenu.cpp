@@ -10,13 +10,16 @@
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
     ObjectDef objectDef[10] = {
-        {"metro", ICONS::Metro},
-        {"osc", ICONS::Osc},
-        {"lfo", ICONS::Lfo},
-        {"adsr", ICONS::Adsr},
-        {"count", ICONS::Count},
-        {"print", ICONS::Print},
-        {"aout", ICONS::Aout}
+        { {{"obj", "Metro"}, {"hz", 8}}, ICONS::Metro},
+        { {{"obj", "Metro"}, {"hz", 1}}, ICONS::Metro},
+        { {{"obj", "Osc"}, {"waveform", "sine"}, {"freq",  660}}, ICONS::Osc},
+        { {{"obj", "Osc"}, {"waveform", "saw"}, {"freq",  330}}, ICONS::Osc},
+        { {{"obj", "lfo"}}, ICONS::Lfo},
+        { {{"obj", "env"}, {"attack", 100}, {"decay", 100}}, ICONS::Adsr},
+        { {{"obj", "env"}, {"attack", 500}, {"decay", 500}}, ICONS::Adsr},
+        { {{"obj", "count"}}, ICONS::Count},
+        { {{"obj", "print"}}, ICONS::Print},
+        { {{"obj", "aout"}}, ICONS::Aout}
     };
 
     for (int i = 0; i < 10; i++)
@@ -36,7 +39,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             }
         };
 
-        item->onMouseDrag = [this](Point position, const std::string& name, Point offset)
+        item->onMouseDrag = [this, itemDef = item->getObjectDefinition()](Point position, const std::string& name, Point offset)
         {
             if (dndObject)
             {
@@ -47,6 +50,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             else
             {
                 dndObject = std::make_unique<Object>(name);
+                dndObject->setObjectDefinition(itemDef);
                 dndObject->scale = cnv->scale;
                 dndObject->opacity = 0.4f;
                 getRootComponent()->addComponent(dndObject.get());

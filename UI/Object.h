@@ -14,7 +14,7 @@
 class Canvas;
 class Object : public CanvasItem {
 public:
-    explicit Object(const std::string& name);
+    explicit Object(const std::string& name, int ID = -1);
 
     ~Object();
 
@@ -24,6 +24,8 @@ public:
     void mouseLeave(SDL_Event& e) override;
     void keyPressed(SDL_Event& e) override;
 
+    void resized() override;
+
     void render(NVGcontext* nvg) override;
 
     [[nodiscard]] const std::string& getName() const { return name; }
@@ -32,15 +34,25 @@ public:
 
     [[nodiscard]] uint8_t getNumOutputs() const { return outPorts.size(); };
 
-    std::string& getObjectDefinition()
+    json getObjectDefinition()
     {
         return definition;
     };
 
+    bool getIsHovered() const { return isHovered; };
+    bool getIsSelected() const { return isSelected; };
+
+    void setObjectDefinition(json j)
+    {
+        definition = j;
+    }
+
+    int nodeID = -1;
+
 private:
 
     std::string name;
-    std::string definition;
+    json definition;
     std::vector<std::unique_ptr<Port>> inPorts;
     std::vector<std::unique_ptr<Port>> outPorts;
 

@@ -40,6 +40,7 @@ file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp")
 
 # PlugPatchCLI target
 add_executable(PlugPatchCLI PlugPatchCLI.cpp ${GRAPH_SOURCES})
+
 target_include_directories(PlugPatchCLI PRIVATE
         "${CMAKE_SOURCE_DIR}/external/portaudio/include"
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
@@ -67,6 +68,7 @@ file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
 add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
+target_compile_definitions(PlugPatchStandalone PRIVATE PATCHFORM_WITH_GUI)
 target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"

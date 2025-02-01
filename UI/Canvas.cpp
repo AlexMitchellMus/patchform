@@ -9,8 +9,9 @@
 #include "Connection.h"
 #include "Lasso.h"
 #include "CanvasItem.h"
+#include "../Graph/AudioGraph.h"
 
-Canvas::Canvas()
+Canvas::Canvas(GraphManager* gm) : graphManager(gm)
 {
 }
 
@@ -21,7 +22,7 @@ std::vector<Object*> Canvas::getObjects() const
 
     for (auto& obj : objects)
     {
-        objs.push_back(obj.get());
+        objs.push_back(obj);
     }
 
     return objs;
@@ -59,11 +60,11 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
         {
             if (lassoBounds.intersects(obj->getBounds()))
             {
-                addToSelection(obj.get());
+                addToSelection(obj);
             }
             else
             {
-                removeFromSelection(obj.get());
+                removeFromSelection(obj);
             }
         }
     }
@@ -135,7 +136,7 @@ void Canvas::deleteSelectedObjects()
     selected.clear();
 
     objects.erase(std::remove_if(objects.begin(), objects.end(),
-        [](const std::unique_ptr<Object>& obj) {
+        [](const Object* obj) {
             return obj->getIsSelected(); // Only remove the objects that are currently selected
         }),
         objects.end());
@@ -351,20 +352,36 @@ void Canvas::renderAll(NVGcontext* nvg)
 
 void Canvas::addObject(Object* toAdd, Point position)
 {
-    auto object = std::make_unique<Object>(toAdd->getName());
+    std::cout << "adding object into graph: " << toAdd->getObjectDefinition() << std::endl;
 
-    addComponent(object.get());
+    auto audioObject = graphManager->addObject(toAdd->getObjectDefinition());
+
+    if (audioObject == nullptr)
+        return;
+
+    auto object = audioObject->createUI(audioObject->getName(), audioObject->nodeID);
+
+    addComponent(object);
     object->setPosition(position);
 
-    setSelected(object.get());
+    setSelected(object);
 
-    objects.push_back(std::move(object));
+    objects.push_back(object);
 
     callOjbectChangedListeners();
 }
 
 void Canvas::addConnection(Port* origin, Port* dest)
 {
+    if (!origin->isOutput())
+        std::swap(origin, dest);
+
+    auto inputObj = reinterpret_cast<Object*>(origin->getParent());
+    auto outputObj = reinterpret_cast<Object*>(dest->getParent());
+
+
+    graphManager->connect(std::to_string(inputObj->nodeID), origin->getPortNum(), std::to_string(outputObj->nodeID), dest->getPortNum());
+
     auto connection = std::make_unique<Connection>(origin, dest);
 
     addComponent(connection.get());

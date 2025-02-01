@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AudioNodeBase.h"
+#include "Print.h"
 
 class Envelope : public AudioNode
 {
@@ -18,6 +19,38 @@ class Envelope : public AudioNode
     bool isAttack = false;  // Track whether the envelope is in attack phase
 
 public:
+    class EnvelopeUI : public UI
+    {
+    public:
+        explicit EnvelopeUI(const std::string& objectName, int ID) : UI(objectName, ID)
+        {
+            setSize(100, 100);
+        };
+
+        void render(NVGcontext* nvg) override
+        {
+            nvgBeginPath(nvg);
+            auto bgCol = nvgRGB(33, 33, 33);
+            auto outLineCol = nvgRGB(45, 45, 45);
+            if (getIsHovered()) bgCol = outLineCol;
+            if (getIsSelected()) outLineCol = nvgRGB(28, 73, 119);
+            nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
+
+            nvgFontSize(nvg, 18.0f);
+            nvgFontFace(nvg, "Regular");
+            nvgFillColor(nvg, nvgRGB(190, 190, 190));
+            nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+            nvgText(nvg, 10, height / 2, "SuperEnv", nullptr);
+        }
+    };
+
+    EnvelopeUI* createUI_Raw(const std::string& objectName, int ID) override
+    {
+        return new EnvelopeUI(objectName, ID);
+    };
+
+
     Envelope(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("Events", AudioPort::PortType::Data);

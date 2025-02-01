@@ -741,9 +741,11 @@ public:
     }
 
     template <typename NodeType>
-    void addNode(const std::optional<std::string>& idString, json& nodeCreationData) {
+    AudioNode* addNode(const std::optional<std::string>& idString, json& nodeCreationData) {
 
         auto node = std::make_unique<NodeType>(context, nodeCreationData);
+
+        auto rawNode = node.get();
 
         const auto nodeID = generateID();
 
@@ -761,6 +763,10 @@ public:
         setSummingFunctionForNode(node.get());
 
         objects.push_back(std::move(node));
+
+        std::cout << "adding node: " << nodeCreationData.value("obj", "") << std::endl;
+
+        return rawNode;
     };
 
     uint32_t generateID() const
@@ -779,7 +785,7 @@ public:
         return idCounter;
     }
 
-    bool addObject(json node)
+    AudioNode* addObject(json node)
     {
         auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
 
@@ -796,71 +802,69 @@ public:
         {
         case hash("add"):
             {
-                addNode<Add>(idString, node);
+                return addNode<Add>(idString, node);
             }
             break;
         case hash("count"):
             {
-                addNode<Count>(idString, node);
+                return addNode<Count>(idString, node);
             }
             break;
         case hash("print"):
             {
-                addNode<Print>(idString, node);
+                return addNode<Print>(idString, node);
             }
             break;
         case hash("if"):
             {
-                addNode<If>(idString, node);
+                return addNode<If>(idString, node);
             }
             break;
         case hash("env"):
         case hash("envelope"):
             {
-                addNode<Envelope>(idString, node);
+                return addNode<Envelope>(idString, node);
             }
             break;
         case hash("metro"):
         case hash("metronome"):
             {
-                addNode<Metronome>(idString, node);
+                return addNode<Metronome>(idString, node);
             }
             break;
         case hash("val"):
         case hash("value"):
             {
-                addNode<Value>(idString, node);
+                return addNode<Value>(idString, node);
             }
             break;
         case hash("lfo"):
             {
-                addNode<LFO>(idString, node);
+                return addNode<LFO>(idString, node);
             }
             break;
         case hash("volume"):
             {
-                addNode<Volume>(idString, node);
+                return addNode<Volume>(idString, node);
             }
             break;
         case hash("osc"):
         case hash("oscillator"):
             {
-                addNode<Oscillator>(idString, node);
+                return addNode<Oscillator>(idString, node);
             }
             break;
         case hash("aout"):
         case hash("audioout"):
             {
-                addNode<AudioOut>(idString, node);
+                return addNode<AudioOut>(idString, node);
             }
             break;
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
-            return false;
+            return nullptr;
         }
-
-        return true;
     };
 
     void printGraph()
@@ -886,7 +890,7 @@ public:
         Logger::getInstance().stopProcessingThread();
     }
 
-    bool addObject(const std::string& objName)
+    AudioNode* addObject(const std::string& objName)
     {
         if (!activeGraph)
         {
@@ -900,7 +904,7 @@ public:
         return activeGraph->addObject(object);
     }
 
-    bool addObject(const json& jsonObj)
+    AudioNode* addObject(const json& jsonObj)
     {
         if (!activeGraph)
         {
