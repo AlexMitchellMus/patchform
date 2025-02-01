@@ -29,7 +29,7 @@ using json = nlohmann::json;
 #include "Logger.h"
 #include "../Utility/ppl_string.hpp"
 #include "AdjacencyMap.h"
-#include "Connection.h"
+#include "Edge.h"
 
 #undef max
 
@@ -270,7 +270,7 @@ public:
 
 class GraphHolder
 {
-    std::vector<std::shared_ptr<Connection>> connections;
+    std::vector<std::shared_ptr<Edge>> connections;
     std::vector<std::shared_ptr<AudioNode>> objects;
 
     ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
@@ -499,7 +499,7 @@ public:
     // Create connections with the object index
     void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto newConnection = std::make_shared<Connection>(oNode, oPort, iNode, iPort);
+        auto newConnection = std::make_shared<Edge>(oNode, oPort, iNode, iPort);
 
         // Check if the connection already exists
         for (const auto& conn : connections)
@@ -528,7 +528,7 @@ public:
     // Remove connections with the object index
     void disconnect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
-        auto toRemove = Connection::encodeHash(oNode, oPort, iNode, iPort);
+        auto toRemove = Edge::encodeHash(oNode, oPort, iNode, iPort);
         std::erase_if(connections, [toRemove](const auto& connection) {
             return connection->getHash() == toRemove; // Predicate to match the connection to remove
         });

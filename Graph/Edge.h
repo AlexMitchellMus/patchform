@@ -15,7 +15,7 @@
 
 #include "AdjacencyMap.h"
 
-class Connection
+class Edge
 {
     uint32_t oCanvas;
     uint32_t oNode;
@@ -28,7 +28,7 @@ class Connection
     uint64_t conHash;
 
 public:
-    Connection(unsigned int oNode, unsigned int oPort, unsigned int iNode, unsigned int iPort)
+    Edge(unsigned int oNode, unsigned int oPort, unsigned int iNode, unsigned int iPort)
         : iNode(iNode), iPort(iPort), oNode(oNode), oPort(oPort)
           , conHash(encodeHash(oNode, oPort, iNode, iPort))
     {

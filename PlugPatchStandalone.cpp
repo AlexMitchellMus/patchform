@@ -2,6 +2,9 @@
 #include <sstream>
 #include <iostream>
 
+#include "PortAudio.h"
+#include "Graph/AudioGraph.h"
+
 #define GLAD_GL_IMPLEMENTATION
 #include "Glad/gl.h"
 
@@ -66,6 +69,26 @@ bool resizingEventWatcher(void* data, SDL_Event* event) {
 }
 
 static Uint32 timerEventType = 0;
+
+// PortAudio Callback
+static int audioCallback(const void* input, void* output,
+                         unsigned long frameCount,
+                         const PaStreamCallbackTimeInfo* timeInfo,
+                         PaStreamCallbackFlags statusFlags,
+                         void* userData) {
+    auto* graphs = static_cast<GraphManager*>(userData);
+    float* out = (float*)output;
+
+    std::fill(out, out+frameCount, 0.0);
+
+    graphs->process(out, frameCount);  // Process the audio graph
+
+    if ((statusFlags & paOutputUnderflow) || (statusFlags & paInputOverflow)) {
+        std::cerr << "Audio under of over flow" << std::endl;
+    }
+
+    return paContinue;
+}
 
 int main(int argc, char* argv[])
 {
