@@ -27,6 +27,7 @@ public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
             setSize(100, 100);
+            setGuiIsTransparent(true);
         };
 
         float valueToAngle(float value)
@@ -51,20 +52,21 @@ public:
             }
         }
 
-        void render(NVGcontext* nvg) override
+        void drawGUI(NVGcontext* nvg) override
         {
-            auto radius = getWidth() * 0.5f;
+            const auto centre = getWidth() * 0.5f;
+            const auto radius = getWidth() * 0.4f;
             // Draw dial background
             nvgBeginPath(nvg);
-            nvgCircle(nvg, radius, radius, radius);
+            nvgCircle(nvg, centre, centre, radius);
             nvgFillColor(nvg, nvgRGBA(50, 50, 50, 255));  // Dark gray background
             nvgFill(nvg);
 
             // Calculate dot position based on angle
             float dotRadius = radius * 0.2f;  // Small dot
             auto angle = valueToAngle(value);
-            float dotX = radius + (radius - dotRadius - 10) * cos(angle);
-            float dotY = radius + (radius - dotRadius - 10) * sin(angle);
+            float dotX = centre + (radius - dotRadius - 10) * cos(angle);
+            float dotY = centre + (radius - dotRadius - 10) * sin(angle);
 
             // Draw dot
             nvgBeginPath(nvg);

@@ -30,7 +30,10 @@ public:
 
     void resized() override;
 
+    void setGuiIsTransparent(bool isTransparent);
     void render(NVGcontext* nvg) override;
+    void drawBackground(NVGcontext* nvg);
+    virtual void drawGUI(NVGcontext* nvg);
 
     [[nodiscard]] const std::string& getName() const { return name; }
 
@@ -69,5 +72,7 @@ private:
     friend class Canvas;
 
     bool multiSelected = false;
+
+    bool isGuiTransparent = false;
 };
 

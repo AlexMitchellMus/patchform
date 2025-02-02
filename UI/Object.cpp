@@ -124,15 +124,34 @@ void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& de
     }
 }
 
+void Object::setGuiIsTransparent(bool isTransparent)
+{
+    isGuiTransparent = isTransparent;
+}
+
+
 void Object::render(NVGcontext* nvg)
 {
-    nvgBeginPath(nvg);
-    auto bgCol = nvgRGB(33, 33, 33);
-    auto outLineCol = nvgRGB(45, 45, 45);
-    if (isHovered) bgCol = outLineCol;
-    if (isSelected) outLineCol = nvgRGB(28, 73, 119);
-    nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
+    drawBackground(nvg);
 
+    drawGUI(nvg);
+}
+
+void Object::drawBackground(NVGcontext* nvg)
+{
+    nvgBeginPath(nvg);
+    auto bgCol = isHovered ? nvgRGB(45, 45, 45) : nvgRGB(33, 33, 33);
+
+    if (isGuiTransparent)
+        bgCol.a *= 0.3f;
+
+    auto outLineCol = isSelected ? nvgRGB(28, 73, 119) : isGuiTransparent ? bgCol : nvgRGB(45, 45, 45);
+
+    nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
+};
+
+void Object::drawGUI(NVGcontext* nvg)
+{
     nvgFontSize(nvg, 18.0f);
     nvgFontFace(nvg, "Regular");
     nvgFillColor(nvg, nvgRGB(190, 190, 190));
