@@ -17,6 +17,9 @@ class Object : public CanvasItem {
 public:
     explicit Object(AudioNode* node);
 
+    // Make a non-functioning UI only object (only for testing)
+    explicit Object(std::string name);
+
     ~Object() override;
 
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
@@ -51,7 +54,7 @@ public:
     int nodeID = -1;
 
 private:
-    AudioNode* audioNode;
+    AudioNode* audioNode = nullptr;
 
     std::string name;
     json definition;

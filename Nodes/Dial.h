@@ -36,9 +36,8 @@ public:
             {
                 if (cnv->isInLockedMode())
                 {
-                    value -= delta.y * 0.005f;
+                    value -= delta.y * 0.005f * cnv->scale;
                     value = fmax(0.0f, fmin(value, 1.0f));
-                    std::cout << "dial val: " << value << std::endl;
                     repaint();
                 }
                 else AudioNode::UI::mouseDrag(position, delta, button);
@@ -63,11 +62,10 @@ public:
             // Draw dot
             nvgBeginPath(nvg);
             nvgCircle(nvg, dotX, dotY, dotRadius);
-            nvgFillColor(nvg, nvgRGBA(20, 20, 20, 255));
+            nvgFillColor(nvg, nvgRGBA(28, 28, 28, 255));
             nvgFill(nvg);
         }
     private:
-        float angle = 0;
         float value = 0;
 
         const float minAngle = -NVG_PI * 0.75f; // -135 degrees

@@ -13,6 +13,20 @@
 
 Canvas::Canvas(GraphManager* gm) : graphManager(gm)
 {
+#ifdef GENERATE_TEST_OBJECTS
+    for (int i = 0; i < 1000; ++i)
+    {
+        auto obj = std::make_unique<Object>("test_obj " + std::to_string(i));
+        addComponent(obj.get());
+        objects.push_back(obj.get());
+        testObjects.push_back(std::move(obj));
+    }
+
+    for (const auto& obj : objects)
+    {
+        obj->setPosition((std::rand() % 800) + canvasOrigin, (std::rand() % 800) + canvasOrigin);
+    }
+#endif
 }
 
 std::vector<Object*> Canvas::getObjects() const

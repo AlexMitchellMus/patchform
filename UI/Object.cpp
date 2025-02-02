@@ -33,6 +33,21 @@ Object::Object(AudioNode* node) : nodeID(node->nodeID), audioNode(node), name(no
     Object::resized();
 }
 
+Object::Object(std::string name) : name(name)
+{
+    setBounds(0, 0, 120, 40);
+
+    for (int i = 0; i < 2; ++i)
+    {
+        inPorts.push_back(std::make_unique<Port>(i, Port::PortType::Audio));
+        addComponent(inPorts.back().get());
+    }
+
+    outPorts.push_back(std::make_unique<Port>(0, Port::PortType::Audio, Port::Direction::Output));
+    addComponent(outPorts.back().get());
+    Object::resized();
+}
+
 Object::~Object()
 {
     std::cout << "object deleting: " << std::endl;

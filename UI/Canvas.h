@@ -16,6 +16,8 @@ class Port;
 class CanvasItem;
 class GraphManager;
 
+//#define GENERATE_TEST_OBJECTS
+
 class Canvas : public pptk::Component {
 public:
     enum class DisplayMode { Edit, Lock };
@@ -90,6 +92,11 @@ private:
     std::unique_ptr<Lasso> lasso;
 
     DisplayMode mode = DisplayMode::Edit;
+
+#ifdef GENERATE_TEST_OBJECTS
+    // ONLY FOR TESTING! These objects are not connected to the DSP system
+    std::vector<std::unique_ptr<Object>> testObjects;
+#endif
 
     void clearSelection();
 };
