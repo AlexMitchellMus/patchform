@@ -251,7 +251,6 @@ int main(int argc, char* argv[])
     while (running)
     {
         Uint32 currentFrameTime = SDL_GetTicks();
-
         while (SDL_PollEvent(&event)) {
             switch (event.type)
             {
@@ -301,12 +300,12 @@ int main(int argc, char* argv[])
             continue;
         }
 
+        app->handleTime(currentFrameTime);
+
         if (!app->needsRepaint()){
             SDL_Delay(1);
             continue;
         }
-
-        app->handleTime(currentFrameTime);
 
         // Update last frame time for the next frame
         lastFrameTime = currentFrameTime;

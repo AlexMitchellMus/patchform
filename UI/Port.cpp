@@ -38,7 +38,7 @@ void Port::mouseButtonUp(SDL_Event& e)
             if (thisObj && otherObj && (thisObj != otherObj))
             {
                 cnv->addConnection(this, foundPort.get());
-                std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
+                //std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
             }
         }
     }

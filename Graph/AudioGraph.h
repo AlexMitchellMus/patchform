@@ -208,7 +208,7 @@ public:
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout << objectList.size() << " objects in graph " <<  objectsSorted.size() << " objects sorted, sort took " << elapsedNs << " ns.\n";
+        //std::cout << objectList.size() << " objects in graph " <<  objectsSorted.size() << " objects sorted, sort took " << elapsedNs << " ns.\n";
 #endif
 
 
@@ -437,7 +437,7 @@ public:
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout << "PortPointerMap took " << elapsedNs << " ns.\n";
+        //std::cout << "PortPointerMap took " << elapsedNs << " ns.\n";
 
 //#define PORTPOINTER_DEBUG
 #ifdef PORTPOINTER_DEBUG
@@ -954,7 +954,6 @@ public:
 
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
     {
-        std::cout << "== adding connection from CLI" << std::endl;
         if (!activeGraph) {
             std::cerr << "No active graph available to connect objects." << std::endl;
             return false;
