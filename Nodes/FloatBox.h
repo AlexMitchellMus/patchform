@@ -40,8 +40,19 @@ public:
         {
             if (isDirty.load())
             {
-                reinterpret_cast<FloatBox*>(audioNode)->queueFromDSP.try_dequeue(value);
-                repaint();
+                float floatValue = 0;
+
+                auto floatBox = reinterpret_cast<FloatBox*>(audioNode);
+
+                std::vector<float> buffer(16); // Adjust size as needed
+                size_t count = floatBox->queueFromDSP.try_dequeue_bulk(buffer.begin(), buffer.size());
+
+                if (count > 0)
+                {
+                    floatValue = buffer[count - 1]; // Use the last value (UI can't update faster than monitor refresh rate)
+                    value = std::format("{:.4f}", floatValue);
+                    repaint();
+                }
             }
         }
 
@@ -59,10 +70,10 @@ public:
             nvgFillColor(nvg, nvgRGB(190, 190, 190));
             nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-            nvgText(nvg, 10, height / 2, std::to_string(value).c_str(), nullptr);
+            nvgText(nvg, 10, height / 2, value.c_str(), nullptr);
         }
     private:
-        float value = 0;
+        std::string value;
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override
