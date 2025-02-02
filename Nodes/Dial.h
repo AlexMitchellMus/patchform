@@ -17,6 +17,10 @@ class Dial final : public AudioNode
 
 public:
 #ifdef PATCHFORM_WITH_GUI
+
+    // Lock-free queue for UI -> Audio communication
+    moodycamel::ConcurrentQueue<float> eventQueue;
+
     class UI final : public AudioNode::UI
     {
     public:
@@ -38,6 +42,9 @@ public:
                 {
                     value -= delta.y * 0.005f * cnv->scale;
                     value = fmax(0.0f, fmin(value, 1.0f));
+
+                    reinterpret_cast<Dial*>(audioNode)->eventQueue.enqueue(value);
+
                     repaint();
                 }
                 else AudioNode::UI::mouseDrag(position, delta, button);
@@ -83,6 +90,18 @@ public:
 
     void processAudio(float* out, const unsigned long frameCount) override
     {
+        float newValue;
+        while (eventQueue.try_dequeue(newValue))
+        {
+            Event* e = context->eventPool.getFreeEvent();
+
+            if (e)
+            {
+                e->data = newValue * 400 + 200;
+                e->setTimeStamp(0); // Set event at time 0
+                outputPort.addEvent(e);
+            }
+        };
     }
 
 };

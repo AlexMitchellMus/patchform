@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     //===================== SETUP PORTAUDIO =====================
     PaError err;
     unsigned long frameCount = 64;
-    float sampleRate = 44100.0f;
+    int sampleRate = 44100;
 
     // Initialize PortAudio
     err = Pa_Initialize();
@@ -106,15 +106,41 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    //===================== AUDIO ENGINE =====================
+    int numAPIs = Pa_GetHostApiCount();
+
+    for (int i = 0; i < numAPIs; ++i)
+    {
+        const PaHostApiInfo* apiInfo = Pa_GetHostApiInfo(i);
+        if (apiInfo)
+            std::cout << "Host API " << i << ": " << apiInfo->name << std::endl;
+    }
+
+    //===================== PLUGPATCH AUDIO ENGINE =====================
 
     auto context = std::make_unique<NodeContext>(sampleRate, frameCount);
 
     GraphManager graphs(context.get());
 
+    //===================== ASIO DEVICE SELECTION / SETUP =====================
+
+    int deviceIndex = Pa_GetHostApiInfo(2)->defaultOutputDevice;
+    if (deviceIndex == paNoDevice) {
+        Pa_Terminate();
+        return -1;
+    }
+
+    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
+    std::cout << "Using device: " << deviceInfo->name << std::endl;
+
     // Set up PortAudio stream
     PaStream* stream;
-    err = Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, sampleRate, frameCount, audioCallback, &graphs);
+    PaStreamParameters outputParams;
+    outputParams.device = deviceIndex;
+    outputParams.channelCount = 1;
+    outputParams.sampleFormat = paFloat32; // 32-bit float samples
+    outputParams.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+    outputParams.hostApiSpecificStreamInfo = nullptr;
+    err = Pa_OpenStream(&stream, nullptr, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, &graphs);
     if (err != paNoError) {
         std::cerr << "PortAudio stream setup failed: " << Pa_GetErrorText(err) << std::endl;
         return 1;

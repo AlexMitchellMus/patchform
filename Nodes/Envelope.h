@@ -79,11 +79,12 @@ public:
             nvgText(nvg, width/2, height / 2, "env", nullptr);
         }
     };
-
+    /*
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
         return std::make_unique<UI>(this);
     };
+    */
 #endif
     Envelope(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {

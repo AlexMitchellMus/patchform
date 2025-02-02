@@ -53,8 +53,9 @@ public:
 
     int nodeID = -1;
 
-private:
     AudioNode* audioNode = nullptr;
+
+private:
 
     std::string name;
     json definition;
