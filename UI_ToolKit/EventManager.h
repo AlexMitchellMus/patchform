@@ -37,16 +37,17 @@ public:
         const Point delta(e.motion.xrel, e.motion.yrel);
 
         Button buttonPressed;
-
+        // SDL button state is bitwise, however we only deal with left/right/middle single button press ATM
+        // Not left | right etc...
         switch (e.motion.state) {
-            case SDL_BUTTON_LMASK:
-                buttonPressed = Button::LEFT;
-                break;
             case SDL_BUTTON_RMASK:
                 buttonPressed = Button::RIGHT;
                 break;
             case SDL_BUTTON_MMASK:
                 buttonPressed = Button::MIDDLE;
+                break;
+            default:
+                buttonPressed = Button::LEFT;
                 break;
         }
 
