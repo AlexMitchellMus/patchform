@@ -364,6 +364,7 @@ void Canvas::renderAll(NVGcontext* nvg)
     nvgRestore(nvg);
 }
 
+// This uses the DnD object that has already been constructed, so no need to add it to the audio engine, as it's already there.
 void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
 {
     if (toAdd == nullptr)

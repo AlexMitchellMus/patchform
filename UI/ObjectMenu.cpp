@@ -31,8 +31,10 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         item->onMouseUp = [this](Point position) mutable {
             if (dndObject)
             {
-                auto droppedPos = cnv->globalToLocalWithScale(position.x, position.y);
-                std::cout << "dropping object at: " << droppedPos.toString() << std::endl;
+                auto objectOffset = Point(dndObject->getWidth() * 0.5f * dndObject->scale, dndObject->getHeight() * 0.5f * dndObject->scale);
+                auto finalPos = position - objectOffset;
+                auto droppedPos = cnv->globalToLocalWithScale(finalPos.x, finalPos.y);
+
                 cnv->addFromDnDMenu(dndObject.get(), droppedPos);
                 repaint();
                 td->removeAddObjectMenu();
@@ -43,9 +45,14 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         {
             if (dndObject)
             {
-                auto scaledOffset = Point(offset.x * scale, offset.y * scale);
                 Point globalPos = localToGlobal(position.x, position.y) + offset;
-                dndObject->setPosition(globalPos.x - dndObject->getWidth() / 2, globalPos.y - dndObject->getHeight() / 2);
+
+                // Correctly center the dragged object
+                auto scaledPos = globalPos -
+                                 Point(dndObject->getWidth() * 0.5f * dndObject->scale,
+                                       dndObject->getHeight() * 0.5f * dndObject->scale);
+
+                dndObject->setPosition(scaledPos);
             }
             else
             {
