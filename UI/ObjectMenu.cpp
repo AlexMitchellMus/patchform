@@ -14,10 +14,10 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { {{"obj", "Metro"}, {"hz", 8}}, ICONS::Metro},
         { {{"obj", "Metro"}, {"hz", 1}}, ICONS::Metro},
         { {{"obj", "Osc"}, {"waveform", "sine"}, {"freq",  440}}, ICONS::Osc},
-        { {{"obj", "Osc"}, {"waveform", "saw"}, {"freq",  330}}, ICONS::Osc},
+        { {{"obj", "Add"}}, "add", false },
         { {{"obj", "lfo"}}, ICONS::Lfo},
         { {{"obj", "env"}, {"attack", 50}, {"decay", 50}}, ICONS::Adsr},
-        { {{"obj", "env"}, {"attack", 500}, {"decay", 500}}, ICONS::Adsr},
+        { {{"obj", "vol"}}, "vol", false },
         { {{"obj", "count"}}, ICONS::Count},
         { {{"obj", "dial"}}, ICONS::Dial},
         { {{"obj", "aout"}}, ICONS::Aout}
@@ -57,6 +57,11 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             else
             {
                 auto newAudioNode = reinterpret_cast<App*>(getRootComponent())->graphManager->addObject(itemDef);
+                if (!newAudioNode)
+                {
+                    std::cerr << "Failed to create new Audio Node." << std::endl;
+                    return;
+                }
                 dndObject = newAudioNode->getOrCreateUI();
                 dndObject->scale = cnv->scale;
                 dndObject->opacity = 0.4f;

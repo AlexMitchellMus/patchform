@@ -831,6 +831,7 @@ public:
         case hash("lfo"):
             return addNode<LFO>(idString, node);
 
+        case hash("vol"):
         case hash("volume"):
             return addNode<Volume>(idString, node);
 

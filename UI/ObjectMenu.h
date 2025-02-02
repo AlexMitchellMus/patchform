@@ -18,6 +18,7 @@ struct ObjectDef
 {
     json definition;
     std::string_view icon;
+    bool useIcon = true;
 };
 
 class Item : public pptk::Component
@@ -31,6 +32,7 @@ class Item : public pptk::Component
     Item(ObjectDef def) : definition(def.definition), icon(def.icon)
     {
         name = !definition.empty() ? definition.value<std::string>("obj", "empty") : "empty";
+        useIcon = def.useIcon;
     };
 
     void mouseDrag(const Point& position, const Point& delta, Button button) override
@@ -61,8 +63,8 @@ class Item : public pptk::Component
         auto col = hovered ? highlight : bg ;
         nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), col, col, 6.0f);
 
-        nvgFontSize(vg, 34.0f);
-        nvgFontFace(vg, "object_icons");
+        nvgFontSize(vg, useIcon ? 34.0f : 18.0f);
+        nvgFontFace(vg, useIcon ? "object_icons" : "Regular");
         nvgTextAlign(vg, NVG_ALIGN_CENTER);
         nvgFillColor(vg, nvgRGB(220, 220, 220)); // Text color
         nvgText(vg, getWidth() / 2, 32, icon.c_str(), nullptr);
@@ -75,6 +77,8 @@ class Item : public pptk::Component
 
 private:
     bool hovered = false;
+
+    bool useIcon = true;
 
     json definition;
     std::string name;
