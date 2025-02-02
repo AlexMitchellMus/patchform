@@ -93,9 +93,7 @@ public:
 
     void destroyUI()
     {
-        std::cout << "we should be deleting the UI unique ptr now for: " << ui.get() << std::endl;
         ui.reset();
-        std::cout << "ptr is now: " << ui.get() << std::endl;
     }
 #endif
 
