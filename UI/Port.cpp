@@ -49,6 +49,9 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
     {
         if (auto cnv = findParentOfClass<Canvas>())
         {
+            if (cnv->isInLockedMode())
+                return;
+
             if (cnv->newConnection)
             {
                 cnv->newConnection->setConnectionDest(currentPosition);

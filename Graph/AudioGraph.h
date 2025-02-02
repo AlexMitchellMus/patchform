@@ -802,65 +802,46 @@ public:
         switch (hash(object))
         {
         case hash("add"):
-            {
-                return addNode<Add>(idString, node);
-            }
-            break;
+            return addNode<Add>(idString, node);
+
         case hash("count"):
-            {
-                return addNode<Count>(idString, node);
-            }
-            break;
+            return addNode<Count>(idString, node);
+
+        case hash("dial"):
+            return addNode<Dial>(idString, node);
+
         case hash("print"):
-            {
-                return addNode<Print>(idString, node);
-            }
-            break;
+            return addNode<Print>(idString, node);
+
         case hash("if"):
-            {
-                return addNode<If>(idString, node);
-            }
-            break;
+            return addNode<If>(idString, node);
+
         case hash("env"):
         case hash("envelope"):
-            {
-                return addNode<Envelope>(idString, node);
-            }
-            break;
+            return addNode<Envelope>(idString, node);
+
         case hash("metro"):
         case hash("metronome"):
-            {
-                return addNode<Metronome>(idString, node);
-            }
-            break;
+            return addNode<Metronome>(idString, node);
+
         case hash("val"):
         case hash("value"):
-            {
-                return addNode<Value>(idString, node);
-            }
-            break;
+            return addNode<Value>(idString, node);
+
         case hash("lfo"):
-            {
-                return addNode<LFO>(idString, node);
-            }
-            break;
+            return addNode<LFO>(idString, node);
+
         case hash("volume"):
-            {
-                return addNode<Volume>(idString, node);
-            }
-            break;
+            return addNode<Volume>(idString, node);
+
         case hash("osc"):
         case hash("oscillator"):
-            {
-                return addNode<Oscillator>(idString, node);
-            }
-            break;
+            return addNode<Oscillator>(idString, node);
+
         case hash("aout"):
         case hash("audioout"):
-            {
-                return addNode<AudioOut>(idString, node);
-            }
-            break;
+            return addNode<AudioOut>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

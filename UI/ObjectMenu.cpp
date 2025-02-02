@@ -19,7 +19,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { {{"obj", "env"}, {"attack", 100}, {"decay", 100}}, ICONS::Adsr},
         { {{"obj", "env"}, {"attack", 500}, {"decay", 500}}, ICONS::Adsr},
         { {{"obj", "count"}}, ICONS::Count},
-        { {{"obj", "print"}}, ICONS::Print},
+        { {{"obj", "dial"}}, ICONS::Dial},
         { {{"obj", "aout"}}, ICONS::Aout}
     };
 

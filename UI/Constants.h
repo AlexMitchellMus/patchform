@@ -14,4 +14,5 @@ namespace ICONS
     static constexpr std::string_view Print = "E";
     static constexpr std::string_view Aout = "F";
     static constexpr std::string_view Count = "G";
+    static constexpr std::string_view Dial = "H";
 }
