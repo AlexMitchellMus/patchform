@@ -144,8 +144,10 @@ void Canvas::deleteSelectedObjects()
     for (auto obj : selected)
     {
         auto objPtr = reinterpret_cast<Object*>(obj);
+        std::cout << "deleting object which is called: " << objPtr->getName() << std::endl;
         idsToDelete.push_back(objPtr->nodeID);
         removeConnectionsFor(objPtr);
+        objPtr->audioNode->deleteUI();
     }
 
     auto graphManager = reinterpret_cast<App*>(getRootComponent())->graphManager;

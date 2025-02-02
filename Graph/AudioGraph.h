@@ -942,7 +942,9 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
 
         for (auto id : ids)
+        {
             transitioningGraph->removeObject(id);
+        }
 
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();

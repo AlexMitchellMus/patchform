@@ -10,7 +10,7 @@
 
 #include <glaze/reflection/get_name.hpp>
 
-Object::Object(const AudioNode* node) : name(node->getName()), nodeID(node->nodeID)
+Object::Object(AudioNode* node) : nodeID(node->nodeID), audioNode(node), name(node->getName())
 {
     setBounds(0, 0, 120, 40);
 
@@ -35,6 +35,7 @@ Object::Object(const AudioNode* node) : name(node->getName()), nodeID(node->node
 
 Object::~Object()
 {
+    std::cout << "object deleting: " << std::endl;
     if (auto* cnv = findParentOfClass<Canvas>())
     {
         cnv->removeConnectionsFor(this);

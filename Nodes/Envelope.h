@@ -23,7 +23,7 @@ public:
     class UI final : public AudioNode::UI
     {
     public:
-        explicit UI(const AudioNode* node) : AudioNode::UI(node)
+        explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
             setSize(100, 100);
         };

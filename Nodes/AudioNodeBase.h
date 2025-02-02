@@ -51,7 +51,7 @@ public:
     class UI : public Object
     {
     public:
-        explicit UI(const AudioNode* node) : Object(node) {  };
+        explicit UI(AudioNode* node) : Object(node) {  };
     };
 #endif
 
@@ -75,10 +75,12 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
+protected:
     virtual UI* createUI_Raw()
     {
         return new UI(this);
     };
+public:
 
     UI* createUI()
     {
@@ -87,6 +89,13 @@ public:
             ui = std::unique_ptr<UI>(createUI_Raw());
 
         return ui.get();
+    }
+
+    void deleteUI()
+    {
+        std::cout << "we should be deleting the UI unique ptr now for: " << ui.get() << std::endl;
+        ui.reset();
+        std::cout << "ptr is now: " << ui.get() << std::endl;
     }
 #endif
 

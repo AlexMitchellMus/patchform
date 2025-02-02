@@ -15,9 +15,9 @@ class AudioNode;
 class Canvas;
 class Object : public CanvasItem {
 public:
-    explicit Object(const AudioNode* node);
+    explicit Object(AudioNode* node);
 
-    ~Object();
+    ~Object() override;
 
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
     void mouseButtonDown(SDL_Event& e) override;
@@ -51,6 +51,7 @@ public:
     int nodeID = -1;
 
 private:
+    AudioNode* audioNode;
 
     std::string name;
     json definition;

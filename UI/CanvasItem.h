@@ -11,6 +11,8 @@
 class CanvasItem : public pptk::Component {
 public:
 
+    virtual ~CanvasItem() = default;
+
     friend class Object;
     friend class Connection;
 
