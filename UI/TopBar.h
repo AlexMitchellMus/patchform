@@ -90,8 +90,9 @@ public:
         addComponent(quitApplication.get());
         quitApplication->onClick = [this]()
         {
-            std::cout << "Quitting..." << std::endl;
-            SDL_Quit();
+            SDL_Event event;
+            event.type = SDL_EVENT_QUIT;
+            SDL_PushEvent(&event);
         };
 
         MainMenu::resized();
