@@ -788,6 +788,9 @@ public:
 
     AudioNode* createObject(json node, bool addToGraph = true)
     {
+        if (node.is_null())
+            return nullptr;
+
         auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
 
         // Attempt to get the ID as a string,

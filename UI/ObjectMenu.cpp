@@ -10,7 +10,7 @@
 
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
-    ObjectDef objectDef[10] = {
+    ObjectDef objectDef[20] = {
         { {{"obj", "Metro"}, {"hz", 8}}, ICONS::Metro},
         { {{"obj", "Metro"}, {"hz", 1}}, ICONS::Metro},
         { {{"obj", "Osc"}, {"waveform", "sine"}, {"freq",  440}}, ICONS::Osc},
@@ -23,55 +23,58 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { {{"obj", "aout"}}, ICONS::Aout}
     };
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 2; i++)
     {
-        auto item = std::make_unique<Item>(objectDef[i]);
-        item->setBounds(16 + (i * (44 + 16)), 16, 44, 44);
-
-        item->onMouseUp = [this](Point position) mutable {
-            if (dndObject)
-            {
-                auto objectOffset = Point(dndObject->getWidth() * 0.5f * dndObject->scale, dndObject->getHeight() * 0.5f * dndObject->scale);
-                auto finalPos = position - objectOffset;
-                auto droppedPos = cnv->globalToLocalWithScale(finalPos.x, finalPos.y);
-
-                cnv->addFromDnDMenu(dndObject.get(), droppedPos);
-                repaint();
-                td->removeAddObjectMenu();
-            }
-        };
-
-        item->onMouseDrag = [this, itemDef = item->getObjectDefinition()](Point position, const std::string& name, Point offset)
+        for (int j = 0; j < 10; j++)
         {
-            if (dndObject)
-            {
-                Point globalPos = localToGlobal(position.x, position.y) + offset;
+            auto item = std::make_unique<Item>(objectDef[(i * 10) + j]);
+            item->setBounds(16 + (j * (44 + 16)), 16 + (i * 55), 44, 44);
 
-                // Correctly center the dragged object
-                auto scaledPos = globalPos -
-                                 Point(dndObject->getWidth() * 0.5f * dndObject->scale,
-                                       dndObject->getHeight() * 0.5f * dndObject->scale);
-
-                dndObject->setPosition(scaledPos);
-            }
-            else
-            {
-                auto newAudioNode = reinterpret_cast<App*>(getRootComponent())->graphManager->addObject(itemDef);
-                if (!newAudioNode)
+            item->onMouseUp = [this](Point position) mutable {
+                if (dndObject)
                 {
-                    std::cerr << "Failed to create new Audio Node." << std::endl;
-                    return;
-                }
-                dndObject = newAudioNode->getOrCreateUI();
-                dndObject->scale = cnv->scale;
-                dndObject->opacity = 0.4f;
-                getRootComponent()->addComponent(dndObject.get());
-                setVisible(false);
-            }
-        };
+                    auto objectOffset = Point(dndObject->getWidth() * 0.5f * dndObject->scale, dndObject->getHeight() * 0.5f * dndObject->scale);
+                    auto finalPos = position - objectOffset;
+                    auto droppedPos = cnv->globalToLocalWithScale(finalPos.x, finalPos.y);
 
-        addComponent(item.get());
-        items.push_back(std::move(item));
+                    cnv->addFromDnDMenu(dndObject.get(), droppedPos);
+                    repaint();
+                    td->removeAddObjectMenu();
+                }
+            };
+
+            item->onMouseDrag = [this, itemDef = item->getObjectDefinition()](Point position, const std::string& name, Point offset)
+            {
+                if (dndObject)
+                {
+                    Point globalPos = localToGlobal(position.x, position.y) + offset;
+
+                    // Correctly center the dragged object
+                    auto scaledPos = globalPos -
+                                     Point(dndObject->getWidth() * 0.5f * dndObject->scale,
+                                           dndObject->getHeight() * 0.5f * dndObject->scale);
+
+                    dndObject->setPosition(scaledPos);
+                }
+                else
+                {
+                    auto newAudioNode = reinterpret_cast<App*>(getRootComponent())->graphManager->addObject(itemDef);
+                    if (!newAudioNode)
+                    {
+                        std::cerr << "Failed to create new Audio Node." << std::endl;
+                        return;
+                    }
+                    dndObject = newAudioNode->getOrCreateUI();
+                    dndObject->scale = cnv->scale;
+                    dndObject->opacity = 0.4f;
+                    getRootComponent()->addComponent(dndObject.get());
+                    setVisible(false);
+                }
+            };
+
+            addComponent(item.get());
+            items.push_back(std::move(item));
+        }
     }
 
     repaint();
