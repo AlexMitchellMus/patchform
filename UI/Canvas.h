@@ -53,6 +53,8 @@ public:
     void addObject(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
     void addFromDnDMenu(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
 
+    void updateGraphValuesIfNeeded();
+
     std::unique_ptr<Connection> newConnection = nullptr;
     void addConnection(Port* port, Port* otherPort);
     void updateConnectionsPosition() const;

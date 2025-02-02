@@ -46,6 +46,8 @@ public:
     bool getIsHovered() const { return isHovered; };
     bool getIsSelected() const { return isSelected; };
 
+    virtual void updateGraphValues() { };
+
     void setObjectDefinition(json j)
     {
         definition = j;

@@ -846,6 +846,9 @@ public:
         case hash("audioout"):
             return addNode<AudioOut>(idString, node);
 
+        case hash("floatbox"):
+            return addNode<FloatBox>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

@@ -16,6 +16,7 @@
 #include "Canvas.h"
 #include "ToolDock.h"
 #include "LeftPanel.h"
+#include "Object.h"
 #include "TopBar.h"
 
 #include "../UI_ToolKit/ToggleButton.h"
@@ -89,6 +90,11 @@ public:
         };
 
         App::resized();
+    }
+
+    void updateObjectsFromDSP()
+    {
+        canvas->updateGraphValuesIfNeeded();
     }
 
     void mouseMove(const Point& position) override

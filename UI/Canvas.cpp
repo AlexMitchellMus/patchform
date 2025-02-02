@@ -42,6 +42,15 @@ std::vector<Object*> Canvas::getObjects() const
     return objs;
 };
 
+void Canvas::updateGraphValuesIfNeeded()
+{
+    for (auto* obj : objects)
+    {
+        obj->updateGraphValues();
+    }
+}
+
+
 void Canvas::mouseButtonDown(SDL_Event& e)
 {
     if (e.button.button == SDL_BUTTON_LEFT)
