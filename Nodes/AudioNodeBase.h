@@ -76,22 +76,22 @@ public:
 
 #ifdef PATCHFORM_WITH_GUI
 protected:
-    virtual UI* createUI_Raw()
+    virtual std::unique_ptr<UI> makeUI()
     {
-        return new UI(this);
+        return std::make_unique<UI>(this);
     };
 public:
 
-    UI* createUI()
+    UI* getOrCreateUI()
     {
         // The default factory method creates a DefaultUI instance.
         if (!ui)
-            ui = std::unique_ptr<UI>(createUI_Raw());
+            ui = makeUI();
 
         return ui.get();
     }
 
-    void deleteUI()
+    void destroyUI()
     {
         std::cout << "we should be deleting the UI unique ptr now for: " << ui.get() << std::endl;
         ui.reset();

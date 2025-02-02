@@ -57,7 +57,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             else
             {
                 auto newAudioNode = reinterpret_cast<App*>(getRootComponent())->graphManager->addObject(itemDef);
-                dndObject = newAudioNode->createUI();
+                dndObject = newAudioNode->getOrCreateUI();
                 dndObject->scale = cnv->scale;
                 dndObject->opacity = 0.4f;
                 getRootComponent()->addComponent(dndObject.get());

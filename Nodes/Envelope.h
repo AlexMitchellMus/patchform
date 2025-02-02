@@ -80,9 +80,9 @@ public:
         }
     };
 
-    UI* createUI_Raw() override
+    std::unique_ptr<AudioNode::UI> makeUI() override
     {
-        return new UI(this);
+        return std::make_unique<UI>(this);
     };
 #endif
     Envelope(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)

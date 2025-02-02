@@ -147,7 +147,7 @@ void Canvas::deleteSelectedObjects()
         std::cout << "deleting object which is called: " << objPtr->getName() << std::endl;
         idsToDelete.push_back(objPtr->nodeID);
         removeConnectionsFor(objPtr);
-        objPtr->audioNode->deleteUI();
+        objPtr->audioNode->destroyUI();
     }
 
     auto graphManager = reinterpret_cast<App*>(getRootComponent())->graphManager;
@@ -396,7 +396,7 @@ void Canvas::addObject(Object* toAdd, Point position)
     if (audioObject == nullptr)
         return;
 
-    auto object = audioObject->createUI();
+    auto object = audioObject->getOrCreateUI();
 
     addComponent(object);
     object->setPosition(position);
