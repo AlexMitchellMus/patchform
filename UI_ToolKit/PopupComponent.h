@@ -21,7 +21,7 @@ namespace pptk
             button = toggleButton;
             registerGlobalMouseListener([this](Component* comp)
             {
-                if (!(this->isOrHasChild(comp) || comp == button))
+                if (!(this->isOrHasChild(comp) || comp == button.get()))
                 {
                     button->setActive(false);
                     close();
@@ -43,6 +43,6 @@ namespace pptk
         }
 
     private:
-        ToggleButton* button = nullptr;
+        SafePointer<ToggleButton> button;
     };
 }
