@@ -11,7 +11,7 @@
 
 class Ping final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Dial", "dial");
+    DEFINE_AND_REGISTER_NODE("Ping", "png");
 
     std::function<void()> repaintFromDSP = [](){};
 
