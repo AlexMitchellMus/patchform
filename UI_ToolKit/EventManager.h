@@ -14,9 +14,9 @@
 
 namespace pptk {
 
-class MouseEventManager {
+class EventManager {
 public:
-    MouseEventManager(Component* rootComp) : rootComponent(reinterpret_cast<RootComponent*>(rootComp)) {}
+    EventManager(Component* rootComp) : rootComponent(reinterpret_cast<RootComponent*>(rootComp)) {}
 
     void handleMouseButtonDown(SDL_Event& e) {
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state

@@ -47,6 +47,58 @@ void Component::handleMouseMove(CompEvent& e)
     }
 }
 
+Component* Component::findComponentAt(int globalX, int globalY)
+{
+    return (getRootComponent())->findComponentAt(globalX, globalY, this);
+}
+
+Component* Component::findComponentAt(int globalX, int globalY, Component* selfComponent)
+{
+    // Transform the global coordinates to local coordinates for this component
+    Point localPos = globalToLocalWithScale(globalX, globalY);
+
+    // Always check children first, in reverse order for topmost components
+    for (auto it = children.rbegin(); it != children.rend(); ++it)
+    {
+        Component* child = *it;
+        if (child->isVisible())
+        {
+            // Pass the original global coordinates to the child
+            Component* found = child->findComponentAt(globalX, globalY, selfComponent);
+            if (found && found != selfComponent)
+            {
+                return found; // Return the first matching child
+            }
+        }
+    }
+
+    // Check this component only after its children
+    if (hitTest(localPos.x, localPos.y))
+    {
+        return this;
+    }
+
+    // No matching component found
+    return nullptr;
+}
+
+Component* Component::getRootComponent()
+{
+    // Find the root component, because we can assign components inside constructors, so root can't be set
+    if (rootCoponent)
+        return rootCoponent;
+
+    Component* current = this;
+    while (current->parent)
+    {
+        current = current->parent;
+    }
+
+    rootCoponent = current;
+
+    return current;
+}
+
 void Component::addComponent(Component* child)
 {
     if (child->parent)
@@ -187,5 +239,94 @@ void Component::setPopupComponent(std::unique_ptr<PopupComponent> popupWindow)
     reinterpret_cast<RootComponent*>(getRootComponent())->popupWindow = std::move(popupWindow);
 }
 
+Point Component::globalToLocalWithScale(float globalX, float globalY) const
+{
+    // If there's a parent, first convert to the parent's local space
+    if (parent)
+    {
+        // First, transform into parent's coordinate space
+        Point parentLocal = parent->globalToLocalWithScale(globalX, globalY);
+        globalX = parentLocal.x;
+        globalY = parentLocal.y;
+    }
+
+    // Offset by this component's position
+    globalX -= x;
+    globalY -= y;
+
+    // **Apply parent's scale recursively**
+    if (scale != 1.0f && scale > 0.0f)
+    {
+        globalX /= scale;
+        globalY /= scale;
+    }
+
+    return Point(globalX, globalY);
+}
+
+Point Component::globalToLocal2(float globalX, float globalY) const
+{
+    // Recursively transform to parent's local coordinates
+    if (parent)
+    {
+        Point parentLocal = parent->globalToLocal(globalX, globalY);
+        globalX = parentLocal.x;
+        globalY = parentLocal.y;
+    }
+
+    // Optionally handle viewport and scaling (if applicable)
+    globalX -= x;
+    globalY -= y;
+
+    // Optionally apply scaling (uncomment if scaling is used)
+    // globalX /= scale;
+    // globalY /= scale;
+
+    return Point(globalX, globalY);
+}
+
+Point Component::globalToLocal(float globalX, float globalY) const
+{
+    // Recursively transform to parent's local coordinates
+    if (parent)
+    {
+        Point parentLocal = parent->globalToLocal(globalX, globalY);
+        globalX = parentLocal.x;
+        globalY = parentLocal.y;
+    }
+
+    // Offset by this component's position
+    //globalX -= x;
+    //globalY -= y;
+
+    // Optionally handle viewport and scaling (if applicable)
+    globalX -= viewportX;
+    globalY -= viewportY;
+
+    // Optionally apply scaling (uncomment if scaling is used)
+    globalX /= scale;
+    globalY /= scale;
+
+    return Point(globalX, globalY);
+}
+
+Point Component::localToGlobal(float localX, float localY) const
+{
+    // Apply scaling before translation
+    localX *= scale;
+    localY *= scale;
+
+    // Apply this component's viewport offset (translation)
+    localX += x + viewportX;
+    localY += y + viewportY;
+
+    // Recursively transform to parent's global coordinates
+    if (parent)
+    {
+        return parent->localToGlobal(localX, localY);
+    }
+
+    return Point(localX, localY);
+}
 
 }

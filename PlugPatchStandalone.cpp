@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
     // FIXME: hack to make the app have a starting size!
     app->setBounds(0, 0, newWidth, newHeight);
 
-    pptk::MouseEventManager eventManager(app.get());
+    pptk::EventManager eventManager(app.get());
 
     bool running = true;
     SDL_Event event;
