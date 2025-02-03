@@ -54,9 +54,6 @@ Component* Component::findComponentAt(int globalX, int globalY)
 
 Component* Component::findComponentAt(int globalX, int globalY, Component* selfComponent)
 {
-    // Transform the global coordinates to local coordinates for this component
-    Point localPos = globalToLocalWithScale(globalX, globalY);
-
     // Always check children first, in reverse order for topmost components
     for (auto it = children.rbegin(); it != children.rend(); ++it)
     {
@@ -71,6 +68,8 @@ Component* Component::findComponentAt(int globalX, int globalY, Component* selfC
             }
         }
     }
+
+    Point localPos = globalToLocalWithScale(globalX, globalY);
 
     // Check this component only after its children
     if (hitTest(localPos.x, localPos.y))
