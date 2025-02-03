@@ -14,8 +14,6 @@ namespace pptk {
 
 Component::~Component()
 {
-    stopFrameTimer();
-
     // Then! Remove component
     removeFromParent();
 

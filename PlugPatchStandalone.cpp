@@ -326,10 +326,10 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        app->handleTime(currentFrameTime);
-
         // TODO: maybe we let objects register themselves if they even want updates from DSP state?
         app->updateObjectsFromDSP();
+
+        app->handleTime(currentFrameTime);
 
         if (!app->needsRepaint()){
             SDL_Delay(1);

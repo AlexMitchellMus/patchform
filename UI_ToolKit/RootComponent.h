@@ -18,26 +18,37 @@ public:
 
     void handleTime(uint32_t time)
     {
-        for (const auto& [ c, callback ] : timerCallbacks)
+        auto callbacksCopy = timerCallbacks;  // Copy to avoid iterator invalidation
+
+        for (auto& [componentPtr, callback] : callbacksCopy)
         {
-            callback();
+            if (componentPtr)  // Ensure component still exists
+            {
+                callback();  // Execute the callback (even if the original vector changed)
+            }
         }
     }
 
+
     void registerTimerCallback(Component* c, const std::function<void()>& callback)
     {
+        unregisterTimerCallback(c);
+
         timerCallbacks.emplace_back(c, callback);
     }
 
     void unregisterTimerCallback(Component* component)
     {
-        // Remove all tuples whose first element (Component*) equals cPtr
+        for (auto& [c, callback] : timerCallbacks)
+        {
+            if (c == component)
+                c = nullptr;  // Mark for deletion
+        }
+
+        // Remove all marked entries after iteration is complete
         timerCallbacks.erase(
-            std::remove_if(timerCallbacks.begin(), timerCallbacks.end(),
-                           [component](auto& tup)
-                           {
-                               return std::get<0>(tup) == component;
-                           }),
+            std::ranges::remove_if(timerCallbacks,
+                                   [](auto& tup) { return std::get<0>(tup) == nullptr; }).begin(),
             timerCallbacks.end()
         );
     }
