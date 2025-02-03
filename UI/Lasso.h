@@ -20,6 +20,13 @@ public:
     // Update the lasso as the mouse moves
     void update(const pptk::Point& currentPoint);
 
+    // Stop lasso from blocking mouse events from clicking on the canvas
+    // This can happen if multiple mouse buttons are clicked at the same time while dragging
+    bool hitTest(float px, float py) const override
+    {
+        return false;
+    }
+
     pptk::Rect getLassoBounds() const;
 
     // Render the lasso rectangle

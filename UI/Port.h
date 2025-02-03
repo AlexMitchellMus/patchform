@@ -48,6 +48,8 @@ public:
 
     int getPortNum() const { return portNum; };
 
+    bool isSignal() const { return portType == PortType::Audio; };
+
 private:
     Direction direction;
     int portNum;

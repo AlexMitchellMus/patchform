@@ -21,7 +21,23 @@ public:
     void handleMouseButtonDown(SDL_Event& e) {
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state
         auto wrappedEvent = CompEvent(e, rootComponent);
-        propagateMouseButtonDown(rootComponent, wrappedEvent);
+        if (const auto comp = findDeepestHitComponent(rootComponent, wrappedEvent))
+        {
+            rootComponent->setDraggingComponent(comp);
+            rootComponent->setClickedComponent(comp);
+
+            Point localPos = comp->globalToLocalWithScale(wrappedEvent.sdlEvent.button.x, wrappedEvent.sdlEvent.button.y);
+
+            wrappedEvent.sdlEvent.button.x = localPos.x;
+            wrappedEvent.sdlEvent.button.y = localPos.y;
+
+            comp->mouseButtonDown(wrappedEvent);
+
+            for (auto& [c, handler] : rootComponent->globalMouseHandlers)
+            {
+                handler(comp);
+            }
+        }
     }
 
     void handleMouseButtonUp(SDL_Event& e) {
@@ -113,42 +129,37 @@ private:
         }
     }
 
-    void propagateMouseButtonDown(Component* component, CompEvent& e) {
+    Component* findDeepestHitComponent(Component* component, CompEvent& e) {
         if (!component->isVisible()) {
-            return;
+            return nullptr;
         }
 
-        // Traverse children in reverse order (for z-order handling)
-        auto& children = component->getChildren();
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            auto& child = *it;
+        // Transform the global coordinates to the component's local coordinate space.
+        Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
 
-            if (child->isVisible()) {
-                propagateMouseButtonDown(child, e);
-                if (rootComponent->getDraggingComponent()) {
-                    return; // Stop propagation if a component is dragging
+        // If the current component is not hit, return nullptr.
+        if (!component->hitTest(localPos.x, localPos.y)) {
+            return nullptr;
+        }
+
+        // If the component is hit, check its children.
+        auto& children = component->getChildren();
+        // Iterate in reverse order for proper z-order (topmost components first).
+        // Iterate in reverse order using index-based access.
+        for (size_t i = children.size(); i > 0; --i) {
+            {
+                Component* child = children.at(i - 1);
+                Component* hitChild = findDeepestHitComponent(child, e);
+                if (hitChild != nullptr)
+                {
+                    // Return the first child that is hit.
+                    return hitChild;
                 }
             }
         }
 
-        // Use scaled coordinate transformation
-        Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
-
-        if (component->hitTest(localPos.x, localPos.y) && !rootComponent->getDraggingComponent()) {
-            rootComponent->setDraggingComponent(component);
-            rootComponent->setClickedComponent(component); // Store the clicked component
-
-            // Adjust event coordinates before passing it to the component
-            e.sdlEvent.button.x = static_cast<int>(localPos.x);
-            e.sdlEvent.button.y = static_cast<int>(localPos.y);
-
-            component->mouseButtonDown(e);
-
-            for (auto& [c, handler] : rootComponent->globalMouseHandlers)
-            {
-                handler(component);
-            }
-        }
+        // No children were hit; return the current component.
+        return component;
     }
 
     void propagateMouseButtonUp(Component* component, CompEvent& e) {

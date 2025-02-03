@@ -59,4 +59,12 @@ private:
     NVGcolor highlightCol = nvgRGB(28, 73, 119);
 
     bool isHovered = false;
+
+    enum class CableType
+    {
+        Signal,
+        Event
+    };
+
+    CableType cableType = CableType::Event;
 };

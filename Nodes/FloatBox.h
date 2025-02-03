@@ -85,7 +85,7 @@ public:
     {
         addInputPort("Value_input", AudioPort::PortType::Data);
     }
-
+#ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {
         const auto aEvents = inputPortBuffers[0]->getEvents();
@@ -99,5 +99,5 @@ public:
             repaintFromDSP();
         }
     }
-
+#endif
 };

@@ -103,10 +103,10 @@ public:
     {
         return std::make_unique<UI>(this);
     };
-
+#endif
     float width = 40;
     float height = 40;
-#endif
+
     Ping(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         width = objParams.value("width", 40);
@@ -114,7 +114,7 @@ public:
 
         addInputPort("Events", AudioPort::PortType::Data);
     }
-
+#ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {
         auto inputEvents = inputPortBuffers[0]->getEvents();
@@ -147,5 +147,5 @@ public:
             repaintFromDSP();
         }
     }
-
+#endif
 };

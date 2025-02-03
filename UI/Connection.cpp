@@ -16,6 +16,9 @@ Connection::Connection(Port* port, Port* dest) : originPort(port), destPort(dest
     auto centre = port->getWidth() / 2;
 
     destPos = { centre, centre };
+
+    if (dest && originPort->isSignal() && destPort->isSignal())
+        cableType = CableType::Signal;
 }
 
 Connection::~Connection()
@@ -240,7 +243,10 @@ void Connection::render(NVGcontext* nvg) {
     //nvgStrokeColor(nvg, nvgRGB(100, 100, 100));
 
     nvgStrokeWidth(nvg, 6.0f);   // Set line width
-    nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), isHovered || isSelected ? highlightCol : conCol, 3, false, false, 0.0f));
+    if (cableType == CableType::Signal)
+        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, isHovered || isSelected ? highlightCol : conCol, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), 0, false, false, 0.0f));
+    else
+        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), isHovered || isSelected ? highlightCol : conCol, 3, false, false, 0.0f));
     nvgStroke(nvg);
 
 //#define DEBUG_PATH_HIT_TEST

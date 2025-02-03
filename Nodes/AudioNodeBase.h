@@ -122,7 +122,7 @@ public:
     }
 
     // Virtual method for processing the audio buffer
-    virtual void processAudio(float* buffer, unsigned long frameCount) = 0;
+    virtual void processAudio(float* buffer, unsigned long frameCount) { };
 
     // Method to get input ports for sorting
     AudioPort* getOutputPort()

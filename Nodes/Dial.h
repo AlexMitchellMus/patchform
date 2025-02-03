@@ -90,6 +90,7 @@ public:
     {
     }
 
+#ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {
         float newValue;
@@ -105,5 +106,6 @@ public:
             }
         };
     }
+#endif
 
 };

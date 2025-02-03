@@ -75,19 +75,22 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
 {
     if (button == pptk::Button::LEFT)
     {
-        lasso->update(position);
-
-        auto lassoBounds = lasso->getLassoBounds();
-
-        for (const auto& obj : objects)
+        if (lasso)
         {
-            if (lassoBounds.intersects(obj->getBounds()))
+            lasso->update(position);
+
+            auto lassoBounds = lasso->getLassoBounds();
+
+            for (const auto& obj : objects)
             {
-                addToSelection(obj);
-            }
-            else
-            {
-                removeFromSelection(obj);
+                if (lassoBounds.intersects(obj->getBounds()))
+                {
+                    addToSelection(obj);
+                }
+                else
+                {
+                    removeFromSelection(obj);
+                }
             }
         }
     }

@@ -135,8 +135,8 @@ public:
                 }
 
                 // Convert current phase to an integer index and calculate next index
-                int idx = static_cast<int>(phase);
-                int nextIdx = idx + 1;
+                int idx = static_cast<int>(phase) % TABLE_SIZE;
+                int nextIdx = (idx + 1) % TABLE_SIZE;
 
                 // Wrap the next index within TABLE_SIZE without conditionals
                 if (nextIdx >= TABLE_SIZE) nextIdx -= TABLE_SIZE;

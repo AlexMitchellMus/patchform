@@ -89,12 +89,16 @@ target_link_libraries(PlugPatchStandalone PRIVATE
 )
 target_compile_definitions(PlugPatchStandalone PRIVATE)
 
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
+set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG")
+
+
 # Apply optimizations for MSVC
 if (MSVC)
     target_compile_options(PlugPatchStandalone PRIVATE
             /std:c++latest
             /Zc:preprocessor
-            $<$<CONFIG:Debug>:/Od /Z7>
+            $<$<CONFIG:Debug>:/Od /Zi /RTC1>
             $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
             $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
     )
