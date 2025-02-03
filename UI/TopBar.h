@@ -6,8 +6,11 @@
 
 #pragma once
 
+#include "../UI_ToolKit/CompEvent.h"
 #include "../UI_ToolKit/PopupComponent.h"
 #include "../UI_ToolKit/ToggleButton.h"
+
+#include "SDL3/SDL.h"
 
 using namespace pptk;
 
@@ -23,19 +26,19 @@ public:
         {
         };
 
-        void mouseEnter(SDL_Event& e) override
+        void mouseEnter(pptk::CompEvent& e) override
         {
             isHovered = true;
             repaint();
         }
 
-        void mouseLeave(SDL_Event& e) override
+        void mouseLeave(pptk::CompEvent& e) override
         {
             isHovered = false;
             repaint();
         }
 
-        void mouseButtonDown(SDL_Event& e) override
+        void mouseButtonDown(pptk::CompEvent& e) override
         {
             onClick();
         }
@@ -226,14 +229,14 @@ public:
         return getBounds().contains(x, y);
     }
 
-    void mouseButtonDown(SDL_Event& e) override {
-        if (e.button.button == SDL_BUTTON_LEFT) {
+    void mouseButtonDown(pptk::CompEvent& e) override {
+        if (e.sdlEvent.button.button == SDL_BUTTON_LEFT) {
             isHit = true;
         }
     }
 
-    void mouseButtonUp(SDL_Event& e) override {
-        if (e.button.button == SDL_BUTTON_LEFT) {
+    void mouseButtonUp(pptk::CompEvent& e) override {
+        if (e.sdlEvent.button.button == SDL_BUTTON_LEFT) {
             isHit = false;
         }
     }

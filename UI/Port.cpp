@@ -10,7 +10,7 @@
 #include "Connection.h"
 
 
-void Port::mouseButtonDown(SDL_Event& e)
+void Port::mouseButtonDown(pptk::CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {
@@ -22,7 +22,7 @@ void Port::mouseButtonDown(SDL_Event& e)
     }
 }
 
-void Port::mouseButtonUp(SDL_Event& e)
+void Port::mouseButtonUp(pptk::CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {

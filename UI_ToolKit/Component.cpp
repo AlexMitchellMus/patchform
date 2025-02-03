@@ -8,6 +8,7 @@
 
 #include "RootComponent.h"
 #include "PopupComponent.h"
+#include "CompEvent.h"
 
 namespace pptk {
 
@@ -22,6 +23,28 @@ Component::~Component()
     }
 
     children.clear();
+}
+
+void Component::mouseButtonDown(CompEvent& e)
+{
+    for (auto it = children.begin(); it != children.end();)
+    {
+        auto& child = *it;
+
+        if (child->hitTest(e.sdlEvent.button.x, e.sdlEvent.button.y))
+        {
+            child->mouseButtonDown(e);
+        }
+        ++it;
+    }
+}
+
+void Component::handleMouseMove(CompEvent& e)
+{
+    if (getBounds().contains(e.sdlEvent.button.x, e.sdlEvent.button.y))
+    {
+        mouseMove(Point(e.sdlEvent.button.x, e.sdlEvent.button.y));
+    }
 }
 
 void Component::addComponent(Component* child)

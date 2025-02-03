@@ -13,8 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "SDL3/SDL.h"
-
 #ifndef NANOVG_GL3_IMPLEMENTATION
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg.h"
@@ -35,6 +33,8 @@
 #endif
 
 namespace pptk {
+
+class CompEvent;
 
 enum class Button { LEFT, RIGHT, MIDDLE };
 
@@ -212,26 +212,9 @@ public:
                py >= 0 && py <= height;
     }
 
-    virtual void mouseButtonDown(SDL_Event& e) {
-        for (auto it = children.begin(); it != children.end(); ) {
-            auto& child = *it;
-
-            if (child->hitTest(e.button.x, e.button.y)) {
-                child->mouseButtonDown(e);
-            }
-            ++it;
-        }
-    }
-
-    virtual void handleMouseMove(SDL_Event& e)
-    {
-        if (getBounds().contains(e.button.x, e.button.y))
-        {
-            mouseMove(Point(e.button.x, e.button.y));
-        }
-    }
-
-    virtual void mouseButtonUp(SDL_Event& e) {}
+    virtual void mouseButtonDown(CompEvent& e);
+    virtual void handleMouseMove(CompEvent& e);
+    virtual void mouseButtonUp(CompEvent& e) {}
 
     // Finds the component at global coordinate.
     // Disregards self, so make sure to call it from the Component you want to disregard from
@@ -300,12 +283,12 @@ public:
         return current;
     }
 
-    virtual void mouseEnter(SDL_Event& e) { }
-    virtual void mouseLeave(SDL_Event& e) { }
+    virtual void mouseEnter(CompEvent& e) { }
+    virtual void mouseLeave(CompEvent& e) { }
     virtual void mouseMove(const Point& position) { }
     virtual void mouseDrag(const Point& position, const Point& delta, Button button) { }
-    virtual void mouseWheel(SDL_Event& e) { }
-    virtual void keyPressed(SDL_Event& e) { }
+    virtual void mouseWheel(CompEvent& e) { }
+    virtual void keyPressed(CompEvent& e) { }
 
     virtual void render(NVGcontext* vg) { };
     virtual void resized() { };

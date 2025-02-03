@@ -23,9 +23,9 @@ public:
 
     void mouseMove(const pptk::Point& position) override;
 
-    void mouseLeave(SDL_Event& e) override;
+    void mouseLeave(pptk::CompEvent& e) override;
 
-    void mouseButtonDown(SDL_Event& e) override;
+    void mouseButtonDown(pptk::CompEvent& e) override;
 
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button) override;
 

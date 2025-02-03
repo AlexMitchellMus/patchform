@@ -93,16 +93,16 @@ void LeftPanel::mouseMove(const pptk::Point& position)
     }
 }
 
-void LeftPanel::mouseLeave(SDL_Event& e)
+void LeftPanel::mouseLeave(pptk::CompEvent& e)
 {
     SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
 }
 
-void LeftPanel::mouseButtonDown(SDL_Event& e)
+void LeftPanel::mouseButtonDown(pptk::CompEvent& e)
 {
-    if (e.button.button == SDL_BUTTON_LEFT)
+    if (e.sdlEvent.button.button == SDL_BUTTON_LEFT)
     {
-        if (e.button.x > getWidth() - 10 && e.button.x < getWidth())
+        if (e.sdlEvent.button.x > getWidth() - 10 && e.sdlEvent.button.x < getWidth())
         {
             isResizingPanel = true;
         }

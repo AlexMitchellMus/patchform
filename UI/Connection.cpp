@@ -195,7 +195,7 @@ bool Connection::hitTest(float px, float py) const
     return isPointNearBezier(Point(px, py), startPoint, controlPoint1, controlPoint2, endPoint);
 }
 
-void Connection::mouseEnter(SDL_Event& e)
+void Connection::mouseEnter(pptk::CompEvent& e)
 {
     if (!isHovered)
     {
@@ -204,7 +204,7 @@ void Connection::mouseEnter(SDL_Event& e)
     }
 }
 
-void Connection::mouseLeave(SDL_Event& e)
+void Connection::mouseLeave(pptk::CompEvent& e)
 {
     if (isHovered)
     {
@@ -213,14 +213,14 @@ void Connection::mouseLeave(SDL_Event& e)
     }
 }
 
-void Connection::mouseButtonDown(SDL_Event& e)
+void Connection::mouseButtonDown(pptk::CompEvent& e)
 {
     findParentOfClass<Canvas>()->setSelected(this);
 }
 
-void Connection::keyPressed(SDL_Event& e)
+void Connection::keyPressed(pptk::CompEvent& e)
 {
-    if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
+    if (e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {
         if (auto cnv = findParentOfClass<Canvas>())
             cnv->deleteSelectedObjects();

@@ -9,6 +9,7 @@
 #include "Component.h"
 #include <iostream>
 
+#include "CompEvent.h"
 #include "RootComponent.h"
 
 namespace pptk {
@@ -19,16 +20,19 @@ public:
 
     void handleMouseButtonDown(SDL_Event& e) {
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state
-        propagateMouseButtonDown(rootComponent, e);
+        auto wrappedEvent = CompEvent(e, rootComponent);
+        propagateMouseButtonDown(rootComponent, wrappedEvent);
     }
 
     void handleMouseButtonUp(SDL_Event& e) {
         if (auto draggedComp = rootComponent->getDraggingComponent()) {
-            draggedComp->mouseButtonUp(e);
-            updateHoveredComponent(rootComponent, e);
+            auto wrappedEvent = CompEvent(e, draggedComp);
+            draggedComp->mouseButtonUp(wrappedEvent);
+            updateHoveredComponent(rootComponent, wrappedEvent);
             rootComponent->setDraggingComponent(nullptr); // Reset dragging state
         } else {
-            propagateMouseButtonUp(rootComponent, e);
+            auto wrappedEvent = CompEvent(e, rootComponent);
+            propagateMouseButtonUp(rootComponent, wrappedEvent);
         }
     }
 
@@ -59,25 +63,28 @@ public:
             return;
         }
 
-        updateHoveredComponent(rootComponent, e); // Update hovered component
+        auto wrappedEvent = CompEvent(e, rootComponent);
+        updateHoveredComponent(rootComponent, wrappedEvent); // Update hovered component
     }
 
     void handleMouseWheel(SDL_Event& e) {
         if (auto hoveredComp = rootComponent->getHoveredComponent()) {
-            hoveredComp->mouseWheel(e);
+            auto wrappedEvent = CompEvent(e, hoveredComp);
+            hoveredComp->mouseWheel(wrappedEvent);
         }
     }
 
     void handleKeyDown(SDL_Event& e) {
         if (auto clickedComp = rootComponent->getClickedComponent()) {
-            clickedComp->keyPressed(e);
+            auto wrappedEvent = CompEvent(e, clickedComp);
+            clickedComp->keyPressed(wrappedEvent);
         }
     }
 
 private:
 
-    void updateHoveredComponent(Component* root, SDL_Event& e) {
-        Point globalMouse(e.motion.x, e.motion.y);
+    void updateHoveredComponent(Component* root, CompEvent& e) {
+        Point globalMouse(e.sdlEvent.motion.x, e.sdlEvent.motion.y);
 
         // Use findComponentAt with global coordinates
         Component* newHovered = root->findComponentAt(globalMouse.x, globalMouse.y);
@@ -99,20 +106,20 @@ private:
         if (auto hovered = rootComponent->getHoveredComponent()) {
             // Use global-to-local transformation including scaling
             Point localMouse = hovered->globalToLocalWithScale(globalMouse.x, globalMouse.y);
-            e.motion.x = static_cast<int>(localMouse.x);
-            e.motion.y = static_cast<int>(localMouse.y);
+            e.sdlEvent.motion.x = static_cast<int>(localMouse.x);
+            e.sdlEvent.motion.y = static_cast<int>(localMouse.y);
 
             hovered->handleMouseMove(e);
         }
     }
 
-    void propagateMouseButtonDown(Component* component, SDL_Event& e) {
+    void propagateMouseButtonDown(Component* component, CompEvent& e) {
         if (!component->isVisible()) {
             return;
         }
 
         // Use scaled coordinate transformation
-        Point localPos = component->globalToLocalWithScale(e.button.x, e.button.y);
+        Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
 
         // Traverse children in reverse order (for z-order handling)
         auto& children = component->getChildren();
@@ -132,8 +139,8 @@ private:
             rootComponent->setClickedComponent(component); // Store the clicked component
 
             // Adjust event coordinates before passing it to the component
-            e.button.x = static_cast<int>(localPos.x);
-            e.button.y = static_cast<int>(localPos.y);
+            e.sdlEvent.button.x = static_cast<int>(localPos.x);
+            e.sdlEvent.button.y = static_cast<int>(localPos.y);
 
             component->mouseButtonDown(e);
 
@@ -144,7 +151,7 @@ private:
         }
     }
 
-    void propagateMouseButtonUp(Component* component, SDL_Event& e) {
+    void propagateMouseButtonUp(Component* component, CompEvent& e) {
         // Only handle the clicked component
         if (auto clickedComp = rootComponent->getClickedComponent()) {
             clickedComp->mouseButtonUp(e);

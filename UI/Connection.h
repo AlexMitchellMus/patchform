@@ -18,10 +18,10 @@ public:
 
     void updateConnectionGeometry();
 
-    void mouseEnter(SDL_Event& e) override;
-    void mouseLeave(SDL_Event& e) override;
-    void mouseButtonDown(SDL_Event& e) override;
-    void keyPressed(SDL_Event& e) override;
+    void mouseEnter(pptk::CompEvent& e) override;
+    void mouseLeave(pptk::CompEvent& e) override;
+    void mouseButtonDown(pptk::CompEvent& e) override;
+    void keyPressed(pptk::CompEvent& e) override;
     bool hitTest(float px, float py) const override;
 
     void setConnectionDest(const pptk::Point& p);

@@ -34,11 +34,11 @@ public:
     {
     }
 
-    void mouseButtonDown(SDL_Event& e) override;
-    void mouseButtonUp(SDL_Event& e) override;
+    void mouseButtonDown(pptk::CompEvent& e) override;
+    void mouseButtonUp(pptk::CompEvent& e) override;
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, const pptk::Button button) override;
-    void mouseWheel(SDL_Event& e) override;
-    void keyPressed(SDL_Event& e) override;
+    void mouseWheel(pptk::CompEvent& e) override;
+    void keyPressed(pptk::CompEvent& e) override;
 
     void deleteSelectedObjects();
     void setSelected(CanvasItem* obj);

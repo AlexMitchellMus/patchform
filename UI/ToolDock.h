@@ -25,17 +25,17 @@ public:
         zoomValue = value * 100;
     }
 
-    void mouseEnter(SDL_Event& e) override
+    void mouseEnter(pptk::CompEvent& e) override
     {
         isHovered = true;
     }
 
-    void mouseLeave(SDL_Event& e) override
+    void mouseLeave(pptk::CompEvent& e) override
     {
         isHovered = false;
     }
 
-    void mouseButtonDown(SDL_Event& e) override
+    void mouseButtonDown(pptk::CompEvent& e) override
     {
         onClick();
     }

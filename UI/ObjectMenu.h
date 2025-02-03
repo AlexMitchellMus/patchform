@@ -7,6 +7,7 @@
 #include "../UI_ToolKit/PopupComponent.h"
 
 #include "json.hpp"
+#include "../UI_ToolKit/CompEvent.h"
 using json = nlohmann::json;
 
 using namespace pptk;
@@ -40,21 +41,21 @@ class Item : public pptk::Component
         onMouseDrag(position, name, getPositionInParent());
     }
 
-    void mouseEnter(SDL_Event& e) override
+    void mouseEnter(pptk::CompEvent& e) override
     {
         hovered = true;
         repaint();
     }
 
-    void mouseLeave(SDL_Event& e) override
+    void mouseLeave(pptk::CompEvent& e) override
     {
         hovered = false;
         repaint();
     }
 
-    void mouseButtonUp(SDL_Event& e) override
+    void mouseButtonUp(pptk::CompEvent& e) override
     {
-        onMouseUp(Point(e.button.x, e.button.y));
+        onMouseUp(Point(e.sdlEvent.button.x, e.sdlEvent.button.y));
     }
 
     void render(NVGcontext* vg) override

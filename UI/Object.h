@@ -23,10 +23,10 @@ public:
     ~Object() override;
 
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
-    void mouseButtonDown(SDL_Event& e) override;
-    void mouseEnter(SDL_Event& e) override;
-    void mouseLeave(SDL_Event& e) override;
-    void keyPressed(SDL_Event& e) override;
+    void mouseButtonDown(pptk::CompEvent& e) override;
+    void mouseEnter(pptk::CompEvent& e) override;
+    void mouseLeave(pptk::CompEvent& e) override;
+    void keyPressed(pptk::CompEvent& e) override;
 
     void resized() override;
 

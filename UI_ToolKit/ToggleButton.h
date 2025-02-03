@@ -15,7 +15,7 @@ public:
         , font(std::move(font))
     {};
 
-    void mouseButtonDown(SDL_Event& e) override
+    void mouseButtonDown(pptk::CompEvent& e) override
     {
         state = !state;
         onToggle(state);
@@ -36,13 +36,13 @@ public:
         repaint();
     }
 
-    void mouseEnter(SDL_Event& e) override
+    void mouseEnter(pptk::CompEvent& e) override
     {
         hovered = true;
         repaint();
     };
 
-    void mouseLeave(SDL_Event& e) override
+    void mouseLeave(pptk::CompEvent& e) override
     {
         hovered = false;
         repaint();

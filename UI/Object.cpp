@@ -74,19 +74,19 @@ void Object::resized()
     }
 }
 
-void Object::mouseEnter(SDL_Event& e)
+void Object::mouseEnter(CompEvent& e)
 {
     isHovered = true;
     repaint();
 }
 
-void Object::mouseLeave(SDL_Event& e)
+void Object::mouseLeave(CompEvent& e)
 {
     isHovered = false;
     repaint();
 }
 
-void Object::mouseButtonDown(SDL_Event& e)
+void Object::mouseButtonDown(CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {
@@ -104,9 +104,9 @@ void Object::mouseButtonDown(SDL_Event& e)
     }
 }
 
-void Object::keyPressed(SDL_Event& e)
+void Object::keyPressed(CompEvent& e)
 {
-    if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
+    if (e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {
         if (auto cnv = findParentOfClass<Canvas>())
             cnv->deleteSelectedObjects();

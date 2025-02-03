@@ -24,19 +24,19 @@ public:
         , portType(type)
     {};
 
-    void mouseButtonDown(SDL_Event& e) override;
+    void mouseButtonDown(pptk::CompEvent& e) override;
 
-    void mouseButtonUp(SDL_Event& e) override;
+    void mouseButtonUp(pptk::CompEvent& e) override;
 
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
 
-    void mouseEnter(SDL_Event& e) override
+    void mouseEnter(pptk::CompEvent& e) override
     {
         isHovered = true;
         repaint();
     };
 
-    void mouseLeave(SDL_Event& e) override
+    void mouseLeave(pptk::CompEvent& e) override
     {
         isHovered = false;
         repaint();

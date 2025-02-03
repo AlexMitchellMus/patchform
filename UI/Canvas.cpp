@@ -51,21 +51,21 @@ void Canvas::updateGraphValuesIfNeeded()
 }
 
 
-void Canvas::mouseButtonDown(SDL_Event& e)
+void Canvas::mouseButtonDown(CompEvent& e)
 {
-    if (e.button.button == SDL_BUTTON_LEFT)
+    if (e.sdlEvent.button.button == SDL_BUTTON_LEFT)
     {
         clearSelection();
 
-        lasso = std::make_unique<Lasso>(Point(e.button.x, e.button.y));   //lasso->start({e.button.x, e.button.y});
+        lasso = std::make_unique<Lasso>(Point(e.sdlEvent.button.x, e.sdlEvent.button.y));   //lasso->start({e.button.x, e.button.y});
         addComponent(lasso.get());
     }
-    else if (e.button.button == SDL_BUTTON_MIDDLE) {
+    else if (e.sdlEvent.button.button == SDL_BUTTON_MIDDLE) {
         SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
     }
 }
 
-void Canvas::mouseButtonUp(SDL_Event& e)
+void Canvas::mouseButtonUp(CompEvent& e)
 {
     SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
     lasso.reset();
@@ -101,7 +101,7 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
     }
 }
 
-void Canvas::mouseWheel(SDL_Event& e)
+void Canvas::mouseWheel(CompEvent& e)
 {
     float mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
@@ -111,7 +111,7 @@ void Canvas::mouseWheel(SDL_Event& e)
     float canvasMouseY = (mouseY - y) / scale;
 
     // Adjust scale with constraints
-    float newScale = scale + e.wheel.y * 0.125f;
+    float newScale = scale + e.sdlEvent.wheel.y * 0.125f;
     newScale = std::min(std::max(newScale, 0.1f), 3.0f);
 
     // Adjust canvas offset to scale around the mouse point
@@ -143,9 +143,9 @@ void Canvas::resetScale()
     repaint();
 }
 
-void Canvas::keyPressed(SDL_Event& e)
+void Canvas::keyPressed(CompEvent& e)
 {
-    if (e.key.key == SDLK_DELETE || e.key.key == SDLK_BACKSPACE)
+    if (e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {
         deleteSelectedObjects();
     }
