@@ -849,6 +849,9 @@ public:
         case hash("floatbox"):
             return addNode<FloatBox>(idString, node);
 
+        case hash("ping"):
+            return addNode<Ping>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

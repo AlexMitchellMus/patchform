@@ -21,7 +21,7 @@ public:
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
 
-        countValue = minCount = objParams.value("min", 0.0f);
+        countValue = minCount = objParams.value("min", 1);
         maxCount = objParams.value("max", std::numeric_limits<int>::max());
     }
 
@@ -38,9 +38,8 @@ public:
                 e->setTimeStamp(event->getTimeStamp());
                 if (countValue > maxCount)
                     countValue = minCount;
-                e->data = countValue;
 
-                countValue++;
+                e->data = countValue++;
 
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);

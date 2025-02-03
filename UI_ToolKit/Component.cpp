@@ -14,6 +14,8 @@ namespace pptk {
 
 Component::~Component()
 {
+    stopFrameTimer();
+
     // Then! Remove component
     removeFromParent();
 
@@ -157,9 +159,14 @@ void Component::setPosition(const Point& point)
     setPosition(point.x, point.y);
 }
 
-void Component::registerTimer(std::function<void()> callback)
+void Component::startFrameTimer(std::function<void()> callback)
 {
     reinterpret_cast<RootComponent*>(getRootComponent())->registerTimerCallback(this, std::move(callback));
+}
+
+void Component::stopFrameTimer()
+{
+    reinterpret_cast<RootComponent*>(getRootComponent())->unregisterTimerCallback(this);
 }
 
 void Component::registerGlobalMouseListener(std::function<void(Component*)> callback)

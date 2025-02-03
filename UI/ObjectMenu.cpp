@@ -22,6 +22,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { {{"obj", "dial"}}, ICONS::Dial},
         { {{"obj", "aout"}}, ICONS::Aout},
         { {{"obj", "floatbox"}}, "fb", false },
+        { {{"obj", "ping"}}, "Png", false },
     };
 
     for (int i = 0; i < 2; i++)

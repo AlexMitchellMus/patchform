@@ -329,7 +329,9 @@ public:
         return Point(x, y);
     }
 
-    void registerTimer(std::function<void()> callback);
+    void startFrameTimer(std::function<void()> callback);
+
+    void stopFrameTimer();
 
     void registerGlobalMouseListener(std::function<void(Component*)> callback);
 
