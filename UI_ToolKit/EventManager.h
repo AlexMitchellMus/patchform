@@ -118,9 +118,6 @@ private:
             return;
         }
 
-        // Use scaled coordinate transformation
-        Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
-
         // Traverse children in reverse order (for z-order handling)
         auto& children = component->getChildren();
         for (auto it = children.rbegin(); it != children.rend(); ++it) {
@@ -133,6 +130,9 @@ private:
                 }
             }
         }
+
+        // Use scaled coordinate transformation
+        Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
 
         if (component->hitTest(localPos.x, localPos.y) && !rootComponent->getDraggingComponent()) {
             rootComponent->setDraggingComponent(component);
