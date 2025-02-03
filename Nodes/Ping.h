@@ -28,9 +28,11 @@ public:
     public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
-            setSize(40, 40);
+            auto pingNode = static_cast<Ping*>(node);
 
-            reinterpret_cast<Ping*>(audioNode)->repaintFromDSP = [this]()
+            setSize(pingNode->width, pingNode->height);
+
+            pingNode->repaintFromDSP = [this]()
             {
                 isDirty.store(true);
             };
@@ -101,9 +103,15 @@ public:
     {
         return std::make_unique<UI>(this);
     };
+
+    float width = 40;
+    float height = 40;
 #endif
     Ping(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
+        width = objParams.value("width", 40);
+        height = objParams.value("height", 40);
+
         addInputPort("Events", AudioPort::PortType::Data);
     }
 
