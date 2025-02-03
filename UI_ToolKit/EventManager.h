@@ -142,6 +142,9 @@ private:
             return nullptr;
         }
 
+        if (component->consumeEvent(e))
+            return component;
+
         // If the component is hit, check its children.
         auto& children = component->getChildren();
         // Iterate in reverse order for proper z-order (topmost components first).

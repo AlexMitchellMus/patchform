@@ -72,7 +72,7 @@ public:
             repaint();
             counter = 0;
             startFrameTimer([this]() mutable {
-                if (counter > 30)
+                if (counter > 15)
                 {
                     stopFrameTimer();
                     triggered = false;

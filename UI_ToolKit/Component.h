@@ -212,6 +212,7 @@ public:
                py >= 0 && py <= height;
     }
 
+    virtual bool consumeEvent(CompEvent& e) { return false; };
     virtual void mouseButtonDown(CompEvent& e);
     virtual void handleMouseMove(CompEvent& e);
     virtual void mouseButtonUp(CompEvent& e) {}

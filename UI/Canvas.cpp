@@ -60,9 +60,6 @@ void Canvas::mouseButtonDown(CompEvent& e)
         lasso = std::make_unique<Lasso>(Point(e.sdlEvent.button.x, e.sdlEvent.button.y));   //lasso->start({e.button.x, e.button.y});
         addComponent(lasso.get());
     }
-    else if (e.sdlEvent.button.button == SDL_BUTTON_MIDDLE) {
-        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
-    }
 }
 
 void Canvas::mouseButtonUp(CompEvent& e)
@@ -73,7 +70,11 @@ void Canvas::mouseButtonUp(CompEvent& e)
 
 void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button)
 {
-    if (button == pptk::Button::LEFT)
+    if (isDragging || button == pptk::Button::MIDDLE)
+    {
+        dragCanvas(delta);
+    }
+    else if (button == pptk::Button::LEFT)
     {
         if (lasso)
         {
@@ -94,14 +95,15 @@ void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pp
             }
         }
     }
-    else if (button == pptk::Button::MIDDLE)
-    {
-        auto scale = getAccumulatedScale();
-        x += delta.x * scale;
-        y += delta.y * scale;
+}
 
-        repaint();
-    }
+void Canvas::dragCanvas(const pptk::Point& delta)
+{
+    auto scale = getAccumulatedScale();
+    x += delta.x * scale;
+    y += delta.y * scale;
+
+    repaint();
 }
 
 void Canvas::mouseWheel(CompEvent& e)
@@ -152,6 +154,26 @@ void Canvas::keyPressed(CompEvent& e)
     {
         deleteSelectedObjects();
     }
+}
+
+bool Canvas::consumeEvent(pptk::CompEvent& e)
+{
+    const bool* keyboardState = SDL_GetKeyboardState(nullptr);
+    if (e.sdlEvent.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+    {
+        // TODO: allow user to choose keyboard key for canvas drag
+        if (e.sdlEvent.button.button == SDL_BUTTON_LEFT && keyboardState[SDL_SCANCODE_SPACE])
+        {
+            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
+            return isDragging = true;
+        }
+        if (e.sdlEvent.button.button == SDL_BUTTON_MIDDLE)
+        {
+            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
+            return isDragging = true;
+        }
+    }
+    return isDragging = false;
 }
 
 void Canvas::deleteSelectedObjects()

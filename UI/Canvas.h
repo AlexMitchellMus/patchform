@@ -30,15 +30,12 @@ public:
 
     std::vector<Object*> getObjects() const;
 
-    void mouseMove(const pptk::Point& position) override
-    {
-    }
-
     void mouseButtonDown(pptk::CompEvent& e) override;
     void mouseButtonUp(pptk::CompEvent& e) override;
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, const pptk::Button button) override;
     void mouseWheel(pptk::CompEvent& e) override;
     void keyPressed(pptk::CompEvent& e) override;
+    bool consumeEvent(pptk::CompEvent& e) override;
 
     void deleteSelectedObjects();
     void setSelected(CanvasItem* obj);
@@ -83,6 +80,8 @@ public:
     static constexpr int canvasOrigin = 64000;
 
 private:
+    void dragCanvas(const pptk::Point&);
+
     GraphManager* graphManager;
 
     std::vector<Object*> objects;
@@ -94,6 +93,8 @@ private:
     std::unique_ptr<Lasso> lasso;
 
     DisplayMode mode = DisplayMode::Edit;
+
+    bool inDragMode;
 
 #ifdef GENERATE_TEST_OBJECTS
     // ONLY FOR TESTING! These objects are not connected to the DSP system
