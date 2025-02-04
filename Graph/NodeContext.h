@@ -33,6 +33,7 @@ public:
         freeStack.pop_back();
 
         Event* evt = &events[eventIndex];
+        evt->data = 0.0f;
         evt->setTimeStamp(0);
         return evt;
     }

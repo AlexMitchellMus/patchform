@@ -119,19 +119,8 @@ public:
     {
         auto inputEvents = inputPortBuffers[0]->getEvents();
 
-        bool newValue;
-        while (eventQueue.try_dequeue(newValue))
-        {
-            Event* e = context->eventPool.getFreeEvent();
 
-            if (e)
-            {
-                e->setTimeStamp(0); // Set event at time 0
-                outputPort.addEvent(e);
-            }
-        };
-
-        if (inputEvents.size())
+        if (!inputEvents.empty())
         {
             for (auto ev : inputEvents)
             {
@@ -146,6 +135,18 @@ public:
             eventQueueFromDSP.enqueue(true);
             repaintFromDSP();
         }
+
+        bool newValue;
+        while (eventQueue.try_dequeue(newValue))
+        {
+            Event* e = context->eventPool.getFreeEvent();
+
+            if (e)
+            {
+                e->setTimeStamp(0); // Set event at time 0
+                outputPort.addEvent(e);
+            }
+        };
     }
 #endif
 };
