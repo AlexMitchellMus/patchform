@@ -57,7 +57,7 @@ void LeftPanel::render(NVGcontext* nvg)
     nvgTextAlign(nvg, NVG_ALIGN_LEFT);
     nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
 
-    nvgText(nvg, textX, textY, "Layers", nullptr);
+    nvgText(nvg, textX, textY, "Objects", nullptr);
     textY += 40;
 
     nvgFontFace(nvg, "Regular");
