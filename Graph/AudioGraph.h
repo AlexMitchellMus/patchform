@@ -1064,6 +1064,23 @@ public:
             graph->process(buffer, frameCount);
         }
 
+        // Calculate peak level
+        float peak = 0.0f;
+
+        for (unsigned long i = 0; i < frameCount; i++)
+        {
+            peak = std::max(peak, std::abs(buffer[i]));
+        }
+
+        constexpr float PEAK_THRESHOLD = 0.01f;
+
+        if (std::abs(peak - lastPeak) > PEAK_THRESHOLD)
+        {
+            volumeMeterQueue.enqueue(peak);
+            repaintMeter();
+            lastPeak = peak;
+        }
+
 #ifdef DSP_TIMING
         auto endTime = std::chrono::high_resolution_clock::now();
 
@@ -1104,8 +1121,13 @@ public:
 #endif
     }
 
+    std::function<void()> repaintMeter = [](){};
+    moodycamel::ConcurrentQueue<float> volumeMeterQueue;
+
 protected:
     std::string filePath;
+
+    float lastPeak = 0.0f;
 
     std::shared_ptr<GraphHolder> activeGraph;         // Actively processed graph
     std::shared_ptr<GraphHolder> transitioningGraph;  // New graph prepared for swapping

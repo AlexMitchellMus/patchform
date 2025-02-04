@@ -14,6 +14,46 @@
 
 using namespace pptk;
 
+class MainVolumeMeter : public Component
+{
+    public:
+    MainVolumeMeter(){};
+
+    void setValue(float value)
+    {
+        // Ensure the value is within range and avoid log(0)
+        value = std::clamp(value, 1e-6f, 1.0f);
+
+        // Convert linear value to dB scale
+        float dbValue = 20.0f * std::log10(value);
+
+        // Normalize dB range (-60 dB to 0 dB) to [0, 1] range
+        meterPeakValue = (dbValue + 60.0f) / 60.0f; // Maps -60dB (0) to 0dB (1)
+        meterPeakValue = std::clamp(meterPeakValue, 0.0f, 1.0f); // Ensure it stays in bounds
+
+        repaint();
+    }
+
+    void render(NVGcontext* nvg) override
+    {
+        nvgBeginPath(nvg);
+        auto bgColor = nvgRGBA(33, 33, 33, 255);
+
+        auto halfHeight = getHeight() * 0.5f;
+        nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bgColor, bgColor, halfHeight);
+
+        float peakX = (width - (halfHeight * 2)) * meterPeakValue; // Convert peak value to X position
+
+        nvgBeginPath(nvg);
+        const auto blue = nvgRGBA(28, 73, 119, 255 * 0.5f);
+        const auto peak = nvgRGB(255, 0, 0);
+        auto col = meterPeakValue > 0.9 ? peak : blue;
+        nvgDrawRoundedRect(nvg, getHeight() * 0.5f, height * 0.3f, peakX, height * 0.4f, col, col, 0);
+    }
+private:
+    float meterPeakValue = 0.0f;
+};
+
 class MainMenu : public PopupComponent
 {
 public:
@@ -184,6 +224,9 @@ public:
         redo->setName("Redo");
         addComponent(redo.get());
 
+        volumeMeter = std::make_unique<MainVolumeMeter>();
+        addComponent(volumeMeter.get());
+
         hideSidePanelsToggle = std::make_unique<ToggleButton>("D", "D");
         hideSidePanelsToggle->setName("HidePanels");
         addComponent(hideSidePanelsToggle.get());
@@ -196,9 +239,15 @@ public:
         TopBar::resized();
     }
 
+    void setVolumeMeterValue(float value)
+    {
+        if (volumeMeter)
+            volumeMeter->setValue(value);
+    }
+
     void resized() override
     {
-        auto centreY = (getHeight() / 2) - (35 / 2);
+        auto centreY = (getHeight() / 2) - (35 * 0.5f);
         int offset = 16;
         mainMenuButton->setBounds(offset, centreY, 35, 35);
         offset += 50;
@@ -206,6 +255,9 @@ public:
         undo->setBounds(offset, centreY, 35, 35);
         offset += 50;
         redo->setBounds(offset, centreY, 35, 35);
+
+        auto volCentreY = (getHeight() / 2) - (32 * 0.5f);
+        volumeMeter->setBounds(getWidth() - 50 - 180, volCentreY, 150, 32);
 
         hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, 35);
 
@@ -249,6 +301,8 @@ private:
 
     std::unique_ptr<ToggleButton> undo;
     std::unique_ptr<ToggleButton> redo;
+
+    std::unique_ptr<MainVolumeMeter> volumeMeter;
 
     std::unique_ptr<ToggleButton> hideSidePanelsToggle;
 

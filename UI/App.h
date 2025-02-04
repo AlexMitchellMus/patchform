@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <atomic>
 
 #include "Canvas.h"
 #include "ToolDock.h"
@@ -45,57 +46,11 @@ public:
 class GraphManager;
 class App : public RootComponent {
 public:
-    App(GraphManager* gm) : graphManager(gm) {
+    App(GraphManager* gm);
 
-        canvas = std::make_unique<Canvas>(graphManager);
-        canvas->setName("canvas");
-        addComponent(canvas.get());
+    std::atomic_bool meterRepaintFlag = std::atomic_bool(false);
 
-        topBar = std::make_unique<TopBar>();
-        topBar->setName("topBar");
-        addComponent(topBar.get());
-
-        toolDock = std::make_unique<ToolDock>(canvas.get());
-        toolDock->setName("toolDock");
-        addComponent(toolDock.get());
-
-        leftPanel = std::make_unique<LeftPanel>(canvas.get());
-        leftPanel->setName("leftPanel");
-        addComponent(leftPanel.get());
-
-        rightPanel = std::make_unique<RightPanel>();
-        rightPanel->setName("rightPanel");
-        addComponent(rightPanel.get());
-
-        topBar->hideShowPanels = [this](bool state)
-        {
-            leftPanel->setVisible(!state);
-            rightPanel->setVisible(!state);
-
-//#define AUTO_HIDE_DOCK
-#ifdef AUTO_HIDE_DOCK
-            if (state)
-            {
-                resizeToolDock(true);
-                registerTimer([this]()
-                {
-                    resizeToolDock(false);
-                });
-            } else
-            {
-                unregisterTimerCallback(this);
-                resizeToolDock(true);
-            }
-#endif
-        };
-
-        App::resized();
-    }
-
-    void updateObjectsFromDSP()
-    {
-        canvas->updateGraphValuesIfNeeded();
-    }
+    void updateObjectsFromDSP();
 
     void mouseMove(const Point& position) override
     {
