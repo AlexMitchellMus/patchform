@@ -1067,22 +1067,7 @@ public:
             graph->process(buffer, frameCount);
         }
 
-        // Calculate peak level
-        float peak = 0.0f;
-
-        for (unsigned long i = 0; i < frameCount; i++)
-        {
-            peak = std::max(peak, std::abs(buffer[i]));
-        }
-
-        constexpr float PEAK_THRESHOLD = 0.01f;
-
-        if (std::abs(peak - lastPeak) > PEAK_THRESHOLD)
-        {
-            volumeMeterQueue.enqueue(peak);
-            repaintMeter();
-            lastPeak = peak;
-        }
+        processPeak(buffer, frameCount);
 
 #ifdef DSP_TIMING
         auto endTime = std::chrono::high_resolution_clock::now();
@@ -1124,13 +1109,25 @@ public:
 #endif
     }
 
-    std::function<void()> repaintMeter = [](){};
-    moodycamel::ConcurrentQueue<float> volumeMeterQueue;
+    // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
+    moodycamel::ConcurrentQueue<float> volumeMeterQueue = moodycamel::ConcurrentQueue<float>(100);
+
+private:
+
+    // Take the average peak and send it to the GUI when the GUI requests an update
+    void processPeak(float* buffer, unsigned long frameCount)
+    {
+        float peak = 0.0f;
+        for (unsigned long i = 0; i < frameCount; i++)
+        {
+            peak = std::max(peak, std::abs(buffer[i]));
+        }
+
+        volumeMeterQueue.enqueue(peak);
+    }
 
 protected:
     std::string filePath;
-
-    float lastPeak = 0.0f;
 
     std::shared_ptr<GraphHolder> activeGraph;         // Actively processed graph
     std::shared_ptr<GraphHolder> transitioningGraph;  // New graph prepared for swapping

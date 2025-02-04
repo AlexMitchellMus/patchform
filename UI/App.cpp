@@ -10,11 +10,6 @@ App::App(GraphManager* gm) : graphManager(gm) {
     topBar->setName("topBar");
     addComponent(topBar.get());
 
-    gm->repaintMeter = [this]()
-    {
-        meterRepaintFlag.store(true, std::memory_order_relaxed);
-    };
-
     toolDock = std::make_unique<ToolDock>(canvas.get());
     toolDock->setName("toolDock");
     addComponent(toolDock.get());
@@ -56,11 +51,30 @@ void App::updateObjectsFromDSP()
 {
     canvas->updateGraphValuesIfNeeded();
 
-    if (meterRepaintFlag.load(std::memory_order_relaxed))
+    float val;
+    float sumPeaks = 0.0f;
+    int count = 0;
+
+    //  Read and process all available peak values
+    while (graphManager->volumeMeterQueue.try_dequeue(val))
     {
-        float val;
-        while (graphManager->volumeMeterQueue.try_dequeue(val)){};
-        topBar->setVolumeMeterValue(val);
-        meterRepaintFlag.store(false, std::memory_order_relaxed);
+        sumPeaks += val;
+        count++;
+    }
+
+    if (count > 0)
+    {
+        float averagedPeak = sumPeaks / count;  // ✅ Process the average
+        float lastValue = topBar->getVolumeMeterValue();
+
+        //  Only update if there’s a significant change
+        constexpr float PEAK_THRESHOLD = 0.0001f;
+        if (std::abs(averagedPeak - lastValue) > PEAK_THRESHOLD)
+        {
+            topBar->setVolumeMeterValue(averagedPeak);
+        }
     }
 }
+
+
+

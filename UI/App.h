@@ -48,8 +48,6 @@ class App : public RootComponent {
 public:
     App(GraphManager* gm);
 
-    std::atomic_bool meterRepaintFlag = std::atomic_bool(false);
-
     void updateObjectsFromDSP();
 
     void mouseMove(const Point& position) override

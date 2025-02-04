@@ -27,11 +27,18 @@ class MainVolumeMeter : public Component
         // Convert linear value to dB scale
         float dbValue = 20.0f * std::log10(value);
 
-        // Normalize dB range (-60 dB to 0 dB) to [0, 1] range
-        meterPeakValue = (dbValue + 60.0f) / 60.0f; // Maps -60dB (0) to 0dB (1)
+        constexpr float dbRange = 80.0f;
+
+        // Normalize dB range (-dbRange dB to 0 dB) to [0, 1] range
+        meterPeakValue = (dbValue + dbRange) / dbRange; // Maps -dbRange (0) to 0dB (1)
         meterPeakValue = std::clamp(meterPeakValue, 0.0f, 1.0f); // Ensure it stays in bounds
 
         repaint();
+    }
+
+    float getValue()
+    {
+        return meterPeakValue;
     }
 
     void render(NVGcontext* nvg) override
@@ -51,9 +58,9 @@ class MainVolumeMeter : public Component
         // Convert peak value to X position
         float peakX = meterWidth * meterPeakValue;
 
-        const auto blue = nvgRGBA(28, 73, 119, 255 * 0.5f);
+        const auto blue = nvgRGBA(28, 73, 119, 255 * 0.7f);
         const auto peak = nvgRGB(255, 0, 0);
-        auto col = meterPeakValue > 0.9 ? peak : blue;
+        auto col = meterPeakValue > 0.99 ? peak : blue;
         nvgDrawRoundedRect(nvg, meterX, height * 0.3f, peakX, height * 0.4f, col, col, 0);
     }
 private:
@@ -251,21 +258,30 @@ public:
             volumeMeter->setValue(value);
     }
 
+    float getVolumeMeterValue()
+    {
+        if (volumeMeter)
+            return volumeMeter->getValue();
+
+        return 0.0f;
+    }
+
     void resized() override
     {
-        auto centreY = (getHeight() / 2) - (35 * 0.5f);
+        constexpr int buttonW = 35;
+        auto centreY = (getHeight() / 2) - (buttonW * 0.5f);
         int offset = 16;
-        mainMenuButton->setBounds(offset, centreY, 35, 35);
+        mainMenuButton->setBounds(offset, centreY, buttonW, buttonW);
         offset += 50;
 
-        undo->setBounds(offset, centreY, 35, 35);
+        undo->setBounds(offset, centreY, buttonW, buttonW);
         offset += 50;
-        redo->setBounds(offset, centreY, 35, 35);
+        redo->setBounds(offset, centreY, buttonW, buttonW);
 
         auto volCentreY = (getHeight() / 2) - (32 * 0.5f);
         volumeMeter->setBounds(getWidth() - 50 - 180, volCentreY, 150, 32);
 
-        hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, 35);
+        hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, buttonW);
 
     }
 
