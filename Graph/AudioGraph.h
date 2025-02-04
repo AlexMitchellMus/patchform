@@ -638,6 +638,9 @@ public:
                                 summingAudioBuffer[i] += outputBuffer[i];
                             }
                         }
+                    } else
+                    {
+                        port->isAnyConnectedPortSignal = false;
                     }
 
                     // Collect and merge events
