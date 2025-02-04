@@ -8,12 +8,18 @@
 
 #include "../UI_ToolKit/Component.h"
 
+namespace pptk {
+    class TextEditor;
+}
+
 using namespace pptk;
 
 class RightPanel : public Component
 {
 public:
-    RightPanel() = default;
+    RightPanel();
+
+    void resized() override;
 
     void render(NVGcontext* nvg) override
     {
@@ -28,4 +34,9 @@ public:
         nvgStrokeWidth(nvg, 1.0f);
         nvgStroke(nvg);
     }
+
+private:
+
+    std::unique_ptr<pptk::TextEditor> textEditorA;
+    std::unique_ptr<pptk::TextEditor> textEditorB;
 };

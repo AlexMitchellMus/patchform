@@ -1,47 +1,59 @@
 #pragma once
 
+#include "Component.h"
 #include "SDL3/SDL.h"
 #include "CompEvent.h"
-#include "Component.h"
+#include <chrono>
+#include <utility>
 
 namespace pptk {
 
 class TextEditor : public Component
 {
 public:
-    TextEditor(std::string textToEdit)
-        : text(textToEdit)
-        , cursorPos(0)
-        , editorActive(true)
-    {}
+
+    std::function<void()> onTextChanged = [](){};
+
+    TextEditor() : cursorPos(0), editorActive(false){}
+
+    void setText(const std::string& newText)
+    {
+        text = newText;
+        repaint();
+    }
+
+    std::string getText() const
+    {
+        return text;
+    }
 
     void render(NVGcontext* vg) override
     {
-        //nvgBeginPath(vg);
-        //nvgRoundedRect(vg, 0, 0, width, height, 0.0f);
-        //auto orange = nvgRGB(120, 74, 28);
-        //nvgFillColor(vg, orange); // Blue fill for ports
-        //nvgFill(vg);
+        auto bgCol = nvgRGB(23, 23, 23);
+        auto outlineCol = nvgRGB(55, 55, 55);
+        nvgDrawRoundedRect(vg, 0, 0, width, height, bgCol, outlineCol, 8.0f);
 
         // Draw text
-        nvgFillColor(vg, nvgRGBA(255, 0, 0, 255));
+        nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
         nvgFontSize(vg, 20.0f);
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
-        nvgText(vg, 10, height, text.c_str(), nullptr);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgText(vg, 10, height * 0.5f, text.c_str(), nullptr);
 
         // Draw cursor if active
         if (editorActive)
         {
-            float textWidth = nvgTextBounds(vg, 0, 0, text.substr(0, cursorPos).c_str(), nullptr, nullptr);
+            // We get the textbounds from the NVG text
+            float textBounds[4] = { 0.0f };
+            float textWidth = nvgTextBounds(vg, 0, 0, text.substr(0, cursorPos).c_str(), nullptr, textBounds);
+            // This is the format of the text bounds
+            //std::cout << "xmin" << textBounds[0] << " ymin " << textBounds[1] << " xmax " << textBounds[2] << " ymax " << textBounds[3] << std::endl;
             float cursorX = 10 + textWidth;
 
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, cursorX, 5);
-            nvgLineTo(vg, cursorX, height - 5);
-            nvgStrokeColor(vg, nvgRGBA(0, 255, 0, 255));
-            nvgStrokeWidth(vg, 2.0f);
-            nvgLineStyle(vg, NVG_SOLID);
-            nvgStroke(vg);
+            // We add the ymin (-) and ymax (+) from vertical alignment
+            auto yMin = height * 0.5f + textBounds[1];
+            auto yMax = height * 0.5f + textBounds[3];
+            auto carrotCol = nvgRGBA(200, 200, 200, 255);
+            nvgDrawRoundedRect(vg, cursorX, yMin, 2, yMax - yMin, carrotCol, carrotCol, 0);
         }
     }
 /*
@@ -65,25 +77,39 @@ public:
 
         const auto keycode = e.sdlEvent.key.key;
 
-        if (keycode == SDLK_BACKSPACE && !text.empty() && cursorPos > 0)
+        switch (keycode)
         {
-            text.erase(cursorPos - 1, 1);
-            cursorPos--;
+        case SDLK_BACKSPACE:
+            if (!text.empty() && cursorPos > 0)
+            {
+                text.erase(cursorPos - 1, 1);
+                onTextChanged();
+                cursorPos--;
+                repaint();
+            }
+            break;
+        case SDLK_LEFT:
+            if (cursorPos > 0)
+            {
+                cursorPos--;
+                repaint();
+            }
+            break;
+        case SDLK_RIGHT:
+            if (cursorPos < text.length())
+            {
+                cursorPos++;
+                repaint();
+            }
+            break;
+        case SDLK_RETURN:
+        case SDLK_RETURN2:
+            editorActive = false;
             repaint();
-        }
-        else if (keycode == SDLK_LEFT && cursorPos > 0)
-        {
-            cursorPos--;
-            repaint();
-        }
-        else if (keycode == SDLK_RIGHT && cursorPos < text.length())
-        {
-            cursorPos++;
-            repaint();
-        }
-        else
-        {
+            break;
+        default:
             onCharInput(keycode);
+            onTextChanged();
         }
     }
 
@@ -91,23 +117,31 @@ public:
     {
         if (!editorActive) return;
 
+        SDL_Keymod modState = SDL_GetModState(); // Get active key modifiers (Shift, Ctrl, etc.)
+
         if (codepoint >= 32 && codepoint <= 126) // Printable characters
         {
-            text.insert(cursorPos, 1, static_cast<char>(codepoint));
+            char character = static_cast<char>(codepoint);
+
+            // Convert to uppercase if Shift is pressed
+            if ((modState & SDL_KMOD_SHIFT) && character >= 'a' && character <= 'z')
+            {
+                character = character - ('a' - 'A'); // Convert lowercase to uppercase
+            }
+
+            text.insert(cursorPos, 1, character);
             cursorPos++;
-            auto parent = getParent();
-            auto pB = parent->getBounds();
-            parent->setBounds(pB.x, pB.y, text.length() * 13, pB.h);
             repaint();
         }
     }
 
     void mouseButtonDown(CompEvent& e) override
     {
-        auto mPos = Point(e.sdlEvent.button.x, e.sdlEvent.button.y);
-        //editorActive = (mPos.x >= 0 && mPos.y <= 0 + width && mPos.y >= 0 && mPos.y <= 0 + height);
-        if (!editorActive)
-            parent->mouseButtonDown(e);
+        if (e.sdlEvent.button.clicks == 2)
+        {
+            editorActive = true;
+            repaint();
+        }
     }
 
 private:
