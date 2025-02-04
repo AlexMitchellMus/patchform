@@ -42,13 +42,19 @@ class MainVolumeMeter : public Component
         auto halfHeight = getHeight() * 0.5f;
         nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bgColor, bgColor, halfHeight);
 
-        float peakX = (width - (halfHeight * 2)) * meterPeakValue; // Convert peak value to X position
+        float meterWidth = width - (halfHeight * 2);
+        float meterX = getHeight() * 0.5f;
 
-        nvgBeginPath(nvg);
+        auto meterBgCol = nvgRGBA(40, 40, 40, 255);
+        nvgDrawRoundedRect(nvg, meterX, height * 0.3f, meterWidth, height * 0.4f, meterBgCol, meterBgCol, 0);
+
+        // Convert peak value to X position
+        float peakX = meterWidth * meterPeakValue;
+
         const auto blue = nvgRGBA(28, 73, 119, 255 * 0.5f);
         const auto peak = nvgRGB(255, 0, 0);
         auto col = meterPeakValue > 0.9 ? peak : blue;
-        nvgDrawRoundedRect(nvg, getHeight() * 0.5f, height * 0.3f, peakX, height * 0.4f, col, col, 0);
+        nvgDrawRoundedRect(nvg, meterX, height * 0.3f, peakX, height * 0.4f, col, col, 0);
     }
 private:
     float meterPeakValue = 0.0f;
