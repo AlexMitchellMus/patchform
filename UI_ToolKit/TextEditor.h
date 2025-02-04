@@ -6,10 +6,10 @@
 
 namespace pptk {
 
-class TextEditorBox : public Component
+class TextEditor : public Component
 {
 public:
-    TextEditorBox(std::string textToEdit)
+    TextEditor(std::string textToEdit)
         : text(textToEdit)
         , cursorPos(0)
         , editorActive(true)
