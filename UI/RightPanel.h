@@ -1,42 +1,77 @@
-/*
-// Copyright (c) 2025 Alex Mitchell
-// For information on usage and redistribution, and for a DISCLAIMER OF ALL
-// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
-*/
-
 #pragma once
 
 #include "../UI_ToolKit/Component.h"
 
-namespace pptk {
+namespace pptk
+{
     class TextEditor;
 }
 
-using namespace pptk;
+class AudioNode;
+class Parameter;
+class Canvas;
 
-class RightPanel : public Component
-{
+// ParamItem: Displays a parameter name and an editable TextBox
+class ParamItem : public pptk::Component {
+private:
+    std::string paramName;
+    Parameter* param = nullptr;
+    std::unique_ptr<pptk::TextEditor> textBox;
+
 public:
-    RightPanel();
+    ParamItem(const std::string& name, Parameter* itemParam);
 
     void resized() override;
 
-    void render(NVGcontext* nvg) override
-    {
-        nvgFillColor(nvg, nvgRGB(33, 33, 33));
-        nvgFillRect(nvg, 0, 0, width, height);
+    void render(NVGcontext* vg) override {
+        // Draw parameter name on the left
+        nvgFillColor(vg, nvgRGB(255, 255, 255));
+        nvgFontSize(vg, 16.0f);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgText(vg, 10, height / 2, paramName.c_str(), nullptr);
+
+        // Render the TextBox
+        Component::render(vg);
+    }
+};
+
+// RightPanel: Displays a list of ParamItems for selected AudioNode
+class RightPanel : public pptk::Component {
+public:
+    RightPanel(Canvas* cnv);
+
+    void setSelectedNode(AudioNode* node) {
+        selectedNode = node;
+        updateUI();
+    }
+
+    void updateUI();
+
+    void resized() override {
+        int yOffset = 20;
+        for (auto& item : paramItems) {
+            item->setBounds(10, yOffset, width - 20, 30);
+            yOffset += 40;
+        }
+    }
+
+    void render(NVGcontext* vg) override {
+        nvgFillColor(vg, nvgRGB(33, 33, 33));
+        nvgFillRect(vg, 0, 0, width, height);
 
         // Vertical edge line (on left)
-        nvgBeginPath(nvg);
-        nvgMoveTo(nvg, 0.5f, 0);
-        nvgLineTo(nvg, 0.5f, height);
-        nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
-        nvgStrokeWidth(nvg, 1.0f);
-        nvgStroke(nvg);
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, 0.5f, 0);
+        nvgLineTo(vg, 0.5f, height);
+        nvgStrokeColor(vg, nvgRGB(53, 53, 53));
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
+
+        // Render children (ParamItems)
+        Component::render(vg);
     }
 
 private:
-
-    std::unique_ptr<pptk::TextEditor> textEditorA;
-    std::unique_ptr<pptk::TextEditor> textEditorB;
+    AudioNode* selectedNode = nullptr;
+    std::vector<std::unique_ptr<ParamItem>> paramItems; // Holds param UI elements
 };

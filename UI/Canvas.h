@@ -29,6 +29,7 @@ public:
     Canvas(GraphManager* gm);
 
     std::vector<Object*> getObjects() const;
+    std::vector<Object*> getSelectedObjects() const;
 
     void mouseButtonDown(pptk::CompEvent& e) override;
     void mouseButtonUp(pptk::CompEvent& e) override;

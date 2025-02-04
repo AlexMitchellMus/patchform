@@ -61,7 +61,7 @@ public:
 
         resizeToolDock(true);
 
-        rightPanel->setBounds(getWidth() - 200, topBarHeight, 200, getHeight() - topBarHeight);
+        rightPanel->setBounds(getWidth() - 300, topBarHeight, 300, getHeight() - topBarHeight);
     }
 
     GraphManager* graphManager;

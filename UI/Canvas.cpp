@@ -42,6 +42,20 @@ std::vector<Object*> Canvas::getObjects() const
     return objs;
 };
 
+std::vector<Object*> Canvas::getSelectedObjects() const
+{
+    std::vector<Object*> selObjecst;
+    selObjecst.reserve(selected.size());
+
+    for (auto& canvasItem : selected)
+    {
+        if (auto obj = dynamic_cast<Object*>(canvasItem))
+        selObjecst.push_back(obj);
+    }
+
+    return selObjecst;
+}
+
 void Canvas::updateGraphValuesIfNeeded()
 {
     for (auto* obj : objects)

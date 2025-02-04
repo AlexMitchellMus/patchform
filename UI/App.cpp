@@ -18,7 +18,7 @@ App::App(GraphManager* gm) : graphManager(gm) {
     leftPanel->setName("leftPanel");
     addComponent(leftPanel.get());
 
-    rightPanel = std::make_unique<RightPanel>();
+    rightPanel = std::make_unique<RightPanel>(canvas.get());
     rightPanel->setName("rightPanel");
     addComponent(rightPanel.get());
 

@@ -25,13 +25,13 @@ class MainVolumeMeter : public Component
         value = std::clamp(value, 1e-6f, 1.0f);
 
         // Convert linear value to dB scale
-        float dbValue = 20.0f * std::log10(value);
+        //float dbValue = 20.0f * std::log10(value);
 
-        constexpr float dbRange = 80.0f;
+        //constexpr float dbRange = 60.0f;
 
         // Normalize dB range (-dbRange dB to 0 dB) to [0, 1] range
-        meterPeakValue = (dbValue + dbRange) / dbRange; // Maps -dbRange (0) to 0dB (1)
-        meterPeakValue = std::clamp(meterPeakValue, 0.0f, 1.0f); // Ensure it stays in bounds
+        //meterPeakValue = (dbValue + dbRange) / dbRange; // Maps -dbRange (0) to 0dB (1)
+        meterPeakValue = std::clamp(value, 0.0f, 1.0f); // Ensure it stays in bounds
 
         repaint();
     }

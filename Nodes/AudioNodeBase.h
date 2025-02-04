@@ -17,6 +17,8 @@
 
 #include "glaze/glaze.hpp"
 
+#include "Parameter.h"
+
 #ifdef PATCHFORM_WITH_GUI
 #include "../UI/Object.h"
 #endif
@@ -134,6 +136,30 @@ public:
 
     uint32_t nodeID;
 
+    Parameter* addParameter(const std::string& name, ParameterValue defaultValue, ParameterValue minValue, ParameterValue maxValue) {
+        auto param = std::make_unique<Parameter>(name, defaultValue, minValue, maxValue);
+        Parameter* paramPtr = param.get();
+
+        paramPtr->setCallback([this, paramPtr](const ParameterValue& newValue) {
+            paramQueue.enqueue({paramPtr, newValue});
+        });
+
+        parameters.push_back(std::move(param));
+        return paramPtr;
+    }
+
+    std::vector<std::unique_ptr<Parameter>>& getParameters() {
+        return parameters;
+    }
+
+    void processParameterUpdates() {
+        std::pair<Parameter*, ParameterValue> update;
+        while (paramQueue.try_dequeue(update)) {
+            update.first->applyValue(update.second);
+        }
+    }
+
+
 private:
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
     {
@@ -145,4 +171,9 @@ private:
     std::unique_ptr<UI> ui = nullptr;
 #endif
     friend class AudioGraph;
+
+protected:
+    std::vector<Parameter*> cachedParameters; // Store parameter references
+    std::vector<std::unique_ptr<Parameter>> parameters;
+    moodycamel::ConcurrentQueue<std::pair<Parameter*, ParameterValue>> paramQueue;
 };
