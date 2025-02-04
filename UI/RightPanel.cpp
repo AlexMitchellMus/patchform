@@ -11,15 +11,14 @@ ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
     , param(itemParam)
 {
     textBox = std::make_unique<TextEditor>();
-    textBox->setText(std::to_string(param->getValue<float>()));
+    textBox->setText(param->getAsString());
     addComponent(textBox.get());
 
     // Hook TextBox updates to parameter
-    textBox->onTextChanged = ([this]() {
+    textBox->onTextReturned = ([this]() {
         try {
-            float floatValue = std::stof(textBox->getText());
-            param->setValue(floatValue);
-            std::cout << "setting param to: " << floatValue << std::endl;
+            std::cout << "sending data to node??" << std::endl;
+            param->setFromString(textBox->getText());
         } catch (...) {
             // Invalid input, ignore it
         }

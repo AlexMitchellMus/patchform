@@ -13,6 +13,7 @@ class TextEditor : public Component
 public:
 
     std::function<void()> onTextChanged = [](){};
+    std::function<void()> onTextReturned = [](){};
 
     TextEditor() : cursorPos(0), editorActive(false){}
 
@@ -29,20 +30,15 @@ public:
 
     void render(NVGcontext* vg) override
     {
-        auto bgCol = nvgRGB(23, 23, 23);
-        auto outlineCol = nvgRGB(55, 55, 55);
-        nvgDrawRoundedRect(vg, 0, 0, width, height, bgCol, outlineCol, 8.0f);
-
         // Draw text
-        nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
         nvgFontSize(vg, 20.0f);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgText(vg, 10, height * 0.5f, text.c_str(), nullptr);
 
         // Draw cursor if active
         if (editorActive)
         {
             // We get the textbounds from the NVG text
+            float fullTextWidth = nvgTextBounds(vg, 0, 0, text.c_str(), nullptr, nullptr);
             float textBounds[4] = { 0.0f };
             float textWidth = nvgTextBounds(vg, 0, 0, text.substr(0, cursorPos).c_str(), nullptr, textBounds);
             // This is the format of the text bounds
@@ -52,9 +48,19 @@ public:
             // We add the ymin (-) and ymax (+) from vertical alignment
             auto yMin = height * 0.5f + textBounds[1];
             auto yMax = height * 0.5f + textBounds[3];
+
+            if (editorFirstActive)
+            {
+                auto blue = nvgRGB(28, 73, 119);
+                nvgDrawRoundedRect(vg, 10, yMin, 10 + fullTextWidth, yMax - yMin, blue, blue, 0.0f);
+            }
+
             auto carrotCol = nvgRGBA(200, 200, 200, 255);
             nvgDrawRoundedRect(vg, cursorX, yMin, 2, yMax - yMin, carrotCol, carrotCol, 0);
         }
+
+        nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+        nvgText(vg, 10, height * 0.5f, text.c_str(), nullptr);
     }
 /*
     void focusGained() override
@@ -74,6 +80,9 @@ public:
     void keyPressed(CompEvent& e) override
     {
         if (!editorActive) return;
+
+        editorFirstActive = false;
+        repaint();
 
         const auto keycode = e.sdlEvent.key.key;
 
@@ -105,6 +114,7 @@ public:
         case SDLK_RETURN:
         case SDLK_RETURN2:
             editorActive = false;
+            onTextReturned();
             repaint();
             break;
         default:
@@ -140,6 +150,7 @@ public:
         if (e.sdlEvent.button.clicks == 2)
         {
             editorActive = true;
+            editorFirstActive = true;
             repaint();
         }
     }
@@ -147,7 +158,8 @@ public:
 private:
     std::string text;
     int cursorPos;
-    bool editorActive;
+    bool editorActive = false;
+    bool editorFirstActive = false;
 };
 
 } // namespace pptk

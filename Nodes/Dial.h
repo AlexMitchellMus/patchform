@@ -15,8 +15,8 @@ class Dial final : public AudioNode
 
     float dailValue;
 
-    Parameter* minValueParam = nullptr;
-    Parameter* maxValueParam = nullptr;
+    FloatParameter* minValueParam = nullptr;
+    FloatParameter* maxValueParam = nullptr;
 
     float minValue = 0.0f;
     float maxValue = 1.0f;
@@ -94,17 +94,16 @@ public:
 #endif
     Dial(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
-        minValueParam = addParameter("Min value", minValue, 0.0f, 10000.0f);
-        maxValueParam = addParameter("Max value", maxValue, 0.0f, 10000.0f);
+        minValueParam = addParameter<FloatParameter>("Min value", minValue, 0.0f, std::numeric_limits<float>::max());
+        maxValueParam = addParameter<FloatParameter>("Max value", maxValue, 0.0f, std::numeric_limits<float>::max());
     }
 
 #ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {
-        //processParameterUpdates();
 
-        minValue = minValueParam->getValue<float>();
-        maxValue = maxValueParam->getValue<float>();
+        minValue = minValueParam->getValue();
+        maxValue = maxValueParam->getValue();
 
         //std::cout << "minValue: " << minValue << " maxValue: " << maxValue << std::endl;
 

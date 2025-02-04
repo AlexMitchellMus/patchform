@@ -136,29 +136,16 @@ public:
 
     uint32_t nodeID;
 
-    Parameter* addParameter(const std::string& name, ParameterValue defaultValue, ParameterValue minValue, ParameterValue maxValue) {
-        auto param = std::make_unique<Parameter>(name, defaultValue, minValue, maxValue);
-        Parameter* paramPtr = param.get();
-
-        paramPtr->setCallback([this, paramPtr](const ParameterValue& newValue) {
-            paramQueue.enqueue({paramPtr, newValue});
-        });
-
+    template<typename T, typename... Args>
+    T* addParameter(const std::string& name, Args&&... args) {
+        static_assert(std::is_base_of_v<Parameter, T>, "T must be a subclass of Parameter");
+        auto param = std::make_unique<T>(name, std::forward<Args>(args)...);
+        T* ptr = param.get();
         parameters.push_back(std::move(param));
-        return paramPtr;
+        return ptr;
     }
 
-    std::vector<std::unique_ptr<Parameter>>& getParameters() {
-        return parameters;
-    }
-
-    void processParameterUpdates() {
-        std::pair<Parameter*, ParameterValue> update;
-        while (paramQueue.try_dequeue(update)) {
-            update.first->applyValue(update.second);
-        }
-    }
-
+    std::vector<std::unique_ptr<Parameter>>& getParameters() { return parameters; };
 
 private:
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
@@ -173,7 +160,5 @@ private:
     friend class AudioGraph;
 
 protected:
-    std::vector<Parameter*> cachedParameters; // Store parameter references
     std::vector<std::unique_ptr<Parameter>> parameters;
-    moodycamel::ConcurrentQueue<std::pair<Parameter*, ParameterValue>> paramQueue;
 };

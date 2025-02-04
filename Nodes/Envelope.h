@@ -13,6 +13,9 @@ class Envelope final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Envelope", "env");
 
+    FloatParameter* attackValParam = nullptr;
+    FloatParameter* decayValParam = nullptr;
+
     float attackVal;
     float decayVal;
     float envValue = 0.0f;
@@ -91,8 +94,11 @@ public:
         addInputPort("Events", AudioPort::PortType::Data);
         addInputPort("Signal", AudioPort::PortType::Signal);
 
-        attackVal = objParams.value("attack", 0.0f) * (context->sampleRate / 1000);
-        decayVal = objParams.value("decay", 0.0f) * (context->sampleRate / 1000);
+        float attackMs = objParams.value("attack", 0.0f);
+        float deacyMs = objParams.value("decay", 0.0f);
+
+        attackValParam = addParameter<FloatParameter>("Attack", attackMs, 0.0f, std::numeric_limits<float>::max());
+        decayValParam = addParameter<FloatParameter>("Decay", deacyMs, 0.0f, std::numeric_limits<float>::max());
     }
 
     void processAudio(float* out, const unsigned long frameCount) override
@@ -100,6 +106,9 @@ public:
         auto events = inputPortBuffers[0]->getEvents();
         auto signal = inputPortBuffers[1]->getAudioBuffer();;
         auto output = outputPort.getAudioBuffer();
+
+        attackVal = attackValParam->getValue() * (context->sampleRate / 1000);
+        decayVal = decayValParam->getValue() * (context->sampleRate / 1000);
 
         std::vector<Event*> toRelease;
         unsigned long nextEventIndex = 0;

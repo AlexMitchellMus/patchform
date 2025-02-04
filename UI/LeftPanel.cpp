@@ -34,7 +34,7 @@ void LeftPanel::updateCanvasObjectList()
     {
         for (auto obj : cnv->getObjects())
         {
-            objectList.push_back({obj->getName(), obj->getIsSelected()});
+            objectList.emplace_back(obj->getName(), obj->getIsSelected());
         }
     }
 
