@@ -10,7 +10,7 @@ ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
     : paramName(name)
     , param(itemParam)
 {
-    textBox = std::make_unique<TextEditor>();
+    textBox = std::make_unique<pptk::TextEditor>();
     textBox->setText(param->getAsString());
     addComponent(textBox.get());
 

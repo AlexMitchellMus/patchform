@@ -21,6 +21,8 @@ class Envelope final : public AudioNode
     float envValue = 0.0f;
     bool isAttack = false;  // Track whether the envelope is in attack phase
 
+    float port1val = 0.0f;
+
 public:
 #ifdef PATCHFORM_WITH_GUI
     class UI final : public AudioNode::UI
@@ -104,8 +106,12 @@ public:
     void processAudio(float* out, const unsigned long frameCount) override
     {
         auto events = inputPortBuffers[0]->getEvents();
-        auto signal = inputPortBuffers[1]->getAudioBuffer();;
+        auto signal = inputPortBuffers[1]->getAudioBuffer();
+        auto port1Events = inputPortBuffers[1]->getEvents();
+        auto useSignalFreq = inputPortBuffers[1]->isAnyConnectedPortSignal;
         auto output = outputPort.getAudioBuffer();
+
+        unsigned int nextFreqEventIndex = 0;
 
         attackVal = attackValParam->getValue() * (context->sampleRate / 1000);
         decayVal = decayValParam->getValue() * (context->sampleRate / 1000);
@@ -120,6 +126,13 @@ public:
                 isAttack = true;
                 nextEventIndex++;
                 //std::cout << "Envelope " << nodeID << " triggered" << std::endl;
+            }
+            if (!useSignalFreq)
+            {
+                while (nextFreqEventIndex < port1Events.size() && port1Events[nextFreqEventIndex]->getTimeStamp() == i) {
+                    port1val = port1Events[nextFreqEventIndex]->data;
+                    nextFreqEventIndex++;
+                }
             }
 
             if (isAttack)
@@ -140,12 +153,10 @@ public:
                 }
             }
 
-            // Apply envelope to the signal
-            output[i] = signal[i] * envValue;
+            if (!useSignalFreq)
+                output[i] = port1val * envValue;
+            else
+                output[i] = signal[i] * envValue;
         }
-        //for (auto e : toRelease)
-        //{
-        //    //context->eventPool.releaseEvent(e);
-        //}
     }
 };

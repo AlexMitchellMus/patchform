@@ -168,17 +168,39 @@ public:
         }
     }
 
+    void mouseDrag(const Point& position, const Point& delta, Button button) override
+    {
+        if (editorActive)
+            return;
+
+        wasDragged = true;
+        draggedNumValue -= delta.y * 0.5f;
+        setText(std::to_string(static_cast<int>(draggedNumValue)));
+        onTextReturned();
+    }
+
     void mouseButtonDown(CompEvent& e) override
     {
+        wasDragged = false;
         if (e.sdlEvent.button.clicks == 2)
         {
             editorActive = true;
             editorFirstActive = true;
             repaint();
+        } else if (e.sdlEvent.button.clicks == 1)
+        {
+            draggedNumValue = std::stof(getText());
         }
     }
 
+    void mouseButtonUp(CompEvent& e) override
+    {
+        wasDragged = false;
+    }
+
 private:
+    bool wasDragged = false;
+    float draggedNumValue = 0.0f;
     std::string text;
     int cursorPos;
     bool editorActive = false;
