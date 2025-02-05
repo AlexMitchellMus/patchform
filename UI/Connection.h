@@ -22,7 +22,7 @@ public:
     void mouseLeave(pptk::CompEvent& e) override;
     void mouseButtonDown(pptk::CompEvent& e) override;
     void keyPressed(pptk::CompEvent& e) override;
-    bool hitTest(float px, float py) const override;
+    bool hitTest(float px, float py) override;
 
     void setConnectionDest(const pptk::Point& p);
 

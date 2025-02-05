@@ -125,6 +125,8 @@ struct Rect {
 class PopupComponent;
 class Component : public SafeObject {
 public:
+    std::function<void()> onVisibilityChanged = [](){};
+
     explicit Component() = default;
 
     virtual ~Component();
@@ -207,7 +209,7 @@ public:
 
 
     // Hit test in local coords
-    virtual bool hitTest(float px, float py) const {
+    virtual bool hitTest(float px, float py) {
         return px >= 0 && px <= width &&
                py >= 0 && py <= height;
     }
@@ -253,6 +255,21 @@ public:
     Rect getBounds() const
     {
         return Rect{ x, y, width, height };
+    }
+
+    void setMinWidth(const float width)
+    {
+        minWidth = width;
+    }
+
+    float getMinWidth() const
+    {
+        return minWidth;
+    }
+
+    float getMaxWidth() const
+    {
+        return maxWidth;
     }
 
     void setMinSize(const float width, const float height)

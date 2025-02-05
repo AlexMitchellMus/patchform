@@ -299,7 +299,7 @@ public:
         nvgStroke(nvg);
     }
 
-    bool hitTest(float x, float y) const override {
+    bool hitTest(float x, float y) override {
         return getBounds().contains(x, y);
     }
 

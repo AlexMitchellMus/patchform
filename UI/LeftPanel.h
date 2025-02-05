@@ -10,9 +10,10 @@
 #include <vector>
 #include <string>
 #include "../UI_ToolKit/Component.h"
-#include "Canvas.h"
+#include "../UI_ToolKit/Resizer.h"
 
-class LeftPanel : public pptk::Component
+class Canvas;
+class LeftPanel : public pptk::ResizableComponent
 {
 public:
     LeftPanel(Canvas* canvas);
@@ -21,16 +22,9 @@ public:
 
     void render(NVGcontext* nvg) override;
 
-    void mouseMove(const pptk::Point& position) override;
-
-    void mouseLeave(pptk::CompEvent& e) override;
-
-    void mouseButtonDown(pptk::CompEvent& e) override;
-
-    void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button) override;
+    void resized() override;
 
 private:
     pptk::SafePointer<Canvas> cnv;
     std::vector<std::tuple<std::string, bool>> objectList;
-    bool isResizingPanel = false;
 };

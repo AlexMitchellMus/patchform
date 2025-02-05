@@ -1,10 +1,12 @@
 #pragma once
 
 #include "../UI_ToolKit/Component.h"
+#include "../UI_ToolKit/Resizer.h"
 
 namespace pptk
 {
     class TextEditor;
+    class Resizer;
 }
 
 class AudioNode;
@@ -34,7 +36,7 @@ public:
 };
 
 // RightPanel: Displays a list of ParamItems for selected AudioNode
-class RightPanel : public pptk::Component {
+class RightPanel : public pptk::ResizableComponent {
 public:
     RightPanel(Canvas* cnv);
 

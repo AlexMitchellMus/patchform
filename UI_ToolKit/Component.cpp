@@ -9,6 +9,7 @@
 #include "RootComponent.h"
 #include "PopupComponent.h"
 #include "CompEvent.h"
+#include "Resizer.h"
 
 namespace pptk {
 
@@ -107,11 +108,16 @@ void Component::addComponent(Component* child)
 
     child->parent = this;
     children.push_back(child);
+    if (auto resizibleChild = dynamic_cast<ResizableComponent*>(child))
+    {
+        children.push_back(&resizibleChild->getResizer());
+    }
 }
 
 void Component::setVisible(bool shouldBeVisible)
 {
     visible = shouldBeVisible;
+    onVisibilityChanged();
 };
 
 void Component::removeFromParent()

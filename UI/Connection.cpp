@@ -176,7 +176,7 @@ void Connection::setConnectionDest(const pptk::Point& p)
     updateConnectionGeometry();
 }
 
-bool Connection::hitTest(float px, float py) const
+bool Connection::hitTest(float px, float py)
 {
     const float exclusionSize = 5.0f;
 

@@ -8,10 +8,12 @@
 #include "SDL3/SDL.h"
 #include "nanovg.h"
 #include "Object.h"
+#include "Canvas.h"
 
 LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
 {
-    setMinMaxSize(100, 400, 0, 0);
+    setMinMaxSize(150, 350, 0, 0);
+    setResizable(Resizer::ResizerMode::Right);
 
     if (cnv)
     {
@@ -39,6 +41,11 @@ void LeftPanel::updateCanvasObjectList()
     }
 
     repaint();
+}
+
+void LeftPanel::resized()
+{
+    getResizer().setBounds(getBounds());
 }
 
 void LeftPanel::render(NVGcontext* nvg)
@@ -79,45 +86,4 @@ void LeftPanel::render(NVGcontext* nvg)
     nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
     nvgStrokeWidth(nvg, 1.0f);
     nvgStroke(nvg);
-}
-
-void LeftPanel::mouseMove(const pptk::Point& position)
-{
-    if (position.x > getWidth() - 10 && position.x < getWidth())
-    {
-        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_W_RESIZE));
-    }
-    else
-    {
-        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
-    }
-}
-
-void LeftPanel::mouseLeave(pptk::CompEvent& e)
-{
-    SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
-}
-
-void LeftPanel::mouseButtonDown(pptk::CompEvent& e)
-{
-    if (e.sdlEvent.button.button == SDL_BUTTON_LEFT)
-    {
-        if (e.sdlEvent.button.x > getWidth() - 10 && e.sdlEvent.button.x < getWidth())
-        {
-            isResizingPanel = true;
-        }
-        else
-        {
-            isResizingPanel = false;
-        }
-    }
-}
-
-void LeftPanel::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button)
-{
-    if (button == pptk::Button::LEFT)
-    {
-        auto currBounds = getBounds();
-        setBounds(currBounds.x, currBounds.y, position.x, currBounds.h);
-    }
 }

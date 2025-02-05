@@ -22,7 +22,7 @@ public:
 
     // Stop lasso from blocking mouse events from clicking on the canvas
     // This can happen if multiple mouse buttons are clicked at the same time while dragging
-    bool hitTest(float px, float py) const override
+    bool hitTest(float px, float py) override
     {
         return false;
     }

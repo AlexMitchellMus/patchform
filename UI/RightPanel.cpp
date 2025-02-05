@@ -5,6 +5,7 @@
 #include "RightPanel.h"
 #include "../UI_ToolKit/TextEditor.h"
 #include "../Nodes/AudioNodeBase.h"
+#include "../UI_ToolKit/Resizer.h"
 
 ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
     : paramName(name)
@@ -39,6 +40,9 @@ RightPanel::RightPanel(Canvas* cnv)
         else
             setSelectedNode(cnv->getSelectedObjects().front()->audioNode);
     });
+
+    setMinMaxSize(150, 350, 0, 0);
+    setResizable(Resizer::ResizerMode::Left);
 }
 
 void RightPanel::resized() {
@@ -47,6 +51,8 @@ void RightPanel::resized() {
         item->setBounds(10, yOffset, width - 20, 30);
         yOffset += 30;
     }
+
+    getResizer().setBounds(getBounds());
 }
 
 void RightPanel::updateUI() {
