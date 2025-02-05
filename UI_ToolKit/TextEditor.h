@@ -4,7 +4,6 @@
 #include "SDL3/SDL.h"
 #include "CompEvent.h"
 #include <chrono>
-#include <utility>
 
 namespace pptk {
 
@@ -15,7 +14,7 @@ public:
     std::function<void()> onTextChanged = [](){};
     std::function<void()> onTextReturned = [](){};
 
-    TextEditor() : cursorPos(0), editorActive(false){}
+    TextEditor() : cursorPos(0) {}
 
     void setText(const std::string& newText)
     {
@@ -30,8 +29,14 @@ public:
 
     void render(NVGcontext* vg) override
     {
+        if (!editorActive && isHovered)
+        {
+            auto col = nvgRGB(45, 45, 45);
+            nvgDrawRoundedRect(vg, 0, 0, width, height, col, col, 6.0f);
+        }
         // Draw text
-        nvgFontSize(vg, 20.0f);
+        nvgFontSize(vg, 14.0f);
+        nvgFontFace(vg, "Regular");
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         // Draw cursor if active
@@ -145,6 +150,24 @@ public:
         }
     }
 
+    void mouseEnter(CompEvent& e) override
+    {
+        if (isHovered != true)
+        {
+            isHovered = true;
+            repaint();
+        }
+    }
+
+    void mouseLeave(CompEvent& e) override
+    {
+        if (isHovered == true)
+        {
+            isHovered = false;
+            repaint();
+        }
+    }
+
     void mouseButtonDown(CompEvent& e) override
     {
         if (e.sdlEvent.button.clicks == 2)
@@ -160,6 +183,8 @@ private:
     int cursorPos;
     bool editorActive = false;
     bool editorFirstActive = false;
+
+    bool isHovered = false;
 };
 
 } // namespace pptk

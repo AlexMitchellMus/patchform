@@ -14,6 +14,8 @@ class Metronome : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Metronome", "metro");
 
+    FloatParameter* tickParam;
+
     float sampleCounter = 0.0f;
     float tickInterval;
 
@@ -26,6 +28,9 @@ public:
     Metronome(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         auto const hz = objParams.value("hz", 1.0f);
+
+        tickParam = addParameter<FloatParameter>("Hz", hz, 0.00001f, std::numeric_limits<float>::max());
+
         tickInterval = context->sampleRate / hz;
 
         addInputPort("ControlInput", AudioPort::PortType::Data);
@@ -34,6 +39,8 @@ public:
     void processAudio(float* out, unsigned long frameCount) override
     {
         float samplesProcessed = 0.0f;
+
+        tickInterval = context->sampleRate / tickParam->getValue();
 
         auto events = inputPortBuffers[0]->getEvents();
 

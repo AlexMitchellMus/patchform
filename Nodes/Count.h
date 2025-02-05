@@ -12,6 +12,9 @@
 class Count : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Count", "cnt");
 
+    IntParameter* minCountParam;
+    IntParameter* maxCountParam;
+
     float countValue;
     int minCount;
     int maxCount;
@@ -23,10 +26,16 @@ public:
 
         countValue = minCount = objParams.value("min", 1);
         maxCount = objParams.value("max", std::numeric_limits<int>::max());
+
+        minCountParam = addParameter<IntParameter>("Count min", minCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        maxCountParam = addParameter<IntParameter>("Count max", minCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
+        minCount = minCountParam->getValue();
+        maxCount = maxCountParam->getValue();
+
         const auto aEvents = inputPortBuffers[0]->getEvents();
 
         for (auto event : aEvents)

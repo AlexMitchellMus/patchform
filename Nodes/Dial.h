@@ -13,8 +13,9 @@ class Dial final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Dial", "dial");
 
-    float dailValue;
+    float dialValue;
 
+    FloatParameter* defaultValueParam = nullptr;
     FloatParameter* minValueParam = nullptr;
     FloatParameter* maxValueParam = nullptr;
 
@@ -34,6 +35,20 @@ public:
         {
             setSize(100, 100);
             setGuiIsTransparent(true);
+
+            auto dial = reinterpret_cast<Dial*>(audioNode);
+
+            // Compute the normalized value.
+            float normalizedValue = 0.0f;
+            if (dial->maxValue != dial->minValue)
+            {
+                value = (dial->dialValue - dial->minValue) / (dial->maxValue - dial->minValue);
+            }
+            else
+            {
+                // If minValue and maxValue are the same, we default the normalized value (avoid division by zero).
+                value = 0.0f;
+            }
         };
 
         float valueToAngle(float value)
@@ -94,8 +109,13 @@ public:
 #endif
     Dial(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
-        minValueParam = addParameter<FloatParameter>("Min value", minValue, 0.0f, std::numeric_limits<float>::max());
-        maxValueParam = addParameter<FloatParameter>("Max value", maxValue, 0.0f, std::numeric_limits<float>::max());
+        minValue = objParams.value("min", 0.0f);
+        maxValue = objParams.value("max", 1.0f);
+        dialValue = objParams.value("value", 0.0f);
+
+        defaultValueParam = addParameter<FloatParameter>("Default val:", dialValue, 0.0f, std::numeric_limits<float>::max());
+        minValueParam     = addParameter<FloatParameter>("Min val:", minValue, 0.0f, std::numeric_limits<float>::max());
+        maxValueParam     = addParameter<FloatParameter>("Max val:", maxValue, 0.0f, std::numeric_limits<float>::max());
     }
 
 #ifdef PATCHFORM_WITH_GUI
@@ -105,16 +125,13 @@ public:
         minValue = minValueParam->getValue();
         maxValue = maxValueParam->getValue();
 
-        //std::cout << "minValue: " << minValue << " maxValue: " << maxValue << std::endl;
-
-        float newValue;
-        while (eventQueue.try_dequeue(newValue))
+        while (eventQueue.try_dequeue(dialValue))
         {
             Event* e = context->eventPool.getFreeEvent();
 
             if (e)
             {
-                e->data = newValue * (maxValue - minValue) + minValue;
+                e->data = dialValue * (maxValue - minValue) + minValue;
                 e->setTimeStamp(0); // Set event at time 0
                 outputPort.addEvent(e);
             }

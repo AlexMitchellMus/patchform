@@ -11,15 +11,15 @@
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
     ObjectDef objectDef[20] = {
-        { {{"obj", "Metro"}, {"hz", 800}}, ICONS::Metro},
-        { {{"obj", "Metro"}, {"hz", 1}}, ICONS::Metro},
+        { {{"obj", "Metro"}}, ICONS::Metro},
         { {{"obj", "Osc"}, {"waveform", "sine"}, {"freq",  440}}, ICONS::Osc},
         { {{"obj", "Add"}}, "add", false },
         { {{"obj", "lfo"}}, ICONS::Lfo},
         { {{"obj", "env"}, {"attack", 50}, {"decay", 50}}, ICONS::Adsr},
         { {{"obj", "vol"}}, "vol", false },
         { {{"obj", "count"}}, ICONS::Count},
-        { {{"obj", "dial"}}, ICONS::Dial},
+        { {{"obj", "dial"}, {"min", 0}, {"max", 10}, {"value", 3}}, ICONS::Dial},
+        { {{"obj", "If"}}, "if", false },
         { {{"obj", "aout"}}, ICONS::Aout},
         { {{"obj", "floatbox"}}, "fb", false },
         { {{"obj", "ping"}}, "Png", false },

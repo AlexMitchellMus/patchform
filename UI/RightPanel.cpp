@@ -34,25 +34,31 @@ RightPanel::RightPanel(Canvas* cnv)
 {
     cnv->addObjectChangedListener([this, cnv]()
     {
-        std::cout << "updating right panel" << std::endl;
-        if (!cnv->getSelectedObjects().empty())
-        {
+        if (cnv->getSelectedObjects().empty())
+            setSelectedNode(nullptr);
+        else
             setSelectedNode(cnv->getSelectedObjects().front()->audioNode);
-        }
     });
 }
 
+void RightPanel::resized() {
+    int yOffset = 50;
+    for (auto& item : paramItems) {
+        item->setBounds(10, yOffset, width - 20, 30);
+        yOffset += 30;
+    }
+}
+
 void RightPanel::updateUI() {
-    paramItems.clear(); // Clear all previous parameter UI elements
+    paramItems.clear();
 
     if (!selectedNode) return;
 
-    int yOffset = 20;
     for (auto& param : selectedNode->getParameters()) {
         auto paramItem = std::make_unique<ParamItem>(param->getName(), param.get());
-        paramItem->setBounds(10, yOffset, width - 20, 30);
         addComponent(paramItem.get());
-        paramItems.push_back(std::move(paramItem)); // Move to vector
-        yOffset += 40;
+        paramItems.push_back(std::move(paramItem));
     }
+
+    RightPanel::resized();
 }

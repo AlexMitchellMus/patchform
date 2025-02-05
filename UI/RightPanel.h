@@ -26,12 +26,10 @@ public:
     void render(NVGcontext* vg) override {
         // Draw parameter name on the left
         nvgFillColor(vg, nvgRGB(255, 255, 255));
-        nvgFontSize(vg, 16.0f);
+        nvgFontFace(vg, "Regular");
+        nvgFontSize(vg, 14.0f);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgText(vg, 10, height / 2, paramName.c_str(), nullptr);
-
-        // Render the TextBox
-        Component::render(vg);
     }
 };
 
@@ -41,19 +39,19 @@ public:
     RightPanel(Canvas* cnv);
 
     void setSelectedNode(AudioNode* node) {
+        if (node == nullptr)
+        {
+            selectedNode = nullptr;
+            paramItems.clear();
+            repaint();
+        }
         selectedNode = node;
         updateUI();
     }
 
     void updateUI();
 
-    void resized() override {
-        int yOffset = 20;
-        for (auto& item : paramItems) {
-            item->setBounds(10, yOffset, width - 20, 30);
-            yOffset += 40;
-        }
-    }
+    void resized() override;
 
     void render(NVGcontext* vg) override {
         nvgFillColor(vg, nvgRGB(33, 33, 33));
@@ -67,8 +65,11 @@ public:
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
 
-        // Render children (ParamItems)
-        Component::render(vg);
+        nvgFillColor(vg, nvgRGB(255, 255, 255));
+        nvgFontSize(vg, 16.0f);
+        nvgFontFace(vg, "SemiBold");
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgText(vg, 20, 30, "Parameters", nullptr);
     }
 
 private:
