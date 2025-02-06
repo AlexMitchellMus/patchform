@@ -22,11 +22,11 @@ public:
 
     void render(NVGcontext* vg) override {
         // Draw parameter name on the left
-        nvgFillColor(vg, nvgRGB(255, 255, 255));
+        nvgFillColor(vg, nvgRGB(220, 220, 220));
         nvgFontFace(vg, "Regular");
         nvgFontSize(vg, 14.0f);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgText(vg, 10, height / 2, paramName.c_str(), nullptr);
+        nvgText(vg, 0, height / 2, paramName.c_str(), nullptr);
     }
 };
 
@@ -35,16 +35,7 @@ class RightPanel : public pptk::ResizableComponent {
 public:
     RightPanel(Canvas* cnv);
 
-    void setSelectedNode(AudioNode* node) {
-        if (node == nullptr)
-        {
-            selectedNode = nullptr;
-            paramItems.clear();
-            repaint();
-        }
-        selectedNode = node;
-        updateUI();
-    }
+    void setSelectedNode(AudioNode* node);
 
     void updateUI();
 
@@ -62,14 +53,18 @@ public:
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
 
-        nvgFillColor(vg, nvgRGB(255, 255, 255));
-        nvgFontSize(vg, 16.0f);
+        float textX = 24; // Padding from the left edge
+        float textY = 40; // Starting Y position with padding from the top
+
+        nvgFillColor(vg, nvgRGB(220, 220, 220));
+        nvgFontSize(vg, 14.0f);
         nvgFontFace(vg, "SemiBold");
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgText(vg, 20, 30, "Parameters", nullptr);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT);
+        nvgText(vg, textX, textY, parameterName.c_str(), nullptr);
     }
 
 private:
     AudioNode* selectedNode = nullptr;
+    std::string parameterName;
     std::vector<std::unique_ptr<ParamItem>> paramItems; // Holds param UI elements
 };

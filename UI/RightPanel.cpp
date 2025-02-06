@@ -18,7 +18,6 @@ ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
     // Hook TextBox updates to parameter
     textBox->onTextReturned = ([this]() {
         try {
-            std::cout << "sending data to node??" << std::endl;
             param->setFromString(textBox->getText());
         } catch (...) {
             // Invalid input, ignore it
@@ -43,12 +42,27 @@ RightPanel::RightPanel(Canvas* cnv)
 
     setMinMaxSize(150, 350, 0, 0);
     setResizable(pptk::Resizer::ResizerMode::Left);
+
+    updateUI();
+}
+
+void RightPanel::setSelectedNode(AudioNode* node)
+{
+    if (node == nullptr)
+    {
+        selectedNode = nullptr;
+        paramItems.clear();
+        repaint();
+    }
+    selectedNode = node;
+
+    updateUI();
 }
 
 void RightPanel::resized() {
     int yOffset = 50;
     for (auto& item : paramItems) {
-        item->setBounds(10, yOffset, width - 20, 30);
+        item->setBounds(24, yOffset, width - 24 - 24, 30);
         yOffset += 30;
     }
 
@@ -56,6 +70,11 @@ void RightPanel::resized() {
 }
 
 void RightPanel::updateUI() {
+    parameterName = "Parameters: (empty)";
+
+    if (selectedNode)
+        parameterName = "Parameters: " + selectedNode->getName();
+
     paramItems.clear();
 
     if (!selectedNode) return;
