@@ -87,10 +87,10 @@ namespace pptk
 
         std::unique_ptr<PopupComponent> popupWindow;
 
-        void cacheFontMetrics(NVGcontext* vg, const std::vector<std::string>& fonts)
+        void cacheFontMetrics(NVGcontext* vg, const std::vector<std::string>& fonts, const std::vector<float>& sizes)
         {
             nvgBeginFrame(vg, 1, 1, 1.0f);
-            fontMetricsCache.cacheFontMetrics(vg, fonts);
+            fontMetricsCache.cacheFontMetrics(vg, fonts, sizes);
             nvgEndFrame(vg);
 
             std::cout << "Cached fonts: ";

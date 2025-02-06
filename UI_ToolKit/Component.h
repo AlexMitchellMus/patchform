@@ -391,8 +391,6 @@ protected:
     std::vector<Component*> children;
     bool isDragging = false;
 
-    Component* draggingComponent = nullptr;
-
     Component* parent = nullptr;
 
     Component* rootComponent = nullptr;

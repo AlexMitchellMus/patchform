@@ -263,11 +263,12 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to load icon font!" << std::endl;
     }
 
-    std::vector<std::string> fonts = { "Regular", "SemiBold", "icons", "object_icons" };
-
     auto app = std::make_unique<App>();
 
-    app->cacheFontMetrics(nvg, fonts);
+    std::vector<std::string> fonts = { "Regular", "SemiBold", "icons", "object_icons" };
+    std::vector<float> sizes = { 14.0f, 16.0f, 100.0f };
+
+    app->cacheFontMetrics(nvg, fonts, sizes);
 
     app->init(&graphs);
 

@@ -76,6 +76,9 @@ void Object::resized()
 
 void Object::mouseEnter(pptk::CompEvent& e)
 {
+    std::cout << "name from cache: " << name << " : " << getTextWidthForFont("Regular", 1000.0f, name) << std::endl;
+
+
     isHovered = true;
     repaint();
 }
@@ -152,10 +155,12 @@ void Object::drawBackground(NVGcontext* nvg)
 
 void Object::drawGUI(NVGcontext* nvg)
 {
-    nvgFontSize(nvg, 18.0f);
+    nvgFontSize(nvg, 1000.0f);
     nvgFontFace(nvg, "Regular");
     nvgFillColor(nvg, nvgRGB(190, 190, 190));
     nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+    std::cout << "name: " << name << " width: " << nvgTextBounds(nvg, 0, 0, name.c_str(), nullptr, nullptr) << std::endl;
 
     nvgText(nvg, 10, height / 2, name.c_str(), nullptr);
 }
