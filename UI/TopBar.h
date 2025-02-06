@@ -12,9 +12,7 @@
 
 #include "SDL3/SDL.h"
 
-using namespace pptk;
-
-class MainVolumeMeter : public Component
+class MainVolumeMeter : public pptk::Component
 {
     public:
     MainVolumeMeter(){};
@@ -67,7 +65,7 @@ private:
     float meterPeakValue = 0.0f;
 };
 
-class MainMenu : public PopupComponent
+class MainMenu : public pptk::PopupComponent
 {
 public:
     class MenuItem : public Component
@@ -200,7 +198,7 @@ private:
     NVGcolor dropShadowCol = nvgRGBA(0, 0, 0, 30);
 };
 
-class TopBar : public Component {
+class TopBar : public pptk::Component {
 public:
     std::function<void(bool)> hideShowPanels = [](bool){};
 
@@ -319,7 +317,7 @@ private:
     bool isHit = false;
 
     std::unique_ptr<ToggleButton> mainMenuButton;
-    SafePointer<MainMenu> mainMenu;
+    pptk::SafePointer<MainMenu> mainMenu;
 
     std::unique_ptr<ToggleButton> undo;
     std::unique_ptr<ToggleButton> redo;

@@ -104,7 +104,7 @@ public:
             auto popup = std::make_unique<ObjectMenu>(cnv, this);
 
             // Ensure SafePointer is used safely
-            addObjectMenu = SafePointer(popup.get());
+            addObjectMenu = pptk::SafePointer(popup.get());
 
             // Swap the popup safely (prevents issues if an old one was lingering)
             setPopupComponent(std::move(popup));
@@ -193,5 +193,5 @@ private:
     std::unique_ptr<ToggleButton> resizeToFit;
     std::unique_ptr<ZoomSlider> zoomSlider;
 
-    SafePointer<ObjectMenu> addObjectMenu;
+    pptk::SafePointer<ObjectMenu> addObjectMenu;
 };

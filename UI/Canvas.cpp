@@ -65,18 +65,18 @@ void Canvas::updateGraphValuesIfNeeded()
 }
 
 
-void Canvas::mouseButtonDown(CompEvent& e)
+void Canvas::mouseButtonDown(pptk::CompEvent& e)
 {
     if (e.sdlEvent.button.button == SDL_BUTTON_LEFT)
     {
         clearSelection();
 
-        lasso = std::make_unique<Lasso>(Point(e.sdlEvent.button.x, e.sdlEvent.button.y));   //lasso->start({e.button.x, e.button.y});
+        lasso = std::make_unique<Lasso>(pptk::Point(e.sdlEvent.button.x, e.sdlEvent.button.y));   //lasso->start({e.button.x, e.button.y});
         addComponent(lasso.get());
     }
 }
 
-void Canvas::mouseButtonUp(CompEvent& e)
+void Canvas::mouseButtonUp(pptk::CompEvent& e)
 {
     SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
     lasso.reset();
@@ -120,7 +120,7 @@ void Canvas::dragCanvas(const pptk::Point& delta)
     repaint();
 }
 
-void Canvas::mouseWheel(CompEvent& e)
+void Canvas::mouseWheel(pptk::CompEvent& e)
 {
     float mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
@@ -162,7 +162,7 @@ void Canvas::resetScale()
     repaint();
 }
 
-void Canvas::keyPressed(CompEvent& e)
+void Canvas::keyPressed(pptk::CompEvent& e)
 {
     if (e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {
@@ -449,7 +449,7 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
     callOjbectChangedListeners();
 }
 
-void Canvas::addObject(Object* toAdd, Point position)
+void Canvas::addObject(Object* toAdd, pptk::Point position)
 {
     std::cout << "adding object into graph: " << toAdd->getObjectDefinition() << std::endl;
 

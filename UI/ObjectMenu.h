@@ -10,8 +10,6 @@
 #include "../UI_ToolKit/CompEvent.h"
 using json = nlohmann::json;
 
-using namespace pptk;
-
 class Object;
 class Canvas;
 
@@ -26,8 +24,8 @@ class Item : public pptk::Component
 {
     public:
 
-    std::function<void(Point, std::string, Point)> onMouseDrag = [](Point, std::string, Point){};
-    std::function<void(Point)> onMouseUp = [](Point){};
+    std::function<void(pptk::Point, std::string, pptk::Point)> onMouseDrag = [](pptk::Point, std::string, pptk::Point){};
+    std::function<void(pptk::Point)> onMouseUp = [](pptk::Point){};
 
 
     Item(ObjectDef def) : definition(def.definition), icon(def.icon)
@@ -36,7 +34,7 @@ class Item : public pptk::Component
         useIcon = def.useIcon;
     };
 
-    void mouseDrag(const Point& position, const Point& delta, Button button) override
+    void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button) override
     {
         onMouseDrag(position, name, getPositionInParent());
     }
@@ -55,7 +53,7 @@ class Item : public pptk::Component
 
     void mouseButtonUp(pptk::CompEvent& e) override
     {
-        onMouseUp(Point(e.sdlEvent.button.x, e.sdlEvent.button.y));
+        onMouseUp(pptk::Point(e.sdlEvent.button.x, e.sdlEvent.button.y));
     }
 
     void render(NVGcontext* vg) override
@@ -113,6 +111,6 @@ private:
     Canvas* cnv;
     ToolDock* td;
 
-    SafePointer<Object> dndObject;
+    pptk::SafePointer<Object> dndObject;
     std::vector<std::unique_ptr<Item>> items;
 };

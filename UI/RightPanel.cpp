@@ -42,7 +42,7 @@ RightPanel::RightPanel(Canvas* cnv)
     });
 
     setMinMaxSize(150, 350, 0, 0);
-    setResizable(Resizer::ResizerMode::Left);
+    setResizable(pptk::Resizer::ResizerMode::Left);
 }
 
 void RightPanel::resized() {

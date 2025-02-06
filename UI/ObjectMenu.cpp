@@ -33,10 +33,10 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
             auto item = std::make_unique<Item>(objectDef[(i * 10) + j]);
             item->setBounds(16 + (j * (44 + 16)), 16 + (i * 55), 44, 44);
 
-            item->onMouseUp = [this](Point position) mutable {
+            item->onMouseUp = [this](pptk::Point position) mutable {
                 if (dndObject)
                 {
-                    auto objectOffset = Point(dndObject->getWidth() * 0.5f * dndObject->scale, dndObject->getHeight() * 0.5f * dndObject->scale);
+                    auto objectOffset = pptk::Point(dndObject->getWidth() * 0.5f * dndObject->scale, dndObject->getHeight() * 0.5f * dndObject->scale);
                     auto finalPos = position - objectOffset;
                     auto droppedPos = cnv->globalToLocalWithScale(finalPos.x, finalPos.y);
 
@@ -46,15 +46,15 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
                 }
             };
 
-            item->onMouseDrag = [this, itemDef = item->getObjectDefinition()](Point position, const std::string& name, Point offset)
+            item->onMouseDrag = [this, itemDef = item->getObjectDefinition()](pptk::Point position, const std::string& name, pptk::Point offset)
             {
                 if (dndObject)
                 {
-                    Point globalPos = localToGlobal(position.x, position.y) + offset;
+                    pptk::Point globalPos = localToGlobal(position.x, position.y) + offset;
 
                     // Correctly center the dragged object
                     auto scaledPos = globalPos -
-                                     Point(dndObject->getWidth() * 0.5f * dndObject->scale,
+                                     pptk::Point(dndObject->getWidth() * 0.5f * dndObject->scale,
                                            dndObject->getHeight() * 0.5f * dndObject->scale);
 
                     dndObject->setPosition(scaledPos);

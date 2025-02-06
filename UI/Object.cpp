@@ -74,19 +74,19 @@ void Object::resized()
     }
 }
 
-void Object::mouseEnter(CompEvent& e)
+void Object::mouseEnter(pptk::CompEvent& e)
 {
     isHovered = true;
     repaint();
 }
 
-void Object::mouseLeave(CompEvent& e)
+void Object::mouseLeave(pptk::CompEvent& e)
 {
     isHovered = false;
     repaint();
 }
 
-void Object::mouseButtonDown(CompEvent& e)
+void Object::mouseButtonDown(pptk::CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {
@@ -104,7 +104,7 @@ void Object::mouseButtonDown(CompEvent& e)
     }
 }
 
-void Object::keyPressed(CompEvent& e)
+void Object::keyPressed(pptk::CompEvent& e)
 {
     if (e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {

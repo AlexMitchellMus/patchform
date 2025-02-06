@@ -23,16 +23,14 @@
 
 #include "../UI_ToolKit/ToggleButton.h"
 
-using namespace pptk;
-
 class GraphManager;
-class App : public RootComponent {
+class App : public pptk::RootComponent {
 public:
     App(GraphManager* gm);
 
     void updateObjectsFromDSP();
 
-    void mouseMove(const Point& position) override
+    void mouseMove(const pptk::Point& position) override
     {
         // FIXME: Mouse move is not registering ATM, we need to add a listener or think about a better solution
         if (position.y > getHeight() - 100)

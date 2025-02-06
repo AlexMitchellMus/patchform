@@ -26,9 +26,9 @@ Connection::~Connection()
     repaint();
 }
 
-float Connection::pointToSegmentDistance(const Point& p,
-                             const Point& a,
-                             const Point& b)
+float Connection::pointToSegmentDistance(const pptk::Point& p,
+                             const pptk::Point& a,
+                             const pptk::Point& b)
 {
     float abX = b.x - a.x, abY = b.y - a.y;
     float apX = p.x - a.x, apY = p.y - a.y;
@@ -46,11 +46,11 @@ float Connection::pointToSegmentDistance(const Point& p,
     return std::hypot(p.x - closestX, p.y - closestY); // Compute Euclidean distance
 }
 
-bool Connection::isPointNearBezier(const Point& p,
-                                   const Point& start,
-                                   const Point& c1,
-                                   const Point& c2,
-                                   const Point& end,
+bool Connection::isPointNearBezier(const pptk::Point& p,
+                                   const pptk::Point& start,
+                                   const pptk::Point& c1,
+                                   const pptk::Point& c2,
+                                   const pptk::Point& end,
                                    float threshold)
 {
     float thresholdSq = threshold * threshold; // Avoid sqrt later
@@ -88,7 +88,7 @@ bool Connection::isPointNearBezier(const Point& p,
     int segments = std::max(5, static_cast<int>(lengthEstimate / 100.0f));
 
     // Fall back to full Bézier hit test
-    Point prevPoint = start;
+    pptk::Point prevPoint = start;
     float invSegments = 1.0f / segments;
 
     for (int i = 1; i <= segments; ++i)
@@ -100,7 +100,7 @@ bool Connection::isPointNearBezier(const Point& p,
         float tt = t * t, uu = u * u;
         float uuu = uu * u, ttt = tt * t;
 
-        Point bezierPoint = {
+        pptk::Point bezierPoint = {
             uuu * start.x + 3 * uu * t * c2.x + 3 * u * tt * c1.x + ttt * end.x,
             uuu * start.y + 3 * uu * t * c2.y + 3 * u * tt * c1.y + ttt * end.y
         };
@@ -127,7 +127,7 @@ void Connection::updateConnectionGeometry()
         {
             auto centre = destPort->getWidth() / 2;
             // Get the positions of the ports in the canvas
-            auto outputPortPos = destPort->getPositionInParent(cnv) + Point(centre, centre);
+            auto outputPortPos = destPort->getPositionInParent(cnv) + pptk::Point(centre, centre);
             destPos = outputPortPos - inputPortPos;
         }
 
@@ -182,11 +182,11 @@ bool Connection::hitTest(float px, float py)
 
     // Define start and end exclusion rectangles
     // We use this so the connection does not block the port mouse interaction
-    Point startMin = { startPoint.x - exclusionSize, startPoint.y - exclusionSize };
-    Point startMax = { startPoint.x + exclusionSize, startPoint.y + exclusionSize };
+    pptk::Point startMin = { startPoint.x - exclusionSize, startPoint.y - exclusionSize };
+    pptk::Point startMax = { startPoint.x + exclusionSize, startPoint.y + exclusionSize };
 
-    Point endMin = { endPoint.x - exclusionSize, endPoint.y - exclusionSize };
-    Point endMax = { endPoint.x + exclusionSize, endPoint.y + exclusionSize };
+    pptk::Point endMin = { endPoint.x - exclusionSize, endPoint.y - exclusionSize };
+    pptk::Point endMax = { endPoint.x + exclusionSize, endPoint.y + exclusionSize };
 
     // If mouse is inside start or end exclusion zones, return false
     if ((px >= startMin.x && px <= startMax.x && py >= startMin.y && py <= startMax.y) ||
@@ -195,7 +195,7 @@ bool Connection::hitTest(float px, float py)
         return false;
     }
 
-    return isPointNearBezier(Point(px, py), startPoint, controlPoint1, controlPoint2, endPoint);
+    return isPointNearBezier(pptk::Point(px, py), startPoint, controlPoint1, controlPoint2, endPoint);
 }
 
 void Connection::mouseEnter(pptk::CompEvent& e)

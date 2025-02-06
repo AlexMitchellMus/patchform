@@ -56,7 +56,7 @@ public:
             return (minAngle - NVG_PI * 0.5f) + (maxAngle - minAngle) * value;
         }
 
-        void mouseDrag(const Point& position, const Point& delta, Button button) override
+        void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button) override
         {
             if (auto cnv = findParentOfClass<Canvas>())
             {

@@ -13,7 +13,7 @@
 LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
 {
     setMinMaxSize(150, 350, 0, 0);
-    setResizable(Resizer::ResizerMode::Right);
+    setResizable(pptk::Resizer::ResizerMode::Right);
 
     if (cnv)
     {
