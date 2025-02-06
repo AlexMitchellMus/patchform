@@ -161,7 +161,6 @@ private:
  * are active for resizing.
  *
  * Make sure to resize the resizer in the resized() function of the target class:
- *
  * @code
  * class MyComponent : public ResizableComponent {
  * public:
