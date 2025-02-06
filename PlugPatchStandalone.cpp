@@ -17,7 +17,7 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
-#include "UI/App.h"
+#include "UI/Editor.h"
 #include "UI_ToolKit/EventManager.h"
 
 

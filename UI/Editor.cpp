@@ -1,4 +1,4 @@
-#include "App.h"
+#include "Editor.h"
 #include "../Graph/AudioGraph.h"
 
 App::App(GraphManager* gm) : graphManager(gm) {

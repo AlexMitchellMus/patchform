@@ -8,7 +8,7 @@
 
 #include "CanvasItem.h"
 
-#include "App.h"
+#include "Editor.h"
 #include "Port.h"
 
 class AudioNode;
