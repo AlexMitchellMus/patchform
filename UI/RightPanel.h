@@ -2,12 +2,7 @@
 
 #include "../UI_ToolKit/Component.h"
 #include "../UI_ToolKit/Resizer.h"
-
-namespace pptk
-{
-    class TextEditor;
-    class Resizer;
-}
+#include "../UI_ToolKit/TextEditor.h"
 
 class AudioNode;
 class Parameter;
