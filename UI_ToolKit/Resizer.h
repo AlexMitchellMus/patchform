@@ -152,6 +152,35 @@ private:
     DraggedEdge draggingEdge = DraggedEdge::None;
 };
 
+/**
+ * @brief A component that supports user-driven resizing.
+ *
+ * This class acts as a decorator by extending the functionality of Component.
+ * It lazily creates a Resizer instance and delegates the resizing behavior to it. By calling
+ * setResizable() with a specific ResizerMode, you can configure which edges (Left, Right, Top, Bottom, All)
+ * are active for resizing.
+ *
+ * Make sure to resize the resizer in the resized() function of the target class:
+ *
+ * @code
+ * class MyComponent : public ResizableComponent {
+ * public:
+ *     MyComponent() {
+ *         // Enable left and right resizing
+ *         setResizable(Resizer::ResizerMode::Left | Resizer::ResizerMode::Right);
+ *     }
+ *
+ *     // Override resized() to ensure the resizer is correctly positioned and sized.
+ *     void resized() override {
+ *         // Update your component's own layout logic here.
+ *         // For example, reposition children or update internal state.
+ *
+ *         // Now update the resizer bounds to match the new size of this component.
+ *         auto bounds = getBounds();
+ *         getResizer().setBounds(bounds.x, bounds.y, bounds.w, bounds.h);
+ *     }
+ * };
+ */
 class ResizableComponent : public Component
 {
 public:
