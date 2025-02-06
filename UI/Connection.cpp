@@ -53,9 +53,6 @@ bool Connection::isPointNearBezier(const pptk::Point& p,
                                    const pptk::Point& end,
                                    float threshold)
 {
-    float thresholdSq = threshold * threshold; // Avoid sqrt later
-    const float epsilon = 0.0001f; // Tolerance for detecting a straight line
-
     // Compute bounding box with padding
     const float padding = std::max(5.0f, threshold * 0.5f);
     float minX = std::min({start.x, c1.x, c2.x, end.x}) - padding;
@@ -178,7 +175,7 @@ void Connection::setConnectionDest(const pptk::Point& p)
 
 bool Connection::hitTest(float px, float py)
 {
-    const float exclusionSize = 5.0f;
+    constexpr float exclusionSize = 5.0f;
 
     // Define start and end exclusion rectangles
     // We use this so the connection does not block the port mouse interaction

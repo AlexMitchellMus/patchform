@@ -60,7 +60,7 @@ public:
 
     void addObjectChangedListener(std::function<void()> callback);
     void removeObjectChangedListener(std::function<void()> callback);
-    void callOjbectChangedListeners();
+    void callObjectChangedListeners();
 
     void setScale(float scale);
     void resetScale();
@@ -95,7 +95,7 @@ private:
 
     DisplayMode mode = DisplayMode::Edit;
 
-    bool inDragMode;
+    bool inDragMode = false;
 
 #ifdef GENERATE_TEST_OBJECTS
     // ONLY FOR TESTING! These objects are not connected to the DSP system

@@ -27,7 +27,7 @@ class Event
 public:
     Event(){};
 
-    Event(uint64_t timeStamp) : timeStamp(timeStamp) {}
+    explicit Event(uint64_t timeStamp) : timeStamp(timeStamp) {}
 
     void setTag(const std::string& tagName)
     {

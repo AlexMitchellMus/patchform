@@ -20,15 +20,16 @@ class Count : public AudioNode {
     int maxCount;
 
 public:
-    Count(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Count(NodeContext* context, const json& objParams)
+        : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
 
         countValue = minCount = objParams.value("min", 1);
-        maxCount = objParams.value("max", std::numeric_limits<int>::max());
+        maxCount = objParams.value("max", 10);
 
-        minCountParam = addParameter<IntParameter>("Count min", minCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-        maxCountParam = addParameter<IntParameter>("Count max", minCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        minCountParam = addParameter<IntParameter>("Min:", minCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        maxCountParam = addParameter<IntParameter>("Max:", maxCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
     }
 
     void processAudio(float* out, unsigned long frameCount) override
@@ -38,11 +39,9 @@ public:
 
         const auto aEvents = inputPortBuffers[0]->getEvents();
 
-        for (auto event : aEvents)
+        for (const auto* event : aEvents)
         {
-            Event* e = context->eventPool.getFreeEvent();
-
-            if (e)
+            if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(event->getTimeStamp());
                 if (countValue > maxCount)

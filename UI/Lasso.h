@@ -13,7 +13,7 @@
 class Lasso : public pptk::Component
 {
 public:
-    Lasso(pptk::Point startPoint);
+    explicit Lasso(pptk::Point startPoint);
 
     ~Lasso();
 

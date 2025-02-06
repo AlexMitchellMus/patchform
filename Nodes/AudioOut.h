@@ -20,7 +20,7 @@ public:
     void processAudio(float* buffer, unsigned long frameCount) override
     {
         // The input port audio is directly sent to the PortAudio stream
-        const auto inputPort = inputPortBuffers[0]->getAudioBuffer();
+        const auto* inputPort = inputPortBuffers[0]->getAudioBuffer();
 
         // We can't copy here, because we may have multiple audio outs in the patch
         for (uint32_t i = 0; i < frameCount; i++)

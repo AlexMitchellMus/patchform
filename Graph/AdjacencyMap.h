@@ -7,10 +7,6 @@
 #pragma once
 
 #include <vector>
-#include <limits>
-#include <iostream>
-#include <iomanip>
-#include <cassert>
 
 #include "unordered_dense.h"
 

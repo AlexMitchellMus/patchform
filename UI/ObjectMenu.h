@@ -80,7 +80,6 @@ private:
     bool useIcon = true;
 
     json definition;
-    std::string name;
     std::string icon;
 
     NVGcolor bg = nvgRGB(46, 46, 46);
@@ -94,7 +93,7 @@ class ObjectMenu : public pptk::PopupComponent {
 public:
     ObjectMenu(Canvas* canvas, ToolDock* toolDock);
 
-    ~ObjectMenu();
+    ~ObjectMenu() override;
 
     void render(NVGcontext* vg) override
     {

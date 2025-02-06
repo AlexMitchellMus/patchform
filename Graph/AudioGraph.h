@@ -36,7 +36,7 @@ using json = nlohmann::json;
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
 public:
-    AudioGraph(NodeContext* context)
+    explicit AudioGraph(NodeContext* context)
         : context(context)
     {
     }
@@ -1115,7 +1115,7 @@ public:
 private:
 
     // Take the average peak and send it to the GUI when the GUI requests an update
-    void processPeak(float* buffer, unsigned long frameCount)
+    void processPeak(const float* buffer, unsigned long frameCount)
     {
         float peak = 0.0f;
         for (unsigned long i = 0; i < frameCount; i++)

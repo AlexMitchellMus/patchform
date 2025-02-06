@@ -34,7 +34,7 @@ public:
         Data   = 1 << 1
     };
 
-    AudioPort(AudioNode* parent, std::string portName, PortType type) : node(parent), name(portName), portType(type)
+    AudioPort(AudioNode* parent, const std::string& portName, PortType type) : node(parent), name(portName), portType(type)
     {
         events.reserve(1024);
     }

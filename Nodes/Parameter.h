@@ -12,7 +12,7 @@ public:
     {
     }
 
-    std::string getName() { return name; };
+    const std::string& getName() { return name; };
 
     virtual void setFromString(const std::string& value) = 0;
     virtual std::string getAsString() const = 0;

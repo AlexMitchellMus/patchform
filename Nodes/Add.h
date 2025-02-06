@@ -32,9 +32,7 @@ public:
 
         for (auto event : aEvents)
         {
-            Event* e = context->eventPool.getFreeEvent();
-
-            if (e)
+            if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(event->getTimeStamp());
                 e->data = event->data + coldValue;

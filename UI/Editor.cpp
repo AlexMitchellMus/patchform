@@ -1,7 +1,17 @@
+/*
+// Copyright (c) 2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #include "Editor.h"
 #include "../Graph/AudioGraph.h"
 
-App::App(GraphManager* gm) : graphManager(gm) {
+App::App(){};
+
+void App::init(GraphManager* gm)
+{
+    graphManager = gm;
 
     canvas = std::make_unique<Canvas>(graphManager);
     canvas->setName("canvas");
@@ -25,7 +35,6 @@ App::App(GraphManager* gm) : graphManager(gm) {
 
     topBar->hideShowPanels = [this](bool state)
     {
-        std::cout << "show fucking pannels" << std::endl;
         leftPanel->setVisible(!state);
         rightPanel->setVisible(!state);
 
@@ -49,7 +58,7 @@ App::App(GraphManager* gm) : graphManager(gm) {
     App::resized();
 }
 
-void App::updateObjectsFromDSP()
+void App::updateObjectsFromDSP() const
 {
     canvas->updateGraphValuesIfNeeded();
 

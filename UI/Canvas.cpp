@@ -218,7 +218,7 @@ void Canvas::deleteSelectedObjects()
 
     selected.clear();
 
-    callOjbectChangedListeners();
+    callObjectChangedListeners();
 
     connections.erase(std::remove_if(connections.begin(), connections.end(),
     [](const std::unique_ptr<Connection>& con) {
@@ -237,7 +237,7 @@ void Canvas::addToSelection(Object* obj)
         obj->setSelected(true);
         selected.push_back(obj);
 
-        callOjbectChangedListeners();
+        callObjectChangedListeners();
     }
 
     repaint();
@@ -251,7 +251,7 @@ void Canvas::removeFromSelection(Object* obj)
         obj->setSelected(false);
         selected.erase(it);
 
-        callOjbectChangedListeners();
+        callObjectChangedListeners();
     }
 
     repaint();
@@ -309,7 +309,7 @@ void Canvas::setSelected(CanvasItem* obj)
 
     selected.push_back(obj);
 
-    callOjbectChangedListeners();
+    callObjectChangedListeners();
 
     repaint();
 }
@@ -323,7 +323,7 @@ void Canvas::clearSelection()
 
     selected.clear();
 
-    callOjbectChangedListeners();
+    callObjectChangedListeners();
 
     repaint();
 }
@@ -446,7 +446,7 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
 
     objects.push_back(toAdd);
 
-    callOjbectChangedListeners();
+    callObjectChangedListeners();
 }
 
 void Canvas::addObject(Object* toAdd, pptk::Point position)
@@ -467,7 +467,7 @@ void Canvas::addObject(Object* toAdd, pptk::Point position)
 
     objects.push_back(object);
 
-    callOjbectChangedListeners();
+    callObjectChangedListeners();
 }
 
 void Canvas::addConnection(Port* origin, Port* dest)
@@ -507,7 +507,7 @@ void Canvas::removeObjectChangedListener(std::function<void()> callback)
     }
 }
 
-void Canvas::callOjbectChangedListeners()
+void Canvas::callObjectChangedListeners()
 {
     for (auto& objChangeListener : objectChangedListeners)
     {

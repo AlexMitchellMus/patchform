@@ -122,7 +122,7 @@ public:
 
         if (!inputEvents.empty())
         {
-            for (auto ev : inputEvents)
+            for (const auto* ev : inputEvents)
             {
                 Event* e = context->eventPool.getFreeEvent();
 

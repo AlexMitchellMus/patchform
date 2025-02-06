@@ -21,8 +21,8 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        const auto buffer1 = inputPortBuffers[0]->getAudioBuffer();
-        const auto buffer2 = inputPortBuffers[1]->getAudioBuffer();
+        const auto* buffer1 = inputPortBuffers[0]->getAudioBuffer();
+        const auto* buffer2 = inputPortBuffers[1]->getAudioBuffer();
 
         auto output = outputPort.getAudioBuffer();
 

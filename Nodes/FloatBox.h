@@ -40,8 +40,6 @@ public:
         {
             if (isDirty.load())
             {
-                float floatValue = 0;
-
                 auto floatBox = reinterpret_cast<FloatBox*>(audioNode);
 
                 std::vector<float> buffer(16); // Adjust size as needed
@@ -49,7 +47,7 @@ public:
 
                 if (count > 0)
                 {
-                    floatValue = buffer[count - 1]; // Use the last value (UI can't update faster than monitor refresh rate)
+                    float floatValue = buffer[count - 1]; // Use the last value (UI can't update faster than monitor refresh rate)
                     value = std::format("{:.4f}", floatValue);
                     repaint();
                 }

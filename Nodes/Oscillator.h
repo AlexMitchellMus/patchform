@@ -116,10 +116,10 @@ public:
         auto freqIn = inputPortBuffers[1]->getAudioBuffer();     // Frequency input
         auto output = outputPort.getAudioBuffer(); // Node's output buffer
 
-        unsigned int nextEventIndex = 0;
-        unsigned int nextFreqEventIndex = 0;
-
         if (useTable) {
+            unsigned int nextEventIndex = 0;
+            unsigned int nextFreqEventIndex = 0;
+
             const auto& table = waveformTables[waveform];
             const float tableSizeF = static_cast<float>(TABLE_SIZE);
 
@@ -139,9 +139,6 @@ public:
                 // Convert current phase to an integer index and calculate next index
                 int idx = static_cast<int>(phase) % TABLE_SIZE;
                 int nextIdx = (idx + 1) % TABLE_SIZE;
-
-                // Wrap the next index within TABLE_SIZE without conditionals
-                if (nextIdx >= TABLE_SIZE) nextIdx -= TABLE_SIZE;
 
                 // Calculate fractional part for interpolation
                 float fraction = phase - static_cast<float>(idx);

@@ -28,8 +28,8 @@ ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
 
 void ParamItem::resized()
 {
-    auto textwidth = getTextWidthForFont("Regular", 14.0f, textBox->getText());
-    std::cout << "text width from cache: " << textwidth << std::endl;
+    //auto textwidth = getTextWidthForFont("Regular", 14.0f, textBox->getText());
+    //std::cout << "text width from cache: " << textwidth << std::endl;
     textBox->setBounds(100, 5, getWidth() - 100, 25); // Place TextBox next to label
 }
 

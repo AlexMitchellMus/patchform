@@ -13,7 +13,7 @@ class If : public AudioNode {
     DEFINE_AND_REGISTER_NODE("If", "if");
 
     IntParameter* ifParam;
-    IntParameter* retParam;
+    FloatParameter* retParam;
 
     int coldValueIf;
     float coldValueReturn;
@@ -29,7 +29,7 @@ public:
         coldValueReturn = objParams.value("return", 0.0f);
 
         ifParam = addParameter<IntParameter>("if", coldValueIf, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-        retParam = addParameter<IntParameter>("return", coldValueReturn, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        retParam = addParameter<FloatParameter>("return", coldValueReturn, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
     }
 
     void processAudio(float* out, unsigned long frameCount) override
@@ -45,9 +45,7 @@ public:
         {
             if (event->data == coldValueIf)
             {
-                Event* e = context->eventPool.getFreeEvent();
-
-                if (e)
+                if (Event* e = context->eventPool.getFreeEvent())
                 {
                     e->setTimeStamp(event->getTimeStamp());
                     e->data = coldValueReturn;

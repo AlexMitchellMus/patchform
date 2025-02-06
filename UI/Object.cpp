@@ -33,7 +33,7 @@ Object::Object(AudioNode* node) : nodeID(node->nodeID), audioNode(node), name(no
     Object::resized();
 }
 
-Object::Object(std::string name) : name(name)
+Object::Object(const std::string& name) : name(name)
 {
     setBounds(0, 0, 120, 40);
 

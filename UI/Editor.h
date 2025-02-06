@@ -32,9 +32,11 @@
 class GraphManager;
 class App : public pptk::RootComponent {
 public:
-    App(GraphManager* gm);
+    App();
 
-    void updateObjectsFromDSP();
+    void init(GraphManager* gm);
+
+    void updateObjectsFromDSP() const;
 
     void mouseMove(const pptk::Point& position) override
     {
@@ -58,7 +60,7 @@ public:
 
     void resized() override
     {
-        const auto topBarHeight = 40;
+        constexpr auto topBarHeight = 40;
         topBar->setBounds(0, 0, getWidth(), topBarHeight);
         canvas->setBounds(-canvas->canvasOrigin, - canvas->canvasOrigin + topBarHeight, canvas->infinteCanvasSize, canvas->infinteCanvasSize);
         leftPanel->setBounds(0, topBarHeight, 200, getHeight() - topBarHeight);

@@ -18,7 +18,7 @@ public:
     explicit Object(AudioNode* node);
 
     // Make a non-functioning UI only object (only for testing)
-    explicit Object(std::string name);
+    explicit Object(const std::string& name);
 
     ~Object() override;
 
@@ -47,11 +47,10 @@ public:
     };
 
     bool getIsHovered() const { return isHovered; };
-    bool getIsSelected() const { return isSelected; };
 
     virtual void updateGraphValues() { };
 
-    void setObjectDefinition(json j)
+    void setObjectDefinition(const json& j)
     {
         definition = j;
     }
@@ -61,7 +60,6 @@ public:
     AudioNode* audioNode = nullptr;
 
 private:
-
     std::string name;
     json definition;
     std::vector<std::unique_ptr<Port>> inPorts;

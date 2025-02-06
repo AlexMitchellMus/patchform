@@ -16,7 +16,7 @@ class Canvas;
 class LeftPanel : public pptk::ResizableComponent
 {
 public:
-    LeftPanel(Canvas* canvas);
+    explicit LeftPanel(Canvas* canvas);
 
     void updateCanvasObjectList();
 

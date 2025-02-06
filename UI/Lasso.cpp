@@ -7,7 +7,8 @@
 #include "Lasso.h"
 
 Lasso::Lasso(pptk::Point canvasPos)
-    : startPoint(canvasPos), endPoint(canvasPos)
+    : startPoint(canvasPos)
+    , endPoint(canvasPos)
 {
     setPosition(canvasPos);
     setSize(0, 0);

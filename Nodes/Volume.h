@@ -24,12 +24,12 @@ public:
 
     void processAudio(float* buffer, unsigned long frameCount) override
     {
-        const auto buffer1   = inputPortBuffers[0]->getAudioBuffer();
-        const auto buffer2   = inputPortBuffers[1]->getAudioBuffer();
+        const auto* buffer1   = inputPortBuffers[0]->getAudioBuffer();
+        const auto* buffer2   = inputPortBuffers[1]->getAudioBuffer();
         const auto volEvents1 = inputPortBuffers[0]->getEvents();
         const auto volEvents2 = inputPortBuffers[1]->getEvents();
-        bool useSignalFreq1   = inputPortBuffers[0]->isAnyConnectedPortSignal;
-        bool useSignalFreq2   = inputPortBuffers[1]->isAnyConnectedPortSignal;
+        const bool useSignalFreq1   = inputPortBuffers[0]->isAnyConnectedPortSignal;
+        const bool useSignalFreq2   = inputPortBuffers[1]->isAnyConnectedPortSignal;
 
         const auto output = outputPort.getAudioBuffer();
 

@@ -265,13 +265,16 @@ int main(int argc, char* argv[])
 
     std::vector<std::string> fonts = { "Regular", "SemiBold", "icons", "object_icons" };
 
-    auto app = std::make_unique<App>(&graphs);
+    auto app = std::make_unique<App>();
+
+    app->cacheFontMetrics(nvg, fonts);
+
+    app->init(&graphs);
+
     // FIXME: hack to make the app have a starting size!
     app->setBounds(0, 0, newWidth, newHeight);
 
     pptk::EventManager eventManager(app.get());
-
-    app->cacheFontMetrics(nvg, fonts);
 
     const int targetFPS = 120;                       // Desired frame rate
     const int targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
