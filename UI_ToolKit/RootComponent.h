@@ -10,89 +10,109 @@
 #include <memory>
 
 #include "PopupComponent.h"
+#include "../UI_ToolKit/FontMetrics.h"
 
-namespace pptk {
-
-class RootComponent : public Component {
-public:
-
-    void handleTime(uint32_t time)
+namespace pptk
+{
+    class RootComponent : public Component
     {
-        auto callbacksCopy = timerCallbacks;  // Copy to avoid iterator invalidation
-
-        for (auto& [componentPtr, callback] : callbacksCopy)
+    public:
+        void handleTime(uint32_t time)
         {
-            if (componentPtr)  // Ensure component still exists
+            auto callbacksCopy = timerCallbacks; // Copy to avoid iterator invalidation
+
+            for (auto& [componentPtr, callback] : callbacksCopy)
             {
-                callback();  // Execute the callback (even if the original vector changed)
+                if (componentPtr) // Ensure component still exists
+                {
+                    callback(); // Execute the callback (even if the original vector changed)
+                }
             }
         }
-    }
 
 
-    void registerTimerCallback(Component* c, const std::function<void()>& callback)
-    {
-        unregisterTimerCallback(c);
-
-        timerCallbacks.emplace_back(c, callback);
-    }
-
-    void unregisterTimerCallback(Component* component)
-    {
-        for (auto& [c, callback] : timerCallbacks)
+        void registerTimerCallback(Component* c, const std::function<void()>& callback)
         {
-            if (c == component)
-                c = nullptr;  // Mark for deletion
+            unregisterTimerCallback(c);
+
+            timerCallbacks.emplace_back(c, callback);
         }
 
-        // Remove all marked entries after iteration is complete
-        timerCallbacks.erase(
-            std::ranges::remove_if(timerCallbacks,
-                                   [](auto& tup) { return std::get<0>(tup) == nullptr; }).begin(),
-            timerCallbacks.end()
-        );
-    }
-
-    Component* getDraggingComponent() const       { return draggingComponent.get(); }
-    void       setDraggingComponent(Component* c) { draggingComponent = makeSafePointer(c);    }
-
-    Component* getHoveredComponent() const        { return hoveredComponent.get(); }
-    void       setHoveredComponent(Component* c)  { hoveredComponent = makeSafePointer(c);     }
-
-    Component* getClickedComponent() const        { return clickedComponent.get(); }
-    void       setClickedComponent(Component* c)  { clickedComponent = makeSafePointer(c);     }
-
-    void registerGlobalMouse(Component* c, const std::function<void(pptk::Component*)>& callback)
-    {
-        globalMouseHandlers.emplace_back(c, callback);
-    }
-
-    void unregisterGlobalMouse(Component* component)
-    {
+        void unregisterTimerCallback(Component* component)
         {
-            // Remove all tuples whose first element (Component*) equals cPtr
-            globalMouseHandlers.erase(
-                std::remove_if(globalMouseHandlers.begin(), globalMouseHandlers.end(),
-                               [component](auto& tup)
-                               {
-                                   return std::get<0>(tup) == component;
-                               }),
-                globalMouseHandlers.end()
+            for (auto& [c, callback] : timerCallbacks)
+            {
+                if (c == component)
+                    c = nullptr; // Mark for deletion
+            }
+
+            // Remove all marked entries after iteration is complete
+            timerCallbacks.erase(
+                std::ranges::remove_if(timerCallbacks,
+                                       [](auto& tup) { return std::get<0>(tup) == nullptr; }).begin(),
+                timerCallbacks.end()
             );
         }
-    }
 
-    std::vector<std::tuple<Component*, std::function<void(Component*)>>> globalMouseHandlers;
+        Component* getDraggingComponent() const { return draggingComponent.get(); }
+        void setDraggingComponent(Component* c) { draggingComponent = makeSafePointer(c); }
 
-    std::unique_ptr<PopupComponent> popupWindow;
+        Component* getHoveredComponent() const { return hoveredComponent.get(); }
+        void setHoveredComponent(Component* c) { hoveredComponent = makeSafePointer(c); }
 
-protected:
+        Component* getClickedComponent() const { return clickedComponent.get(); }
+        void setClickedComponent(Component* c) { clickedComponent = makeSafePointer(c); }
 
-    SafePointer<Component> draggingComponent;
-    SafePointer<Component> hoveredComponent;
-    SafePointer<Component> clickedComponent;
+        void registerGlobalMouse(Component* c, const std::function<void(pptk::Component*)>& callback)
+        {
+            globalMouseHandlers.emplace_back(c, callback);
+        }
 
-    std::vector<std::tuple<Component*, std::function<void()>>> timerCallbacks;
-};
+        void unregisterGlobalMouse(Component* component)
+        {
+            {
+                // Remove all tuples whose first element (Component*) equals cPtr
+                globalMouseHandlers.erase(
+                    std::remove_if(globalMouseHandlers.begin(), globalMouseHandlers.end(),
+                                   [component](auto& tup)
+                                   {
+                                       return std::get<0>(tup) == component;
+                                   }),
+                    globalMouseHandlers.end()
+                );
+            }
+        }
 
+        std::vector<std::tuple<Component*, std::function<void(Component*)>>> globalMouseHandlers;
+
+        std::unique_ptr<PopupComponent> popupWindow;
+
+        void cacheFontMetrics(NVGcontext* vg, const std::vector<std::string>& fonts)
+        {
+            nvgBeginFrame(vg, 1, 1, 1.0f);
+            fontMetricsCache.cacheFontMetrics(vg, fonts);
+            nvgEndFrame(vg);
+
+            std::cout << "Cached fonts: ";
+            for (const auto& entry : fontMetricsCache.glyphCacheMap) {
+                std::cout << "\"" << entry.first << "\" ";
+            }
+            std::cout << std::endl;
+        }
+
+        float getTextWidth(const std::string& fontName, const float size, const std::string& text) const
+        {
+            return fontMetricsCache.getTextWidth(fontName, size, text);
+        }
+
+    private:
+        FontMetricsCache fontMetricsCache;
+
+    protected:
+        SafePointer<Component> draggingComponent;
+        SafePointer<Component> hoveredComponent;
+        SafePointer<Component> clickedComponent;
+
+        std::vector<std::tuple<Component*, std::function<void()>>> timerCallbacks;
+    };
 }

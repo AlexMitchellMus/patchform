@@ -85,8 +85,8 @@ Component* Component::findComponentAt(int globalX, int globalY, Component* selfC
 Component* Component::getRootComponent()
 {
     // Find the root component, because we can assign components inside constructors, so root can't be set
-    if (rootCoponent)
-        return rootCoponent;
+    if (rootComponent)
+        return rootComponent;
 
     Component* current = this;
     while (current->parent)
@@ -94,7 +94,7 @@ Component* Component::getRootComponent()
         current = current->parent;
     }
 
-    rootCoponent = current;
+    rootComponent = current;
 
     return current;
 }
@@ -108,6 +108,7 @@ void Component::addComponent(Component* child)
 
     child->parent = this;
     children.push_back(child);
+
     if (auto resizibleChild = dynamic_cast<ResizableComponent*>(child))
     {
         children.push_back(&resizibleChild->getResizer());
@@ -332,6 +333,15 @@ Point Component::localToGlobal(float localX, float localY) const
     }
 
     return Point(localX, localY);
+}
+
+float Component::getTextWidthForFont(const std::string& fontName, float size, const std::string& text)
+{
+    if (auto root = dynamic_cast<RootComponent*>(getRootComponent()))
+    {
+        return root->getTextWidth(fontName, size, text);
+    }
+    return 0.0f;
 }
 
 }

@@ -363,6 +363,8 @@ public:
 
     void repaint();
 
+    float getTextWidthForFont(const std::string& fontName, float size, const std::string& text);
+
 private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);
 
@@ -393,7 +395,7 @@ protected:
 
     Component* parent = nullptr;
 
-    Component* rootCoponent = nullptr;
+    Component* rootComponent = nullptr;
 };
 
 } // namespace ppuitk

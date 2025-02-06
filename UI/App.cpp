@@ -2,6 +2,7 @@
 #include "../Graph/AudioGraph.h"
 
 App::App(GraphManager* gm) : graphManager(gm) {
+
     canvas = std::make_unique<Canvas>(graphManager);
     canvas->setName("canvas");
     addComponent(canvas.get());
@@ -24,6 +25,7 @@ App::App(GraphManager* gm) : graphManager(gm) {
 
     topBar->hideShowPanels = [this](bool state)
     {
+        std::cout << "show fucking pannels" << std::endl;
         leftPanel->setVisible(!state);
         rightPanel->setVisible(!state);
 

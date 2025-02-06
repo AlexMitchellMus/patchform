@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../UI_ToolKit/RootComponent.h"
+#include "../UI_ToolKit/ToggleButton.h"
 
 #include <memory>
 #include <vector>
@@ -21,7 +22,12 @@
 #include "Object.h"
 #include "TopBar.h"
 
-#include "../UI_ToolKit/ToggleButton.h"
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
 
 class GraphManager;
 class App : public pptk::RootComponent {

@@ -235,12 +235,6 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    auto app = std::make_unique<App>(&graphs);
-    // FIXME: hack to make the app have a starting size!
-    app->setBounds(0, 0, newWidth, newHeight);
-
-    pptk::EventManager eventManager(app.get());
-
     bool running = true;
     SDL_Event event;
 
@@ -254,10 +248,10 @@ int main(int argc, char* argv[])
     }
 
     int semiBold = nvgCreateFont(nvg, "SemiBold", "Assets/Fonts/Inter_18pt-SemiBold.ttf");
-    if (semiBold == -1) {
+    if (semiBold == -1)
+    {
         std::cerr << "Failed to load inter font!" << std::endl;
     }
-
 
     int iconFontHandle = nvgCreateFont(nvg, "icons", "Assets/Icons/IconFontPlugPatch_google.ttf");
     if (iconFontHandle == -1) {
@@ -268,6 +262,16 @@ int main(int argc, char* argv[])
     if (objectIconFontHandle == -1) {
         std::cerr << "Failed to load icon font!" << std::endl;
     }
+
+    std::vector<std::string> fonts = { "Regular", "SemiBold", "icons", "object_icons" };
+
+    auto app = std::make_unique<App>(&graphs);
+    // FIXME: hack to make the app have a starting size!
+    app->setBounds(0, 0, newWidth, newHeight);
+
+    pptk::EventManager eventManager(app.get());
+
+    app->cacheFontMetrics(nvg, fonts);
 
     const int targetFPS = 120;                       // Desired frame rate
     const int targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds

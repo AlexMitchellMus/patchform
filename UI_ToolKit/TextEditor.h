@@ -44,6 +44,7 @@ public:
         {
             // We get the textbounds from the NVG text
             float fullTextWidth = nvgTextBounds(vg, 0, 0, text.c_str(), nullptr, nullptr);
+            std::cout << "================= text width from nvg: " << fullTextWidth << std::endl;
             float textBounds[4] = { 0.0f };
             float textWidth = nvgTextBounds(vg, 0, 0, text.substr(0, cursorPos).c_str(), nullptr, textBounds);
             // This is the format of the text bounds
