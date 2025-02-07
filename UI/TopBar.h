@@ -29,9 +29,17 @@ class MainVolumeMeter : public pptk::Component
 
         // Normalize dB range (-dbRange dB to 0 dB) to [0, 1] range
         //meterPeakValue = (dbValue + dbRange) / dbRange; // Maps -dbRange (0) to 0dB (1)
-        meterPeakValue = std::clamp(value, 0.0f, 1.0f); // Ensure it stays in bounds
+        meterPeakValue = std::clamp(value, 0.0f, 1.0f);
 
-        repaint();
+        // Scale the value to represent how large it would be in the UI
+        // If there hasn't been a half-pixel change don't repaint.
+        float meterWidth = width - (height * 2) * getAccumulatedScale();
+        int scaledPos = meterPeakValue * meterWidth * 2;
+        if (peakMeterPos != scaledPos)
+        {
+            peakMeterPos = scaledPos;
+            repaint();
+        }
     }
 
     float getValue()
@@ -63,6 +71,7 @@ class MainVolumeMeter : public pptk::Component
     }
 private:
     float meterPeakValue = 0.0f;
+    int peakMeterPos = 0;
 };
 
 class MainMenu : public pptk::PopupComponent

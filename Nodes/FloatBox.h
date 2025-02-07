@@ -67,7 +67,7 @@ public:
             if (getIsSelected()) outLineCol = nvgRGB(28, 73, 119);
             nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
 
-            nvgFontSize(nvg, 18.0f);
+            nvgFontSize(nvg, 16.0f);
             nvgFontFace(nvg, "Regular");
             nvgFillColor(nvg, nvgRGB(190, 190, 190));
             nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);

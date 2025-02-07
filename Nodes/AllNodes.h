@@ -15,7 +15,7 @@
 #include "Metronome.h"
 #include "Envelope.h"
 #include "LFO.h"
-#include "Volume.h"
+#include "Gain.h"
 #include "AudioOut.h"
 #include "Print.h"
 #include "Count.h"

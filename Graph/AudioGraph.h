@@ -837,9 +837,11 @@ public:
         case hash("lfo"):
             return addNode<LFO>(idString, node);
 
+        // TODO: Remove old name, but leave in vol & volume for now
         case hash("vol"):
         case hash("volume"):
-            return addNode<Volume>(idString, node);
+        case hash("gain"):
+            return addNode<Gain>(idString, node);
 
         case hash("osc"):
         case hash("oscillator"):

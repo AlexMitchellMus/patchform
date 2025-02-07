@@ -10,7 +10,7 @@
 
 // AddNode that sums two signals
 class Count : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Count", "cnt");
+    DEFINE_AND_REGISTER_NODE("Count", "count");
 
     IntParameter* minCountParam;
     IntParameter* maxCountParam;

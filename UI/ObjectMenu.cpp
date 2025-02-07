@@ -16,7 +16,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { {{"obj", "Add"}}, "add", false },
         { {{"obj", "lfo"}}, ICONS::Lfo},
         { {{"obj", "env"}, {"attack", 50}, {"decay", 50}}, ICONS::Adsr},
-        { {{"obj", "vol"}}, "vol", false },
+        { {{"obj", "gain"}}, "gain", false },
         { {{"obj", "count"}}, ICONS::Count},
         { {{"obj", "dial"}, {"min", 0}, {"max", 10}, {"value", 3}}, ICONS::Dial},
         { {{"obj", "If"}}, "if", false },

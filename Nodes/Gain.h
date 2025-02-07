@@ -8,15 +8,15 @@
 
 #include "AudioNodeBase.h"
 
-// VolumeNode that multiplies the outputs of two input nodes
-class Volume : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Volume", "vol");
+// Gain node that multiplies the outputs of two input nodes
+class Gain : public AudioNode {
+    DEFINE_AND_REGISTER_NODE("Gain", "gain");
 
     float eventVal1 = 0.0f;
     float eventVal2 = 0.0f;
 
 public:
-    Volume(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
+    Gain(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("A", AudioPort::PortType::Signal);
         addInputPort("B", AudioPort::PortType::Signal);
