@@ -89,18 +89,13 @@ namespace pptk
 
         void cacheFontMetrics(NVGcontext* vg, const std::vector<std::string>& fonts, const std::vector<float>& sizes)
         {
-            nvgBeginFrame(vg, 1, 1, 1.0f);
-            fontMetricsCache.cacheFontMetrics(vg, fonts, sizes);
+            // Use nanovg state once to cache font metrics
+            nvgBeginFrame(vg, 0, 0, 1.0f);
+            fontMetricsCache.cacheFontMetrics(vg, fonts);
             nvgEndFrame(vg);
-
-            std::cout << "Cached fonts: ";
-            for (const auto& entry : fontMetricsCache.glyphCacheMap) {
-                std::cout << "\"" << entry.first << "\" ";
-            }
-            std::cout << std::endl;
         }
 
-        float getTextWidth(const std::string& fontName, const float size, const std::string& text) const
+        float getTextWidth(const std::string& fontName, const float size, const std::string& text)
         {
             return fontMetricsCache.getTextWidth(fontName, size, text);
         }

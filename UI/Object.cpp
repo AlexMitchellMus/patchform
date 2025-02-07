@@ -10,7 +10,11 @@
 
 #include <glaze/reflection/get_name.hpp>
 
-Object::Object(AudioNode* node) : nodeID(node->nodeID), audioNode(node), name(node->getName())
+Object::Object(AudioNode* node)
+    : nodeID(node->nodeID)
+    , audioNode(node)
+    , shortName(node->getShortName())
+    , name(node->getName())
 {
     setBounds(0, 0, 120, 40);
 
@@ -45,7 +49,6 @@ Object::Object(const std::string& name) : name(name)
 
     outPorts.push_back(std::make_unique<Port>(0, Port::PortType::Audio, Port::Direction::Output));
     addComponent(outPorts.back().get());
-    Object::resized();
 }
 
 Object::~Object()
@@ -61,6 +64,14 @@ void Object::resized()
 {
     int portDiam = 10;
     int numInputs = static_cast<int>(inPorts.size());
+
+    if (!isCustomUI())
+    {
+        textCacheWidth = getTextWidthForFont("Regular", 16.0f, shortName);
+        auto finalWidth = std::max(textCacheWidth + 20, inPorts.size() * 20.0f);
+        setBounds(0, 0, finalWidth, getHeight());
+    }
+
     float spacing = (getWidth() - 2 - (numInputs * portDiam)) / std::max(1, numInputs - 1);
 
     for (int i = 0; i < inPorts.size(); ++i)
@@ -72,13 +83,12 @@ void Object::resized()
     {
         outPorts[0]->setBounds(1, getHeight() - portDiam - 1, portDiam, portDiam);
     }
+
+    repaint();
 }
 
 void Object::mouseEnter(pptk::CompEvent& e)
 {
-    std::cout << "name from cache: " << name << " : " << getTextWidthForFont("Regular", 1000.0f, name) << std::endl;
-
-
     isHovered = true;
     repaint();
 }
@@ -155,12 +165,21 @@ void Object::drawBackground(NVGcontext* nvg)
 
 void Object::drawGUI(NVGcontext* nvg)
 {
-    nvgFontSize(nvg, 1000.0f);
+    nvgFontSize(nvg, 16.0f);
     nvgFontFace(nvg, "Regular");
     nvgFillColor(nvg, nvgRGB(190, 190, 190));
     nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-    std::cout << "name: " << name << " width: " << nvgTextBounds(nvg, 0, 0, name.c_str(), nullptr, nullptr) << std::endl;
+    nvgText(nvg, 10, height / 2, shortName.c_str(), nullptr);
 
-    nvgText(nvg, 10, height / 2, name.c_str(), nullptr);
+//#define  DEBUG_FONT_METRICS
+#ifdef DEBUG_FONT_METRICS
+    auto none = nvgRGBA(255, 0, 0, 0);
+    auto red = nvgRGB(255, 0, 0);
+    auto green = nvgRGB(0, 255, 0);
+
+    auto textW = nvgTextBounds(nvg, 0, 0, shortName.c_str(), nullptr, nullptr);
+    nvgDrawRoundedRect(nvg, 10, 0, textW, 32, none, red, 0);
+    nvgDrawRoundedRect(nvg, 10, 0, textCacheWidth, 32, none, green, 0);
+#endif
 }

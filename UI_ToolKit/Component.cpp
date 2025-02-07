@@ -84,18 +84,18 @@ Component* Component::findComponentAt(int globalX, int globalY, Component* selfC
 
 Component* Component::getRootComponent()
 {
-    // Find the root component, because we can assign components inside constructors, so root can't be set
-    if (rootComponent)
+    // Return the cached root if available.
+    if (rootComponent != nullptr)
         return rootComponent;
 
     Component* current = this;
-    while (current->parent)
+    // Traverse upward until no parent exists.
+    while (current->parent != nullptr)
     {
         current = current->parent;
     }
-
+    // Cache the computed root.
     rootComponent = current;
-
     return current;
 }
 
@@ -108,6 +108,8 @@ void Component::addComponent(Component* child)
 
     child->parent = this;
     children.push_back(child);
+    child->rootComponent = rootComponent;
+    child->resized();
 
     if (auto resizibleChild = dynamic_cast<ResizableComponent*>(child))
     {
@@ -129,6 +131,8 @@ void Component::removeFromParent()
 
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
         parent = nullptr;
+        // FIXME: not sure if we should or shouldn't do this, leave it out for now
+        //rootComponent = nullptr;
     }
 }
 
@@ -341,7 +345,7 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     {
         return root->getTextWidth(fontName, size, text);
     }
-    return 0.0f;
+    return -3.0f;
 }
 
 }

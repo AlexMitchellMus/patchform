@@ -30,6 +30,8 @@ public:
     public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
+            setSize(150, getHeight());
+
             reinterpret_cast<FloatBox*>(audioNode)->repaintFromDSP = [this]()
             {
                 isDirty.store(true);
@@ -53,6 +55,8 @@ public:
                 }
             }
         }
+
+        bool isCustomUI() const override { return true; }
 
         void render(NVGcontext* nvg) override
         {

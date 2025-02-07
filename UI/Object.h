@@ -34,6 +34,7 @@ public:
     void render(NVGcontext* nvg) override;
     void drawBackground(NVGcontext* nvg);
     virtual void drawGUI(NVGcontext* nvg);
+    virtual bool isCustomUI() const { return false; }
 
     [[nodiscard]] const std::string& getName() const { return name; }
 
@@ -60,6 +61,7 @@ public:
     AudioNode* audioNode = nullptr;
 
 private:
+    std::string shortName;
     std::string name;
     json definition;
     std::vector<std::unique_ptr<Port>> inPorts;
@@ -70,6 +72,8 @@ private:
     friend class Canvas;
 
     bool multiSelected = false;
+
+    float textCacheWidth = -1.0f;
 
     bool isGuiTransparent = false;
 };

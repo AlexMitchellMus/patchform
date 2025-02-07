@@ -73,6 +73,8 @@ public:
             }
         }
 
+        bool isCustomUI() const override { return true; }
+
         void drawGUI(NVGcontext* nvg) override
         {
             const auto centre = getWidth() * 0.5f;
