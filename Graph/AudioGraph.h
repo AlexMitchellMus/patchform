@@ -857,6 +857,9 @@ public:
         case hash("ping"):
             return addNode<Ping>(idString, node);
 
+        case hash("scope"):
+            return addNode<Scope>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

@@ -23,3 +23,4 @@
 #include "Dial.h"
 #include "FloatBox.h"
 #include "Ping.h"
+#include "Scope.h"

@@ -22,6 +22,8 @@ public:
     moodycamel::ConcurrentQueue<bool> eventQueue;
     moodycamel::ConcurrentQueue<bool> eventQueueFromDSP;
 
+    bool isDefaultUI() const override { return false; };
+
     class UI final : public AudioNode::UI
     {
         std::atomic<bool> isDirty = std::atomic<bool>(false);
@@ -82,8 +84,6 @@ public:
                 counter++;
             });
         }
-
-        bool isCustomUI() const override { return true; }
 
         void drawGUI(NVGcontext* nvg) override
         {

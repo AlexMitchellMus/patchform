@@ -84,6 +84,8 @@ protected:
     };
 public:
 
+    virtual bool isDefaultUI() const { return true; };
+
     UI* getOrCreateUI()
     {
         // The default factory method creates a DefaultUI instance.

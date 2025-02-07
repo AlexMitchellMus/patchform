@@ -24,6 +24,8 @@ public:
     // Lock-free queue for UI -> Audio communication
     moodycamel::ConcurrentQueue<float> queueFromDSP;
 
+    bool isDefaultUI() const override { return false; };
+
     class UI final : public AudioNode::UI
     {
         std::atomic<bool> isDirty = std::atomic<bool>(false);
@@ -55,8 +57,6 @@ public:
                 }
             }
         }
-
-        bool isCustomUI() const override { return true; }
 
         void render(NVGcontext* nvg) override
         {

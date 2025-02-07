@@ -10,13 +10,63 @@
 
 #include <glaze/reflection/get_name.hpp>
 
+class Object::InsetParameter : public Component
+{
+    public:
+    InsetParameter(Parameter* linkedParam)
+    {
+        paramDisplayText = linkedParam->getName() + " : " + linkedParam->getAsString();
+
+        linkedParam->onParameterChanged = [this, linkedParam](const std::string& newValue)
+        {
+            auto newText = linkedParam->getName() + " : " + newValue;
+            if (paramDisplayText != newText)
+            {
+                paramDisplayText = newText;
+                getParent()->resized();
+            }
+        };
+
+    };
+
+    bool hitTest(float x, float y) override
+    {
+        return false;
+    };
+
+    void render(NVGcontext* vg) override
+    {
+        auto col = nvgRGBA(44, 44, 44, 255);
+        nvgDrawRoundedRect(vg, 0, 0, width, height, col, col, 5);
+
+        nvgFontSize(vg, 13.0f);
+        nvgFontFace(vg, "Regular");
+        nvgFillColor(vg, nvgRGB(120, 120, 120));
+        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+
+        nvgText(vg, width / 2, height / 2, paramDisplayText.c_str(), nullptr);
+    }
+
+    std::string paramDisplayText;
+};
+
 Object::Object(AudioNode* node)
     : nodeID(node->nodeID)
     , audioNode(node)
     , shortName(node->getShortName())
     , name(node->getName())
+    , useDefaultUI(node->isDefaultUI())
 {
     setBounds(0, 0, 120, 40);
+
+    if (useDefaultUI)
+    {
+        for (const auto& param : node->getParameters())
+        {
+            insetParameters.push_back(std::make_unique<InsetParameter>(param.get()));
+            addComponent(insetParameters.back().get());
+        }
+    }
 
     auto convertPortType = [](const AudioPort::PortType& type) {
         return (type == AudioPort::Signal) ? Port::PortType::Audio :
@@ -34,6 +84,7 @@ Object::Object(AudioNode* node)
         outPorts.push_back(std::make_unique<Port>(0, convertPortType(node->outputPort.getPortType()), Port::Direction::Output));
         addComponent(outPorts.back().get());
     }
+
     Object::resized();
 }
 
@@ -65,11 +116,29 @@ void Object::resized()
     int portDiam = 10;
     int numInputs = static_cast<int>(inPorts.size());
 
-    if (!isCustomUI())
+    int insetParamOffset = 0;
+
+    if (useDefaultUI)
     {
-        textCacheWidth = getTextWidthForFont("Regular", 16.0f, shortName);
-        auto finalWidth = std::max(textCacheWidth + 20, inPorts.size() * 20.0f);
-        setBounds(0, 0, finalWidth, getHeight());
+        nameWidth = getTextWidthForFont("Regular", 16.0f, shortName);
+
+        for (int i = 0; i < insetParameters.size(); i++)
+        {
+            auto iP = insetParameters[i].get();
+            constexpr int parmHeight = 16;
+            iP->setBounds(nameWidth + 20 + insetParamOffset, height * 0.5f - parmHeight * 0.5f, getTextWidthForFont("Regular", 14.0f, iP->paramDisplayText) + 4, parmHeight);
+            insetParamOffset += iP->getWidth() + 10;
+        }
+
+        auto currentBounds = getBounds();
+        auto finalWidth = std::max(nameWidth + 20 + insetParamOffset, inPorts.size() * 20.0f);
+        setBounds(currentBounds.x, currentBounds.y, finalWidth, getHeight());
+
+        if (finalWidth != currentBounds.w)
+        {
+            if (const auto* cnv = findParentOfClass<Canvas>())
+                cnv->updateConnectionsPosition();
+        }
     }
 
     float spacing = (getWidth() - 2 - (numInputs * portDiam)) / std::max(1, numInputs - 1);

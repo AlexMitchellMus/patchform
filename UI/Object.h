@@ -34,7 +34,6 @@ public:
     void render(NVGcontext* nvg) override;
     void drawBackground(NVGcontext* nvg);
     virtual void drawGUI(NVGcontext* nvg);
-    virtual bool isCustomUI() const { return false; }
 
     [[nodiscard]] const std::string& getName() const { return name; }
 
@@ -61,11 +60,15 @@ public:
     AudioNode* audioNode = nullptr;
 
 private:
+    bool useDefaultUI = true;
     std::string shortName;
     std::string name;
     json definition;
     std::vector<std::unique_ptr<Port>> inPorts;
     std::vector<std::unique_ptr<Port>> outPorts;
+
+    class InsetParameter;
+    std::vector<std::unique_ptr<InsetParameter>> insetParameters;
 
     bool isHovered = false;
 
@@ -73,7 +76,7 @@ private:
 
     bool multiSelected = false;
 
-    float textCacheWidth = -1.0f;
+    float nameWidth = -1.0f;
 
     bool isGuiTransparent = false;
 };

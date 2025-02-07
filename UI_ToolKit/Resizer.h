@@ -43,6 +43,11 @@ public:
         draggingEdge = DraggedEdge::None;
     }
 
+    void mouseEnter(CompEvent& e) override
+    {
+        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_W_RESIZE));
+    }
+
     void mouseLeave(CompEvent& e) override
     {
         SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
@@ -60,7 +65,6 @@ public:
             if (x > 0 && x < 8)
             {
                 draggingEdge = DraggedEdge::Left;
-                SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_W_RESIZE));
                 return true;
             }
             break;
@@ -68,7 +72,6 @@ public:
             if (x > getWidth() - 8 && x < getWidth())
             {
                 draggingEdge = DraggedEdge::Right;
-                SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_W_RESIZE));
                 return true;
             }
             break;

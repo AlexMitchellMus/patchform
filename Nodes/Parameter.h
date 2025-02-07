@@ -8,6 +8,8 @@ class Parameter
 public:
     std::string name;
 
+    std::function<void(std::string)> onParameterChanged = [](std::string){};
+
     Parameter(const std::string& paramName) : name(paramName)
     {
     }
@@ -34,6 +36,8 @@ public:
     {
         value = newValue;
         queue.enqueue(newValue);
+
+        onParameterChanged(getAsString());
     }
 
     float getValue()
@@ -53,7 +57,26 @@ public:
         } catch (...) {}
     }
 
-    std::string getAsString() const override { return std::to_string(value); }
+    std::string getAsString() const override
+    {
+        if (std::fabs(value - std::round(value)) < 1e-9)
+        {
+            return std::to_string(static_cast<int>(std::round(value)));
+        }
+        // Format the value with a fixed precision.
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(6) << value;
+        std::string s = oss.str();
+
+        // Trim trailing zeros.
+        s.erase(s.find_last_not_of('0') + 1, std::string::npos);
+        // If the last character is now a dot, remove it.
+        if (!s.empty() && s.back() == '.')
+        {
+            s.pop_back();
+        }
+        return s;
+    }
 
 private:
     float value, minValue, maxValue;
@@ -73,6 +96,8 @@ public:
     void setValue(int newValue)
     {
         queue.enqueue(newValue);
+
+        onParameterChanged(std::to_string(newValue));
     }
 
     int getValue()

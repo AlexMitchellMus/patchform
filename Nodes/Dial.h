@@ -25,6 +25,11 @@ class Dial final : public AudioNode
 public:
 #ifdef PATCHFORM_WITH_GUI
 
+    bool isDefaultUI() const override
+    {
+        return false;
+    }
+
     // Lock-free queue for UI -> Audio communication
     moodycamel::ConcurrentQueue<float> eventQueue;
 
@@ -72,8 +77,6 @@ public:
                 else AudioNode::UI::mouseDrag(position, delta, button);
             }
         }
-
-        bool isCustomUI() const override { return true; }
 
         void drawGUI(NVGcontext* nvg) override
         {
