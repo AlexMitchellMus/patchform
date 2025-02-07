@@ -13,6 +13,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
     ObjectDef objectDef[20] = {
         { {{"obj", "Metro"}}, ICONS::Metro},
         { {{"obj", "Osc"}, {"waveform", "sine"}, {"freq",  440}}, ICONS::Osc},
+        { {{"obj", "Osc"}, {"waveform", "saw"}, {"freq",  440}}, "saw", false},
         { {{"obj", "Add"}}, "add", false },
         { {{"obj", "lfo"}}, ICONS::Lfo},
         { {{"obj", "env"}, {"attack", 50}, {"decay", 50}}, ICONS::Adsr},

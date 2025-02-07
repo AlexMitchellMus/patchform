@@ -7,7 +7,7 @@
 #pragma once
 
 #include "AudioNodeBase.h"
-#include <vector>
+#include <array>
 #include <iostream>         // For debugging output
 #include "nanovg.h"         // NanoVG drawing API header.
 #include "concurrentqueue.h"// Moodycamel's lock-free queue header.
@@ -21,84 +21,95 @@ class Scope final : public AudioNode
 public:
 #ifdef PATCHFORM_WITH_GUI
 
-    bool isDefaultUI() const override
+    bool isDefaultUI() const override { return false; }
+
+    // Use a fixed buffer size for DSP.
+    static constexpr size_t DSP_BUFFER_SIZE = 1024;
+    // Define BufferType as a fixed-size std::array.
+    using BufferType = std::array<float, DSP_BUFFER_SIZE>;
+
+    // Enqueue fixed–size buffers.
+    moodycamel::ConcurrentQueue<BufferType> eventQueue;
+
+class UI final : public AudioNode::UI
+{
+public:
+    // Define the fixed DSP buffer size.
+    static constexpr size_t DSP_BUFFER_SIZE = 1024;
+    // Use std::array for fixed-size buffers.
+    using BufferType = std::array<float, DSP_BUFFER_SIZE>;
+
+    explicit UI(AudioNode* node) : AudioNode::UI(node)
     {
-        return false;
+        // Set a fixed size for the oscilloscope widget.
+        setSize(400, 100);
     }
 
-    // We enqueue entire audio buffers as vectors.
-    // Each enqueued vector will contain exactly 1024 samples.
-    moodycamel::ConcurrentQueue<std::vector<float>> eventQueue;
-
-    class UI final : public AudioNode::UI
+    // updateGraphValues() drains the queue and updates the waveform state.
+    void updateGraphValues() override
     {
-    public:
-        explicit UI(AudioNode* node) : AudioNode::UI(node)
+        auto scope = reinterpret_cast<Scope*>(audioNode);
+        BufferType newBuffer;
+        bool newData = false;
+
+        // Drain any new fixed-size buffers from the queue.
+        while (scope->eventQueue.try_dequeue(newBuffer))
         {
-            // Set a fixed widget size.
-            // (The widget width in pixels is independent of the number of samples drawn.)
-            setSize(400, 100);
+            waveform = newBuffer;
+            waveformValid = true;
+            newData = true;
         }
 
-        // Called (e.g., via a timer) to update the UI.
-        void updateGraphValues() override
-        {
+        // Only trigger a repaint if we got new data.
+        if (newData)
             repaint();
-        }
+    }
 
-        void drawGUI(NVGcontext* nvg) override
+    // drawGUI() now simply draws the current waveform.
+    void drawGUI(NVGcontext* nvg) override
+    {
+        const int w = getWidth();
+        const int h = getHeight();
+
+        // Draw a dark, rounded background.
+        auto bg = nvgRGBA(30, 30, 30, 255);
+        nvgDrawRoundedRect(nvg, 1, 1, w - 2, h - 2, bg, bg, 5);
+
+        if (!waveformValid)
+            return;
+
+        // Draw exactly DSP_BUFFER_SIZE samples along the horizontal axis.
+        constexpr size_t DISPLAY_SIZE = DSP_BUFFER_SIZE;
+        float xStep = static_cast<float>(w) / (DISPLAY_SIZE - 1);
+
+        nvgBeginPath(nvg);
+        float x = 0.0f;
+        // Map the first sample (assumed to be in [-1, 1]) vertically.
+        float prevY = h * 0.5f - waveform[0] * (h * 0.5f);
+        nvgMoveTo(nvg, x, prevY);
+
+        // Define a threshold (in pixels) for detecting discontinuities.
+        const float discontinuityThreshold = 20.0f; // Adjust as needed
+
+        for (size_t i = 1; i < DISPLAY_SIZE; ++i)
         {
-            const int w = getWidth();
-            const int h = getHeight();
-
-            // Draw a dark, rounded background.
-            auto bg = nvgRGBA(30, 30, 30, 255);
-            nvgDrawRoundedRect(nvg, 1, 1, w - 2, h - 2, bg, bg, 5);
-
-            // Drain any new audio buffers from the node’s queue.
-            auto scope = reinterpret_cast<Scope*>(audioNode);
-            std::vector<float> newBuffer;
-            while (scope->eventQueue.try_dequeue(newBuffer))
-            {
-                // Instead of appending, simply replace the current waveform
-                // with the newly received 1024-sample buffer.
-                waveform = std::move(newBuffer);
-            }
-
-            // If no waveform is available, nothing to draw.
-            if (waveform.empty())
-                return;
-
-            // We want to display exactly 1024 samples horizontally.
-            constexpr size_t DISPLAY_SIZE = 1024;
-            // (Even if the received vector is not 1024 samples, use whatever is available.)
-            size_t numSamples = (waveform.size() < DISPLAY_SIZE) ? waveform.size() : DISPLAY_SIZE;
-
-            // Map the 1024 (or fewer) samples evenly along the widget’s width.
-            float xStep = static_cast<float>(w) / (DISPLAY_SIZE - 1);
-            float x = 0.0f;
-            // Assume sample values are in [-1, 1]; map them so that 1 is at the top and -1 at the bottom.
-            float y = h * 0.5f - waveform[0] * (h * 0.5f);
-            nvgBeginPath(nvg);
-            nvgMoveTo(nvg, x, y);
-
-            // Draw a line through each sample.
-            for (size_t i = 1; i < DISPLAY_SIZE && i < waveform.size(); ++i)
-            {
-                x = i * xStep;
-                y = h * 0.5f - waveform[i] * (h * 0.5f);
-                nvgLineTo(nvg, x, y);
-            }
-
-            nvgLineStyle(nvg, NVG_SOLID);
-            nvgStrokeColor(nvg, nvgRGBA(200, 200, 200, 255));
-            nvgStrokeWidth(nvg, 1.0f);
-            nvgStroke(nvg);
+            x = i * xStep;
+            float currentY = h * 0.5f - waveform[i] * (h * 0.5f);
+            nvgLineTo(nvg, x, currentY);
         }
-    private:
-        // Local buffer that holds the most recent 1024 samples.
-        std::vector<float> waveform;
-    };
+
+        nvgLineStyle(nvg, NVG_SOLID);
+        nvgStrokeColor(nvg, nvgRGBA(200, 200, 200, 255));
+        nvgStrokeWidth(nvg, 1.0f);
+        nvgStroke(nvg);
+    }
+
+private:
+    // Buffer holding the most recent DSP_BUFFER_SIZE samples.
+    BufferType waveform;
+    bool waveformValid = false;
+};
+
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
@@ -114,40 +125,58 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    // The audio processing callback.
-    void processAudio(float* out, const unsigned long frameCount) override
+    // DSP processing callback that uses a fixed-size array.
+    void processAudio(float* /*out*/, const unsigned long frameCount) override
     {
-        // Get the pointer to the first channel’s audio buffer.
         const float* inputBuffer = inputPortBuffers[0]->getAudioBuffer();
         if (!inputBuffer)
             return;
 
-        // Accumulate incoming samples.
-        accumulationBuffer.insert(accumulationBuffer.end(), inputBuffer, inputBuffer + frameCount);
-
-        // When we have at least 1024 samples, package exactly 1024 samples into a vector
-        // and enqueue it for the UI to display.
-        constexpr size_t DISPLAY_SIZE = 1024;
-        while (accumulationBuffer.size() >= DISPLAY_SIZE)
+        // Process each incoming sample.
+        for (unsigned long i = 0; i < frameCount; ++i)
         {
-            // Create a vector containing the first 1024 samples.
-            std::vector<float> buffer(accumulationBuffer.begin(),
-                                      accumulationBuffer.begin() + DISPLAY_SIZE);
-            eventQueue.enqueue(std::move(buffer));
+            dspBuffer[dspBufferIndex++] = inputBuffer[i];
 
-            // Remove the enqueued samples from the accumulation buffer.
-            accumulationBuffer.erase(accumulationBuffer.begin(),
-                                     accumulationBuffer.begin() + DISPLAY_SIZE);
+            // When dspBuffer is full, sync on a rising edge.
+            if (dspBufferIndex == DSP_BUFFER_SIZE)
+            {
+                int triggerIndex = -1;
+                // Look for a rising edge: a transition from negative to zero or positive.
+                for (size_t j = 1; j < DSP_BUFFER_SIZE; ++j)
+                {
+                    if (dspBuffer[j - 1] < 0.0f && dspBuffer[j] >= 0.0f)
+                    {
+                        triggerIndex = static_cast<int>(j);
+                        break;
+                    }
+                }
+                // If no rising edge is found, default to 0.
+                if (triggerIndex < 0)
+                    triggerIndex = 0;
+
+                // Create a fixed–size buffer (std::array) with the synchronized data.
+                BufferType buffer;
+                for (size_t j = 0; j < DSP_BUFFER_SIZE; ++j)
+                {
+                    buffer[j] = dspBuffer[(triggerIndex + j) % DSP_BUFFER_SIZE];
+                }
+                // Enqueue the fixed–size buffer.
+                eventQueue.enqueue(std::move(buffer));
+
+                // Reset the dspBuffer index for new incoming samples.
+                dspBufferIndex = 0;
+            }
         }
 
-        // Optionally, if you want to pass audio through, you can copy the input to the output.
         // std::copy(inputBuffer, inputBuffer + frameCount, out);
     }
 #endif
 
 private:
 #ifdef PATCHFORM_WITH_GUI
-    // Buffer to accumulate incoming samples.
-    std::vector<float> accumulationBuffer;
+    // Fixed–size DSP buffer to accumulate samples.
+    std::array<float, DSP_BUFFER_SIZE> dspBuffer{};
+    // Current index in dspBuffer.
+    size_t dspBufferIndex = 0;
 #endif
 };

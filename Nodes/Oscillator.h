@@ -102,7 +102,7 @@ public:
         waveform = objParams.value("waveform", "sine");
         freq = objParams.value("freq", 440.0f);
 
-        addParameter<StringParameter>("Waveform", "sine");
+        addParameter<StringParameter>("Waveform", waveform);
 
         initializeWaveformTable(this->waveform, this->useTable);
     }
