@@ -91,6 +91,7 @@ public:
         switch (keycode)
         {
         case SDLK_BACKSPACE:
+            editorFirstActive = false;
             if (!text.empty() && cursorPos > 0)
             {
                 text.erase(cursorPos - 1, 1);
@@ -100,6 +101,7 @@ public:
             }
             break;
         case SDLK_LEFT:
+            editorFirstActive = false;
             if (cursorPos > 0)
             {
                 cursorPos--;
@@ -107,6 +109,7 @@ public:
             }
             break;
         case SDLK_RIGHT:
+            editorFirstActive = false;
             if (cursorPos < text.length())
             {
                 cursorPos++;
