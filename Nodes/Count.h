@@ -28,8 +28,8 @@ public:
         countValue = minCount = objParams.value("min", 1);
         maxCount = objParams.value("max", 10);
 
-        minCountParam = addParameter<IntParameter>("Min:", minCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-        maxCountParam = addParameter<IntParameter>("Max:", maxCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        minCountParam = addParameter<IntParameter>("Min", minCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        maxCountParam = addParameter<IntParameter>("Max", maxCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
     }
 
     void processAudio(float* out, unsigned long frameCount) override

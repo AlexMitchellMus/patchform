@@ -29,9 +29,9 @@ public:
     {
         auto const hz = objParams.value("hz", 1.0f);
 
-        tickParam = addParameter<FloatParameter>("Hz", hz, 0.00001f, std::numeric_limits<float>::max());
+        tickParam = addParameter<FloatParameter>("Hz", hz, 0.0f, std::numeric_limits<float>::max());
 
-        tickInterval = context->sampleRate / hz;
+        tickInterval = hz == 0.0f ? 0.0f : context->sampleRate / hz;
 
         addInputPort("ControlInput", AudioPort::PortType::Data);
     }
@@ -40,7 +40,12 @@ public:
     {
         float samplesProcessed = 0.0f;
 
-        tickInterval = context->sampleRate / tickParam->getValue();
+        auto hz = tickParam->getValue();
+
+        if (hz == 0.0f || tickInterval == 0.0f)
+            return;
+
+        tickInterval = context->sampleRate / hz;
 
         auto events = inputPortBuffers[0]->getEvents();
 

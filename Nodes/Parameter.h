@@ -34,10 +34,13 @@ public:
 
     void setValue(float newValue)
     {
-        value = newValue;
-        queue.enqueue(newValue);
+        if (newValue <= maxValue && newValue >= minValue)
+        {
+            value = newValue;
+            queue.enqueue(newValue);
 
-        onParameterChanged(getAsString());
+            onParameterChanged(getAsString());
+        }
     }
 
     float getValue()
@@ -95,9 +98,12 @@ public:
 
     void setValue(int newValue)
     {
-        queue.enqueue(newValue);
-
-        onParameterChanged(std::to_string(newValue));
+        if (newValue <= maxValue && newValue >= minValue)
+        {
+            value = newValue;
+            queue.enqueue(newValue);
+            onParameterChanged(std::to_string(newValue));
+        }
     }
 
     int getValue()

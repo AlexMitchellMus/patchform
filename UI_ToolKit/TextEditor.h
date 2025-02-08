@@ -124,6 +124,7 @@ public:
             {
                 editorFirstActive = false;
                 text.clear();
+                cursorPos = 0;
             }
 
             onCharInput(keycode);
