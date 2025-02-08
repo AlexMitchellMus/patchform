@@ -25,13 +25,13 @@ namespace pptk
             {
                 if (componentPtr) // Ensure component still exists
                 {
-                    callback(); // Execute the callback (even if the original vector changed)
+                    callback(time); // Execute the callback (even if the original vector changed)
                 }
             }
         }
 
 
-        void registerTimerCallback(Component* c, const std::function<void()>& callback)
+        void registerTimerCallback(Component* c, const std::function<void(uint32_t)>& callback)
         {
             unregisterTimerCallback(c);
 
@@ -108,6 +108,6 @@ namespace pptk
         SafePointer<Component> hoveredComponent;
         SafePointer<Component> clickedComponent;
 
-        std::vector<std::tuple<Component*, std::function<void()>>> timerCallbacks;
+        std::vector<std::tuple<Component*, std::function<void(uint32_t)>>> timerCallbacks;
     };
 }

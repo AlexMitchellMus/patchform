@@ -36,7 +36,7 @@ public:
 
             pingNode->repaintFromDSP = [this]()
             {
-                isDirty.store(true);
+                isDirty.store(true, std::memory_order::release);
             };
         };
 
@@ -44,6 +44,7 @@ public:
         {
             if (isDirty.load())
             {
+                isDirty.store(false, std::memory_order::memory_order_acquire);
                 auto ping = reinterpret_cast<Ping*>(audioNode);
 
                 bool receivedEvent = false;
@@ -72,16 +73,14 @@ public:
         {
             triggered = true;
             repaint();
-            counter = 0;
-            startFrameTimer([this]() mutable {
-                if (counter > 15)
+            triggerStartTime = SDL_GetTicks();
+            startFrameTimer([this](uint32_t time) mutable {
+                if (time - triggerStartTime >= 90)
                 {
                     stopFrameTimer();
                     triggered = false;
                     repaint();
-                    counter = 0;
                 }
-                counter++;
             });
         }
 
@@ -98,7 +97,7 @@ public:
         }
     private:
         bool triggered = false;
-        unsigned int counter = 0;
+        uint32_t triggerStartTime = 0;
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override

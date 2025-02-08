@@ -219,7 +219,7 @@ void Component::setPosition(const Point& point)
     setPosition(point.x, point.y);
 }
 
-void Component::startFrameTimer(std::function<void()> callback)
+void Component::startFrameTimer(std::function<void(uint32_t)> callback)
 {
     reinterpret_cast<RootComponent*>(getRootComponent())->registerTimerCallback(this, std::move(callback));
 }
