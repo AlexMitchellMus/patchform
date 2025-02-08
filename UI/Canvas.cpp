@@ -27,6 +27,15 @@ Canvas::Canvas(GraphManager* gm) : graphManager(gm)
         obj->setPosition((std::rand() % 800) + canvasOrigin, (std::rand() % 800) + canvasOrigin);
     }
 #endif
+
+    objectsLayer.setSize(infinteCanvasSize, infinteCanvasSize);
+    connectionsLayer.setSize(infinteCanvasSize, infinteCanvasSize);
+
+    addComponent(&objectsLayer);
+    addComponent(&connectionsLayer);
+
+    objectsLayer.setInterceptsMouseClicks(false, true);
+    connectionsLayer.setInterceptsMouseClicks(false, true);
 }
 
 std::vector<Object*> Canvas::getObjects() const
@@ -41,6 +50,11 @@ std::vector<Object*> Canvas::getObjects() const
 
     return objs;
 };
+
+void Canvas::resized()
+{
+    std::cout << "resizing canvas" << std::endl;
+}
 
 std::vector<Object*> Canvas::getSelectedObjects() const
 {
@@ -170,6 +184,7 @@ void Canvas::keyPressed(pptk::CompEvent& e)
     }
 }
 
+
 bool Canvas::consumeEvent(pptk::CompEvent& e)
 {
     const bool* keyboardState = SDL_GetKeyboardState(nullptr);
@@ -189,6 +204,7 @@ bool Canvas::consumeEvent(pptk::CompEvent& e)
     }
     return isDragging = false;
 }
+
 
 void Canvas::deleteSelectedObjects()
 {
@@ -378,6 +394,7 @@ void Canvas::render(NVGcontext* nvg)
     nvgStroke(nvg);
 }
 
+// TODO: We don't need to do this if we deal with it at the component level- remove soon!
 void Canvas::renderAll(NVGcontext* nvg)
 {
     nvgSave(nvg);
@@ -388,11 +405,15 @@ void Canvas::renderAll(NVGcontext* nvg)
     // Render the background
     render(nvg);
 
-    for (auto const& obj : objects)
+    // TODO: as we are ALSO dealing with this at the component level, don't ALSO do it here!
+    if (mode == Canvas::DisplayMode::Edit)
     {
-        // Objects are widgets that have children
-        // So we need to render child components
-        obj->renderAll(nvg);
+        renderAllObjects(nvg);
+        renderAllConnections(nvg);
+    } else if (mode == Canvas::DisplayMode::Lock)
+    {
+        renderAllConnections(nvg);
+        renderAllObjects(nvg);
     }
 
     if (newConnection)
@@ -401,17 +422,6 @@ void Canvas::renderAll(NVGcontext* nvg)
         nvgTranslate(nvg, newConnection->getX(), newConnection->getY());
 
         newConnection->render(nvg);
-
-        nvgRestore(nvg);
-    }
-
-    for (auto const& con : connections)
-    {
-        // Connections have no child components
-        nvgSave(nvg);
-        nvgTranslate(nvg, con->getX(), con->getY());
-
-        con->render(nvg);
 
         nvgRestore(nvg);
     }
@@ -430,6 +440,30 @@ void Canvas::renderAll(NVGcontext* nvg)
     nvgRestore(nvg);
 }
 
+void Canvas::renderAllObjects(NVGcontext* nvg)
+{
+    for (auto const& obj : objects)
+    {
+        // Objects are widgets that have children
+        // So we need to render child components
+        obj->renderAll(nvg);
+    }
+}
+
+void Canvas::renderAllConnections(NVGcontext* nvg)
+{
+    for (auto const& con : connections)
+    {
+        // Connections have no child components
+        nvgSave(nvg);
+        nvgTranslate(nvg, con->getX(), con->getY());
+
+        con->render(nvg);
+
+        nvgRestore(nvg);
+    }
+}
+
 // This uses the DnD object that has already been constructed, so no need to add it to the audio engine, as it's already there.
 void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
 {
@@ -441,7 +475,7 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
     // Reset the scale to 1, as the canvas itself now takes care of the object's scale!
     toAdd->scale = 1.0f;
 
-    addComponent(toAdd);
+    objectsLayer.addComponent(toAdd);
     toAdd->setPosition(position);
 
     setSelected(toAdd);
@@ -485,7 +519,7 @@ void Canvas::addConnection(Port* origin, Port* dest)
 
     auto connection = std::make_unique<Connection>(origin, dest);
 
-    addComponent(connection.get());
+    connectionsLayer.addComponent(connection.get());
 
     connection->updateConnectionGeometry();
 

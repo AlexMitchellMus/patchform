@@ -134,35 +134,40 @@ private:
             return nullptr;
         }
 
-        // Transform the global coordinates to the component's local coordinate space.
+        // Convert global coordinates to the component’s local space.
         Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
 
-        // If the current component is not hit, return nullptr.
-        if (!component->hitTest(localPos.x, localPos.y)) {
+        // Determine if this component would normally be hit.
+        bool isHit = component->hitTest(localPos.x, localPos.y);
+
+        // If this component is not hit and it doesn't allow its children to be hit,
+        // then skip it entirely.
+        if (!isHit && !component->allowsClicksOnChildComponents()) {
             return nullptr;
         }
 
-        if (component->consumeEvent(e))
+        // First, if the component is hit, ask it if it wants to consume the event.
+        // This allows a layer to decide "I want this event" (returning true) or "pass it down" (returning false).
+        if (isHit && component->consumeEvent(e)) {
             return component;
+        }
 
-        // If the component is hit, check its children.
+        // Check children in reverse order (topmost first).
         auto& children = component->getChildren();
-        // Iterate in reverse order for proper z-order (topmost components first).
-        // Iterate in reverse order using index-based access.
         for (size_t i = children.size(); i > 0; --i) {
-            {
-                Component* child = children.at(i - 1);
-                Component* hitChild = findDeepestHitComponent(child, e);
-                if (hitChild != nullptr)
-                {
-                    // Return the first child that is hit.
-                    return hitChild;
-                }
+            Component* child = children.at(i - 1);
+            Component* hitChild = findDeepestHitComponent(child, e);
+            if (hitChild != nullptr) {
+                return hitChild;
             }
         }
 
-        // No children were hit; return the current component.
-        return component;
+        // Only return this component if it was hit AND it intercepts mouse clicks.
+        if (isHit && component->interceptsMouseClicks()) {
+            return component;
+        }
+
+        return nullptr;
     }
 
     void propagateMouseButtonUp(Component* component, CompEvent& e) {

@@ -117,6 +117,37 @@ void Component::addComponent(Component* child)
     }
 }
 
+void Component::toBack()
+{
+    // If the component has no parent, there's nothing to do.
+    if (!parent)
+        return;
+
+    // Get a reference to the parent's children vector.
+    auto& siblings = parent->children;
+
+    // Find and remove this component from the siblings.
+    auto it = std::find(siblings.begin(), siblings.end(), this);
+    if (it != siblings.end())
+    {
+        siblings.erase(it);
+        // Insert at the beginning so it is drawn first (at the back).
+        siblings.insert(siblings.begin(), this);
+    }
+
+    // If this component is a ResizableComponent, also move its resizer.
+    if (auto resizable = dynamic_cast<ResizableComponent*>(this))
+    {
+        Component* resizer = &resizable->getResizer();
+        auto itResizer = std::find(siblings.begin(), siblings.end(), resizer);
+        if (itResizer != siblings.end())
+        {
+            siblings.erase(itResizer);
+            siblings.insert(siblings.begin(), resizer);
+        }
+    }
+}
+
 void Component::setVisible(bool shouldBeVisible)
 {
     visible = shouldBeVisible;

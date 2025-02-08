@@ -153,6 +153,7 @@ public:
     float getHeight() const { return height; }
 
     void addComponent(Component* child);
+    void toBack();
 
     PopupComponent* getPopupComponent();
     void setPopupComponent(std::unique_ptr<PopupComponent> popupComponent);
@@ -207,9 +208,20 @@ public:
         children.erase(std::remove(children.begin(), children.end(), child), children.end());
     }
 
+    void setInterceptsMouseClicks(bool allowClicksOnThisComponent, bool allowClicksOnChildComponents) noexcept {
+        m_allowClicksOnThisComponent = allowClicksOnThisComponent;
+        m_allowClicksOnChildComponents = allowClicksOnChildComponents;
+    }
+
+    bool allowsClicksOnChildComponents() { return m_allowClicksOnChildComponents; };
+
+    bool interceptsMouseClicks() { return m_allowClicksOnThisComponent; };
 
     // Hit test in local coords
     virtual bool hitTest(float px, float py) {
+        if (!interceptsMouseClicks())
+            return false;
+
         return px >= 0 && px <= width &&
                py >= 0 && py <= height;
     }
@@ -369,6 +381,12 @@ private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);
 
     void removeFromParent();
+
+    // If true, this component intercepts clicks; otherwise, it lets clicks pass through.
+    bool m_allowClicksOnThisComponent = true;
+
+    // If true and m_allowClicksOnThisComponent is false, then child components can still be clicked.
+    bool m_allowClicksOnChildComponents = true;
 
 protected:
     std::string name;

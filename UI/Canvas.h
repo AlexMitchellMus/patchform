@@ -15,6 +15,7 @@ class Object;
 class Port;
 class CanvasItem;
 class GraphManager;
+class CanvasInteractionLayer;
 
 //#define GENERATE_TEST_OBJECTS
 
@@ -36,6 +37,7 @@ public:
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, const pptk::Button button) override;
     void mouseWheel(pptk::CompEvent& e) override;
     void keyPressed(pptk::CompEvent& e) override;
+
     bool consumeEvent(pptk::CompEvent& e) override;
 
     void deleteSelectedObjects();
@@ -47,6 +49,8 @@ public:
 
     void render(NVGcontext* nvg) override;
     void renderAll(NVGcontext* nvg) override;
+    void renderAllObjects(NVGcontext* nvg);
+    void renderAllConnections(NVGcontext* nvg);
 
     void addObject(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
     void addFromDnDMenu(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
@@ -70,6 +74,12 @@ public:
         if (mode != newMode)
         {
             mode = newMode;
+
+            if (mode == DisplayMode::Edit)
+                objectsLayer.toBack();
+            else if (mode == DisplayMode::Lock)
+                connectionsLayer.toBack();
+
             repaint();
         }
     };
@@ -80,10 +90,18 @@ public:
     static constexpr int infinteCanvasSize = 120000;
     static constexpr int canvasOrigin = 64000;
 
+    // Non graphical components that hold objects/connections
+    // This is so we can move the connections infront/below objects
+    Component objectsLayer;
+    Component connectionsLayer;
+
 private:
     void dragCanvas(const pptk::Point&);
 
+    // TODO: Move graph manager outside of canvas!
     GraphManager* graphManager;
+
+    void resized() override;
 
     std::vector<Object*> objects;
     std::vector<std::unique_ptr<Connection>> connections;
