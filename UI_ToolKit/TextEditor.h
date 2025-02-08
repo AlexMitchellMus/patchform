@@ -86,9 +86,6 @@ public:
     {
         if (!editorActive) return;
 
-        editorFirstActive = false;
-        repaint();
-
         const auto keycode = e.sdlEvent.key.key;
 
         switch (keycode)
@@ -123,6 +120,12 @@ public:
             repaint();
             break;
         default:
+            if (editorFirstActive)
+            {
+                editorFirstActive = false;
+                text.clear();
+            }
+
             onCharInput(keycode);
             onTextChanged();
         }
