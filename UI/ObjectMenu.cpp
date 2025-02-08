@@ -50,16 +50,20 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
 
             item->onMouseDrag = [this, itemDef = item->getObjectDefinition()](pptk::Point position, const std::string& name, pptk::Point offset)
             {
-                if (dndObject)
-                {
+                auto updateDraggedObject = [this, position, offset](Object* object) {
                     pptk::Point globalPos = localToGlobal(position.x, position.y) + offset;
 
                     // Correctly center the dragged object
                     auto scaledPos = globalPos -
-                                     pptk::Point(dndObject->getWidth() * 0.5f * dndObject->scale,
-                                           dndObject->getHeight() * 0.5f * dndObject->scale);
+                        pptk::Point(object->getWidth()  * 0.5f * object->scale,
+                                    object->getHeight() * 0.5f * object->scale);
 
-                    dndObject->setPosition(scaledPos);
+                    object->setPosition(scaledPos);
+                };
+
+                if (dndObject)
+                {
+                    updateDraggedObject(dndObject.get());
                 }
                 else
                 {
@@ -69,11 +73,18 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
                         std::cerr << "Failed to create new Audio Node." << std::endl;
                         return;
                     }
-                    dndObject = newAudioNode->getOrCreateUI();
-                    dndObject->scale = cnv->scale;
-                    dndObject->opacity = 0.4f;
-                    getRootComponent()->addComponent(dndObject.get());
-                    setVisible(false);
+                    // Check it again - just to be super safe (this hasn't been an issue yet!)
+                    if ((dndObject = newAudioNode->getOrCreateUI()))
+                    {
+                        dndObject->scale = cnv->scale;
+                        dndObject->opacity = 0.4f;
+                        getRootComponent()->addComponent(dndObject.get());
+                        updateDraggedObject(dndObject.get());
+                        setVisible(false);
+                    } else
+                    {
+                        std::cerr << "Failed to create/get audio node UI!" << std::endl;
+                    }
                 }
             };
 

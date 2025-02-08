@@ -72,7 +72,8 @@ public:
         const int h = getHeight();
 
         // Draw a dark, rounded background.
-        auto bg = nvgRGBA(30, 30, 30, 255);
+        // TODO: make bg/fg colour a parameter
+        auto bg = nvgRGBA(11, 11, 11, 255);
         nvgDrawRoundedRect(nvg, 1, 1, w - 2, h - 2, bg, bg, 5);
 
         if (!waveformValid)
