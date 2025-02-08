@@ -10,22 +10,22 @@
 
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
-    ObjectDef objectDef[20] = {
-        { {{"obj", "Metro"}}, ICONS::Metro},
-        { {{"obj", "Osc"}, {"waveform", "sine"}, {"freq",  440}}, ICONS::Osc},
-        { {{"obj", "Osc"}, {"waveform", "saw"}, {"freq",  440}}, "saw", false},
-        { {{"obj", "Add"}}, "add", false },
-        { {{"obj", "lfo"}}, ICONS::Lfo},
-        { {{"obj", "env"}, {"attack", 50}, {"decay", 50}}, ICONS::Adsr},
-        { {{"obj", "gain"}}, "gain", false },
-        { {{"obj", "count"}}, ICONS::Count},
-        { {{"obj", "dial"}, {"min", 0}, {"max", 10}, {"value", 3}}, ICONS::Dial},
-        { {{"obj", "If"}}, "if", false },
-        { {{"obj", "aout"}}, ICONS::Aout},
-        { {{"obj", "floatbox"}}, "fb", false },
-        { {{"obj", "ping"}}, "Png", false },
-        { {{"obj", "ping"}, {"width", 60}, {"height", 60}}, "Png", false },
-        { {{"obj", "scope"}}, "Scp", false },
+    constexpr ObjectDef objectDef[20] = {
+        { R"({"obj": "Metro"})", ICONS::Metro, true },
+        { R"({"obj": "Osc", "waveform": "sine", "freq": 440})", ICONS::Osc, true },
+        { R"({"obj": "Osc", "waveform": "saw", "freq": 440})", "saw", false },
+        { R"({"obj": "Add"})", "add", false },
+        { R"({"obj": "lfo"})", ICONS::Lfo, true },
+        { R"({"obj": "env", "attack": 50, "decay": 50})", ICONS::Adsr, true },
+        { R"({"obj": "gain"})", "gain", false },
+        { R"({"obj": "count"})", ICONS::Count, true },
+        { R"({"obj": "dial", "min": 0, "max": 10, "value": 3})", ICONS::Dial, true },
+        { R"({"obj": "If"})", "if", false },
+        { R"({"obj": "aout"})", ICONS::Aout, true },
+        { R"({"obj": "floatbox"})", "fb", false },
+        { R"({"obj": "ping"})", "Png", false },
+        { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false },
+        { R"({"obj": "scope"})", "Scp", false }
     };
 
     for (int i = 0; i < 2; i++)
@@ -33,6 +33,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         for (int j = 0; j < 10; j++)
         {
             auto item = std::make_unique<Item>(objectDef[(i * 10) + j]);
+            if (item->isInvalid())
+                return;
             item->setBounds(16 + (j * (44 + 16)), 16 + (i * 55), 44, 44);
 
             item->onMouseUp = [this](pptk::Point position) mutable {

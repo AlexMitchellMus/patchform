@@ -15,9 +15,14 @@ class Canvas;
 
 struct ObjectDef
 {
-    json definition;
+    std::string_view definition;
     std::string_view icon;
     bool useIcon = true;
+
+    bool isEmpty()
+    {
+        return definition.length() > 0;
+    }
 };
 
 class Item : public pptk::Component
@@ -30,7 +35,11 @@ class Item : public pptk::Component
 
     Item(ObjectDef def) : definition(def.definition), icon(def.icon)
     {
-        name = !definition.empty() ? definition.value<std::string>("obj", "empty") : "empty";
+        if (!definition.empty())
+        {
+            json j = json::parse(def.definition);
+            name = j.value<std::string>("obj", "empty");
+        }
         useIcon = def.useIcon;
     };
 
@@ -71,7 +80,13 @@ class Item : public pptk::Component
 
     json getObjectDefinition()
     {
-        return definition;
+        std::cout << "definition: " << definition << std::endl;
+        return json::parse(definition);
+    }
+
+    bool isInvalid()
+    {
+        return definition.empty();
     }
 
 private:
@@ -79,7 +94,7 @@ private:
 
     bool useIcon = true;
 
-    json definition;
+    std::string definition;
     std::string icon;
 
     NVGcolor bg = nvgRGB(46, 46, 46);
