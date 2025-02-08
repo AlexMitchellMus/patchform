@@ -356,7 +356,15 @@ public:
 
     float scale = 1.0f;
 
-    float opacity = 1.0f;
+    // nanoVG opacity doesn't work like scale/translation state
+    // Each time it's set in the render loop it reset the full state
+    // not the accumulated state, eg:
+    // parent opacity = 0.5f : component opacity = 0.5f
+    // child opacity  = 1.0f : component opacity = 1.0f
+
+    // So we set it here as -1.0f and inside render we check if it's > 0.0f
+    // If so we set the opacity
+    float opacity = -1.0f;
 
     Component* getParent() const { return parent; };
 

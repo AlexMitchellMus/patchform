@@ -131,9 +131,7 @@ public:
 
         while (eventQueue.try_dequeue(dialValue))
         {
-            Event* e = context->eventPool.getFreeEvent();
-
-            if (e)
+            if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->data = dialValue * (maxValue - minValue) + minValue;
                 e->setTimeStamp(0); // Set event at time 0

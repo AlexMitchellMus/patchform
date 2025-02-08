@@ -175,7 +175,8 @@ void Component::renderAll(NVGcontext* vg)
     nvgTranslate(vg, x, y);
     nvgScale(vg, scale, scale);
 
-    nvgGlobalAlpha(vg, opacity);
+    if (opacity >= 0.0f)
+        nvgGlobalAlpha(vg, opacity);
 
     // Render this component
     render(vg);
