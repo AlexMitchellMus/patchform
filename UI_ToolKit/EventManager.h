@@ -85,19 +85,17 @@ public:
         updateHoveredComponent(rootComponent, wrappedEvent); // Update hovered component
     }
 
-    void handleMouseWheel(SDL_Event& e) {
-        if (auto focusedComp = rootComponent->getFocusedComponent()) {
-            auto wrappedEvent = CompEvent(e, focusedComp);
-            focusedComp->mouseWheel(wrappedEvent);
+    void handleMouseWheel(SDL_Event& e)
+    {
+        if (auto hoveredComp = rootComponent->getHoveredComponent()) {
+            auto wrappedEvent = CompEvent(e, hoveredComp);
+            if (auto tempFocus = getFocusableComponent(hoveredComp))
+                tempFocus->mouseWheel(wrappedEvent);
         }
-
-        //if (auto hoveredComp = rootComponent->getHoveredComponent()) {
-        //    auto wrappedEvent = CompEvent(e, hoveredComp);
-        //    hoveredComp->mouseWheel(wrappedEvent);
-        //}
     }
 
-    void handleKeyDown(SDL_Event& e) {
+    void handleKeyDown(SDL_Event& e)
+    {
         if (auto clickedComp = rootComponent->getClickedComponent()) {
             auto wrappedEvent = CompEvent(e, clickedComp);
             clickedComp->keyPressed(wrappedEvent);
@@ -105,21 +103,24 @@ public:
     }
 
 private:
-
-    void updateFocusedComponent(Component* current)
+    // This will find the fist ancestor of the current component that wants focus.
+    // It WILL NOT set the focused component
+    Component* getFocusableComponent(Component* current)
     {
-        Component* foundComponent = nullptr;
         while (current != nullptr)
         {
             if (current->getWantsFocus())
             {
-                foundComponent = current;
-                break;
+                return current;
             }
             current = current->getParent();
         }
+        return nullptr;
+    }
 
-        rootComponent->setFocusedComponent(foundComponent);
+    void updateFocusedComponent(Component* current)
+    {
+        rootComponent->setFocusedComponent(getFocusableComponent(current));
     }
 
     void updateHoveredComponent(Component* root, CompEvent& e) {
