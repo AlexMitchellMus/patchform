@@ -320,6 +320,7 @@ public:
         {
             auto node = obj->nodeCreationData;
             node["id"] = obj->nodeID; // Update the id field (as it could have changed)
+            node["pos"] = { obj->canvasPos.x, obj->canvasPos.y }; // Position will also have changed.
             nodes.push_back(node);
         }
 
@@ -774,6 +775,12 @@ public:
         const auto nodeID = generateID();
 
         node->nodeID = nodeID;
+        if (nodeCreationData.contains("pos") && nodeCreationData["pos"].is_array() &&
+            nodeCreationData["pos"].size() >= 2)
+        {
+            node->canvasPos = pptk::Point(nodeCreationData["pos"][0].get<float>(), nodeCreationData["pos"][1].get<float>()
+            );
+        }
 
         // Determine the ID to use for the object ID map
         const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);

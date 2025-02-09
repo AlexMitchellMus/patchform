@@ -48,6 +48,11 @@ public:
         }
     }
 
+    Canvas* getActiveCanvas() const
+    {
+        return canvas.get();
+    }
+
     void loadFile(const std::string& file) const;
 
     void resizeToolDock(bool reset)

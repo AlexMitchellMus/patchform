@@ -1,15 +1,72 @@
 {
-    "nodes": [
-        { "id": 0, "obj": "AudioOut" },
-        { "id": 1, "obj": "Value", "value": 220.0 },
-        { "id": 2, "obj": "Oscillator" },
-        { "id": 3, "obj": "Value", "value": 550.0 },
-        { "id": 4, "obj": "Oscillator" }
-    ],
     "connections": [
-        { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 1 },
-        { "sourceNode": 3, "sourcePort": 0, "targetNode": 4, "targetPort": 1 },
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 0, "targetPort": 0 },
-        { "sourceNode": 4, "sourcePort": 0, "targetNode": 0, "targetPort": 0 }
+        {
+            "sourceNode": 1,
+            "sourcePort": 0,
+            "targetNode": 2,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 3,
+            "sourcePort": 0,
+            "targetNode": 4,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 2,
+            "sourcePort": 0,
+            "targetNode": 0,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 4,
+            "sourcePort": 0,
+            "targetNode": 0,
+            "targetPort": 0
+        }
+    ],
+    "nodes": [
+        {
+            "id": 0,
+            "obj": "AudioOut",
+            "pos": [
+                25.0,
+                356.0
+            ]
+        },
+        {
+            "id": 1,
+            "obj": "Value",
+            "pos": [
+                296.0,
+                248.0
+            ],
+            "value": 220.0
+        },
+        {
+            "id": 2,
+            "obj": "Oscillator",
+            "pos": [
+                105.0,
+                310.0
+            ]
+        },
+        {
+            "id": 3,
+            "obj": "Value",
+            "pos": [
+                299.0,
+                89.0
+            ],
+            "value": 550.0
+        },
+        {
+            "id": 4,
+            "obj": "Oscillator",
+            "pos": [
+                160.0,
+                190.0
+            ]
+        }
     ]
 }

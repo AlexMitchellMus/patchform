@@ -1,35 +1,150 @@
 {
-    "nodes": [
-        { "id": 0, "obj": "Value", "value": 770.0 },
-        { "id": 1, "obj": "Oscillator", "waveform": "sine" },
-        { "id": 2, "obj": "Metro", "hz": 8 },
-        { "id": 3, "obj": "Envelope", "attack": 0, "decay": 200 },
-
-        { "id": 4, "obj": "Value", "value": 200.0 },
-        { "id": 5, "obj": "Oscillator", "waveform": "tri" },
-        { "id": 6, "obj": "Envelope", "attack": 0, "decay": 10 },
-
-        { "id": 7, "obj": "AudioOut" }
-    ],
     "connections": [
-        // value -> oscillator
-        { "sourceNode": 0, "sourcePort": 0, "targetNode": 1, "targetPort": 1 },
-        { "sourceNode": 4, "sourcePort": 0, "targetNode": 5, "targetPort": 1 },
-
-        // oscillator -> envelope
-        { "sourceNode": 1, "sourcePort": 0, "targetNode": 3, "targetPort": 1 },
-        { "sourceNode": 5, "sourcePort": 0, "targetNode": 6, "targetPort": 1 },
-
-        // metro -> envelope
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 6, "targetPort": 0 },
-
-        // metro -> oscillator (phase reset)
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 1, "targetPort": 0 },
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 5, "targetPort": 0 },
-
-        // envelope -> audio out
-        { "sourceNode": 3, "sourcePort": 0, "targetNode": 7, "targetPort": 0 },
-        { "sourceNode": 6, "sourcePort": 0, "targetNode": 7, "targetPort": 0 }
+        {
+            "sourceNode": 0,
+            "sourcePort": 0,
+            "targetNode": 1,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 4,
+            "sourcePort": 0,
+            "targetNode": 5,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 1,
+            "sourcePort": 0,
+            "targetNode": 3,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 5,
+            "sourcePort": 0,
+            "targetNode": 6,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 3,
+            "sourcePort": 0,
+            "targetNode": 7,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 6,
+            "sourcePort": 0,
+            "targetNode": 7,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 2,
+            "sourcePort": 0,
+            "targetNode": 5,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 2,
+            "sourcePort": 0,
+            "targetNode": 6,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 1,
+            "sourcePort": 0,
+            "targetNode": 7,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 1,
+            "sourcePort": 0,
+            "targetNode": 2,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 5,
+            "sourcePort": 0,
+            "targetNode": 6,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 7,
+            "sourcePort": 0,
+            "targetNode": 2,
+            "targetPort": 0
+        }
+    ],
+    "nodes": [
+        {
+            "id": 0,
+            "obj": "Value",
+            "pos": [
+                192.6640625,
+                31.9921875
+            ],
+            "value": 770.0
+        },
+        {
+            "id": 1,
+            "obj": "Oscillator",
+            "pos": [
+                67.16015625,
+                118.75390625
+            ],
+            "waveform": "sine"
+        },
+        {
+            "attack": 0,
+            "decay": 200,
+            "id": 2,
+            "obj": "Envelope",
+            "pos": [
+                15.109375,
+                163.54296875
+            ]
+        },
+        {
+            "id": 3,
+            "obj": "Value",
+            "pos": [
+                12.85546875,
+                26.19140625
+            ],
+            "value": 200.0
+        },
+        {
+            "id": 4,
+            "obj": "Oscillator",
+            "pos": [
+                79.671875,
+                211.76953125
+            ],
+            "waveform": "tri"
+        },
+        {
+            "attack": 0,
+            "decay": 10,
+            "id": 5,
+            "obj": "Envelope",
+            "pos": [
+                29.88671875,
+                259.29296875
+            ]
+        },
+        {
+            "id": 6,
+            "obj": "AudioOut",
+            "pos": [
+                14.50390625,
+                304.57421875
+            ]
+        },
+        {
+            "id": 7,
+            "obj": "Metro",
+            "pos": [
+                12.953125,
+                71.48046875
+            ]
+        }
     ]
 }

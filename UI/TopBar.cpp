@@ -6,6 +6,7 @@
 
 #include "TopBar.h"
 #include "Editor.h"
+#include "../Graph/AudioGraph.h"
 #include "../UI_ToolKit/PlatformHelpers.h"
 
 MainMenu::MainMenu()
@@ -27,6 +28,27 @@ MainMenu::MainMenu()
 
     savePatch = std::make_unique<MenuItem>("Save patch...");
     addComponent(savePatch.get());
+    savePatch->onClick = [this]()
+    {
+        if (auto* ed = findParentOfClass<Editor>())
+        {
+            setVisible(false);
+            auto filePath = ed->graphManager->getPatchFile();
+            auto jsonData = ed->graphManager->graphToJSON();
+            std::ofstream outputFile(filePath, std::ios::out | std::ios::trunc);
+
+            if (!outputFile.is_open()) {
+                throw std::ios_base::failure("Failed to open the file for writing.");
+            }
+
+            // Write the JSON to the file with pretty formatting
+            outputFile << jsonData.dump(4);
+            outputFile.close();
+
+            std::cout << "Graph successfully saved to " << std::filesystem::absolute(filePath).string() << std::endl;
+            close();
+        }
+    };
 
     saveAsPatch = std::make_unique<MenuItem>("Save patch as...");
     addComponent(saveAsPatch.get());

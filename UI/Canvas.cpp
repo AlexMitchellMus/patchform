@@ -301,9 +301,14 @@ void Canvas::setMultiObjectPosition(pptk::Point pos)
     if (isInLockedMode())
         return;
 
-    for (auto& obj : selected)
+    for (auto& cnvItem : selected)
     {
-        obj->setPosition(obj->getPosition() + pos);
+        auto newPosition = cnvItem->getPosition() + pos;
+        cnvItem->setPosition(newPosition);
+        if (auto* objObject = dynamic_cast<Object*>(cnvItem))
+        {
+            objObject->audioNode->canvasPos = newPosition - pptk::Point(canvasOrigin, canvasOrigin);
+        }
     }
 
     updateConnectionsPosition();
@@ -533,7 +538,7 @@ void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
     {
         objects.push_back(obj);
         objectsLayer.addComponent(obj);
-        obj->setPosition(pptk::Point(obj->audioNode->canvasPos.x + canvasOrigin + std::rand() % 10000, obj->audioNode->canvasPos.y + canvasOrigin + std::rand() % 10000));
+        obj->setPosition(pptk::Point(obj->audioNode->canvasPos.x + canvasOrigin, obj->audioNode->canvasPos.y + canvasOrigin));
     }
 
     callObjectChangedListeners();
@@ -563,16 +568,20 @@ void Canvas::reloadConnections(std::vector<Edge*> edges)
             Object* inputObj = *inputObjIt;
             Object* outputObj = *outputObjIt;
 
-            auto* origin = outputObj->outPorts[edge->getoPort()].get();
-            auto* dest = inputObj->inPorts[edge->getiPort()].get();
+            // We shouldn't need to do this here, as the engine should always have the correct info.
+            if (edge->getoPort() < outputObj->outPorts.size() && edge->getiPort() < inputObj->inPorts.size())
+            {
+                auto* origin = outputObj->outPorts[edge->getoPort()].get();
+                auto* dest = inputObj->inPorts[edge->getiPort()].get();
 
-            auto connection = std::make_unique<Connection>(origin, dest);
+                auto connection = std::make_unique<Connection>(origin, dest);
 
-            connectionsLayer.addComponent(connection.get());
+                connectionsLayer.addComponent(connection.get());
 
-            connection->updateConnectionGeometry();
+                connection->updateConnectionGeometry();
 
-            connections.push_back(std::move(connection));
+                connections.push_back(std::move(connection));
+            }
         }
     }
 }

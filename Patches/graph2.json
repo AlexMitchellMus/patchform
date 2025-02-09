@@ -1,15 +1,72 @@
 {
-    "nodes": [
-        { "id": 0, "obj": "Value", "value": 660.0 },
-        { "id": 1, "obj": "LFO", "rate": 3 },
-        { "id": 2, "obj": "Volume" },
-        { "id": 3, "obj": "Oscillator" },
-        { "id": 4, "obj": "AudioOut" }
-    ],
     "connections": [
-        { "sourceNode": 0, "sourcePort": 0, "targetNode": 3, "targetPort": 0 },
-        { "sourceNode": 1, "sourcePort": 0, "targetNode": 2, "targetPort": 1 },
-        { "sourceNode": 3, "sourcePort": 0, "targetNode": 2, "targetPort": 0 },
-        { "sourceNode": 2, "sourcePort": 0, "targetNode": 4, "targetPort": 0 }
+        {
+            "sourceNode": 0,
+            "sourcePort": 0,
+            "targetNode": 3,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 1,
+            "sourcePort": 0,
+            "targetNode": 2,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 3,
+            "sourcePort": 0,
+            "targetNode": 2,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 2,
+            "sourcePort": 0,
+            "targetNode": 4,
+            "targetPort": 0
+        }
+    ],
+    "nodes": [
+        {
+            "id": 0,
+            "obj": "Value",
+            "pos": [
+                108.0,
+                131.0
+            ],
+            "value": 660.0
+        },
+        {
+            "id": 1,
+            "obj": "LFO",
+            "pos": [
+                308.0,
+                187.0
+            ],
+            "rate": 3
+        },
+        {
+            "id": 2,
+            "obj": "Volume",
+            "pos": [
+                118.0,
+                264.0
+            ]
+        },
+        {
+            "id": 3,
+            "obj": "Oscillator",
+            "pos": [
+                106.0,
+                188.0
+            ]
+        },
+        {
+            "id": 4,
+            "obj": "AudioOut",
+            "pos": [
+                96.0,
+                363.0
+            ]
+        }
     ]
 }
