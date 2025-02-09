@@ -26,8 +26,11 @@ Project Goals
 *        Select multiple objects/connections with shift-click
 * [DONE] Basic focus system (We need to think more about this - 
          what it means to gain focus? We still need to hover scroll components- but they wont have focus??)
-
-
+         -- MAYBE?? 
+         * We use a temporary focus system.
+         * When there is a scroll event, we look at the current component's ancestors, and find who wants focus
+         * If we don't find who wants focus we do nothing.
+         * We also have an assignable focus system, which is what happens on mouse down - or when components request it.
 
 
 

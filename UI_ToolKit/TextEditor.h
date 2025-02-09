@@ -120,6 +120,7 @@ public:
         case SDLK_RETURN2:
             editorActive = false;
             onTextReturned();
+            loseFocus();
             repaint();
             break;
         default:

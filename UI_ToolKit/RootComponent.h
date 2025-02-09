@@ -39,7 +39,7 @@ namespace pptk
             timerCallbacks.emplace_back(c, callback);
         }
 
-        void unregisterTimerCallback(Component* component)
+        void unregisterTimerCallback(const Component* component)
         {
             for (auto& [c, callback] : timerCallbacks)
             {
@@ -55,20 +55,21 @@ namespace pptk
             );
         }
 
-        Component* getDraggingComponent() const { return draggingComponent.get(); }
+        [[nodiscard]] Component* getDraggingComponent() const { return draggingComponent.get(); }
         void setDraggingComponent(Component* c) { draggingComponent = makeSafePointer(c); }
 
-        Component* getHoveredComponent() const { return hoveredComponent.get(); }
+        [[nodiscard]] Component* getHoveredComponent() const { return hoveredComponent.get(); }
         void setHoveredComponent(Component* c) { hoveredComponent = makeSafePointer(c); }
 
-        Component* getClickedComponent() const { return clickedComponent.get(); }
+        [[nodiscard]] Component* getClickedComponent() const { return clickedComponent.get(); }
         void setClickedComponent(Component* c) { clickedComponent = makeSafePointer(c); }
 
-        Component* getFocusedComponent() const { return focusedComponent.get(); }
+        [[nodiscard]] Component* getFocusedComponent() const { return focusedComponent.get(); }
         void setFocusedComponent(Component* c)
         {
             if (!c && lastFocusedComponent)
             {
+                std::cout << "FocusedComponent swapping." << std::endl;
                 focusedComponent->focusLost();
                 std::swap(lastFocusedComponent, focusedComponent);
                 focusedComponent->focusGained();
@@ -80,6 +81,8 @@ namespace pptk
 
                 focusedComponent = makeSafePointer(c);
                 focusedComponent->focusGained();
+                if (!lastFocusedComponent)
+                    lastFocusedComponent = makeSafePointer(c);
             }
         }
 

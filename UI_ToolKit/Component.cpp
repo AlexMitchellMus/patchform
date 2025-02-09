@@ -288,6 +288,7 @@ void Component::gainFocus()
 
 void Component::loseFocus()
 {
+    std::cout << "should be losing focus" << std::endl;
     reinterpret_cast<RootComponent*>(getRootComponent())->setFocusedComponent(nullptr);
 }
 
