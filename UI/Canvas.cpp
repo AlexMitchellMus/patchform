@@ -498,6 +498,8 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
 
     objectsLayer.addComponent(toAdd);
     toAdd->setPosition(position);
+    toAdd->audioNode->canvasPos = position - pptk::Point(canvasOrigin, canvasOrigin);
+
 
     setSelected(toAdd);
 
@@ -604,6 +606,12 @@ void Canvas::addConnection(Port* origin, Port* dest)
     connection->updateConnectionGeometry();
 
     connections.push_back(std::move(connection));
+}
+
+void Canvas::setPatchName(const std::string& name)
+{
+    patchName = name;
+    onPatchChanged();
 }
 
 void Canvas::addObjectChangedListener(std::function<void()> callback)

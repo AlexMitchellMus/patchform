@@ -642,7 +642,8 @@ public:
                     auto* connection = portGroup.connectedPorts[connIndex];
                     const auto outputBuffer = connection->getAudioBuffer();
 
-                    if (isPortSignal && connection->isSignal())
+                    // FIXME! outputBuffer should always be non-null? It can be null! Why do we need to check it?
+                    if (outputBuffer && isPortSignal && connection->isSignal())
                     {
                         // Update port status, any connected signal overrides events
                         port->isAnyConnectedPortSignal = true;

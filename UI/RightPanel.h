@@ -35,8 +35,6 @@ class RightPanel : public pptk::ResizableComponent {
 public:
     RightPanel(Canvas* cnv);
 
-    void canvasReloaded(Canvas* cnv);
-
     void setSelectedNode(AudioNode* node);
 
     void updateUI();

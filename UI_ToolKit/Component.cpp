@@ -26,20 +26,6 @@ Component::~Component()
     children.clear();
 }
 
-void Component::mouseButtonDown(CompEvent& e)
-{
-    for (auto it = children.begin(); it != children.end();)
-    {
-        auto& child = *it;
-
-        if (child->hitTest(e.sdlEvent.button.x, e.sdlEvent.button.y))
-        {
-            child->mouseButtonDown(e);
-        }
-        ++it;
-    }
-}
-
 void Component::handleMouseMove(CompEvent& e)
 {
     if (getBounds().contains(e.sdlEvent.button.x, e.sdlEvent.button.y))
@@ -167,7 +153,7 @@ void Component::removeFromParent()
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
         parent = nullptr;
         // FIXME: not sure if we should or shouldn't do this, leave it out for now
-        //rootComponent = nullptr;
+        rootComponent = nullptr;
     }
 }
 

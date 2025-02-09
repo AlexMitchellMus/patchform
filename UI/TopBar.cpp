@@ -34,7 +34,14 @@ MainMenu::MainMenu()
         {
             setVisible(false);
             auto filePath = ed->graphManager->getPatchFile();
+            if (filePath.empty())
+            {
+                close();
+                return;
+            }
+
             auto jsonData = ed->graphManager->graphToJSON();
+
             std::ofstream outputFile(filePath, std::ios::out | std::ios::trunc);
 
             if (!outputFile.is_open()) {

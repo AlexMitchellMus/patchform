@@ -49,19 +49,6 @@ RightPanel::RightPanel(Canvas* cnv)
     updateUI();
 }
 
-void RightPanel::canvasReloaded(Canvas* cnv)
-{
-    cnv->addObjectChangedListener([this, cnv]()
-{
-    if (cnv->getSelectedObjects().empty())
-        setSelectedNode(nullptr);
-    else
-        setSelectedNode(cnv->getSelectedObjects().front()->audioNode);
-});
-    updateUI();
-}
-
-
 void RightPanel::setSelectedNode(AudioNode* node)
 {
     if (node == nullptr)

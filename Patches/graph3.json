@@ -23,6 +23,12 @@
             "sourcePort": 0,
             "targetNode": 0,
             "targetPort": 0
+        },
+        {
+            "sourceNode": 5,
+            "sourcePort": 0,
+            "targetNode": 4,
+            "targetPort": 0
         }
     ],
     "nodes": [
@@ -66,6 +72,14 @@
             "pos": [
                 160.0,
                 190.0
+            ]
+        },
+        {
+            "id": 5,
+            "obj": "Metro",
+            "pos": [
+                0.0,
+                0.0
             ]
         }
     ]

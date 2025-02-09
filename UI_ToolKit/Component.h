@@ -229,9 +229,7 @@ public:
     }
 
     virtual bool consumeEvent(CompEvent& e) { return false; };
-    virtual void mouseButtonDown(CompEvent& e);
     virtual void handleMouseMove(CompEvent& e);
-    virtual void mouseButtonUp(CompEvent& e) {}
 
     // Finds the component at global coordinate.
     // Disregards self, so make sure to call it from the Component you want to disregard from
@@ -257,6 +255,8 @@ public:
 
     virtual void mouseEnter(CompEvent& e) { }
     virtual void mouseLeave(CompEvent& e) { }
+    virtual void mouseButtonUp(CompEvent& e) { }
+    virtual void mouseButtonDown(CompEvent& e) { }
     virtual void mouseMove(const Point& position) { }
     virtual void mouseDrag(const Point& position, const Point& delta, Button button) { }
     virtual void mouseWheel(CompEvent& e) { }
@@ -264,8 +264,8 @@ public:
     virtual void focusGained() { }
     virtual void focusLost() { }
 
-    virtual void render(NVGcontext* vg) { };
-    virtual void resized() { };
+    virtual void render(NVGcontext* vg) { }
+    virtual void resized() { }
     virtual void renderAll(NVGcontext* vg);
 
     Rect getBounds() const
@@ -349,7 +349,7 @@ public:
         return false;
     }
 
-    void setName(const std::string& newName) { name = newName;; };
+    void setName(const std::string& newName) { name = newName; }
     std::string& getName() { return name; };
 
     float finalX = 0.0f;

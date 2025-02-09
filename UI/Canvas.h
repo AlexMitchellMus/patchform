@@ -25,6 +25,7 @@ public:
     enum class DisplayMode { Edit, Lock };
 
     std::function<void(float)> onScaleChange = [](float){};
+    std::function<void()> onPatchChanged = [](){};
 
     using ObjectChangedListeners = std::vector<std::function<void()>>;
 
@@ -59,6 +60,9 @@ public:
     void reloadAllCanvasObjects(std::vector<Object*> objects);
     void addFromDnDMenu(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
     void reloadConnections(std::vector<Edge*>);
+
+    void setPatchName(const std::string& name);
+    const std::string& getPatchName() { return patchName; };
 
     void updateGraphValuesIfNeeded();
 
@@ -119,6 +123,8 @@ private:
     DisplayMode mode = DisplayMode::Edit;
 
     bool inDragMode = false;
+
+    std::string patchName;
 
 #ifdef GENERATE_TEST_OBJECTS
     // ONLY FOR TESTING! These objects are not connected to the DSP system

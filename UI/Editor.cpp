@@ -21,6 +21,11 @@ void Editor::init(GraphManager* gm)
     topBar->setName("topBar");
     addComponent(topBar.get());
 
+    canvas->onPatchChanged = [this]()
+    {
+        topBar->setPatchName(canvas->getPatchName());
+    };
+
     toolDock = std::make_unique<ToolDock>(canvas.get());
     toolDock->setName("toolDock");
     addComponent(toolDock.get());
@@ -60,12 +65,10 @@ void Editor::init(GraphManager* gm)
 
 void Editor::loadFile(const std::string& fileName) const
 {
-    std::cout << "Loading graph from file: " << fileName << "..." << std::endl;
+    if (fileName.empty())
+        return;
 
-    // Handle file loading
     std::ifstream file(fileName);
-
-    std::cout << fileName << " loaded successfully" << std::endl;
 
     std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
@@ -75,6 +78,8 @@ void Editor::loadFile(const std::string& fileName) const
         if (!patch.empty()) {
             auto filePath = std::filesystem::absolute(fileName).string();
             auto [ graphObjects, connEdges ] = graphManager->setActiveGraph(filePath, patch, false);
+            std::filesystem::path filePathObj(fileName);
+            canvas->setPatchName(filePathObj.stem().string());
             canvas->reloadAllCanvasObjects(graphObjects);
             canvas->reloadConnections(connEdges);
         }

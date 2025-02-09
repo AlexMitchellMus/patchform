@@ -226,6 +226,12 @@ public:
         TopBar::resized();
     }
 
+    void setPatchName(const std::string& patchName)
+    {
+        loadedPatch = patchName;
+        repaint();
+    }
+
     void setVolumeMeterValue(float value)
     {
         if (volumeMeter)
@@ -251,6 +257,8 @@ public:
         undo->setBounds(offset, centreY, buttonW, buttonW);
         offset += 50;
         redo->setBounds(offset, centreY, buttonW, buttonW);
+        offset += 50;
+        textOffset = offset;
 
         auto volCentreY = (getHeight() / 2) - (32 * 0.5f);
         volumeMeter->setBounds(getWidth() - 50 - 180, volCentreY, 150, 32);
@@ -271,6 +279,16 @@ public:
         nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
         nvgStrokeWidth(nvg, 1.0f);
         nvgStroke(nvg);
+
+        nvgSave(nvg);
+
+        nvgFillColor(nvg, nvgRGB(220, 220, 220));
+        nvgFontFace(nvg, "Regular");
+        nvgFontSize(nvg, 14.0f);
+        nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgText(nvg, textOffset, height / 2, loadedPatch.c_str(), nullptr);
+
+        nvgRestore(nvg);
     }
 
     bool hitTest(float x, float y) override {
@@ -302,4 +320,6 @@ private:
 
     std::unique_ptr<ToggleButton> hideSidePanelsToggle;
 
+    std::string loadedPatch;
+    int textOffset = 0;
 };
