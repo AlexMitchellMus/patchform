@@ -24,6 +24,8 @@ Project Goals
 *        Text entry (for object/nodes mainly)
 *        Selected connections via lasso
 *        Select multiple objects/connections with shift-click
+* [DONE] Basic focus system (We need to think more about this - 
+         what it means to gain focus? We still need to hover scroll components- but they wont have focus??)
 
 
 
@@ -33,8 +35,6 @@ NOTES
 
 [UI]
 make delete work from a key pressed listener on the canvas itself
-We need to implement a 'focused' component, which stays set even when children components become active
-OR- we can add register a key listener for the canvas, so it can be informed directly of any key events even if it's not focuses?
 
 [ICONS]
 https://fluenticons.co/outlined/
