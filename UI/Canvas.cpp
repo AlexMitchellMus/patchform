@@ -36,6 +36,8 @@ Canvas::Canvas(GraphManager* gm) : graphManager(gm)
 
     objectsLayer.setInterceptsMouseClicks(false, true);
     connectionsLayer.setInterceptsMouseClicks(false, true);
+
+    setWantsFocus(true);
 }
 
 std::vector<Object*> Canvas::getObjects() const
@@ -132,6 +134,16 @@ void Canvas::dragCanvas(const pptk::Point& delta)
     y += delta.y * scale;
 
     repaint();
+}
+
+void Canvas::focusGained()
+{
+    std::cout << "focusGained" << std::endl;
+}
+
+void Canvas::focusLost()
+{
+    std::cout << "focusLost" << std::endl;
 }
 
 void Canvas::mouseWheel(pptk::CompEvent& e)
@@ -483,6 +495,8 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
     objects.push_back(toAdd);
 
     callObjectChangedListeners();
+
+    gainFocus();
 }
 
 void Canvas::addObject(Object* toAdd, pptk::Point position)

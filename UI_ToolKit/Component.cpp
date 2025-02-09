@@ -281,6 +281,16 @@ void Component::setPopupComponent(std::unique_ptr<PopupComponent> popupWindow)
     reinterpret_cast<RootComponent*>(getRootComponent())->popupWindow = std::move(popupWindow);
 }
 
+void Component::gainFocus()
+{
+    reinterpret_cast<RootComponent*>(getRootComponent())->setFocusedComponent(this);
+}
+
+void Component::loseFocus()
+{
+    reinterpret_cast<RootComponent*>(getRootComponent())->setFocusedComponent(nullptr);
+}
+
 Point Component::globalToLocalWithScale(float globalX, float globalY) const
 {
     // If there's a parent, first convert to the parent's local space

@@ -259,6 +259,8 @@ public:
     virtual void mouseDrag(const Point& position, const Point& delta, Button button) { }
     virtual void mouseWheel(CompEvent& e) { }
     virtual void keyPressed(CompEvent& e) { }
+    virtual void focusGained() { }
+    virtual void focusLost() { }
 
     virtual void render(NVGcontext* vg) { };
     virtual void resized() { };
@@ -385,6 +387,19 @@ public:
 
     float getTextWidthForFont(const std::string& fontName, float size, const std::string& text);
 
+    bool getWantsFocus() const
+    {
+        return wantsFocus;
+    }
+
+    void setWantsFocus(bool shouldHaveFocus)
+    {
+        wantsFocus = shouldHaveFocus;
+    }
+
+    void gainFocus();
+    void loseFocus();
+
 private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);
 
@@ -413,6 +428,8 @@ protected:
     float maxHeight = -1;
 
     bool visible = true;
+
+    bool wantsFocus = false;
 
     std::vector<Component*> children;
     bool isDragging = false;

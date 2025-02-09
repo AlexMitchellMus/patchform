@@ -74,14 +74,14 @@ public:
         editorActive = true;
         repaint();
     }
-
+*/
     void focusLost() override
     {
         std::cout << "editor focus lost" << std::endl;
         editorActive = false;
         repaint();
     }
-*/
+
     void keyPressed(CompEvent& e) override
     {
         if (!editorActive) return;
@@ -193,6 +193,7 @@ public:
         {
             editorActive = true;
             editorFirstActive = true;
+            gainFocus();
             repaint();
         } else if (e.sdlEvent.button.clicks == 1)
         {

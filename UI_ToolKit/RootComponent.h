@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <iostream>
 #include <memory>
 
@@ -63,6 +64,25 @@ namespace pptk
         Component* getClickedComponent() const { return clickedComponent.get(); }
         void setClickedComponent(Component* c) { clickedComponent = makeSafePointer(c); }
 
+        Component* getFocusedComponent() const { return focusedComponent.get(); }
+        void setFocusedComponent(Component* c)
+        {
+            if (!c && lastFocusedComponent)
+            {
+                focusedComponent->focusLost();
+                std::swap(lastFocusedComponent, focusedComponent);
+                focusedComponent->focusGained();
+            }
+            if (c && c != focusedComponent.get())
+            {
+                if (focusedComponent)
+                    focusedComponent->focusLost();
+
+                focusedComponent = makeSafePointer(c);
+                focusedComponent->focusGained();
+            }
+        }
+
         void registerGlobalMouse(Component* c, const std::function<void(pptk::Component*)>& callback)
         {
             globalMouseHandlers.emplace_back(c, callback);
@@ -107,6 +127,8 @@ namespace pptk
         SafePointer<Component> draggingComponent;
         SafePointer<Component> hoveredComponent;
         SafePointer<Component> clickedComponent;
+        SafePointer<Component> focusedComponent;
+        SafePointer<Component> lastFocusedComponent;
 
         std::vector<std::tuple<Component*, std::function<void(uint32_t)>>> timerCallbacks;
     };

@@ -31,6 +31,8 @@ public:
             wrappedEvent.sdlEvent.button.x = localPos.x;
             wrappedEvent.sdlEvent.button.y = localPos.y;
 
+            updateFocusedComponent(comp);
+
             comp->mouseButtonDown(wrappedEvent);
 
             for (auto& [c, handler] : rootComponent->globalMouseHandlers)
@@ -84,10 +86,15 @@ public:
     }
 
     void handleMouseWheel(SDL_Event& e) {
-        if (auto hoveredComp = rootComponent->getHoveredComponent()) {
-            auto wrappedEvent = CompEvent(e, hoveredComp);
-            hoveredComp->mouseWheel(wrappedEvent);
+        if (auto focusedComp = rootComponent->getFocusedComponent()) {
+            auto wrappedEvent = CompEvent(e, focusedComp);
+            focusedComp->mouseWheel(wrappedEvent);
         }
+
+        //if (auto hoveredComp = rootComponent->getHoveredComponent()) {
+        //    auto wrappedEvent = CompEvent(e, hoveredComp);
+        //    hoveredComp->mouseWheel(wrappedEvent);
+        //}
     }
 
     void handleKeyDown(SDL_Event& e) {
@@ -98,6 +105,22 @@ public:
     }
 
 private:
+
+    void updateFocusedComponent(Component* current)
+    {
+        Component* foundComponent = nullptr;
+        while (current != nullptr)
+        {
+            if (current->getWantsFocus())
+            {
+                foundComponent = current;
+                break;
+            }
+            current = current->getParent();
+        }
+
+        rootComponent->setFocusedComponent(foundComponent);
+    }
 
     void updateHoveredComponent(Component* root, CompEvent& e) {
         Point globalMouse(e.sdlEvent.motion.x, e.sdlEvent.motion.y);

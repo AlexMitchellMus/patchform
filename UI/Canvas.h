@@ -37,6 +37,8 @@ public:
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, const pptk::Button button) override;
     void mouseWheel(pptk::CompEvent& e) override;
     void keyPressed(pptk::CompEvent& e) override;
+    void focusLost() override;
+    void focusGained() override;
 
     bool consumeEvent(pptk::CompEvent& e) override;
 
