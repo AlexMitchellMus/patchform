@@ -5,11 +5,15 @@
 */
 
 #include "Canvas.h"
+
+#include <glaze/core/common.hpp>
+
 #include "Object.h"
 #include "Connection.h"
 #include "Lasso.h"
 #include "CanvasItem.h"
 #include "../Graph/AudioGraph.h"
+#include "../Graph/Edge.h"
 
 Canvas::Canvas(GraphManager* gm) : graphManager(gm)
 {
@@ -242,7 +246,7 @@ void Canvas::deleteSelectedObjects()
         }
     }
 
-    auto graphManager = reinterpret_cast<App*>(getRootComponent())->graphManager;
+    auto graphManager = reinterpret_cast<Editor*>(getRootComponent())->graphManager;
 
     graphManager->removeObjects(idsToDelete);
 
@@ -482,7 +486,7 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
     if (toAdd == nullptr)
         return;
 
-    // DnD objects are semi-transparent
+    // DnD objects were originally semi-transparent, reset that here
     toAdd->opacity = 1.0f;
     // Reset the scale to 1, as the canvas itself now takes care of the object's scale!
     toAdd->scale = 1.0f;
@@ -510,14 +514,67 @@ void Canvas::addObject(Object* toAdd, pptk::Point position)
 
     auto object = audioObject->getOrCreateUI();
 
-    addComponent(object);
+    objectsLayer.addComponent(object);
     object->setPosition(position);
 
     setSelected(object);
 
     objects.push_back(object);
 
+
     callObjectChangedListeners();
+}
+
+void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
+{
+    objects.clear();
+
+    for (auto* obj : newObjects)
+    {
+        objects.push_back(obj);
+        objectsLayer.addComponent(obj);
+        obj->setPosition(pptk::Point(obj->audioNode->canvasPos.x + canvasOrigin + std::rand() % 10000, obj->audioNode->canvasPos.y + canvasOrigin + std::rand() % 10000));
+    }
+
+    callObjectChangedListeners();
+    repaint();
+}
+
+void Canvas::reloadConnections(std::vector<Edge*> edges)
+{
+    connections.clear();
+
+    for (auto* edge : edges)
+    {
+        //std::cout << "making connection for: " << edge->toString() << std::endl;
+
+        auto outputObjIt = std::find_if(objects.begin(), objects.end(),
+            [edge](const Object* obj) {
+                return obj->nodeID == edge->getoNode();
+            });
+
+        auto inputObjIt = std::find_if(objects.begin(), objects.end(),
+            [edge](const Object* obj) {
+                return obj->nodeID == edge->getiNode();
+            });
+
+        if (inputObjIt != objects.end() && outputObjIt != objects.end())
+        {
+            Object* inputObj = *inputObjIt;
+            Object* outputObj = *outputObjIt;
+
+            auto* origin = outputObj->outPorts[edge->getoPort()].get();
+            auto* dest = inputObj->inPorts[edge->getiPort()].get();
+
+            auto connection = std::make_unique<Connection>(origin, dest);
+
+            connectionsLayer.addComponent(connection.get());
+
+            connection->updateConnectionGeometry();
+
+            connections.push_back(std::move(connection));
+        }
+    }
 }
 
 void Canvas::addConnection(Port* origin, Port* dest)

@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to load icon font!" << std::endl;
     }
 
-    auto app = std::make_unique<App>();
+    auto app = std::make_unique<Editor>();
 
     std::vector<std::string> fonts = { "Regular", "SemiBold", "icons", "object_icons" };
     std::vector<float> sizes = { 14.0f, 16.0f, 100.0f };

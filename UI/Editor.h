@@ -30,9 +30,9 @@
 #endif
 
 class GraphManager;
-class App : public pptk::RootComponent {
+class Editor : public pptk::RootComponent {
 public:
-    App();
+    Editor();
 
     void init(GraphManager* gm);
 
@@ -47,6 +47,8 @@ public:
             resizeToolDock(true);
         }
     }
+
+    void loadFile(const std::string& file) const;
 
     void resizeToolDock(bool reset)
     {

@@ -303,6 +303,16 @@ public:
         return graph.get();
     }
 
+    std::vector<AudioNode*> getObjects() const
+    {
+        std::vector<AudioNode*> nodes;
+        for (auto& node : objects)
+        {
+            nodes.push_back(node.get());
+        }
+        return nodes;
+    }
+
     const json graphToJSON() const
     {
         json nodes = json::array();
@@ -494,6 +504,17 @@ public:
             return true;
         }
         return false;
+    }
+
+    std::vector<Edge*> getConnections() const
+    {
+        auto connectionCopy = std::vector<Edge*>();
+
+        for (const auto& conn : connections)
+        {
+            connectionCopy.push_back(conn.get());
+        }
+        return connectionCopy;
     }
 
     // Create connections with the object index
@@ -1021,10 +1042,10 @@ public:
         activeGraph->printGraph();
     }
 
-    void setActiveGraph(const std::string& patchPath, const json& patch, bool logVerbose) {
+    std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch, bool logVerbose) {
         if (swapGraph.load(std::memory_order_acquire)) {
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
-            return;
+            return { };
         }
 
         filePath = patchPath;
@@ -1033,7 +1054,26 @@ public:
 
         transitioningGraph->loadPatch(patch, logVerbose);
 
+        auto loadedObjects = getObjects();
+        auto connections = transitioningGraph->getConnections();
+
         swapGraph.store(true, std::memory_order_release);
+
+        return { loadedObjects, connections };
+    }
+
+    std::vector<Object*> getObjects()
+    {
+        std::vector<Object*> objects;
+
+        for (auto* aNode : transitioningGraph->getObjects())
+        {
+            if (auto object = reinterpret_cast<Object*>(aNode->getOrCreateUI()))
+            {
+                objects.push_back(object);
+            }
+        }
+        return objects;
     }
 
     const std::string& getPatchFile()

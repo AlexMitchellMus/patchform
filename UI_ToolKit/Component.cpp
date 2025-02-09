@@ -150,8 +150,12 @@ void Component::toBack()
 
 void Component::setVisible(bool shouldBeVisible)
 {
-    visible = shouldBeVisible;
-    onVisibilityChanged();
+    if (visible != shouldBeVisible)
+    {
+        visible = shouldBeVisible;
+        onVisibilityChanged();
+        repaint();
+    }
 };
 
 void Component::removeFromParent()
@@ -165,6 +169,11 @@ void Component::removeFromParent()
         // FIXME: not sure if we should or shouldn't do this, leave it out for now
         //rootComponent = nullptr;
     }
+}
+
+void Component::removeAllChildren()
+{
+    children.clear();
 }
 
 void Component::renderAll(NVGcontext* vg)

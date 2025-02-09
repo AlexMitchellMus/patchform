@@ -163,6 +163,8 @@ public:
         return children;
     }
 
+    void removeAllChildren();
+
     // Computes the absolute position of the component
     Point getAbsolutePosition() const {
         if (parent) {

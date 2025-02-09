@@ -49,6 +49,8 @@ class AudioGraph;
 class AudioNode {
 public:
 
+    pptk::Point canvasPos;
+
 #ifdef PATCHFORM_WITH_GUI
     class UI : public Object
     {
@@ -102,14 +104,14 @@ public:
 #endif
 
     // Glaze read json as std::string (not connected ATM)
-    template <typename T>
-    constexpr T& parseObjectParams(T& paramData)
-    {
-        auto result = glz::read<glz::opts{.error_on_unknown_keys = false}>(paramData, nodeCreationData.dump());
-        if (result) {
-            std::cerr << "Failed to parse node data: " << format_error(result.ec) << std::endl;
-        }
-    }
+    //template <typename T>
+    //constexpr T& parseObjectParams(T& paramData)
+    //{
+    //    auto result = glz::read<glz::opts{.error_on_unknown_keys = false}>(paramData, nodeCreationData.dump());
+    //    if (result) {
+    //        std::cerr << "Failed to parse node data: " << format_error(result.ec) << std::endl;
+    //    }
+    //}
 
     // Defined by the macro for each derived class
     virtual const std::string& getName() const = 0;

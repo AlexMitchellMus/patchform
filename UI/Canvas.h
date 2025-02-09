@@ -16,6 +16,7 @@ class Port;
 class CanvasItem;
 class GraphManager;
 class CanvasInteractionLayer;
+class Edge;
 
 //#define GENERATE_TEST_OBJECTS
 
@@ -55,7 +56,9 @@ public:
     void renderAllConnections(NVGcontext* nvg);
 
     void addObject(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
+    void reloadAllCanvasObjects(std::vector<Object*> objects);
     void addFromDnDMenu(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
+    void reloadConnections(std::vector<Edge*>);
 
     void updateGraphValuesIfNeeded();
 

@@ -7,9 +7,9 @@
 #include "Editor.h"
 #include "../Graph/AudioGraph.h"
 
-App::App(){};
+Editor::Editor(){};
 
-void App::init(GraphManager* gm)
+void Editor::init(GraphManager* gm)
 {
     graphManager = gm;
 
@@ -55,10 +55,37 @@ void App::init(GraphManager* gm)
 #endif
     };
 
-    App::resized();
+    Editor::resized();
 }
 
-void App::updateObjectsFromDSP() const
+void Editor::loadFile(const std::string& fileName) const
+{
+    std::cout << "Loading graph from file: " << fileName << "..." << std::endl;
+
+    // Handle file loading
+    std::ifstream file(fileName);
+
+    std::cout << fileName << " loaded successfully" << std::endl;
+
+    std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    try {
+        nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, true, true);
+        if (!patch.empty()) {
+            auto filePath = std::filesystem::absolute(fileName).string();
+            auto [ graphObjects, connEdges ] = graphManager->setActiveGraph(filePath, patch, false);
+            canvas->reloadAllCanvasObjects(graphObjects);
+            canvas->reloadConnections(connEdges);
+        }
+    }
+    catch (const nlohmann::json::parse_error& ex)
+    {
+        std::cerr << "Parse error in JSON file: " << ex.what() << std::endl;
+    }
+}
+
+void Editor::updateObjectsFromDSP() const
 {
     canvas->updateGraphValuesIfNeeded();
 

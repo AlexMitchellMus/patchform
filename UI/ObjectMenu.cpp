@@ -69,7 +69,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
                 }
                 else
                 {
-                    auto newAudioNode = reinterpret_cast<App*>(getRootComponent())->graphManager->addObject(itemDef);
+                    auto newAudioNode = reinterpret_cast<Editor*>(getRootComponent())->graphManager->addObject(itemDef);
                     if (!newAudioNode)
                     {
                         std::cerr << "Failed to create new Audio Node." << std::endl;

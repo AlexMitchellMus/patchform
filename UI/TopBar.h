@@ -126,40 +126,7 @@ public:
         bool isHovered = false;
     };
 
-    MainMenu()
-    {
-        setSize(150, 6 * 35 + 5);
-
-        loadPatch = std::make_unique<MenuItem>("Open patch...");
-        addComponent(loadPatch.get());
-
-        savePatch = std::make_unique<MenuItem>("Save patch...");
-        addComponent(savePatch.get());
-
-        saveAsPatch = std::make_unique<MenuItem>("Save patch as...");
-        addComponent(saveAsPatch.get());
-
-        applicationSettings = std::make_unique<MenuItem>("Settings...");
-        addComponent(applicationSettings.get());
-
-        aboutApplication = std::make_unique<MenuItem>("About...");
-        addComponent(aboutApplication.get());
-        aboutApplication->onClick = [this]()
-        {
-
-        };
-
-        quitApplication = std::make_unique<MenuItem>("Exit");
-        addComponent(quitApplication.get());
-        quitApplication->onClick = [this]()
-        {
-            SDL_Event event;
-            event.type = SDL_EVENT_QUIT;
-            SDL_PushEvent(&event);
-        };
-
-        MainMenu::resized();
-    };
+    MainMenu();
 
     void resized() override
     {
