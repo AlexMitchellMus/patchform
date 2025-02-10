@@ -357,6 +357,33 @@ public:
             uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
             uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
 
+            if (source >= objects.size())
+            {
+                std::cerr << "Error: Source index " << source << " is out of bounds (max index " << objects.size()-1 << "). Skipping connection.\n";
+                continue;
+            }
+            if (target >= objects.size())
+            {
+                std::cerr << "Error: Target index " << target << " is out of bounds (max index " << objects.size()-1 << "). Skipping connection.\n";
+                continue;
+            }
+
+            uint32_t sourcePort = connection["sourcePort"].get<int>();
+            uint32_t targetPort = connection["targetPort"].get<int>();
+
+            if (sourcePort >= 1)
+            {
+                std::cerr << "Error: Source port index " << sourcePort << " is out of bounds for node at index " <<
+                    source << " (max index " << 0 << "). Skipping connection.\n";
+                continue;
+            }
+            if (targetPort >= objects[target]->inputPortBuffers.size())
+            {
+                std::cerr << "Error: Target port index " << targetPort << " is out of bounds for node at index " <<
+                    target << " (max index " << objects[target]->inputPortBuffers.size() - 1 << "). Skipping connection.\n";
+                continue;
+            }
+
             //std::cout << "connecting: (" << source << " id: " << objects[source]->nodeID << ") -> (" << target << " id: " << objects[target]->nodeID << ")" << std::endl;
 
             // connections use unique ID's for nodes
@@ -1050,7 +1077,7 @@ public:
         activeGraph->printGraph();
     }
 
-    std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch, bool logVerbose) {
+    std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch, const bool logVerbose) {
         if (swapGraph.load(std::memory_order_acquire)) {
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
             return { };
@@ -1060,7 +1087,7 @@ public:
 
         transitioningGraph = std::make_shared<GraphHolder>(ctx);
 
-        transitioningGraph->loadPatch(patch, logVerbose);
+        transitioningGraph->loadPatch(patch, true);
 
         auto loadedObjects = getObjects();
         auto connections = transitioningGraph->getConnections();

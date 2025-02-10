@@ -500,7 +500,6 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
     toAdd->setPosition(position);
     toAdd->audioNode->canvasPos = position - pptk::Point(canvasOrigin, canvasOrigin);
 
-
     setSelected(toAdd);
 
     objects.push_back(toAdd);
@@ -534,7 +533,10 @@ void Canvas::addObject(Object* toAdd, pptk::Point position)
 
 void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
 {
+    // Clear both objects and selected as selected could contain (if they were selected) dead objects
+    // TODO: We could make selected objects SafePointers but ATM we can manage their lifetime
     objects.clear();
+    selected.clear();
 
     for (auto* obj : newObjects)
     {
@@ -551,42 +553,69 @@ void Canvas::reloadConnections(std::vector<Edge*> edges)
 {
     connections.clear();
 
+    // Optionally, build a mapping for faster lookup:
+    // std::unordered_map<int, Object*> objectMap;
+    // for (auto* obj : objects)
+    //     objectMap[obj->nodeID] = obj;
+
     for (auto* edge : edges)
     {
-        //std::cout << "making connection for: " << edge->toString() << std::endl;
+        std::cout << "Processing edge: " << edge->toString() << std::endl;
 
+        // Look up the output object
         auto outputObjIt = std::find_if(objects.begin(), objects.end(),
             [edge](const Object* obj) {
                 return obj->nodeID == edge->getoNode();
             });
 
+        // Look up the input object
         auto inputObjIt = std::find_if(objects.begin(), objects.end(),
             [edge](const Object* obj) {
                 return obj->nodeID == edge->getiNode();
             });
 
-        if (inputObjIt != objects.end() && outputObjIt != objects.end())
+        if (outputObjIt == objects.end())
         {
-            Object* inputObj = *inputObjIt;
-            Object* outputObj = *outputObjIt;
+            std::cerr << "Warning: Output object with nodeID "
+                      << edge->getoNode() << " not found." << std::endl;
+            continue;
+        }
 
-            // We shouldn't need to do this here, as the engine should always have the correct info.
-            if (edge->getoPort() < outputObj->outPorts.size() && edge->getiPort() < inputObj->inPorts.size())
-            {
-                auto* origin = outputObj->outPorts[edge->getoPort()].get();
-                auto* dest = inputObj->inPorts[edge->getiPort()].get();
+        if (inputObjIt == objects.end())
+        {
+            std::cerr << "Warning: Input object with nodeID "
+                      << edge->getiNode() << " not found." << std::endl;
+            continue;
+        }
 
-                auto connection = std::make_unique<Connection>(origin, dest);
+        Object* outputObj = *outputObjIt;
+        Object* inputObj = *inputObjIt;
 
-                connectionsLayer.addComponent(connection.get());
+        std::cout << "Found output object (nodeID " << outputObj->nodeID
+                  << ") and input object (nodeID " << inputObj->nodeID << ")." << std::endl;
 
-                connection->updateConnectionGeometry();
+        // Validate that the port indices are within bounds.
+        if (edge->getoPort() < outputObj->outPorts.size() &&
+            edge->getiPort() < inputObj->inPorts.size())
+        {
+            auto* origin = outputObj->outPorts[edge->getoPort()].get();
+            auto* dest = inputObj->inPorts[edge->getiPort()].get();
 
-                connections.push_back(std::move(connection));
-            }
+            auto connection = std::make_unique<Connection>(origin, dest);
+
+            connectionsLayer.addComponent(connection.get());
+            connection->updateConnectionGeometry();
+
+            connections.push_back(std::move(connection));
+        }
+        else
+        {
+            std::cerr << "Port index out of range for edge: "
+                      << edge->toString() << std::endl;
         }
     }
 }
+
 
 void Canvas::addConnection(Port* origin, Port* dest)
 {
