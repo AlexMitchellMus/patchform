@@ -131,7 +131,8 @@ void Connection::updateConnectionGeometry()
         setPosition(inputPortPos);
 
         // Store final points
-        startPoint = {4.5f, 6.5f}; // Offset the start position slightly
+        auto centre = originPort->getWidth() / 2;
+        startPoint = { centre, centre }; // Offset the start position slightly
         endPoint = destPos;
 
         if (!originPort->isOutput())
