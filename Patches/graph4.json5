@@ -1,161 +1,78 @@
 {
     "connections": [
         {
-            "sourceNode": 2,
+            "sourceNode": "0",
             "sourcePort": 0,
-            "targetNode": 3,
+            "targetNode": "1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "1",
+            "sourcePort": 0,
+            "targetNode": "2",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "3",
+            "sourcePort": 0,
+            "targetNode": "1",
             "targetPort": 1
         },
         {
-            "sourceNode": 3,
+            "sourceNode": "4",
             "sourcePort": 0,
-            "targetNode": 0,
-            "targetPort": 0
-        },
-        {
-            "sourceNode": 1,
-            "sourcePort": 0,
-            "targetNode": 3,
-            "targetPort": 0
-        },
-        {
-            "sourceNode": 3,
-            "sourcePort": 0,
-            "targetNode": 4,
-            "targetPort": 0
-        },
-        {
-            "sourceNode": 5,
-            "sourcePort": 0,
-            "targetNode": 6,
-            "targetPort": 0
-        },
-        {
-            "sourceNode": 7,
-            "sourcePort": 0,
-            "targetNode": 6,
+            "targetNode": "3",
             "targetPort": 1
-        },
-        {
-            "sourceNode": 6,
-            "sourcePort": 0,
-            "targetNode": 2,
-            "targetPort": 1
-        },
-        {
-            "sourceNode": 8,
-            "sourcePort": 0,
-            "targetNode": 7,
-            "targetPort": 1
-        },
-        {
-            "sourceNode": 9,
-            "sourcePort": 0,
-            "targetNode": 7,
-            "targetPort": 0
-        },
-        {
-            "sourceNode": 3,
-            "sourcePort": 0,
-            "targetNode": 10,
-            "targetPort": 0
         }
     ],
     "nodes": [
         {
+            "hz": 1.0,
             "id": 0,
-            "obj": "scope",
-            "pos": [
-                146.546875,
-                622.44921875
-            ]
-        },
-        {
-            "id": 1,
             "obj": "Metro",
             "pos": [
-                22.14453125,
-                255.32421875
+                68.265625,
+                122.0
             ]
-        },
-        {
-            "freq": 440,
-            "id": 2,
-            "obj": "Osc",
-            "pos": [
-                168.49609375,
-                376.44140625
-            ],
-            "waveform": "sine"
         },
         {
             "attack": 50,
             "decay": 50,
-            "id": 3,
+            "id": 1,
             "obj": "env",
             "pos": [
-                95.51953125,
-                466.6796875
+                112.86328125,
+                316.0
             ]
+        },
+        {
+            "id": 2,
+            "obj": "aout",
+            "pos": [
+                106.63671875,
+                404.0
+            ]
+        },
+        {
+            "freq": 440,
+            "id": 3,
+            "obj": "Osc",
+            "pos": [
+                137.1796875,
+                259.0
+            ],
+            "waveform": "sine"
         },
         {
             "id": 4,
-            "obj": "aout",
-            "pos": [
-                50.63671875,
-                623.0
-            ]
-        },
-        {
-            "id": 5,
-            "obj": "lfo",
-            "pos": [
-                215.5703125,
-                175.0
-            ]
-        },
-        {
-            "id": 6,
-            "obj": "gain",
-            "pos": [
-                249.2421875,
-                294.0
-            ]
-        },
-        {
-            "id": 7,
-            "obj": "gain",
-            "pos": [
-                444.48828125,
-                293.02734375
-            ]
-        },
-        {
-            "id": 8,
             "max": 10,
             "min": 0,
             "obj": "dial",
             "pos": [
-                870.3359375,
-                494.4453125
+                305.0,
+                129.0
             ],
             "value": 3
-        },
-        {
-            "id": 9,
-            "obj": "lfo",
-            "pos": [
-                356.015625,
-                101.33203125
-            ]
-        },
-        {
-            "id": 10,
-            "obj": "scope",
-            "pos": [
-                571.328125,
-                619.91796875
-            ]
         }
     ]
 }

@@ -315,11 +315,16 @@ public:
 
     const json graphToJSON() const
     {
+        ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
+        for (const auto& [name, id] : objectIDMap) {
+            invertedMap[id] = name;
+        }
+
         json nodes = json::array();
         for (const auto& obj : objects)
         {
-            auto node = obj->nodeCreationData;
-            node["id"] = obj->nodeID; // Update the id field (as it could have changed)
+            auto node = obj->getSerializedNode();
+            node["id"] = invertedMap[obj->nodeID];
             node["pos"] = { obj->canvasPos.x, obj->canvasPos.y }; // Position will also have changed.
             nodes.push_back(node);
         }
@@ -328,9 +333,9 @@ public:
         for (const auto& connection : connections)
         {
             json conn;
-            conn["sourceNode"] = connection->getoNode();
+            conn["sourceNode"] = invertedMap[connection->getoNode()];
             conn["sourcePort"] = connection->getoPort();
-            conn["targetNode"] = connection->getiNode();
+            conn["targetNode"] = invertedMap[connection->getiNode()];
             conn["targetPort"] = connection->getiPort();
             conns.push_back(conn);
         }
@@ -354,8 +359,8 @@ public:
         for (const auto& connection : patch["connections"])
         {
             // source and target ID needs to be set in the file format
-            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : connection["sourceNode"].get<int>();
-            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : connection["targetNode"].get<int>();
+            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : objectIDMap[std::to_string(connection["sourceNode"].get<int>())];
+            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
 
             if (source >= objects.size())
             {
@@ -371,6 +376,7 @@ public:
             uint32_t sourcePort = connection["sourcePort"].get<int>();
             uint32_t targetPort = connection["targetPort"].get<int>();
 
+            /*
             if (sourcePort >= 1)
             {
                 std::cerr << "Error: Source port index " << sourcePort << " is out of bounds for node at index " <<
@@ -383,6 +389,7 @@ public:
                     target << " (max index " << objects[target]->inputPortBuffers.size() - 1 << "). Skipping connection.\n";
                 continue;
             }
+            */
 
             //std::cout << "connecting: (" << source << " id: " << objects[source]->nodeID << ") -> (" << target << " id: " << objects[target]->nodeID << ")" << std::endl;
 

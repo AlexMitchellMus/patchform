@@ -66,6 +66,8 @@ public:
 
     json nodeCreationData;
 
+    virtual json getSerializedNode() { return nodeCreationData; };
+
     AudioNode(NodeContext* context, AudioPort::PortType type, const json& creationData)
         : context(context)
         , outputPort(this, "output", type)
@@ -152,6 +154,7 @@ public:
     std::vector<std::unique_ptr<Parameter>>& getParameters() { return parameters; };
 
 private:
+
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
     {
         sumInputBuffers(inputPortBuffers, runningGraph, index);

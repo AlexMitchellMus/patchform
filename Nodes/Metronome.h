@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AudioNodeBase.h"
+#include <atomic>
 
 // Sample accurate metronome implementation
 
@@ -18,6 +19,7 @@ class Metronome : public AudioNode
 
     float sampleCounter = 0.0f;
     float tickInterval;
+    std::atomic<float> hzValue;
 
 //#define TEST_TIMING
 #ifdef TEST_TIMING
@@ -27,25 +29,31 @@ class Metronome : public AudioNode
 public:
     Metronome(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
-        auto const hz = objParams.value("hz", 1.0f);
+        hzValue.store(objParams.value("hz", 1.0f));
 
-        tickParam = addParameter<FloatParameter>("Hz", hz, 0.0f, std::numeric_limits<float>::max());
+        tickParam = addParameter<FloatParameter>("Hz", hzValue.load(), 0.0f, std::numeric_limits<float>::max());
 
-        tickInterval = hz == 0.0f ? 0.0f : context->sampleRate / hz;
+        tickInterval = hzValue.load() == 0.0f ? 0.0f : context->sampleRate / hzValue.load();
 
         addInputPort("ControlInput", AudioPort::PortType::Data);
+    }
+
+    json getSerializedNode() override
+    {
+        nodeCreationData["hz"] = hzValue.load();
+        return nodeCreationData;
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
         float samplesProcessed = 0.0f;
 
-        auto hz = tickParam->getValue();
+        hzValue.store(tickParam->getValue());
 
-        if (hz == 0.0f || tickInterval == 0.0f)
+        if (hzValue.load() == 0.0f || tickInterval == 0.0f)
             return;
 
-        tickInterval = context->sampleRate / hz;
+        tickInterval = context->sampleRate / hzValue.load();
 
         auto events = inputPortBuffers[0]->getEvents();
 
