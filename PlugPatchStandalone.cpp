@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to load inter font!" << std::endl;
     }
 
-    int iconFontHandle = nvgCreateFont(nvg, "icons", "Assets/Icons/IconFontPlugPatch_google.ttf");
+    int iconFontHandle = nvgCreateFont(nvg, "icons", "Assets/Icons/IconFontPlugPatch.ttf");
     if (iconFontHandle == -1) {
         std::cerr << "Failed to load icon font!" << std::endl;
     }
