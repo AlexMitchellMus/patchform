@@ -560,7 +560,7 @@ void Canvas::reloadConnections(std::vector<Edge*> edges)
 
     for (auto* edge : edges)
     {
-        std::cout << "Processing edge: " << edge->toString() << std::endl;
+        //std::cout << "Processing edge: " << edge->toString() << std::endl;
 
         // Look up the output object
         auto outputObjIt = std::find_if(objects.begin(), objects.end(),
@@ -576,23 +576,20 @@ void Canvas::reloadConnections(std::vector<Edge*> edges)
 
         if (outputObjIt == objects.end())
         {
-            std::cerr << "Warning: Output object with nodeID "
-                      << edge->getoNode() << " not found." << std::endl;
+            //std::cerr << "Warning: Output object with nodeID " << edge->getoNode() << " not found." << std::endl;
             continue;
         }
 
         if (inputObjIt == objects.end())
         {
-            std::cerr << "Warning: Input object with nodeID "
-                      << edge->getiNode() << " not found." << std::endl;
+            //std::cerr << "Warning: Input object with nodeID " << edge->getiNode() << " not found." << std::endl;
             continue;
         }
 
         Object* outputObj = *outputObjIt;
         Object* inputObj = *inputObjIt;
 
-        std::cout << "Found output object (nodeID " << outputObj->nodeID
-                  << ") and input object (nodeID " << inputObj->nodeID << ")." << std::endl;
+        //std::cout << "Found output object (nodeID " << outputObj->nodeID << ") and input object (nodeID " << inputObj->nodeID << ")." << std::endl;
 
         // Validate that the port indices are within bounds.
         if (edge->getoPort() < outputObj->outPorts.size() &&
@@ -610,8 +607,7 @@ void Canvas::reloadConnections(std::vector<Edge*> edges)
         }
         else
         {
-            std::cerr << "Port index out of range for edge: "
-                      << edge->toString() << std::endl;
+            //std::cerr << "Port index out of range for edge: " << edge->toString() << std::endl;
         }
     }
 }

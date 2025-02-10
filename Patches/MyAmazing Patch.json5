@@ -1,0 +1,75 @@
+{
+    "connections": [
+        {
+            "sourceNode": 0,
+            "sourcePort": 0,
+            "targetNode": 1,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 4,
+            "sourcePort": 0,
+            "targetNode": 0,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 2,
+            "sourcePort": 0,
+            "targetNode": 4,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 3,
+            "sourcePort": 0,
+            "targetNode": 4,
+            "targetPort": 0
+        }
+    ],
+    "nodes": [
+        {
+            "freq": 440,
+            "id": 0,
+            "obj": "Osc",
+            "pos": [
+                159.1796875,
+                282.0
+            ],
+            "waveform": "sine"
+        },
+        {
+            "id": 1,
+            "obj": "aout",
+            "pos": [
+                134.63671875,
+                367.0
+            ]
+        },
+        {
+            "id": 2,
+            "max": 10,
+            "min": 0,
+            "obj": "dial",
+            "pos": [
+                419.05078125,
+                84.68359375
+            ],
+            "value": 3
+        },
+        {
+            "id": 3,
+            "obj": "lfo",
+            "pos": [
+                146.94921875,
+                112.234375
+            ]
+        },
+        {
+            "id": 4,
+            "obj": "gain",
+            "pos": [
+                296.34375,
+                211.08203125
+            ]
+        }
+    ]
+}

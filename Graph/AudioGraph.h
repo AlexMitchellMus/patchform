@@ -824,7 +824,7 @@ public:
 
         objects.push_back(std::move(node));
 
-        std::cout << "adding node: " << nodeCreationData.value("obj", "") << std::endl;
+        //std::cout << "adding node: " << nodeCreationData.value("obj", "") << std::endl;
 
         return rawNode;
     };
@@ -1087,7 +1087,7 @@ public:
 
         transitioningGraph = std::make_shared<GraphHolder>(ctx);
 
-        transitioningGraph->loadPatch(patch, true);
+        transitioningGraph->loadPatch(patch, logVerbose);
 
         auto loadedObjects = getObjects();
         auto connections = transitioningGraph->getConnections();

@@ -1,244 +1,1440 @@
 {
-    "nodes": [
-        { "id": 0,  "obj": "Value",    "value": 440.0 },
-        { "id": 1,  "obj": "Oscillator" },
-        { "id": 2,  "obj": "Metro",    "hz": 0.1 },
-        { "id": 3,  "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 4,  "obj": "Value",    "value": 600.0 },
-        { "id": 5,  "obj": "Oscillator" },
-        { "id": 6,  "obj": "Metro",    "hz": 0.06 },
-        { "id": 7,  "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 8,  "obj": "Value",    "value": 770.0 },
-        { "id": 9,  "obj": "Oscillator", "waveform": "triangle" },
-        { "id": 10, "obj": "Metro",    "hz": 0.045 },
-        { "id": 11, "obj": "Envelope", "attack": 6000, "decay": 6000 },
-
-        { "id": 12, "obj": "Volume" },
-
-        { "id": 13, "obj": "Value",    "value": 730.49 },
-        { "id": 14, "obj": "Oscillator" },
-        { "id": 15, "obj": "Metro",    "hz": 0.15 },
-        { "id": 16, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 17, "obj": "Value",    "value": 366.85 },
-        { "id": 18, "obj": "Oscillator" },
-        { "id": 19, "obj": "Metro",    "hz": 0.08 },
-        { "id": 20, "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-
-        { "id": 21, "obj": "Value",    "value": 515.09 },
-        { "id": 22, "obj": "Oscillator" },
-        { "id": 23, "obj": "Metro",    "hz": 0.25 },
-        { "id": 24, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-
-        { "id": 25, "obj": "Value",    "value": 999.87 },
-        { "id": 26, "obj": "Oscillator" },
-        { "id": 27, "obj": "Metro",    "hz": 0.10 },
-        { "id": 28, "obj": "Envelope", "attack": 1000, "decay": 5000 },
-
-        { "id": 29, "obj": "Value",    "value": 432.12 },
-        { "id": 30, "obj": "Oscillator" },
-        { "id": 31, "obj": "Metro",    "hz": 0.20 },
-        { "id": 32, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 33, "obj": "Value",    "value": 863.51 },
-        { "id": 34, "obj": "Oscillator" },
-        { "id": 35, "obj": "Metro",    "hz": 0.13 },
-        { "id": 36, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 37, "obj": "Value",    "value": 389.77 },
-        { "id": 38, "obj": "Oscillator" },
-        { "id": 39, "obj": "Metro",    "hz": 0.02 },
-        { "id": 40, "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 41, "obj": "Value",    "value": 973.24 },
-        { "id": 42, "obj": "Oscillator" },
-        { "id": 43, "obj": "Metro",    "hz": 0.24 },
-        { "id": 44, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 45, "obj": "Value",    "value": 753.68 },
-        { "id": 46, "obj": "Oscillator" },
-        { "id": 47, "obj": "Metro",    "hz": 0.21 },
-        { "id": 48, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 49, "obj": "Value",    "value": 312.93 },
-        { "id": 50, "obj": "Oscillator" },
-        { "id": 51, "obj": "Metro",    "hz": 0.16 },
-        { "id": 52, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 53, "obj": "Value",    "value": 897.42 },
-        { "id": 54, "obj": "Oscillator" },
-        { "id": 55, "obj": "Metro",    "hz": 0.09 },
-        { "id": 56, "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 57, "obj": "Value",    "value": 465.15 },
-        { "id": 58, "obj": "Oscillator" },
-        { "id": 59, "obj": "Metro",    "hz": 0.23 },
-        { "id": 60, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 61, "obj": "Value",    "value": 680.64 },
-        { "id": 62, "obj": "Oscillator" },
-        { "id": 63, "obj": "Metro",    "hz": 0.19 },
-        { "id": 64, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 65, "obj": "Value",    "value": 342.71 },
-        { "id": 66, "obj": "Oscillator", "waveform": "noise" },
-        { "id": 67, "obj": "Metro",    "hz": 0.05 },
-        { "id": 68, "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 69, "obj": "Value",    "value": 777.25 },
-        { "id": 70, "obj": "Oscillator", "waveform": "saw" },
-        { "id": 71, "obj": "Metro",    "hz": 0.11 },
-        { "id": 72, "obj": "Envelope", "attack": 1000, "decay": 5000 },
-
-        { "id": 73, "obj": "Value",    "value": 906.81 },
-        { "id": 74, "obj": "Oscillator" },
-        { "id": 75, "obj": "Metro",    "hz": 0.06 },
-        { "id": 76, "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 77, "obj": "Value",    "value": 539.36 },
-        { "id": 78, "obj": "Oscillator" },
-        { "id": 79, "obj": "Metro",    "hz": 0.18 },
-        { "id": 80, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 81, "obj": "Value",    "value": 410.52 },
-        { "id": 82, "obj": "Oscillator" },
-        { "id": 83, "obj": "Metro",    "hz": 0.01 },
-        { "id": 84, "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 85, "obj": "Value",    "value": 638.05 },
-        { "id": 86, "obj": "Oscillator" },
-        { "id": 87, "obj": "Metro",    "hz": 0.22 },
-        { "id": 88, "obj": "Envelope", "attack": 1000, "decay": 1000 },
-
-        { "id": 89, "obj": "Value",    "value": 984.60 },
-        { "id": 90, "obj": "Oscillator" },
-        { "id": 91, "obj": "Metro",    "hz": 0.04 },
-        { "id": 92, "obj": "Envelope", "attack": 5000, "decay": 5000 },
-
-        { "id": 93, "obj": "AudioOut" },
-        { "id": 94, "obj": "Value", "value": 0.1 }
-    ],
     "connections": [
-        { "sourceNode": 0,  "sourcePort": 0, "targetNode": 1,  "targetPort": 1 },
-        { "sourceNode": 1,  "sourcePort": 0, "targetNode": 3,  "targetPort": 1 },
-        { "sourceNode": 2,  "sourcePort": 0, "targetNode": 3,  "targetPort": 0 },
-        { "sourceNode": 3,  "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 4,  "sourcePort": 0, "targetNode": 5,  "targetPort": 1 },
-        { "sourceNode": 5,  "sourcePort": 0, "targetNode": 7,  "targetPort": 1 },
-        { "sourceNode": 6,  "sourcePort": 0, "targetNode": 7,  "targetPort": 0 },
-        { "sourceNode": 7,  "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 8,  "sourcePort": 0, "targetNode": 9,  "targetPort": 1 },
-        { "sourceNode": 9,  "sourcePort": 0, "targetNode": 11, "targetPort": 1 },
-        { "sourceNode": 10, "sourcePort": 0, "targetNode": 11, "targetPort": 0 },
-        { "sourceNode": 11, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 13, "sourcePort": 0, "targetNode": 14, "targetPort": 1 },
-        { "sourceNode": 14, "sourcePort": 0, "targetNode": 16, "targetPort": 1 },
-        { "sourceNode": 15, "sourcePort": 0, "targetNode": 16, "targetPort": 0 },
-        { "sourceNode": 16, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 17, "sourcePort": 0, "targetNode": 18, "targetPort": 1 },
-        { "sourceNode": 18, "sourcePort": 0, "targetNode": 20, "targetPort": 1 },
-        { "sourceNode": 19, "sourcePort": 0, "targetNode": 20, "targetPort": 0 },
-        { "sourceNode": 20, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 21, "sourcePort": 0, "targetNode": 22, "targetPort": 1 },
-        { "sourceNode": 22, "sourcePort": 0, "targetNode": 24, "targetPort": 1 },
-        { "sourceNode": 23, "sourcePort": 0, "targetNode": 24, "targetPort": 0 },
-        { "sourceNode": 24, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 25, "sourcePort": 0, "targetNode": 26, "targetPort": 1 },
-        { "sourceNode": 26, "sourcePort": 0, "targetNode": 28, "targetPort": 1 },
-        { "sourceNode": 27, "sourcePort": 0, "targetNode": 28, "targetPort": 0 },
-        { "sourceNode": 28, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 29, "sourcePort": 0, "targetNode": 30, "targetPort": 1 },
-        { "sourceNode": 30, "sourcePort": 0, "targetNode": 32, "targetPort": 1 },
-        { "sourceNode": 31, "sourcePort": 0, "targetNode": 32, "targetPort": 0 },
-        { "sourceNode": 32, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 33, "sourcePort": 0, "targetNode": 34, "targetPort": 1 },
-        { "sourceNode": 34, "sourcePort": 0, "targetNode": 36, "targetPort": 1 },
-        { "sourceNode": 35, "sourcePort": 0, "targetNode": 36, "targetPort": 0 },
-        { "sourceNode": 36, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 37, "sourcePort": 0, "targetNode": 38, "targetPort": 1 },
-        { "sourceNode": 38, "sourcePort": 0, "targetNode": 40, "targetPort": 1 },
-        { "sourceNode": 39, "sourcePort": 0, "targetNode": 40, "targetPort": 0 },
-        { "sourceNode": 40, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 41, "sourcePort": 0, "targetNode": 42, "targetPort": 1 },
-        { "sourceNode": 42, "sourcePort": 0, "targetNode": 44, "targetPort": 1 },
-        { "sourceNode": 43, "sourcePort": 0, "targetNode": 44, "targetPort": 0 },
-        { "sourceNode": 44, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 45, "sourcePort": 0, "targetNode": 46, "targetPort": 1 },
-        { "sourceNode": 46, "sourcePort": 0, "targetNode": 48, "targetPort": 1 },
-        { "sourceNode": 47, "sourcePort": 0, "targetNode": 48, "targetPort": 0 },
-        { "sourceNode": 48, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 49, "sourcePort": 0, "targetNode": 50, "targetPort": 1 },
-        { "sourceNode": 50, "sourcePort": 0, "targetNode": 52, "targetPort": 1 },
-        { "sourceNode": 51, "sourcePort": 0, "targetNode": 52, "targetPort": 0 },
-        { "sourceNode": 52, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 53, "sourcePort": 0, "targetNode": 54, "targetPort": 1 },
-        { "sourceNode": 54, "sourcePort": 0, "targetNode": 56, "targetPort": 1 },
-        { "sourceNode": 55, "sourcePort": 0, "targetNode": 56, "targetPort": 0 },
-        { "sourceNode": 56, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 57, "sourcePort": 0, "targetNode": 58, "targetPort": 1 },
-        { "sourceNode": 58, "sourcePort": 0, "targetNode": 60, "targetPort": 1 },
-        { "sourceNode": 59, "sourcePort": 0, "targetNode": 60, "targetPort": 0 },
-        { "sourceNode": 60, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 61, "sourcePort": 0, "targetNode": 62, "targetPort": 1 },
-        { "sourceNode": 62, "sourcePort": 0, "targetNode": 64, "targetPort": 1 },
-        { "sourceNode": 63, "sourcePort": 0, "targetNode": 64, "targetPort": 0 },
-        { "sourceNode": 64, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 65, "sourcePort": 0, "targetNode": 66, "targetPort": 1 },
-        { "sourceNode": 66, "sourcePort": 0, "targetNode": 68, "targetPort": 1 },
-        { "sourceNode": 67, "sourcePort": 0, "targetNode": 68, "targetPort": 0 },
-        { "sourceNode": 68, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 69, "sourcePort": 0, "targetNode": 70, "targetPort": 1 },
-        { "sourceNode": 70, "sourcePort": 0, "targetNode": 72, "targetPort": 1 },
-        { "sourceNode": 71, "sourcePort": 0, "targetNode": 72, "targetPort": 0 },
-        { "sourceNode": 72, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 73, "sourcePort": 0, "targetNode": 74, "targetPort": 1 },
-        { "sourceNode": 74, "sourcePort": 0, "targetNode": 76, "targetPort": 1 },
-        { "sourceNode": 75, "sourcePort": 0, "targetNode": 76, "targetPort": 0 },
-        { "sourceNode": 76, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 77, "sourcePort": 0, "targetNode": 78, "targetPort": 1 },
-        { "sourceNode": 78, "sourcePort": 0, "targetNode": 80, "targetPort": 1 },
-        { "sourceNode": 79, "sourcePort": 0, "targetNode": 80, "targetPort": 0 },
-        { "sourceNode": 80, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 81, "sourcePort": 0, "targetNode": 82, "targetPort": 1 },
-        { "sourceNode": 82, "sourcePort": 0, "targetNode": 84, "targetPort": 1 },
-        { "sourceNode": 83, "sourcePort": 0, "targetNode": 84, "targetPort": 0 },
-        { "sourceNode": 84, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 85, "sourcePort": 0, "targetNode": 86, "targetPort": 1 },
-        { "sourceNode": 86, "sourcePort": 0, "targetNode": 88, "targetPort": 1 },
-        { "sourceNode": 87, "sourcePort": 0, "targetNode": 88, "targetPort": 0 },
-        { "sourceNode": 88, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 89, "sourcePort": 0, "targetNode": 90, "targetPort": 1 },
-        { "sourceNode": 90, "sourcePort": 0, "targetNode": 92, "targetPort": 1 },
-        { "sourceNode": 91, "sourcePort": 0, "targetNode": 92, "targetPort": 0 },
-        { "sourceNode": 92, "sourcePort": 0, "targetNode": 12, "targetPort": 0 },
-
-        { "sourceNode": 12, "sourcePort": 0, "targetNode": 93, "targetPort": 0 },
-        { "sourceNode": 94, "sourcePort": 0, "targetNode": 12, "targetPort": 1 }
+        {
+            "sourceNode": 0,
+            "sourcePort": 0,
+            "targetNode": 1,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 1,
+            "sourcePort": 0,
+            "targetNode": 3,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 2,
+            "sourcePort": 0,
+            "targetNode": 3,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 3,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 4,
+            "sourcePort": 0,
+            "targetNode": 5,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 5,
+            "sourcePort": 0,
+            "targetNode": 7,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 6,
+            "sourcePort": 0,
+            "targetNode": 7,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 7,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 8,
+            "sourcePort": 0,
+            "targetNode": 9,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 9,
+            "sourcePort": 0,
+            "targetNode": 11,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 10,
+            "sourcePort": 0,
+            "targetNode": 11,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 11,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 13,
+            "sourcePort": 0,
+            "targetNode": 14,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 14,
+            "sourcePort": 0,
+            "targetNode": 16,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 15,
+            "sourcePort": 0,
+            "targetNode": 16,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 16,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 17,
+            "sourcePort": 0,
+            "targetNode": 18,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 18,
+            "sourcePort": 0,
+            "targetNode": 20,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 19,
+            "sourcePort": 0,
+            "targetNode": 20,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 20,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 21,
+            "sourcePort": 0,
+            "targetNode": 22,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 22,
+            "sourcePort": 0,
+            "targetNode": 24,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 23,
+            "sourcePort": 0,
+            "targetNode": 24,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 24,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 25,
+            "sourcePort": 0,
+            "targetNode": 26,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 26,
+            "sourcePort": 0,
+            "targetNode": 28,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 27,
+            "sourcePort": 0,
+            "targetNode": 28,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 28,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 29,
+            "sourcePort": 0,
+            "targetNode": 30,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 30,
+            "sourcePort": 0,
+            "targetNode": 32,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 31,
+            "sourcePort": 0,
+            "targetNode": 32,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 32,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 33,
+            "sourcePort": 0,
+            "targetNode": 34,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 34,
+            "sourcePort": 0,
+            "targetNode": 36,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 35,
+            "sourcePort": 0,
+            "targetNode": 36,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 36,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 37,
+            "sourcePort": 0,
+            "targetNode": 38,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 38,
+            "sourcePort": 0,
+            "targetNode": 40,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 39,
+            "sourcePort": 0,
+            "targetNode": 40,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 40,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 41,
+            "sourcePort": 0,
+            "targetNode": 42,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 42,
+            "sourcePort": 0,
+            "targetNode": 44,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 43,
+            "sourcePort": 0,
+            "targetNode": 44,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 44,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 45,
+            "sourcePort": 0,
+            "targetNode": 46,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 46,
+            "sourcePort": 0,
+            "targetNode": 48,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 47,
+            "sourcePort": 0,
+            "targetNode": 48,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 48,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 49,
+            "sourcePort": 0,
+            "targetNode": 50,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 50,
+            "sourcePort": 0,
+            "targetNode": 52,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 51,
+            "sourcePort": 0,
+            "targetNode": 52,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 52,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 53,
+            "sourcePort": 0,
+            "targetNode": 54,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 54,
+            "sourcePort": 0,
+            "targetNode": 56,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 55,
+            "sourcePort": 0,
+            "targetNode": 56,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 56,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 57,
+            "sourcePort": 0,
+            "targetNode": 58,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 58,
+            "sourcePort": 0,
+            "targetNode": 60,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 59,
+            "sourcePort": 0,
+            "targetNode": 60,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 60,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 61,
+            "sourcePort": 0,
+            "targetNode": 62,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 62,
+            "sourcePort": 0,
+            "targetNode": 64,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 63,
+            "sourcePort": 0,
+            "targetNode": 64,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 64,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 65,
+            "sourcePort": 0,
+            "targetNode": 66,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 66,
+            "sourcePort": 0,
+            "targetNode": 68,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 67,
+            "sourcePort": 0,
+            "targetNode": 68,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 68,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 69,
+            "sourcePort": 0,
+            "targetNode": 70,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 70,
+            "sourcePort": 0,
+            "targetNode": 72,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 71,
+            "sourcePort": 0,
+            "targetNode": 72,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 72,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 73,
+            "sourcePort": 0,
+            "targetNode": 74,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 74,
+            "sourcePort": 0,
+            "targetNode": 76,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 75,
+            "sourcePort": 0,
+            "targetNode": 76,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 76,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 77,
+            "sourcePort": 0,
+            "targetNode": 78,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 78,
+            "sourcePort": 0,
+            "targetNode": 80,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 79,
+            "sourcePort": 0,
+            "targetNode": 80,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 80,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 81,
+            "sourcePort": 0,
+            "targetNode": 82,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 82,
+            "sourcePort": 0,
+            "targetNode": 84,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 83,
+            "sourcePort": 0,
+            "targetNode": 84,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 84,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 85,
+            "sourcePort": 0,
+            "targetNode": 86,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 86,
+            "sourcePort": 0,
+            "targetNode": 88,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 87,
+            "sourcePort": 0,
+            "targetNode": 88,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 88,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 89,
+            "sourcePort": 0,
+            "targetNode": 90,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 90,
+            "sourcePort": 0,
+            "targetNode": 92,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 91,
+            "sourcePort": 0,
+            "targetNode": 92,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 92,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 12,
+            "sourcePort": 0,
+            "targetNode": 93,
+            "targetPort": 0
+        },
+        {
+            "sourceNode": 94,
+            "sourcePort": 0,
+            "targetNode": 12,
+            "targetPort": 1
+        },
+        {
+            "sourceNode": 12,
+            "sourcePort": 0,
+            "targetNode": 95,
+            "targetPort": 0
+        }
+    ],
+    "nodes": [
+        {
+            "id": 0,
+            "obj": "Value",
+            "pos": [
+                2146.609375,
+                628.875
+            ],
+            "value": 440.0
+        },
+        {
+            "id": 1,
+            "obj": "Oscillator",
+            "pos": [
+                2021.4375,
+                682.140625
+            ]
+        },
+        {
+            "hz": 0.1,
+            "id": 2,
+            "obj": "Metro",
+            "pos": [
+                1937.59375,
+                628.875
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 3,
+            "obj": "Envelope",
+            "pos": [
+                1937.5703125,
+                726.05078125
+            ]
+        },
+        {
+            "id": 4,
+            "obj": "Value",
+            "pos": [
+                1005.09765625,
+                668.81640625
+            ],
+            "value": 600.0
+        },
+        {
+            "id": 5,
+            "obj": "Oscillator",
+            "pos": [
+                883.9453125,
+                720.74609375
+            ]
+        },
+        {
+            "hz": 0.06,
+            "id": 6,
+            "obj": "Metro",
+            "pos": [
+                794.7421875,
+                667.46875
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 7,
+            "obj": "Envelope",
+            "pos": [
+                798.734375,
+                769.98828125
+            ]
+        },
+        {
+            "id": 8,
+            "obj": "Value",
+            "pos": [
+                224.03515625,
+                39.81640625
+            ],
+            "value": 770.0
+        },
+        {
+            "id": 9,
+            "obj": "Oscillator",
+            "pos": [
+                73.16796875,
+                87.76953125
+            ],
+            "waveform": "triangle"
+        },
+        {
+            "hz": 0.045,
+            "id": 10,
+            "obj": "Metro",
+            "pos": [
+                12.203125,
+                39.7890625
+            ]
+        },
+        {
+            "attack": 6000,
+            "decay": 6000,
+            "id": 11,
+            "obj": "Envelope",
+            "pos": [
+                12.2265625,
+                136.7109375
+            ]
+        },
+        {
+            "id": 12,
+            "obj": "Volume",
+            "pos": [
+                1482.01171875,
+                1130.09375
+            ]
+        },
+        {
+            "id": 13,
+            "obj": "Value",
+            "pos": [
+                301.9453125,
+                292.5625
+            ],
+            "value": 730.49
+        },
+        {
+            "id": 14,
+            "obj": "Oscillator",
+            "pos": [
+                171.06640625,
+                335.51171875
+            ]
+        },
+        {
+            "hz": 0.15,
+            "id": 15,
+            "obj": "Metro",
+            "pos": [
+                94.1328125,
+                285.55859375
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 16,
+            "obj": "Envelope",
+            "pos": [
+                96.16015625,
+                381.4765625
+            ]
+        },
+        {
+            "id": 17,
+            "obj": "Value",
+            "pos": [
+                1643.4375,
+                707.99609375
+            ],
+            "value": 366.85
+        },
+        {
+            "id": 18,
+            "obj": "Oscillator",
+            "pos": [
+                1525.57421875,
+                758.94921875
+            ]
+        },
+        {
+            "hz": 0.08,
+            "id": 19,
+            "obj": "Metro",
+            "pos": [
+                1443.6796875,
+                708.0078125
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 20,
+            "obj": "Envelope",
+            "pos": [
+                1443.671875,
+                804.90625
+            ]
+        },
+        {
+            "id": 21,
+            "obj": "Value",
+            "pos": [
+                744.84765625,
+                45.43359375
+            ],
+            "value": 515.09
+        },
+        {
+            "id": 22,
+            "obj": "Oscillator",
+            "pos": [
+                623.640625,
+                97.35546875
+            ]
+        },
+        {
+            "hz": 0.25,
+            "id": 23,
+            "obj": "Metro",
+            "pos": [
+                547.74609375,
+                44.08984375
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 24,
+            "obj": "Envelope",
+            "pos": [
+                547.75,
+                143.9453125
+            ]
+        },
+        {
+            "id": 25,
+            "obj": "Value",
+            "pos": [
+                808.8515625,
+                379.41796875
+            ],
+            "value": 999.87
+        },
+        {
+            "id": 26,
+            "obj": "Oscillator",
+            "pos": [
+                681.0390625,
+                430.0078125
+            ]
+        },
+        {
+            "hz": 0.1,
+            "id": 27,
+            "obj": "Metro",
+            "pos": [
+                601.12890625,
+                386.03515625
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 5000,
+            "id": 28,
+            "obj": "Envelope",
+            "pos": [
+                605.140625,
+                480.58203125
+            ]
+        },
+        {
+            "id": 29,
+            "obj": "Value",
+            "pos": [
+                2560.5546875,
+                630.9296875
+            ],
+            "value": 432.12
+        },
+        {
+            "id": 30,
+            "obj": "Oscillator",
+            "pos": [
+                2435.9375,
+                672.45703125
+            ]
+        },
+        {
+            "hz": 0.2,
+            "id": 31,
+            "obj": "Metro",
+            "pos": [
+                2359.25,
+                632.53515625
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 32,
+            "obj": "Envelope",
+            "pos": [
+                2359.2578125,
+                720.38671875
+            ]
+        },
+        {
+            "id": 33,
+            "obj": "Value",
+            "pos": [
+                3301.7890625,
+                578.62109375
+            ],
+            "value": 863.51
+        },
+        {
+            "id": 34,
+            "obj": "Oscillator",
+            "pos": [
+                3178.7890625,
+                624.9453125
+            ]
+        },
+        {
+            "hz": 0.13,
+            "id": 35,
+            "obj": "Metro",
+            "pos": [
+                3106.890625,
+                578.61328125
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 36,
+            "obj": "Envelope",
+            "pos": [
+                3106.8984375,
+                672.875
+            ]
+        },
+        {
+            "id": 37,
+            "obj": "Value",
+            "pos": [
+                2913.8359375,
+                608.1640625
+            ],
+            "value": 389.77
+        },
+        {
+            "id": 38,
+            "obj": "Oscillator",
+            "pos": [
+                2792.421875,
+                657.69140625
+            ]
+        },
+        {
+            "hz": 0.02,
+            "id": 39,
+            "obj": "Metro",
+            "pos": [
+                2712.5234375,
+                611.359375
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 40,
+            "obj": "Envelope",
+            "pos": [
+                2714.140625,
+                707.20703125
+            ]
+        },
+        {
+            "id": 41,
+            "obj": "Value",
+            "pos": [
+                3326.859375,
+                292.91015625
+            ],
+            "value": 973.24
+        },
+        {
+            "id": 42,
+            "obj": "Oscillator",
+            "pos": [
+                3209.6875,
+                339.47265625
+            ]
+        },
+        {
+            "hz": 0.24,
+            "id": 43,
+            "obj": "Metro",
+            "pos": [
+                3129.765625,
+                291.55078125
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 44,
+            "obj": "Envelope",
+            "pos": [
+                3131.109375,
+                387.41796875
+            ]
+        },
+        {
+            "id": 45,
+            "obj": "Value",
+            "pos": [
+                3309.5078125,
+                -11.3125
+            ],
+            "value": 753.68
+        },
+        {
+            "id": 46,
+            "obj": "Oscillator",
+            "pos": [
+                3187.109375,
+                34.3046875
+            ]
+        },
+        {
+            "hz": 0.21,
+            "id": 47,
+            "obj": "Metro",
+            "pos": [
+                3115.1953125,
+                77.4453125
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 48,
+            "obj": "Envelope",
+            "pos": [
+                3112.9140625,
+                123.140625
+            ]
+        },
+        {
+            "id": 49,
+            "obj": "Value",
+            "pos": [
+                2938.2421875,
+                -0.14453125
+            ],
+            "value": 312.93
+        },
+        {
+            "id": 50,
+            "obj": "Oscillator",
+            "pos": [
+                2811.5390625,
+                43.25
+            ]
+        },
+        {
+            "hz": 0.16,
+            "id": 51,
+            "obj": "Metro",
+            "pos": [
+                2733.8984375,
+                -0.1328125
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 52,
+            "obj": "Envelope",
+            "pos": [
+                2731.625,
+                91.171875
+            ]
+        },
+        {
+            "id": 53,
+            "obj": "Value",
+            "pos": [
+                2579.2109375,
+                313.7265625
+            ],
+            "value": 897.42
+        },
+        {
+            "id": 54,
+            "obj": "Oscillator",
+            "pos": [
+                2454.3515625,
+                359.69140625
+            ]
+        },
+        {
+            "hz": 0.09,
+            "id": 55,
+            "obj": "Metro",
+            "pos": [
+                2369.3984375,
+                308.71484375
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 56,
+            "obj": "Envelope",
+            "pos": [
+                2370.40625,
+                405.640625
+            ]
+        },
+        {
+            "id": 57,
+            "obj": "Value",
+            "pos": [
+                2969.03125,
+                299.6015625
+            ],
+            "value": 465.15
+        },
+        {
+            "id": 58,
+            "obj": "Oscillator",
+            "pos": [
+                2844.140625,
+                345.51953125
+            ]
+        },
+        {
+            "hz": 0.23,
+            "id": 59,
+            "obj": "Metro",
+            "pos": [
+                2761.2109375,
+                303.5546875
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 60,
+            "obj": "Envelope",
+            "pos": [
+                2766.21875,
+                395.4765625
+            ]
+        },
+        {
+            "id": 61,
+            "obj": "Value",
+            "pos": [
+                2490.4375,
+                -8.0546875
+            ],
+            "value": 680.64
+        },
+        {
+            "id": 62,
+            "obj": "Oscillator",
+            "pos": [
+                2361.0234375,
+                38.2578125
+            ]
+        },
+        {
+            "hz": 0.19,
+            "id": 63,
+            "obj": "Metro",
+            "pos": [
+                2289.125,
+                87.796875
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 64,
+            "obj": "Envelope",
+            "pos": [
+                2287.515625,
+                140.54296875
+            ]
+        },
+        {
+            "id": 65,
+            "obj": "Value",
+            "pos": [
+                254.2734375,
+                627.98828125
+            ],
+            "value": 342.71
+        },
+        {
+            "id": 66,
+            "obj": "Oscillator",
+            "pos": [
+                120.06640625,
+                674.31640625
+            ],
+            "waveform": "noise"
+        },
+        {
+            "hz": 0.05,
+            "id": 67,
+            "obj": "Metro",
+            "pos": [
+                41.80078125,
+                627.953125
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 68,
+            "obj": "Envelope",
+            "pos": [
+                43.37890625,
+                723.796875
+            ]
+        },
+        {
+            "id": 69,
+            "obj": "Value",
+            "pos": [
+                1686.7109375,
+                320.70703125
+            ],
+            "value": 777.25
+        },
+        {
+            "id": 70,
+            "obj": "Oscillator",
+            "pos": [
+                1563.703125,
+                368.63671875
+            ],
+            "waveform": "saw"
+        },
+        {
+            "hz": 0.11,
+            "id": 71,
+            "obj": "Metro",
+            "pos": [
+                1483.828125,
+                323.90234375
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 5000,
+            "id": 72,
+            "obj": "Envelope",
+            "pos": [
+                1485.4375,
+                418.1640625
+            ]
+        },
+        {
+            "id": 73,
+            "obj": "Value",
+            "pos": [
+                1560.3125,
+                54.90625
+            ],
+            "value": 906.81
+        },
+        {
+            "id": 74,
+            "obj": "Oscillator",
+            "pos": [
+                1434.51171875,
+                104.99609375
+            ]
+        },
+        {
+            "hz": 0.06,
+            "id": 75,
+            "obj": "Metro",
+            "pos": [
+                1352.28515625,
+                52.5234375
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 76,
+            "obj": "Envelope",
+            "pos": [
+                1352.31640625,
+                151.80859375
+            ]
+        },
+        {
+            "id": 77,
+            "obj": "Value",
+            "pos": [
+                1293.16015625,
+                424.09375
+            ],
+            "value": 539.36
+        },
+        {
+            "id": 78,
+            "obj": "Oscillator",
+            "pos": [
+                1167.6328125,
+                472.078125
+            ]
+        },
+        {
+            "hz": 0.18,
+            "id": 79,
+            "obj": "Metro",
+            "pos": [
+                1090.0078125,
+                425.30859375
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 80,
+            "obj": "Envelope",
+            "pos": [
+                1091.109375,
+                520.03515625
+            ]
+        },
+        {
+            "id": 81,
+            "obj": "Value",
+            "pos": [
+                2077.09375,
+                4.265625
+            ],
+            "value": 410.52
+        },
+        {
+            "id": 82,
+            "obj": "Oscillator",
+            "pos": [
+                1951.5078125,
+                51.06640625
+            ]
+        },
+        {
+            "hz": 0.01,
+            "id": 83,
+            "obj": "Metro",
+            "pos": [
+                1867.0390625,
+                4.27734375
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 84,
+            "obj": "Envelope",
+            "pos": [
+                1868.203125,
+                98.9921875
+            ]
+        },
+        {
+            "id": 85,
+            "obj": "Value",
+            "pos": [
+                2197.046875,
+                293.828125
+            ],
+            "value": 638.05
+        },
+        {
+            "id": 86,
+            "obj": "Oscillator",
+            "pos": [
+                2071.828125,
+                339.08203125
+            ]
+        },
+        {
+            "hz": 0.22,
+            "id": 87,
+            "obj": "Metro",
+            "pos": [
+                1994.578125,
+                291.16015625
+            ]
+        },
+        {
+            "attack": 1000,
+            "decay": 1000,
+            "id": 88,
+            "obj": "Envelope",
+            "pos": [
+                1993.6953125,
+                382.67578125
+            ]
+        },
+        {
+            "id": 89,
+            "obj": "Value",
+            "pos": [
+                1130.28125,
+                100.44140625
+            ],
+            "value": 984.6
+        },
+        {
+            "id": 90,
+            "obj": "Oscillator",
+            "pos": [
+                1006.49609375,
+                145.64453125
+            ]
+        },
+        {
+            "hz": 0.04,
+            "id": 91,
+            "obj": "Metro",
+            "pos": [
+                926.53515625,
+                100.0390625
+            ]
+        },
+        {
+            "attack": 5000,
+            "decay": 5000,
+            "id": 92,
+            "obj": "Envelope",
+            "pos": [
+                927.1015625,
+                193.515625
+            ]
+        },
+        {
+            "id": 93,
+            "obj": "AudioOut",
+            "pos": [
+                1475.3359375,
+                1218.4140625
+            ]
+        },
+        {
+            "id": 94,
+            "obj": "Value",
+            "pos": [
+                1575.7421875,
+                1018.2890625
+            ],
+            "value": 0.1
+        },
+        {
+            "id": 95,
+            "obj": "scope",
+            "pos": [
+                1588.3671875,
+                1149.7421875
+            ]
+        }
     ]
 }

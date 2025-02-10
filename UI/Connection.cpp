@@ -239,11 +239,15 @@ void Connection::render(NVGcontext* nvg) {
     //nvgLineTo(nvg, originPos.x, originPos.y);
     //nvgStrokeColor(nvg, nvgRGB(100, 100, 100));
 
+    const auto bgCol = nvgRGBA(30, 30, 30, 180);
+
     nvgStrokeWidth(nvg, 6.0f);   // Set line width
-    if (cableType == CableType::Signal)
-        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, isHovered || isSelected ? highlightCol : conCol, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), 0, false, false, 0.0f));
+    if (connectionBeingCreated)
+        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, highlightCol, bgCol, bgCol, 0, false, false, 0.0f));
+    else if (cableType == CableType::Signal)
+        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, isHovered || isSelected ? highlightCol : conCol, bgCol, bgCol, 0, false, false, 0.0f));
     else
-        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, nvgRGBA(90, 90, 90, 30), nvgRGBA(90, 90, 90, 30), isHovered || isSelected ? highlightCol : conCol, 3, false, false, 0.0f));
+        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, bgCol, bgCol, isHovered || isSelected ? highlightCol : conCol, 3, false, false, 0.0f));
     nvgStroke(nvg);
 
 //#define DEBUG_PATH_HIT_TEST
