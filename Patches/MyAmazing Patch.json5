@@ -1,18 +1,6 @@
 {
     "connections": [
         {
-            "sourceNode": "4",
-            "sourcePort": 0,
-            "targetNode": "3",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "1",
-            "sourcePort": 0,
-            "targetNode": "3",
-            "targetPort": 1
-        },
-        {
             "sourceNode": "dial1",
             "sourcePort": 0,
             "targetNode": "6",
@@ -23,12 +11,6 @@
             "sourcePort": 0,
             "targetNode": "6",
             "targetPort": 0
-        },
-        {
-            "sourceNode": "3",
-            "sourcePort": 0,
-            "targetNode": "dial1",
-            "targetPort": 1
         },
         {
             "sourceNode": "6",
@@ -49,20 +31,20 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "3",
+            "sourceNode": "1",
             "sourcePort": 0,
-            "targetNode": "9",
-            "targetPort": 0
+            "targetNode": "dial1",
+            "targetPort": 1
         }
     ],
     "nodes": [
         {
-            "hz": 23.0,
+            "hz": 86.0,
             "id": "0",
             "obj": "Metro",
             "pos": [
-                100.265625,
-                152.0
+                101.5,
+                299.76953125
             ]
         },
         {
@@ -72,34 +54,17 @@
             "obj": "dial",
             "pos": [
                 99.0,
-                -1.0
+                155.3984375
             ],
-            "value": 1000.0083618164063
-        },
-        {
-            "id": "3",
-            "obj": "gain",
-            "pos": [
-                215.2421875,
-                246.0
-            ]
-        },
-        {
-            "id": "4",
-            "obj": "lfo",
-            "pos": [
-                178.5703125,
-                199.0
-            ],
-            "rate": 239.0
+            "value": 600.0018310546875
         },
         {
             "freq": 440,
             "id": "dial1",
             "obj": "Osc",
             "pos": [
-                119.1796875,
-                321.0
+                100.671875,
+                342.5859375
             ],
             "waveform": "sine"
         },
@@ -125,24 +90,16 @@
             "id": "8",
             "obj": "scope",
             "pos": [
-                115.0,
-                432.0
+                103.890625,
+                430.1484375
             ]
         },
         {
             "id": "2",
             "obj": "floatbox",
             "pos": [
-                100.0,
-                109.0
-            ]
-        },
-        {
-            "id": "9",
-            "obj": "scope",
-            "pos": [
-                350.4296875,
-                258.0
+                100.6171875,
+                257.37890625
             ]
         }
     ]

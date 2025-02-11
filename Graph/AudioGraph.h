@@ -993,10 +993,10 @@ public:
         return activeGraph->createObject(jsonObj);
     }
 
-    void removeObject(int id)
+    std::vector<Edge*> removeObject(int id)
     {
         if (!activeGraph)
-            return;
+            return { };
 
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
 
@@ -1006,14 +1006,18 @@ public:
         transitioningGraph->sortNodes();
         transitioningGraph->updateOutputInputPortMap();
 
+        auto connectionState = transitioningGraph->getConnections();
+
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
+
+        return connectionState;
     }
 
-    void removeObjects(std::vector<int>& ids)
+    std::vector<Edge*> removeObjects(std::vector<int>& ids)
     {
         if (!activeGraph)
-            return;
+            return { };
 
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
 
@@ -1026,8 +1030,12 @@ public:
         transitioningGraph->sortNodes();
         transitioningGraph->updateOutputInputPortMap();
 
+        auto connectionState = transitioningGraph->getConnections();
+
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
+
+        return connectionState;
     }
 
     bool connect(const int oObj, int oPort, const int iObj, int iPort)

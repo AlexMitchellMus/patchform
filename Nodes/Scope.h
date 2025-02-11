@@ -70,6 +70,8 @@ public:
                 newData = true;
             }
 
+            // FIXME: We probably want param without queue here?
+            // Params for this object are not used in the audio thread
             auto newNegRange = reinterpret_cast<Scope*>(audioNode)->negRangeParam->getValue();
             auto newPosRange = reinterpret_cast<Scope*>(audioNode)->posRangeParam->getValue();
 

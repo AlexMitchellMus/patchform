@@ -248,18 +248,13 @@ void Canvas::deleteSelectedObjects()
 
     auto graphManager = reinterpret_cast<Editor*>(getRootComponent())->graphManager;
 
-    graphManager->removeObjects(idsToDelete);
+    auto newConnState = graphManager->removeObjects(idsToDelete);
 
     selected.clear();
 
     callObjectChangedListeners();
 
-    connections.erase(std::remove_if(connections.begin(), connections.end(),
-    [](const std::unique_ptr<Connection>& con) {
-
-        return con->getIsSelected(); // Only remove the objects that are currently selected
-    }),
-    connections.end());
+    reloadConnections(newConnState);
 
     repaint();
 }
