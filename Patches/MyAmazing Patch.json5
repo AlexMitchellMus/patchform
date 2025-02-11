@@ -15,12 +15,6 @@
         {
             "sourceNode": "6",
             "sourcePort": 0,
-            "targetNode": "7",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "6",
-            "sourcePort": 0,
             "targetNode": "8",
             "targetPort": 0
         },
@@ -35,6 +29,12 @@
             "sourcePort": 0,
             "targetNode": "dial1",
             "targetPort": 1
+        },
+        {
+            "sourceNode": "6",
+            "sourcePort": 0,
+            "targetNode": "4",
+            "targetPort": 0
         }
     ],
     "nodes": [
@@ -56,7 +56,7 @@
                 99.0,
                 155.3984375
             ],
-            "value": 600.0018310546875
+            "value": 6000018.5
         },
         {
             "freq": 440,
@@ -79,19 +79,11 @@
             ]
         },
         {
-            "id": "7",
-            "obj": "aout",
-            "pos": [
-                100.63671875,
-                535.0
-            ]
-        },
-        {
             "id": "8",
             "obj": "scope",
             "pos": [
-                103.890625,
-                430.1484375
+                244.890625,
+                513.1484375
             ]
         },
         {
@@ -100,6 +92,14 @@
             "pos": [
                 100.6171875,
                 257.37890625
+            ]
+        },
+        {
+            "id": "4",
+            "obj": "aout",
+            "pos": [
+                60.63671875,
+                613.0
             ]
         }
     ]

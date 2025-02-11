@@ -12,7 +12,7 @@
 
 class Connection : public CanvasItem {
 public:
-    Connection(Port* origin, Port* destPos = nullptr);
+    Connection(Port* origin, Port* destPos = nullptr, uint64_t edgeHash = 0);
 
     ~Connection();
 
@@ -31,7 +31,11 @@ public:
     Port* getOriginPort() { return originPort.get(); };
     Port* getDestPort() { return destPort.get(); };
 
+    uint64_t getEdgeHash() { return edgeHash; };
+
 private:
+    uint64_t edgeHash;
+
     static inline bool isPointNearBezier(const pptk::Point& p,
                                          const pptk::Point& start,
                                          const pptk::Point& c1,

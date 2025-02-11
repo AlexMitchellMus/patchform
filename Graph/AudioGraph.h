@@ -595,13 +595,20 @@ public:
         return false;
     }
 
+    // remove the connection using the connection hash
+    void removeEdge(uint64_t connEdgeHash)
+    {
+        std::erase_if(connections, [connEdgeHash](const auto& connection)
+        {
+            return connection->getHash() == connEdgeHash; // Predicate to match the connection to remove
+        });
+    }
+
     // Remove connections with the object index
     void disconnect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
         auto toRemove = Edge::encodeHash(oNode, oPort, iNode, iPort);
-        std::erase_if(connections, [toRemove](const auto& connection) {
-            return connection->getHash() == toRemove; // Predicate to match the connection to remove
-        });
+        removeEdge(toRemove);
     }
 
     void removeObject(unsigned int nodeID)
@@ -1014,7 +1021,7 @@ public:
         return connectionState;
     }
 
-    std::vector<Edge*> removeObjects(std::vector<int>& ids)
+    std::vector<Edge*> removeObjects(std::vector<int>& ids, std::vector<uint64_t>& edgeHashes)
     {
         if (!activeGraph)
             return { };
@@ -1024,6 +1031,11 @@ public:
         for (auto id : ids)
         {
             transitioningGraph->removeObject(id);
+        }
+
+        for (auto edgeHash : edgeHashes)
+        {
+            transitioningGraph->removeEdge(edgeHash);
         }
 
         transitioningGraph->updateConnections();
@@ -1038,11 +1050,12 @@ public:
         return connectionState;
     }
 
-    bool connect(const int oObj, int oPort, const int iObj, int iPort)
+    std::vector<Edge*> connect(const int oObj, int oPort, const int iObj, int iPort)
     {
+        std::cout << "connecting from UI: " << std::endl;
         if (!activeGraph) {
             std::cerr << "No active graph available to connect objects." << std::endl;
-            return false;
+            return { };
         }
 
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
@@ -1050,16 +1063,18 @@ public:
         if (!transitioningGraph->connect(oObj, oPort, iObj, iPort)) {
             std::cerr << "Failed to connect objects in the transitioning graph." << std::endl;
             transitioningGraph.reset(); // Discard transitioning graph
-            return false;
+            return activeGraph->getConnections();
         }
 
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
         transitioningGraph->updateOutputInputPortMap();
 
+        auto allConnections = transitioningGraph->getConnections();
+
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
-        return true;
+        return allConnections;
     }
 
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)

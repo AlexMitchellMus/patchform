@@ -234,6 +234,7 @@ void Canvas::deleteSelectedObjects()
         objects.end());
 
     std::vector<int> idsToDelete;
+    std::vector<uint64_t> edgeHashToDelete;
 
     for (auto* obj : selected)
     {
@@ -243,12 +244,15 @@ void Canvas::deleteSelectedObjects()
             idsToDelete.push_back(objPtr->nodeID);
             removeConnectionsFor(objPtr);
             objPtr->audioNode->destroyUI();
+        } else if (auto* connPtr = dynamic_cast<Connection*>(obj))
+        {
+            edgeHashToDelete.push_back(connPtr->getEdgeHash());
         }
     }
 
     auto graphManager = reinterpret_cast<Editor*>(getRootComponent())->graphManager;
 
-    auto newConnState = graphManager->removeObjects(idsToDelete);
+    auto newConnState = graphManager->removeObjects(idsToDelete, edgeHashToDelete);
 
     selected.clear();
 
@@ -550,6 +554,7 @@ void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
 
 void Canvas::reloadConnections(std::vector<Edge*> edges)
 {
+    std::cout << "reloading ALL connections" << std::endl;
     connections.clear();
 
     // Optionally, build a mapping for faster lookup:
@@ -597,7 +602,7 @@ void Canvas::reloadConnections(std::vector<Edge*> edges)
             auto* origin = outputObj->outPorts[edge->getoPort()].get();
             auto* dest = inputObj->inPorts[edge->getiPort()].get();
 
-            auto connection = std::make_unique<Connection>(origin, dest);
+            auto connection = std::make_unique<Connection>(origin, dest, edge->getHash());
 
             connectionsLayer.addComponent(connection.get());
             connection->updateConnectionGeometry();
@@ -623,12 +628,9 @@ void Canvas::addConnection(Port* origin, Port* dest)
     std::cout << "Connecting from node: " << outputObj->getName() << " ID: " << outputObj->nodeID << " (port " << origin->getPortNum() << ") "
           << "to node " << inputObj->getName() << " ID: " << inputObj->nodeID << " (port " << dest->getPortNum() << ")" << std::endl;
 
-    graphManager->connect(outputObj->nodeID, origin->getPortNum(), inputObj->nodeID, dest->getPortNum());
+    auto newConnState = graphManager->connect(outputObj->nodeID, origin->getPortNum(), inputObj->nodeID, dest->getPortNum());
 
-    auto connection = std::make_unique<Connection>(origin, dest);
-    connectionsLayer.addComponent(connection.get());
-    connection->updateConnectionGeometry();
-    connections.push_back(std::move(connection));
+    reloadConnections(newConnState);
 }
 
 void Canvas::setPatchName(const std::string& name)

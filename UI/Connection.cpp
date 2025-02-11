@@ -11,7 +11,7 @@
 #include "Connection.h"
 #include "Object.h"
 
-Connection::Connection(Port* port, Port* dest) : originPort(port), destPort(dest), connectionBeingCreated(!dest)
+Connection::Connection(Port* port, Port* dest, uint64_t connEdgeHash) : originPort(port), destPort(dest), connectionBeingCreated(!dest), edgeHash(connEdgeHash)
 {
     auto centre = port->getWidth() / 2;
 
