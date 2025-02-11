@@ -40,9 +40,10 @@ public:
         auto freq = frequency.load() / context->sampleRate;
 
         for (unsigned int i = 0; i < frameCount; i++) {
-            output[i] = 0.5f * std::sin(phase);
+            output[i] = 0.5f * (std::sin(phase) + 1.0f);
             phase += 2.0f * M_PI * freq;
-            if (phase >= 2.0f * M_PI) phase -= 2.0f * M_PI;
+            if (phase >= 2.0f * M_PI)
+                phase -= 2.0f * M_PI;
         }
     }
 };

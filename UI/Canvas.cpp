@@ -535,6 +535,10 @@ void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
 {
     // Clear both objects and selected as selected could contain (if they were selected) dead objects
     // TODO: We could make selected objects SafePointers but ATM we can manage their lifetime
+    for (auto* obj : objects)
+    {
+        obj->audioNode->destroyUI();
+    }
     objects.clear();
     selected.clear();
 

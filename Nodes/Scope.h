@@ -23,6 +23,12 @@ public:
 
     bool isDefaultUI() const override { return false; }
 
+    FloatParameter* negRangeParam;
+    FloatParameter* posRangeParam;
+
+    float negRange;
+    float posRange;
+
     // Use a fixed DSP buffer size.
     static constexpr size_t DSP_BUFFER_SIZE = 1024;
     // FULL_BUFFER_SIZE is 2x DSP_BUFFER_SIZE to allow a contiguous block after rotation.
@@ -39,6 +45,9 @@ public:
         // Define the fixed DSP buffer size.
         static constexpr size_t DSP_BUFFER_SIZE = 1024;
         using BufferType = std::array<float, DSP_BUFFER_SIZE>;
+
+        float negRange;
+        float posRange;
 
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
@@ -61,12 +70,18 @@ public:
                 newData = true;
             }
 
+            auto newNegRange = reinterpret_cast<Scope*>(audioNode)->negRangeParam->getValue();
+            auto newPosRange = reinterpret_cast<Scope*>(audioNode)->posRangeParam->getValue();
+
             // Only trigger a repaint if we got new data.
-            if (newData)
+            if (newData || newNegRange != negRange || newPosRange != posRange)
+            {
+                posRange = newPosRange;
+                negRange = newNegRange;
                 repaint();
+            }
         }
 
-        // drawGUI() now simply draws the current waveform.
         void drawGUI(NVGcontext* nvg) override
         {
             const int w = getWidth();
@@ -79,20 +94,32 @@ public:
             if (!waveformValid)
                 return;
 
+            // Calculate the full range width.
+            float rangeWidth = posRange - negRange;
+            if (rangeWidth == 0.0f) {
+                // Avoid division by zero.
+                return;
+            }
+
             // Draw exactly DSP_BUFFER_SIZE samples along the horizontal axis.
             constexpr size_t DISPLAY_SIZE = DSP_BUFFER_SIZE;
             float xStep = static_cast<float>(w) / (DISPLAY_SIZE - 1);
 
             nvgBeginPath(nvg);
             float x = 0.0f;
-            // Map the first sample (assumed to be in [-1, 1]) vertically.
-            float prevY = h * 0.5f - waveform[0] * (h * 0.5f);
+
+            // For the first sample, map it from [negRange, posRange] into [0, 1]
+            float normalized = (waveform[0] - negRange) / rangeWidth;
+            // Then map [0,1] to [h,0]: normalized value 0 gives y = h (bottom),
+            // normalized value 1 gives y = 0 (top)
+            float prevY = h * (1.0f - normalized);
             nvgMoveTo(nvg, x, prevY);
 
             for (size_t i = 1; i < DISPLAY_SIZE; ++i)
             {
                 x = i * xStep;
-                float currentY = h * 0.5f - waveform[i] * (h * 0.5f);
+                normalized = (waveform[i] - negRange) / rangeWidth;
+                float currentY = h * (1.0f - normalized);
                 nvgLineTo(nvg, x, currentY);
             }
 
@@ -101,6 +128,8 @@ public:
             nvgStrokeWidth(nvg, 1.0f);
             nvgStroke(nvg);
         }
+
+
 
     private:
         // Buffer holding the most recent DSP_BUFFER_SIZE samples.
@@ -119,6 +148,12 @@ public:
     {
         // Add an input port named "audioIn" expecting signal data.
         addInputPort("audioIn", AudioPort::Signal);
+
+        negRange = objParams.value("neg range", -1.0f);
+        posRange = objParams.value("pos range", 1.0f);
+
+        negRangeParam     = addParameter<FloatParameter>("signal range -", negRange, -10000.0f, 10000);
+        posRangeParam     = addParameter<FloatParameter>("signal range +", posRange, -10000.0f, 10000);
     }
 
 #ifdef PATCHFORM_WITH_GUI

@@ -1,51 +1,60 @@
 {
     "connections": [
         {
-            "sourceNode": 0,
+            "sourceNode": "1",
             "sourcePort": 0,
-            "targetNode": 3,
-            "targetPort": 0
-        },
-        {
-            "sourceNode": 1,
-            "sourcePort": 0,
-            "targetNode": 2,
+            "targetNode": "2",
             "targetPort": 1
         },
         {
-            "sourceNode": 3,
+            "sourceNode": "3",
             "sourcePort": 0,
-            "targetNode": 2,
+            "targetNode": "2",
             "targetPort": 0
         },
         {
-            "sourceNode": 2,
+            "sourceNode": "2",
             "sourcePort": 0,
-            "targetNode": 4,
+            "targetNode": "4",
             "targetPort": 0
+        },
+        {
+            "sourceNode": "3",
+            "sourcePort": 0,
+            "targetNode": "5",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "2",
+            "sourcePort": 0,
+            "targetNode": "6",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "1",
+            "sourcePort": 0,
+            "targetNode": "7",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "0",
+            "sourcePort": 0,
+            "targetNode": "3",
+            "targetPort": 1
         }
     ],
     "nodes": [
         {
-            "id": 0,
-            "obj": "Value",
-            "pos": [
-                4.29296875,
-                5.55078125
-            ],
-            "value": 660.0
-        },
-        {
-            "id": 1,
+            "id": "1",
             "obj": "LFO",
             "pos": [
-                207.9453125,
-                66.8203125
+                243.9453125,
+                1.109375
             ],
-            "rate": 8.0
+            "rate": 115.0
         },
         {
-            "id": 2,
+            "id": "2",
             "obj": "Volume",
             "pos": [
                 26.63671875,
@@ -53,20 +62,55 @@
             ]
         },
         {
-            "id": 3,
+            "id": "3",
             "obj": "Oscillator",
             "pos": [
                 9.953125,
-                70.0703125
+                56.93359375
             ]
         },
         {
-            "id": 4,
+            "id": "4",
             "obj": "AudioOut",
             "pos": [
                 25.31640625,
                 214.3125
             ]
+        },
+        {
+            "id": "5",
+            "obj": "scope",
+            "pos": [
+                281.83984375,
+                193.43359375
+            ]
+        },
+        {
+            "id": "6",
+            "obj": "scope",
+            "pos": [
+                280.140625,
+                294.5859375
+            ]
+        },
+        {
+            "id": "7",
+            "obj": "scope",
+            "pos": [
+                284.14453125,
+                91.6953125
+            ]
+        },
+        {
+            "id": "0",
+            "max": 1000.0,
+            "min": 0.0,
+            "obj": "dial",
+            "pos": [
+                11.3046875,
+                -44.30078125
+            ],
+            "value": 325.0003967285156
         }
     ]
 }
