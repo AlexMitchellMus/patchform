@@ -554,7 +554,9 @@ public:
 
     bool connect(int oNode, int oPort, int iNode, int iPort) {
         ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
+        //std::cout << "=========== objectIDMap ==========" << std::endl;
         for (const auto& [name, id] : objectIDMap) {
+            //std::cout << "id: " << id << " name: " << name << std::endl;
             invertedMap[id] = name;
         }
 
@@ -613,40 +615,36 @@ public:
 
     void removeObject(unsigned int nodeID)
     {
-        // to remove an object, we can't delete it straight away
-        // as it's pointer is still used in the graph
-        // So we remove it from the objects list, and place it in a 'removed list'
-        // then after this we will re-build the transitioning graph with the
-        // object removed
-
+        // 1) Remove the object from the objects vector and move it to removedObjects.
         auto removeResult = std::ranges::remove_if(objects,
             [nodeID](const std::shared_ptr<AudioNode>& obj)
             {
                 return obj->nodeID == nodeID;
             }
         );
-
         auto newEnd = removeResult.begin();
 
-        // 2) Move the removed items to removedObjects.
+        // Move removed objects into removedObjects.
         for (auto it = newEnd; it != objects.end(); ++it)
         {
             removedObjects.push_back(std::move(*it));
         }
-
-        // 3) Erase them from the original vector.
         objects.erase(newEnd, objects.end());
 
-        // connections can be deleted straight away, as the transitioning graph
-        // rebuilds it's connections completely
+        // 2) Find and remove the entry from objectIDMap by matching the value.
+        auto mapIt = std::find_if(objectIDMap.begin(), objectIDMap.end(),
+            [nodeID](const auto& entry) { return entry.second == nodeID; }
+        );
+        if (mapIt != objectIDMap.end()) {
+            objectIDMap.erase(mapIt);
+        }
 
-        // find connections that are connected to this node
-        // remove them all
-
+        // 3) Remove any connections associated with this node.
         std::erase_if(connections, [nodeID](const auto& con) {
             return con->getiNode() == nodeID || con->getoNode() == nodeID;
         });
     }
+
 
     void process(float* buffer, unsigned long frameCount)
     {
@@ -825,37 +823,35 @@ public:
     AudioNode* addNode(const std::optional<std::string>& idString, json& nodeCreationData)
     {
         auto node = std::make_unique<NodeType>(context, nodeCreationData);
-
         auto rawNode = node.get();
 
         const auto nodeID = generateID();
-
         node->nodeID = nodeID;
+
         if (nodeCreationData.contains("pos") && nodeCreationData["pos"].is_array() &&
             nodeCreationData["pos"].size() >= 2)
         {
-            node->canvasPos = pptk::Point(nodeCreationData["pos"][0].get<float>(), nodeCreationData["pos"][1].get<float>()
+            node->canvasPos = pptk::Point(
+                nodeCreationData["pos"][0].get<float>(),
+                nodeCreationData["pos"][1].get<float>()
             );
         }
 
-        // Determine the ID to use for the object ID map
-        const std::string finalID = idString.has_value() ? idString.value() : std::to_string(nodeID);
-        // Fallback to node ID
-
+        // Preserve the custom id from the JSON if provided, else use nodeID converted to a string.
+        const std::string finalID = (idString.has_value() && !idString->empty())
+            ? idString.value()
+            : std::to_string(nodeID);
         objectIDMap[finalID] = nodeID;
 
-        // Function responsible for summing audio & event buffers of connected inputs for each node.
-        // This looks up the index of the running node in the current graphs pointer vector.
-        // We do this so we skip using an unordered_map, as we can pre-process
-        // all the pointers for the running graph in advance.
-        setSummingFunctionForNode(node.get());
+        // Optionally, store the final id in the node so that you can reference it later (if AudioNode has such a field)
+        // e.g., node->idString = finalID;
 
+        setSummingFunctionForNode(node.get());
         objects.push_back(std::move(node));
 
-        //std::cout << "adding node: " << nodeCreationData.value("obj", "") << std::endl;
-
         return rawNode;
-    };
+    }
+
 
     uint32_t generateID() const
     {
@@ -990,6 +986,8 @@ public:
 
     AudioNode* addObject(const json& jsonObj)
     {
+        std::cout << "adding object from UI" <<  std::endl;
+
         if (!activeGraph)
         {
             activeGraph = std::make_unique<GraphHolder>(ctx);
@@ -997,7 +995,18 @@ public:
 
         // TODO: Lock the graph, or communicate via a queue
 
-        return activeGraph->createObject(jsonObj);
+        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
+
+        auto newNode = transitioningGraph->createObject(jsonObj);
+
+        transitioningGraph->updateConnections();
+        transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+
+        return newNode;
     }
 
     std::vector<Edge*> removeObject(int id)
