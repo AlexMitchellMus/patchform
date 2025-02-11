@@ -60,9 +60,7 @@ public:
         // Handle first event in metronome
         if (sampleCounter == 0.0)
         {
-            Event* e = context->eventPool.getFreeEvent();
-
-            if (e) {
+            if (Event* e = context->eventPool.getFreeEvent()) {
                 e->setTimeStamp(0); // Set event at time 0
                 outputPort.addEvent(e);
 

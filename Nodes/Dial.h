@@ -123,6 +123,14 @@ public:
         maxValueParam     = addParameter<FloatParameter>("Max:", maxValue, 0.0f, std::numeric_limits<float>::max());
     }
 
+    json getSerializedNode() override
+    {
+        nodeCreationData["min"] = minValue;
+        nodeCreationData["max"] = maxValue;
+        nodeCreationData["value"] = dialValue * (maxValue - minValue) + minValue;
+        return nodeCreationData;
+    }
+
 #ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {

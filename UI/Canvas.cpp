@@ -618,18 +618,17 @@ void Canvas::addConnection(Port* origin, Port* dest)
     if (!origin->isOutput())
         std::swap(origin, dest);
 
-    auto inputObj = reinterpret_cast<Object*>(origin->getParent());
-    auto outputObj = reinterpret_cast<Object*>(dest->getParent());
+    auto outputObj = reinterpret_cast<Object*>(origin->getParent());
+    auto inputObj = reinterpret_cast<Object*>(dest->getParent());
 
+    std::cout << "Connecting from node: " << outputObj->getName() << " ID: " << outputObj->nodeID << " (port " << origin->getPortNum() << ") "
+          << "to node " << inputObj->getName() << " ID: " << inputObj->nodeID << " (port " << dest->getPortNum() << ")" << std::endl;
 
-    graphManager->connect(std::to_string(inputObj->nodeID), origin->getPortNum(), std::to_string(outputObj->nodeID), dest->getPortNum());
+    graphManager->connect(outputObj->nodeID, origin->getPortNum(), inputObj->nodeID, dest->getPortNum());
 
     auto connection = std::make_unique<Connection>(origin, dest);
-
     connectionsLayer.addComponent(connection.get());
-
     connection->updateConnectionGeometry();
-
     connections.push_back(std::move(connection));
 }
 

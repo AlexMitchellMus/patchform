@@ -1,107 +1,149 @@
 {
     "connections": [
         {
+            "sourceNode": "4",
+            "sourcePort": 0,
+            "targetNode": "3",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "1",
+            "sourcePort": 0,
+            "targetNode": "3",
+            "targetPort": 1
+        },
+        {
+            "sourceNode": "dial1",
+            "sourcePort": 0,
+            "targetNode": "6",
+            "targetPort": 1
+        },
+        {
+            "sourceNode": "0",
+            "sourcePort": 0,
+            "targetNode": "6",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "3",
+            "sourcePort": 0,
+            "targetNode": "dial1",
+            "targetPort": 1
+        },
+        {
+            "sourceNode": "6",
+            "sourcePort": 0,
+            "targetNode": "7",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "6",
+            "sourcePort": 0,
+            "targetNode": "8",
+            "targetPort": 0
+        },
+        {
             "sourceNode": "1",
             "sourcePort": 0,
             "targetNode": "2",
             "targetPort": 0
         },
         {
-            "sourceNode": "3",
+            "sourceNode": "2",
             "sourcePort": 0,
-            "targetNode": "1",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "5",
-            "sourcePort": 0,
-            "targetNode": "3",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "4",
-            "sourcePort": 0,
-            "targetNode": "5",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "dial1",
-            "sourcePort": 0,
-            "targetNode": "1",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "6",
-            "sourcePort": 0,
-            "targetNode": "5",
+            "targetNode": "9",
             "targetPort": 0
         }
     ],
     "nodes": [
         {
-            "attack": 50,
-            "decay": 50,
-            "id": "1",
-            "obj": "env",
+            "hz": 23.0,
+            "id": "0",
+            "obj": "Metro",
             "pos": [
-                100.94921875,
-                346.0234375
+                100.265625,
+                152.0
             ]
         },
         {
-            "id": "2",
-            "obj": "aout",
+            "id": "1",
+            "max": 10000.0,
+            "min": 0.0,
+            "obj": "dial",
             "pos": [
-                100.1328125,
-                397.26953125
+                99.0,
+                -1.0
+            ],
+            "value": 6500000.0
+        },
+        {
+            "id": "3",
+            "obj": "gain",
+            "pos": [
+                215.2421875,
+                246.0
             ]
+        },
+        {
+            "id": "4",
+            "obj": "lfo",
+            "pos": [
+                178.5703125,
+                199.0
+            ],
+            "rate": 239.0
         },
         {
             "freq": 440,
-            "id": "3",
+            "id": "dial1",
             "obj": "Osc",
             "pos": [
-                149.04296875,
-                290.09375
+                119.1796875,
+                321.0
             ],
             "waveform": "sine"
         },
         {
-            "id": "4",
-            "max": 10,
-            "min": 0,
-            "obj": "dial",
-            "pos": [
-                349.44921875,
-                104.62109375
-            ],
-            "value": 3
-        },
-        {
-            "id": "5",
-            "obj": "gain",
-            "pos": [
-                263.3984375,
-                246.05078125
-            ]
-        },
-        {
-            "hz": 4.0,
-            "id": "dial1",
-            "obj": "Metro",
-            "pos": [
-                -1.734375,
-                176.0
-            ]
-        },
-        {
+            "attack": 50,
+            "decay": 50,
             "id": "6",
-            "obj": "lfo",
+            "obj": "env",
             "pos": [
-                195.11328125,
-                128.99609375
-            ],
-            "rate": 38.0
+                101.86328125,
+                387.0
+            ]
+        },
+        {
+            "id": "7",
+            "obj": "aout",
+            "pos": [
+                100.63671875,
+                535.0
+            ]
+        },
+        {
+            "id": "8",
+            "obj": "scope",
+            "pos": [
+                115.0,
+                432.0
+            ]
+        },
+        {
+            "id": "2",
+            "obj": "floatbox",
+            "pos": [
+                100.0,
+                109.0
+            ]
+        },
+        {
+            "id": "9",
+            "obj": "scope",
+            "pos": [
+                362.0,
+                247.0
+            ]
         }
     ]
 }

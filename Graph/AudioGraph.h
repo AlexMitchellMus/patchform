@@ -513,6 +513,17 @@ public:
 #endif
     }
 
+    std::vector<Edge*> getConnections() const
+    {
+        auto connectionCopy = std::vector<Edge*>();
+
+        for (const auto& conn : connections)
+        {
+            connectionCopy.push_back(conn.get());
+        }
+        return connectionCopy;
+    }
+
     void updateConnections()
     {
         graph->objectIDtoIndex.reserve(objects.size());
@@ -535,25 +546,28 @@ public:
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
         if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
         {
-            connect(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
+            connectObjIndex(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
             return true;
         }
         return false;
     }
 
-    std::vector<Edge*> getConnections() const
-    {
-        auto connectionCopy = std::vector<Edge*>();
-
-        for (const auto& conn : connections)
-        {
-            connectionCopy.push_back(conn.get());
+    bool connect(int oNode, int oPort, int iNode, int iPort) {
+        ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
+        for (const auto& [name, id] : objectIDMap) {
+            invertedMap[id] = name;
         }
-        return connectionCopy;
+
+        if (invertedMap.contains(oNode) && invertedMap.contains(iNode))
+        {
+            connect(invertedMap[oNode], oPort, invertedMap[iNode], iPort);
+            return true;
+        }
+        return false;
     }
 
     // Create connections with the object index
-    void connect(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
+    void connectObjIndex(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
     {
         auto newConnection = std::make_shared<Edge>(oNode, oPort, iNode, iPort);
 
@@ -1014,6 +1028,30 @@ public:
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
+    }
+
+    bool connect(const int oObj, int oPort, const int iObj, int iPort)
+    {
+        if (!activeGraph) {
+            std::cerr << "No active graph available to connect objects." << std::endl;
+            return false;
+        }
+
+        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
+        // Add the connection to the transitioning graph
+        if (!transitioningGraph->connect(oObj, oPort, iObj, iPort)) {
+            std::cerr << "Failed to connect objects in the transitioning graph." << std::endl;
+            transitioningGraph.reset(); // Discard transitioning graph
+            return false;
+        }
+
+        transitioningGraph->updateConnections();
+        transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+        return true;
     }
 
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
