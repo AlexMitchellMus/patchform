@@ -211,75 +211,89 @@ public:
         // Note: We assume that the member variable 'phase' is normalized to [0,1) for all waveforms.
         for (unsigned int i = 0; i < frameCount; i++)
         {
-            // --- Handle external phase-reset events ---
-            while (nextEventIndex < events.size() &&
-                events[nextEventIndex]->getTimeStamp() == i)
+            if (waveformTable)
             {
-                // For a saw wave, apply a BLEP correction at reset.
+                // --- Handle external phase-reset events ---
+                while (nextEventIndex < events.size() &&
+                    events[nextEventIndex]->getTimeStamp() == i)
+                {
+                    // For a saw wave, apply a BLEP correction at reset.
+                    if (useBlep == UseBlep::SawBlep)
+                    {
+                        blep.step(); // Ensure BLEP state is in sync.
+                        // For a saw defined as 2×phase–1 the jump is 2.
+                        blep.add(-2.0f, 1, 0.0f);
+                    }
+                    phase = 0.0f;
+                    nextEventIndex++;
+                }
+
+                // --- Process frequency events ---
+                while (!useSignalFreq &&
+                    nextFreqEventIndex < freqEvents.size() &&
+                    freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
+                {
+                    freq = freqEvents[nextFreqEventIndex]->data;
+                    nextFreqEventIndex++;
+                }
+
+                if (useSignalFreq)
+                    freq = freqIn[1];
+
+                // --- Advance phase ---
+                // Compute the normalized phase increment (one cycle = 1.0).
+                double dPhase = static_cast<double>(freq) / context->sampleRate;
+                double phase_d = static_cast<double>(phase) + dPhase;
+
+                // If we're using BLEP (i.e. for saw), handle natural wrap-around with correction.
                 if (useBlep == UseBlep::SawBlep)
                 {
-                    blep.step(); // Ensure BLEP state is in sync.
-                    // For a saw defined as 2×phase–1 the jump is 2.
-                    blep.add(-2.0f, 1, 0.0f);
+                    blep.step();
+                    if (phase_d >= 1.0)
+                    {
+                        double overshoot = phase_d - 1.0;
+                        double t = overshoot / dPhase; // fractional offset within the current sample
+                        phase_d -= 1.0;
+                        blep.add(-2.0f, 1, static_cast<float>(t));
+                    }
                 }
-                phase = 0.0f;
-                nextEventIndex++;
-            }
+                // Save the updated phase (wrap safety).
+                phase = static_cast<float>(phase_d);
+                if (phase >= 1.0f)
+                    phase -= 1.0f;
 
-            // --- Process frequency events ---
-            while (!useSignalFreq &&
-                nextFreqEventIndex < freqEvents.size() &&
-                freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
-            {
-                freq = freqEvents[nextFreqEventIndex]->data;
-                nextFreqEventIndex++;
-            }
+                // --- Table lookup ---
+                // Convert the normalized phase to a table index.
+                double tableIndex = static_cast<double>(phase) * TABLE_SIZE;
+                int idx = static_cast<int>(tableIndex);
+                // Because our tables have FULL_TABLE_SIZE samples (TABLE_SIZE+1), we use idx+1 directly.
+                int nextIdx = idx + 1;
+                double frac = tableIndex - idx;
+                double value = waveformTable[idx] + frac * (waveformTable[nextIdx] - waveformTable[idx]);
 
-            if (useSignalFreq)
-                freq = freqIn[1];
-
-            // --- Advance phase ---
-            // Compute the normalized phase increment (one cycle = 1.0).
-            double dPhase = static_cast<double>(freq) / context->sampleRate;
-            double phase_d = static_cast<double>(phase) + dPhase;
-
-            // If we're using BLEP (i.e. for saw), handle natural wrap-around with correction.
-            if (useBlep == UseBlep::SawBlep)
-            {
-                blep.step();
-                if (phase_d >= 1.0)
+                // --- Apply BLEP correction only for saw ---
+                if (useBlep == UseBlep::SawBlep)
                 {
-                    double overshoot = phase_d - 1.0;
-                    double t = overshoot / dPhase; // fractional offset within the current sample
-                    phase_d -= 1.0;
-                    blep.add(-2.0f, 1, static_cast<float>(t));
+                    value += blep.get();
+                }
+
+                // --- Optionally pass through the allpass filter ---
+                value = allpass(static_cast<float>(value));
+
+                // --- Write the output sample with scaling ---
+                output[i] = 0.5f * static_cast<float>(value);
+            }
+            else
+            {
+                // Generate noise on the fly.
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+                for (unsigned long i = 0; i < frameCount; i++)
+                {
+                    output[i] = dist(gen);
                 }
             }
-            // Save the updated phase (wrap safety).
-            phase = static_cast<float>(phase_d);
-            if (phase >= 1.0f)
-                phase -= 1.0f;
-
-            // --- Table lookup ---
-            // Convert the normalized phase to a table index.
-            double tableIndex = static_cast<double>(phase) * TABLE_SIZE;
-            int idx = static_cast<int>(tableIndex);
-            // Because our tables have FULL_TABLE_SIZE samples (TABLE_SIZE+1), we use idx+1 directly.
-            int nextIdx = idx + 1;
-            double frac = tableIndex - idx;
-            double value = waveformTable[idx] + frac * (waveformTable[nextIdx] - waveformTable[idx]);
-
-            // --- Apply BLEP correction only for saw ---
-            if (useBlep == UseBlep::SawBlep)
-            {
-                value += blep.get();
-            }
-
-            // --- Optionally pass through the allpass filter ---
-            value = allpass(static_cast<float>(value));
-
-            // --- Write the output sample with scaling ---
-            output[i] = 0.5f * static_cast<float>(value);
         }
     }
 };
