@@ -14,7 +14,7 @@ public:
     std::function<void()> onTextChanged = [](){};
     std::function<void()> onTextReturned = [](){};
 
-    TextEditor() : cursorPos(0) {}
+    TextEditor(bool isNumber = true) : cursorPos(0), isNumber(isNumber){}
 
     void setText(const std::string& newText)
     {
@@ -196,7 +196,7 @@ public:
             editorFirstActive = true;
             gainFocus();
             repaint();
-        } else if (e.sdlEvent.button.clicks == 1)
+        } else if (isNumber && e.sdlEvent.button.clicks == 1)
         {
             draggedNumValue = std::stof(getText());
         }
@@ -212,6 +212,7 @@ private:
     float draggedNumValue = 0.0f;
     std::string text;
     int cursorPos;
+    bool isNumber;
     bool editorActive = false;
     bool editorFirstActive = false;
 

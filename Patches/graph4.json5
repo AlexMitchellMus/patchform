@@ -61,7 +61,7 @@
                 137.1796875,
                 259.0
             ],
-            "waveform": "sine"
+            "waveform": "square"
         },
         {
             "id": "4",

@@ -125,11 +125,16 @@ public:
                 nvgLineTo(nvg, x, currentY);
             }
 
+            // Scissor the waveform only
+            nvgSave(nvg);
             nvgScissor(nvg, 0, 1, width, height - 2);
+
             nvgLineStyle(nvg, NVG_SOLID);
             nvgStrokeColor(nvg, nvgRGBA(200, 200, 200, 255));
             nvgStrokeWidth(nvg, 1.0f);
             nvgStroke(nvg);
+
+            nvgRestore(nvg);
         }
 
 
