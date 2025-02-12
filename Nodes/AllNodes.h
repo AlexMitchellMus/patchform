@@ -24,3 +24,4 @@
 #include "FloatBox.h"
 #include "Ping.h"
 #include "Scope.h"
+#include "BandPassFilter.h"

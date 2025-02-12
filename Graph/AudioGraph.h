@@ -940,6 +940,10 @@ public:
         case hash("scope"):
             return addNode<Scope>(idString, node);
 
+        case hash("bpf"):
+        case hash("bandpassfilter"):
+            return addNode<BandPassFilter>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

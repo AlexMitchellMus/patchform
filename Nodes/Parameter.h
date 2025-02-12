@@ -178,7 +178,10 @@ public:
 
     void setValue(const std::string& newValue)
     {
+        value = newValue;
         queue.enqueue(newValue);
+
+        onParameterChanged(value);
     }
 
     std::string getValue()

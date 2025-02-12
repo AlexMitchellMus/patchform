@@ -32,11 +32,11 @@ constexpr float constexpr_sin(float x) {
     while (x < -pi) x += twoPi;
 
     float x2 = x * x;
-    float term1 = x;                           // x
-    float term2 = (x * x2) / 6.0f;               // x^3/3!
-    float term3 = (x * x2 * x2) / 120.0f;          // x^5/5!
-    float term4 = (x * x2 * x2 * x2) / 5040.0f;      // x^7/7!
-    float term5 = (x * x2 * x2 * x2 * x2) / 362880.0f; // x^9/9!
+    float term1 = x;                                          // x
+    float term2 = (x * x2) / 6.0f;                            // x^3/3!
+    float term3 = (x * x2 * x2) / 120.0f;                     // x^5/5!
+    float term4 = (x * x2 * x2 * x2) / 5040.0f;               // x^7/7!
+    float term5 = (x * x2 * x2 * x2 * x2) / 362880.0f;        // x^9/9!
     float term6 = (x * x2 * x2 * x2 * x2 * x2) / 39916800.0f; // x^11/11!
 
     return term1 - term2 + term3 - term4 + term5 - term6;
