@@ -17,26 +17,28 @@
 #include <random>
 #include <cstdlib>
 #include <array>
+#include "SignalsmithBlep.h"
 
 // Use TABLE_SIZE as the number of intervals; we add one extra sample to close the cycle.
-constexpr size_t TABLE_SIZE = 8192;
-//constexpr size_t FULL_TABLE_SIZE = TABLE_SIZE + 1;
+constexpr size_t TABLE_SIZE = 4092;
+constexpr size_t FULL_TABLE_SIZE = TABLE_SIZE + 1;
 
 constexpr float pi = 3.14159265358979323846f;
 constexpr float twoPi = 6.28318530717958647692f;
 
 // A constexpr sine approximation.
-constexpr float constexpr_sin(float x) {
+constexpr float constexpr_sin(float x)
+{
     // Normalize x to [-pi, pi]
-    while (x > pi)  x -= twoPi;
+    while (x > pi) x -= twoPi;
     while (x < -pi) x += twoPi;
 
     float x2 = x * x;
-    float term1 = x;                                          // x
-    float term2 = (x * x2) / 6.0f;                            // x^3/3!
-    float term3 = (x * x2 * x2) / 120.0f;                     // x^5/5!
-    float term4 = (x * x2 * x2 * x2) / 5040.0f;               // x^7/7!
-    float term5 = (x * x2 * x2 * x2 * x2) / 362880.0f;        // x^9/9!
+    float term1 = x; // x
+    float term2 = (x * x2) / 6.0f; // x^3/3!
+    float term3 = (x * x2 * x2) / 120.0f; // x^5/5!
+    float term4 = (x * x2 * x2 * x2) / 5040.0f; // x^7/7!
+    float term5 = (x * x2 * x2 * x2 * x2) / 362880.0f; // x^9/9!
     float term6 = (x * x2 * x2 * x2 * x2 * x2) / 39916800.0f; // x^11/11!
 
     return term1 - term2 + term3 - term4 + term5 - term6;
@@ -46,58 +48,71 @@ constexpr float constexpr_sin(float x) {
 // Waveform Table Generators (all produce FULL_TABLE_SIZE samples)
 //-----------------------------------------------------------
 
-constexpr std::array<float, TABLE_SIZE> generateSineWave() {
-    std::array<float, TABLE_SIZE> table = {};
-    // When i == TABLE_SIZE, the angle is exactly 2*pi.
-    for (size_t i = 0; i < TABLE_SIZE; ++i) {
-        table[i] = constexpr_sin(2.0f * pi * static_cast<float>(i) / TABLE_SIZE);
+constexpr std::array<float, FULL_TABLE_SIZE> generateSineWave()
+{
+    std::array<float, FULL_TABLE_SIZE> table = {};
+    // Use TABLE_SIZE as the denominator so that the extra sample is computed at 2*pi.
+    for (size_t i = 0; i < FULL_TABLE_SIZE; ++i)
+    {
+        float angle = 2.0f * pi * static_cast<float>(i) / TABLE_SIZE;
+        table[i] = constexpr_sin(angle);
     }
     return table;
 }
 
-constexpr std::array<float, TABLE_SIZE> generateSawWave() {
-    std::array<float, TABLE_SIZE> table = {};
-    for (size_t i = 0; i < TABLE_SIZE; ++i) {
-        float fraction = static_cast<float>(i) / TABLE_SIZE;
+constexpr std::array<float, FULL_TABLE_SIZE> generateSawWave()
+{
+    std::array<float, FULL_TABLE_SIZE> table = {};
+    // For TABLE_SIZE intervals, we generate TABLE_SIZE+1 samples.
+    // The value at i=TABLE_SIZE is exactly 2*(TABLE_SIZE/TABLE_SIZE)-1 = 1.
+    for (size_t i = 0; i < FULL_TABLE_SIZE; ++i)
+    {
+        float fraction = static_cast<float>(i) / TABLE_SIZE; // note: divide by TABLE_SIZE, not FULL_TABLE_SIZE
         table[i] = 2.0f * fraction - 1.0f;
     }
     return table;
 }
 
-constexpr std::array<float, TABLE_SIZE> generateSquareWave() {
-    std::array<float, TABLE_SIZE> table = {};
-    // Square wave: first half is 1.0, second half is -1.0.
-    for (size_t i = 0; i < TABLE_SIZE; ++i) {
+constexpr std::array<float, FULL_TABLE_SIZE> generateSquareWave()
+{
+    std::array<float, FULL_TABLE_SIZE> table = {};
+    for (size_t i = 0; i < TABLE_SIZE; ++i)
+    {
         table[i] = (i < (TABLE_SIZE / 2)) ? 1.0f : -1.0f;
     }
+    // Close the cycle by making the extra sample equal to the first sample.
+    table[TABLE_SIZE] = 1.0f;
     return table;
 }
 
-constexpr std::array<float, TABLE_SIZE> generateTriangleWave() {
-    std::array<float, TABLE_SIZE> table = {};
-    for (size_t i = 0; i < TABLE_SIZE; ++i) {
+constexpr std::array<float, FULL_TABLE_SIZE> generateTriangleWave()
+{
+    std::array<float, FULL_TABLE_SIZE> table = {};
+    for (size_t i = 0; i < TABLE_SIZE; ++i)
+    {
         float fraction = static_cast<float>(i) / TABLE_SIZE;
-        if (fraction < 0.5f) {
+        if (fraction < 0.5f)
             table[i] = 4.0f * fraction - 1.0f;
-        } else {
+        else
             table[i] = 3.0f - 4.0f * fraction;
-        }
     }
+    // Close the cycle by matching the first sample.
+    table[TABLE_SIZE] = -1.0f;
     return table;
 }
 
 // Precomputed tables.
-constexpr auto sineWaveTable     = generateSineWave();
-constexpr auto sawWaveTable      = generateSawWave();
-constexpr auto squareWaveTable   = generateSquareWave();
+constexpr auto sineWaveTable = generateSineWave();
+constexpr auto sawWaveTable = generateSawWave();
+constexpr auto squareWaveTable = generateSquareWave();
 constexpr auto triangleWaveTable = generateTriangleWave();
 
 //-----------------------------------------------------------
 // Oscillator Class Using the Tables
 //-----------------------------------------------------------
 
-class Oscillator : public AudioNode {
-
+class Oscillator : public AudioNode
+{
     DEFINE_AND_REGISTER_NODE("Oscillator", "osc");
 
 protected:
@@ -116,11 +131,21 @@ protected:
     // Effective cycle length remains TABLE_SIZE (the extra sample is for interpolation only)
     size_t tableLength = TABLE_SIZE;
 
+    enum class UseBlep { None, SawBlep };
+
+    UseBlep useBlep;
+
+    signalsmith::EllipticBlep<float> blep;
+    signalsmith::EllipticBlepAllpass<float> allpass;
+
     // Choose waveform table based on the string.
     void updateWaveform()
     {
-        switch (hash(waveform)) {
+        useBlep = UseBlep::None;
+        switch (hash(waveform))
+        {
         case hash("saw"):
+            useBlep = UseBlep::SawBlep;
             waveformTable = sawWaveTable.data();
             break;
         case hash("square"):
@@ -134,7 +159,8 @@ protected:
             waveformTable = nullptr;
             break;
         default:
-            if (hash(waveform) != hash("sine")) {
+            if (hash(waveform) != hash("sine"))
+            {
                 //std::cout << "Error! Unknown waveform: " << waveform << ", using default sine" << std::endl;
                 waveform = "sine";
             }
@@ -158,65 +184,102 @@ public:
         updateWaveform();
     }
 
+    json getSerializedNode() override
+    {
+        nodeCreationData["waveform"] = waveform;
+        return nodeCreationData;
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
+        // Get input event buffers and audio buffers.
         auto events = inputPortBuffers[0]->getEvents();
         auto freqEvents = inputPortBuffers[1]->getEvents();
         bool useSignalFreq = inputPortBuffers[1]->isAnyConnectedPortSignal;
         auto freqIn = inputPortBuffers[1]->getAudioBuffer();
         auto output = outputPort.getAudioBuffer();
 
+        // Update waveform if parameter changed.
         waveform = waveformParameter->getValue();
         updateWaveform();
 
-        // We use tableLength (TABLE_SIZE) as the effective period.
-        const float tableSizeF = static_cast<float>(tableLength);
+        // These indices track events within the current block.
+        unsigned int nextEventIndex = 0;
+        unsigned int nextFreqEventIndex = 0;
 
-        if (waveformTable) {
-            unsigned int nextEventIndex = 0;
-            unsigned int nextFreqEventIndex = 0;
-
-            for (unsigned long i = 0; i < frameCount; i++) {
-                // Handle phase-reset events.
-                while (nextEventIndex < events.size() && events[nextEventIndex]->getTimeStamp() == i) {
-                    phase = 0.0f;
-                    nextEventIndex++;
+        // Process each sample.
+        // Note: We assume that the member variable 'phase' is normalized to [0,1) for all waveforms.
+        for (unsigned int i = 0; i < frameCount; i++)
+        {
+            // --- Handle external phase-reset events ---
+            while (nextEventIndex < events.size() &&
+                events[nextEventIndex]->getTimeStamp() == i)
+            {
+                // For a saw wave, apply a BLEP correction at reset.
+                if (useBlep == UseBlep::SawBlep)
+                {
+                    blep.step(); // Ensure BLEP state is in sync.
+                    // For a saw defined as 2×phase–1 the jump is 2.
+                    blep.add(-2.0f, 1, 0.0f);
                 }
-                if (!useSignalFreq) {
-                    while (nextFreqEventIndex < freqEvents.size() && freqEvents[nextFreqEventIndex]->getTimeStamp() == i) {
-                        freq = freqEvents[nextFreqEventIndex]->data;
-                        nextFreqEventIndex++;
-                    }
+                phase = 0.0f;
+                nextEventIndex++;
+            }
+
+            // --- Process frequency events ---
+            while (!useSignalFreq &&
+                nextFreqEventIndex < freqEvents.size() &&
+                freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
+            {
+                freq = freqEvents[nextFreqEventIndex]->data;
+                nextFreqEventIndex++;
+            }
+
+            if (useSignalFreq)
+                freq = freqIn[1];
+
+            // --- Advance phase ---
+            // Compute the normalized phase increment (one cycle = 1.0).
+            double dPhase = static_cast<double>(freq) / context->sampleRate;
+            double phase_d = static_cast<double>(phase) + dPhase;
+
+            // If we're using BLEP (i.e. for saw), handle natural wrap-around with correction.
+            if (useBlep == UseBlep::SawBlep)
+            {
+                blep.step();
+                if (phase_d >= 1.0)
+                {
+                    double overshoot = phase_d - 1.0;
+                    double t = overshoot / dPhase; // fractional offset within the current sample
+                    phase_d -= 1.0;
+                    blep.add(-2.0f, 1, static_cast<float>(t));
                 }
-
-                int idx = static_cast<int>(phase);
-                // We may want to extend all wavetables by 1 sample, instead of using % here
-                int nextIdx = (idx + 1) % TABLE_SIZE;
-                float fraction = phase - static_cast<float>(idx);
-                float value = waveformTable[idx] + fraction * (waveformTable[nextIdx] - waveformTable[idx]);
-
-                // Write the output sample.
-                output[i] = 0.5f * value;
-
-                // Determine current frequency.
-                float currentFreq = useSignalFreq ? freqIn[i] : freq;
-
-                // Increment phase.
-                phase += (tableSizeF * currentFreq) / context->sampleRate;
-                // Wrap phase if necessary.
-                if (phase >= tableSizeF)
-                    phase -= tableSizeF;
-                else if (phase < 0.0f)
-                    phase += tableSizeF;
             }
-        } else {
-            // Generate noise on the fly.
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-            for (unsigned long i = 0; i < frameCount; i++) {
-                output[i] = dist(gen);
+            // Save the updated phase (wrap safety).
+            phase = static_cast<float>(phase_d);
+            if (phase >= 1.0f)
+                phase -= 1.0f;
+
+            // --- Table lookup ---
+            // Convert the normalized phase to a table index.
+            double tableIndex = static_cast<double>(phase) * TABLE_SIZE;
+            int idx = static_cast<int>(tableIndex);
+            // Because our tables have FULL_TABLE_SIZE samples (TABLE_SIZE+1), we use idx+1 directly.
+            int nextIdx = idx + 1;
+            double frac = tableIndex - idx;
+            double value = waveformTable[idx] + frac * (waveformTable[nextIdx] - waveformTable[idx]);
+
+            // --- Apply BLEP correction only for saw ---
+            if (useBlep == UseBlep::SawBlep)
+            {
+                value += blep.get();
             }
+
+            // --- Optionally pass through the allpass filter ---
+            value = allpass(static_cast<float>(value));
+
+            // --- Write the output sample with scaling ---
+            output[i] = 0.5f * static_cast<float>(value);
         }
     }
 };

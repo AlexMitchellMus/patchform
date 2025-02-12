@@ -3,15 +3,15 @@ Project Goals
 * Sample accurate events
 * Similar node logic to Puredata
 * Separation of audio / graph maintenance
-* No clicking ever, for live patching etc
-* Close to zero allocation on audio thread
+* No clicking ever, for live patching etc (graph discontinuity is ok, as some graph changes will be impossible to mitigate - clicking due to priority inversion is not ok)
+* Zero allocation on audio thread
 * Simple / logical, and expressive file format (using json)
 * Dynamic loading of compiled externals
 * Sub-patches
 * Multi-patch definitions (define multiple patches in same file, reuse the patch locally)
-* Lightweight audio execution (no allocation in audio loop)
 * Modern c++, make library as simple as possible.
 * Set values for nodes from external controls (UI etc)
+* Expressive and feature rich ABI for external / plugin c++ creation
 
 [UI TODO]
 
@@ -19,7 +19,7 @@ Project Goals
 * [DONE] scale / position canvas - make a way for the canvas to have a viewport - per component scaling
 *        scrollbars - needed for canavs and side panels etc
 * [DONE] Icons - simple icons to start with
-*        Load patch etc
+* [DONE] Load patch etc
 *        Desktop scale etc
 *        Text entry (for object/nodes mainly)
 *        Selected connections via lasso
@@ -31,6 +31,11 @@ Project Goals
          * When there is a scroll event, we look at the current component's ancestors, and find who wants focus
          * If we don't find who wants focus we do nothing.
          * We also have an assignable focus system, which is what happens on mouse down - or when components request it.
+
+
+[DSP TODO]
+*        Improve oscillator for Triangle and Square. We need to use eblep (but with custom setup for each waveform)  
+*        Square oscillator needs to be able to change duty cycle, need to allow for this... wavetables?
 
 
 

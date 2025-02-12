@@ -1,7 +1,7 @@
 {
     "connections": [
         {
-            "sourceNode": "12",
+            "sourceNode": "",
             "sourcePort": 0,
             "targetNode": "18",
             "targetPort": 0
@@ -45,7 +45,7 @@
         {
             "sourceNode": "17",
             "sourcePort": 0,
-            "targetNode": "25",
+            "targetNode": "",
             "targetPort": 0
         },
         {
@@ -121,7 +121,7 @@
             "targetPort": 1
         },
         {
-            "sourceNode": "12",
+            "sourceNode": "",
             "sourcePort": 0,
             "targetNode": "4",
             "targetPort": 0
@@ -153,11 +153,11 @@
         {
             "sourceNode": "42",
             "sourcePort": 0,
-            "targetNode": "3",
+            "targetNode": "",
             "targetPort": 0
         },
         {
-            "sourceNode": "3",
+            "sourceNode": "",
             "sourcePort": 0,
             "targetNode": "2",
             "targetPort": 0
@@ -173,11 +173,17 @@
             "sourcePort": 0,
             "targetNode": "2",
             "targetPort": 0
+        },
+        {
+            "sourceNode": "25",
+            "sourcePort": 0,
+            "targetNode": "3",
+            "targetPort": 0
         }
     ],
     "nodes": [
         {
-            "id": "12",
+            "id": "",
             "max": 10000.0,
             "min": 1.0,
             "obj": "dial",
@@ -185,7 +191,7 @@
                 708.3203125,
                 63.1953125
             ],
-            "value": 5100.4912109375
+            "value": 509947117568.0
         },
         {
             "id": "18",
@@ -204,15 +210,7 @@
                 758.58203125,
                 690.21875
             ],
-            "value": 2.0
-        },
-        {
-            "id": "25",
-            "obj": "scope",
-            "pos": [
-                234.0390625,
-                629.73828125
-            ]
+            "value": 8.0
         },
         {
             "hz": 11.0,
@@ -376,7 +374,7 @@
             "waveform": "sine"
         },
         {
-            "id": "3",
+            "id": "",
             "obj": "If",
             "pos": [
                 452.62109375,
@@ -389,6 +387,24 @@
             "pos": [
                 502.5234375,
                 164.37109375
+            ]
+        },
+        {
+            "freq": 440,
+            "id": "25",
+            "obj": "Osc",
+            "pos": [
+                96.1796875,
+                587.0
+            ],
+            "waveform": "saw"
+        },
+        {
+            "id": "3",
+            "obj": "scope",
+            "pos": [
+                168.0,
+                794.0
             ]
         }
     ]
