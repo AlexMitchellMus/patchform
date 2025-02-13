@@ -940,6 +940,9 @@ public:
         case hash("scope"):
             return addNode<Scope>(idString, node);
 
+        case hash("spec"):
+            return addNode<Spec>(idString, node);
+
         case hash("bpf"):
         case hash("bandpassfilter"):
             return addNode<BandPassFilter>(idString, node);

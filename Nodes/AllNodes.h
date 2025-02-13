@@ -25,3 +25,4 @@
 #include "Ping.h"
 #include "Scope.h"
 #include "BandPassFilter.h"
+#include "Spec.h"

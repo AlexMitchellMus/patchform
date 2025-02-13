@@ -35,6 +35,9 @@ add_subdirectory(external/nanovg)
 add_library(moodycamel_concurrentqueue INTERFACE)
 target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/concurrentqueue")
 
+add_library(pffft STATIC external/pffft/pffft.c)
+target_include_directories(pffft PUBLIC external/pffft)
+
 # Collect common source files
 file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp")
 
@@ -78,6 +81,7 @@ target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/nanovg/src/"
         "${CMAKE_SOURCE_DIR}/Glad/"
         "${CMAKE_SOURCE_DIR}/external/SDL2/include"
+        "${CMAKE_SOURCE_DIR}/external/pffft"
 )
 target_link_libraries(PlugPatchStandalone PRIVATE
         SDL3::SDL3-static
@@ -86,6 +90,7 @@ target_link_libraries(PlugPatchStandalone PRIVATE
         unordered_dense
         glaze::glaze
         nanovg
+        pffft
 )
 target_compile_definitions(PlugPatchStandalone PRIVATE)
 

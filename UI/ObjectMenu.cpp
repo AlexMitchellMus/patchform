@@ -13,7 +13,6 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
     constexpr ObjectDef objectDef[20] = {
         { R"({"obj": "Metro"})", ICONS::Metro, true },
         { R"({"obj": "Osc", "waveform": "sine", "freq": 440})", ICONS::Osc, true },
-        { R"({"obj": "Osc", "waveform": "saw", "freq": 440})", "saw", false },
         { R"({"obj": "Add"})", "add", false },
         { R"({"obj": "lfo"})", ICONS::Lfo, true },
         { R"({"obj": "env", "attack": 50, "decay": 50})", ICONS::Adsr, true },
@@ -26,8 +25,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "ping"})", "Png", false },
         { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false },
         { R"({"obj": "scope"})", "Scp", false },
-        { R"({"obj": "bpf"})", "bpf", false }
-
+        { R"({"obj": "bpf"})", "bpf", false },
+        { R"({"obj": "spec"})", "spec", false }
     };
 
     for (int i = 0; i < 2; i++)
