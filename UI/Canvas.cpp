@@ -194,7 +194,16 @@ void Canvas::resetScale()
 
 void Canvas::keyPressed(pptk::CompEvent& e)
 {
-    if (e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
+    auto modKey = e.sdlEvent.key.mod;
+    bool ctrlPressed = (modKey & SDL_KMOD_CTRL) != 0;
+    bool onlyCtrl = (modKey & ~SDL_KMOD_CTRL) == 0;
+    if (ctrlPressed && onlyCtrl)
+    {
+        if (e.sdlEvent.key.scancode == SDL_SCANCODE_C)
+        {
+            copySelectionToClipboard();
+        }
+    } else if(e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {
         deleteSelectedObjects();
     }
@@ -637,6 +646,19 @@ void Canvas::setPatchName(const std::string& name)
 {
     patchName = name;
     onPatchChanged();
+}
+
+void Canvas::copySelectionToClipboard()
+{
+    std::vector<uint32_t> selectedNodes;
+    for (auto* node : selected)
+    {
+        if (auto* obj = dynamic_cast<Object*>(node))
+            selectedNodes.push_back(obj->nodeID);
+    }
+    auto selectedGraph = graphManager->copySelectedToClipboard(selectedNodes);
+
+    SDL_SetClipboardText(selectedNodes.size() ? to_string(selectedGraph).c_str() : "");
 }
 
 void Canvas::addObjectChangedListener(std::function<void()> callback)

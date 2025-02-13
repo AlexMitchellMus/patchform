@@ -96,10 +96,14 @@ public:
 
     void handleKeyDown(SDL_Event& e)
     {
-        if (auto clickedComp = rootComponent->getClickedComponent()) {
-            auto wrappedEvent = CompEvent(e, clickedComp);
-            clickedComp->keyPressed(wrappedEvent);
+        if (auto focusedComponent = rootComponent->getFocusedComponent()) {
+            auto wrappedEvent = CompEvent(e, focusedComponent);
+            focusedComponent->keyPressed(wrappedEvent);
         }
+    }
+
+    void handleKeyUp(SDL_Event& e)
+    {
     }
 
 private:

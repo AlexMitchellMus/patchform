@@ -308,9 +308,9 @@ int main(int argc, char* argv[])
             case SDL_EVENT_KEY_DOWN:
                 eventManager.handleKeyDown(event);
                 break;
-                //case SDL_EVENT_KEY_UP:
-                //    eventManager.handleKeyUp(app.get(), event);
-                //    break;
+            case SDL_EVENT_KEY_UP:
+                eventManager.handleKeyUp(event);
+                break;
             case SDL_EVENT_WINDOW_RESIZED:
                 {
                     newWidth = event.window.data1;

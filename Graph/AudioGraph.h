@@ -951,6 +951,62 @@ public:
         }
     };
 
+    // Get the json string for only the selected nodes and the selected objects interconnected connections
+    json serializeSelectedNodes(const std::vector<uint32_t>& selectedNodeIDs) const
+    {
+        json nodes = json::array();
+        json conns = json::array();
+
+        // Create a set for quick lookup of selected node IDs
+        std::set<uint32_t> selectedNodesSet(selectedNodeIDs.begin(), selectedNodeIDs.end());
+
+        // Build an inverted map from nodeID to its string ID (if available)
+        ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
+        for (const auto& [name, id] : objectIDMap)
+        {
+            invertedMap[id] = name;
+        }
+
+        // Serialize nodes whose nodeID is in the selected set.
+        for (const auto& nodePtr : objects)
+        {
+            if (selectedNodesSet.find(nodePtr->nodeID) != selectedNodesSet.end())
+            {
+                json nodeJson = nodePtr->getSerializedNode();
+                // Use the string ID if available, otherwise fall back to nodeID as a string.
+                nodeJson["id"] = invertedMap.contains(nodePtr->nodeID)
+                                     ? invertedMap.at(nodePtr->nodeID)
+                                     : std::to_string(nodePtr->nodeID);
+                nodeJson["pos"] = {nodePtr->canvasPos.x, nodePtr->canvasPos.y};
+                nodes.push_back(nodeJson);
+            }
+        }
+
+        // Serialize connections only if both source and target nodes are selected.
+        for (const auto& conn : connections)
+        {
+            if (selectedNodesSet.find(conn->getoNode()) != selectedNodesSet.end() &&
+                selectedNodesSet.find(conn->getiNode()) != selectedNodesSet.end())
+            {
+                json connJson;
+                connJson["sourceNode"] = invertedMap.contains(conn->getoNode())
+                                             ? invertedMap.at(conn->getoNode())
+                                             : std::to_string(conn->getoNode());
+                connJson["sourcePort"] = conn->getoPort();
+                connJson["targetNode"] = invertedMap.contains(conn->getiNode())
+                                             ? invertedMap.at(conn->getiNode())
+                                             : std::to_string(conn->getiNode());
+                connJson["targetPort"] = conn->getiPort();
+                conns.push_back(connJson);
+            }
+        }
+
+        json patch;
+        patch["nodes"] = nodes;
+        patch["connections"] = conns;
+        return patch;
+    }
+
     void printGraph()
     {
         for (const auto& obj : objects)
@@ -1200,6 +1256,14 @@ public:
     const json graphToJSON()
     {
         return activeGraph->graphToJSON();
+    }
+
+    const json copySelectedToClipboard(const std::vector<uint32_t>& selectedNodeIDs)
+    {
+        if (activeGraph)
+        {
+            return activeGraph->serializeSelectedNodes(selectedNodeIDs);
+        }
     }
 
     void process(float* buffer, unsigned long frameCount)

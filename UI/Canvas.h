@@ -61,6 +61,8 @@ public:
     void addFromDnDMenu(Object* object, pptk::Point position = pptk::Point(canvasOrigin, canvasOrigin));
     void reloadConnections(std::vector<Edge*>);
 
+    void copySelectionToClipboard();
+
     void setPatchName(const std::string& name);
     const std::string& getPatchName() { return patchName; };
 
