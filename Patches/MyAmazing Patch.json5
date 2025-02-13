@@ -1,115 +1,19 @@
 {
     "connections": [
         {
-            "sourceNode": "",
+            "sourceNode": "0",
             "sourcePort": 0,
-            "targetNode": "18",
+            "targetNode": "2",
             "targetPort": 0
-        },
-        {
-            "sourceNode": "",
-            "sourcePort": 0,
-            "targetNode": "27",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "",
-            "sourcePort": 0,
-            "targetNode": "28",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "",
-            "sourcePort": 0,
-            "targetNode": "29",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "",
-            "sourcePort": 0,
-            "targetNode": "30",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "33",
-            "sourcePort": 0,
-            "targetNode": "17",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "24",
-            "sourcePort": 0,
-            "targetNode": "17",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "17",
-            "sourcePort": 0,
-            "targetNode": "",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "28",
-            "sourcePort": 0,
-            "targetNode": "34",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "27",
-            "sourcePort": 0,
-            "targetNode": "35",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "29",
-            "sourcePort": 0,
-            "targetNode": "36",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "17",
-            "sourcePort": 0,
-            "targetNode": "23",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "40",
-            "sourcePort": 0,
-            "targetNode": "",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "40",
-            "sourcePort": 0,
-            "targetNode": "33",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "26",
-            "sourcePort": 0,
-            "targetNode": "42",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "42",
-            "sourcePort": 0,
-            "targetNode": "40",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "1",
-            "sourcePort": 0,
-            "targetNode": "33",
-            "targetPort": 1
         },
         {
             "sourceNode": "2",
             "sourcePort": 0,
             "targetNode": "1",
-            "targetPort": 1
+            "targetPort": 0
         },
         {
-            "sourceNode": "0",
+            "sourceNode": "3",
             "sourcePort": 0,
             "targetNode": "2",
             "targetPort": 1
@@ -117,294 +21,202 @@
         {
             "sourceNode": "4",
             "sourcePort": 0,
+            "targetNode": "2",
+            "targetPort": 2
+        },
+        {
+            "sourceNode": "0",
+            "sourcePort": 0,
+            "targetNode": "9",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "3",
+            "sourcePort": 0,
+            "targetNode": "11",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "7",
+            "sourcePort": 0,
             "targetNode": "0",
             "targetPort": 1
         },
         {
-            "sourceNode": "",
-            "sourcePort": 0,
-            "targetNode": "4",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "5",
             "sourcePort": 0,
-            "targetNode": "4",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "29",
-            "sourcePort": 0,
-            "targetNode": "5",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "27",
-            "sourcePort": 0,
-            "targetNode": "5",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "28",
-            "sourcePort": 0,
-            "targetNode": "5",
-            "targetPort": 1
-        },
-        {
-            "sourceNode": "42",
-            "sourcePort": 0,
-            "targetNode": "",
+            "targetNode": "8",
             "targetPort": 0
         },
         {
-            "sourceNode": "",
+            "sourceNode": "2",
             "sourcePort": 0,
-            "targetNode": "2",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "42",
-            "sourcePort": 0,
-            "targetNode": "6",
+            "targetNode": "5",
             "targetPort": 0
         },
         {
             "sourceNode": "6",
             "sourcePort": 0,
+            "targetNode": "5",
+            "targetPort": 1
+        },
+        {
+            "sourceNode": "13",
+            "sourcePort": 0,
+            "targetNode": "14",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "14",
+            "sourcePort": 0,
             "targetNode": "2",
             "targetPort": 0
         },
         {
-            "sourceNode": "25",
+            "sourceNode": "12",
             "sourcePort": 0,
-            "targetNode": "3",
-            "targetPort": 0
+            "targetNode": "14",
+            "targetPort": 1
         }
     ],
     "nodes": [
-        {
-            "id": "",
-            "max": 10000.0,
-            "min": 1.0,
-            "obj": "dial",
-            "pos": [
-                708.3203125,
-                63.1953125
-            ],
-            "value": 509947117568.0
-        },
-        {
-            "id": "18",
-            "obj": "floatbox",
-            "pos": [
-                708.01953125,
-                174.30859375
-            ]
-        },
-        {
-            "id": "24",
-            "max": 2.0,
-            "min": 0.0,
-            "obj": "dial",
-            "pos": [
-                758.58203125,
-                690.21875
-            ],
-            "value": 8.0
-        },
-        {
-            "hz": 11.0,
-            "id": "26",
-            "obj": "Metro",
-            "pos": [
-                43.14453125,
-                0.6640625
-            ]
-        },
-        {
-            "id": "",
-            "obj": "count",
-            "pos": [
-                74.5859375,
-                171.80859375
-            ]
-        },
-        {
-            "id": "27",
-            "obj": "If",
-            "pos": [
-                168.3359375,
-                286.97265625
-            ]
-        },
-        {
-            "id": "28",
-            "obj": "If",
-            "pos": [
-                7.98046875,
-                287.09375
-            ]
-        },
-        {
-            "id": "29",
-            "obj": "If",
-            "pos": [
-                339.140625,
-                287.5546875
-            ]
-        },
-        {
-            "id": "30",
-            "obj": "floatbox",
-            "pos": [
-                269.0546875,
-                170.44140625
-            ]
-        },
-        {
-            "attack": 50,
-            "decay": 50,
-            "id": "33",
-            "obj": "env",
-            "pos": [
-                678.69921875,
-                642.43359375
-            ]
-        },
-        {
-            "id": "17",
-            "obj": "gain",
-            "pos": [
-                679.62890625,
-                795.52734375
-            ]
-        },
-        {
-            "id": "23",
-            "obj": "aout",
-            "pos": [
-                673.4296875,
-                890.08203125
-            ]
-        },
-        {
-            "id": "34",
-            "obj": "ping",
-            "pos": [
-                10.00390625,
-                244.86328125
-            ]
-        },
-        {
-            "id": "35",
-            "obj": "ping",
-            "pos": [
-                167.00390625,
-                242.86328125
-            ]
-        },
-        {
-            "id": "36",
-            "obj": "ping",
-            "pos": [
-                322.00390625,
-                245.86328125
-            ]
-        },
-        {
-            "id": "40",
-            "obj": "If",
-            "pos": [
-                49.9375,
-                113.34375
-            ]
-        },
-        {
-            "id": "42",
-            "obj": "count",
-            "pos": [
-                45.28125,
-                51.02734375
-            ]
-        },
         {
             "freq": 440,
             "id": "0",
             "obj": "Osc",
             "pos": [
-                676.04296875,
-                356.59765625
-            ],
-            "waveform": "sine"
-        },
-        {
-            "freq": 440,
-            "id": "1",
-            "obj": "Osc",
-            "pos": [
-                625.87109375,
-                464.84765625
-            ],
-            "waveform": "sine"
-        },
-        {
-            "id": "2",
-            "obj": "gain",
-            "pos": [
-                652.7734375,
-                408.0625
-            ]
-        },
-        {
-            "id": "4",
-            "obj": "gain",
-            "pos": [
-                757.47265625,
-                266.0859375
-            ]
-        },
-        {
-            "freq": 440,
-            "id": "5",
-            "obj": "Osc",
-            "pos": [
-                356.43359375,
-                470.75390625
-            ],
-            "waveform": "sine"
-        },
-        {
-            "id": "",
-            "obj": "If",
-            "pos": [
-                452.62109375,
-                101.50390625
-            ]
-        },
-        {
-            "id": "6",
-            "obj": "If",
-            "pos": [
-                502.5234375,
-                164.37109375
-            ]
-        },
-        {
-            "freq": 440,
-            "id": "25",
-            "obj": "Osc",
-            "pos": [
-                96.1796875,
-                587.0
+                49.84765625,
+                209.08984375
             ],
             "waveform": "saw"
         },
         {
-            "id": "3",
-            "obj": "scope",
+            "id": "1",
+            "obj": "spec",
             "pos": [
-                168.0,
-                794.0
+                292.95703125,
+                323.328125
+            ]
+        },
+        {
+            "id": "2",
+            "obj": "bpf",
+            "pos": [
+                46.0703125,
+                268.8046875
+            ]
+        },
+        {
+            "id": "3",
+            "max": 600.0,
+            "min": 300.0,
+            "obj": "dial",
+            "pos": [
+                565.73046875,
+                122.83203125
+            ],
+            "value": 421.5
+        },
+        {
+            "id": "4",
+            "max": 200.0,
+            "min": 0.0,
+            "obj": "dial",
+            "pos": [
+                685.7421875,
+                126.25
+            ],
+            "value": 74.9999771118164
+        },
+        {
+            "id": "7",
+            "max": 1000.0,
+            "min": 0.0,
+            "obj": "dial",
+            "pos": [
+                99.98046875,
+                48.94921875
+            ],
+            "value": 75.00035858154297
+        },
+        {
+            "id": "8",
+            "obj": "aout",
+            "pos": [
+                41.57421875,
+                523.04296875
+            ]
+        },
+        {
+            "id": "9",
+            "obj": "spec",
+            "pos": [
+                291.6796875,
+                426.5390625
+            ]
+        },
+        {
+            "id": "10",
+            "obj": "spec",
+            "pos": [
+                291.66015625,
+                530.296875
+            ]
+        },
+        {
+            "id": "11",
+            "obj": "floatbox",
+            "pos": [
+                557.6796875,
+                255.24609375
+            ]
+        },
+        {
+            "id": "5",
+            "obj": "gain",
+            "pos": [
+                40.140625,
+                436.9453125
+            ]
+        },
+        {
+            "id": "6",
+            "max": 100.0,
+            "min": 0.0,
+            "obj": "dial",
+            "pos": [
+                114.20703125,
+                376.4296875
+            ],
+            "value": 10.000082015991211
+        },
+        {
+            "id": "12",
+            "max": 10.0,
+            "min": 0.0,
+            "obj": "dial",
+            "pos": [
+                449.78515625,
+                42.88671875
+            ],
+            "value": 0.700007438659668
+        },
+        {
+            "freq": 440,
+            "id": "13",
+            "obj": "Osc",
+            "pos": [
+                254.26953125,
+                101.34375
+            ],
+            "waveform": "noise"
+        },
+        {
+            "id": "14",
+            "obj": "gain",
+            "pos": [
+                354.04296875,
+                169.14453125
             ]
         }
     ]
