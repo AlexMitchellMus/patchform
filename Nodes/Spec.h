@@ -73,19 +73,17 @@ public:
             nvgBeginPath(nvg);
             float xPos = 0.0f;
 
-            // Ensure proper mapping: 0 (min) is bottom, 1 (max) is top
-            float prevY = h * (1.0f - spectrum[0]);
+            // **Scale Y properly for raw magnitude**
+            float prevY = h * (1.0f - spectrum[0]); // Map [0, 1] → UI height
 
             nvgMoveTo(nvg, xPos, prevY);
 
             for (size_t i = 1; i < FREQ_BINS; ++i)
             {
                 xPos = i * xStep;
-                float currentY = h * (1.0f - spectrum[i]);
-                nvgLineTo(nvg, xPos + 1, currentY + 1);
+                float currentY = h * (1.0f - spectrum[i]); // Map [0, 1] → UI height
+                nvgLineTo(nvg, xPos, currentY);
             }
-
-            std::cout << std::endl;
 
             nvgSave(nvg);
             nvgScissor(nvg, 1, 1, w, h);
@@ -140,74 +138,70 @@ public:
         }
     }
 
-void computeFFT(BufferType& spectrum)
-{
-    std::array<float, FFT_SIZE> timeDomainBuffer{};
-    std::array<float, FFT_SIZE> freqDomainBuffer{};
-    std::array<int, FREQ_BINS> binCounts{}; // Count bins for averaging
-
-    // Apply Hann window
-    for (size_t i = 0; i < FFT_SIZE; ++i)
+    void computeFFT(BufferType& spectrum)
     {
-        timeDomainBuffer[i] = dspBuffer[i] * 0.5f * (1.0f - cosf(2.0f * M_PI * i / (FFT_SIZE - 1)));
+        std::array<float, FFT_SIZE> timeDomainBuffer{};
+        std::array<float, FFT_SIZE> freqDomainBuffer{};
+        std::array<int, FREQ_BINS> binCounts{}; // Count bins for averaging
+
+        // Apply Hann window
+        for (size_t i = 0; i < FFT_SIZE; ++i)
+        {
+            timeDomainBuffer[i] = dspBuffer[i] * 0.5f * (1.0f - cosf(2.0f * M_PI * i / (FFT_SIZE - 1)));
+        }
+
+        // Perform FFT using PFFFT
+        pffft_transform_ordered(fftSetup, timeDomainBuffer.data(), freqDomainBuffer.data(), nullptr, PFFFT_FORWARD);
+
+        // Reset bins
+        std::fill(spectrum.begin(), spectrum.end(), 0.0f);
+        std::fill(binCounts.begin(), binCounts.end(), 0);
+
+        float sampleRate = context->sampleRate;
+        float nyquist = sampleRate / 2.0f;
+
+        // **Log scale setup**
+        float minFreq = 20.0f; // Start at 20 Hz (avoid log(0))
+        float logMin = logf(minFreq);
+        float logMax = logf(nyquist);
+        float logRange = logMax - logMin;
+
+        for (size_t i = 1; i < FFT_SIZE / 2; ++i) // Skip DC component
+        {
+            float real = freqDomainBuffer[i * 2];
+            float imag = freqDomainBuffer[i * 2 + 1];
+            float magnitude = sqrtf(real * real + imag * imag);
+
+            // **Compute bin frequency**
+            float freq = (i / (float)FFT_SIZE) * sampleRate;
+            freq = std::max(freq, minFreq); // Prevent log(0)
+
+            // **Logarithmic bin mapping**
+            float logPos = (logf(freq) - logMin) / logRange; // Normalize to [0, 1]
+            int binIndex = static_cast<int>(logPos * (FREQ_BINS - 1));
+
+            // Ensure binIndex stays within valid range
+            binIndex = std::clamp(binIndex, 0, (int)FREQ_BINS - 1);
+
+            // **Smooth bin distribution**
+            float frac = logPos * (FREQ_BINS - 1) - binIndex;
+            spectrum[binIndex] += magnitude * (1.0f - frac);
+            if (binIndex + 1 < FREQ_BINS) spectrum[binIndex + 1] += magnitude * frac;
+
+            binCounts[binIndex]++;
+        }
+
+        // **Normalize bins (keep raw magnitude)**
+        float maxMagnitude = *std::max_element(spectrum.begin(), spectrum.end());
+        if (maxMagnitude > 0.0f)
+        {
+            for (size_t i = 0; i < FREQ_BINS; ++i)
+            {
+                if (binCounts[i] > 0) spectrum[i] /= binCounts[i]; // Average values
+                spectrum[i] /= maxMagnitude; // Normalize to [0, 1] for UI
+            }
+        }
     }
-
-    // Perform FFT using PFFFT
-    pffft_transform_ordered(fftSetup, timeDomainBuffer.data(), freqDomainBuffer.data(), nullptr, PFFFT_FORWARD);
-
-    // Reset bins
-    std::fill(spectrum.begin(), spectrum.end(), 0.0f);
-    std::fill(binCounts.begin(), binCounts.end(), 0);
-
-    float sampleRate = context->sampleRate;
-    float nyquist = sampleRate / 2.0f;
-
-    // ✅ Increase min frequency slightly for better low-end resolution
-    float minFreq = 30.0f; // Previously 20Hz, now 30Hz
-    float logMin = logf(minFreq);
-    float logMax = logf(nyquist);
-    float logRange = logMax - logMin;
-
-    for (size_t i = 1; i < FFT_SIZE / 2; ++i) // Skip DC component
-    {
-        float real = freqDomainBuffer[i * 2];   // Correct indexing
-        float imag = freqDomainBuffer[i * 2 + 1];
-        float magnitude = sqrtf(real * real + imag * imag);
-
-        // Compute bin frequency
-        float freq = (i / (float)FFT_SIZE) * sampleRate;
-        freq = std::max(freq, minFreq); // Prevent log(0) issues
-
-        float logPos = (logf(freq) - logMin) / logRange; // Normalize to [0, 1]
-        logPos = powf(logPos, 0.85f);  // ✅ Smooth low-end scaling
-
-        int binIndex = static_cast<int>(logPos * (FREQ_BINS - 1));
-
-        binIndex = std::clamp(binIndex, 0, (int)FREQ_BINS - 1);
-
-        float frac = logPos * (FREQ_BINS - 1) - binIndex;
-        spectrum[binIndex] += magnitude * (1.0f - frac);
-        if (binIndex + 1 < FREQ_BINS) spectrum[binIndex + 1] += magnitude * frac;
-
-        binCounts[binIndex]++;
-    }
-
-    // Normalize bins
-    for (size_t i = 0; i < FREQ_BINS; ++i)
-    {
-        if (binCounts[i] > 0)
-            spectrum[i] /= binCounts[i]; // Average values
-    }
-
-    // Normalize to [0, 1] range
-    float maxMagnitude = *std::max_element(spectrum.begin(), spectrum.end());
-    if (maxMagnitude > 0.0f)
-    {
-        for (auto& value : spectrum)
-            value /= maxMagnitude;
-    }
-}
-
 
 #endif
 
