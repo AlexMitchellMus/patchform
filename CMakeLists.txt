@@ -38,6 +38,9 @@ target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_
 add_library(pffft STATIC external/pffft/pffft.c)
 target_include_directories(pffft PUBLIC external/pffft)
 
+add_library(glad STATIC Glad/glad.cpp)
+target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/Glad")
+
 # Collect common source files
 file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp")
 
@@ -71,15 +74,15 @@ file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
 add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
-target_compile_definitions(PlugPatchStandalone PRIVATE PATCHFORM_WITH_GUI)
+target_compile_definitions(PlugPatchStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION)
 target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
         "${CMAKE_SOURCE_DIR}/external/unordered_dense/include/ankerl"
         "${CMAKE_SOURCE_DIR}/external/glaze/include/"
         "${CMAKE_SOURCE_DIR}/external/portaudio/include"
-        "${CMAKE_SOURCE_DIR}/external/nanovg/src/"
         "${CMAKE_SOURCE_DIR}/Glad/"
+        "${CMAKE_SOURCE_DIR}/external/nanovg/src/"
         "${CMAKE_SOURCE_DIR}/external/SDL2/include"
         "${CMAKE_SOURCE_DIR}/external/pffft"
 )
@@ -89,6 +92,7 @@ target_link_libraries(PlugPatchStandalone PRIVATE
         moodycamel_concurrentqueue
         unordered_dense
         glaze::glaze
+        glad
         nanovg
         pffft
 )

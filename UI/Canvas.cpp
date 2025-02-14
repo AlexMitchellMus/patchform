@@ -163,16 +163,18 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
     float newScale = scale + e.sdlEvent.wheel.y * 0.125f;
     newScale = std::min(std::max(newScale, 0.1f), 3.0f);
 
-    // Adjust canvas offset to scale around the mouse point
-    x -= canvasMouseX * (newScale - scale);
-    y -= canvasMouseY * (newScale - scale);
-
     // Apply the new scale
-    scale = newScale;
+    if (scale != newScale)
+    {
+        // Adjust canvas offset to scale around the mouse point
+        x -= canvasMouseX * (newScale - scale);
+        y -= canvasMouseY * (newScale - scale);
 
-    onScaleChange(scale);
-
-    repaint();
+        scale = newScale;
+        onScaleChange(scale);
+        repaint();
+        frameBufferRepaint = true;
+    }
 }
 
 void Canvas::setScale(float offset)
@@ -182,6 +184,7 @@ void Canvas::setScale(float offset)
     scale = newScale;
 
     onScaleChange(scale);
+    frameBufferRepaint = true;
     repaint();
 }
 
@@ -189,6 +192,7 @@ void Canvas::resetScale()
 {
     scale = 1.0f;
     onScaleChange(scale);
+    frameBufferRepaint = true;
     repaint();
 }
 
@@ -380,31 +384,17 @@ void Canvas::render(NVGcontext* nvg)
 {
     // Draw Background color
     nvgBeginPath(nvg);
-    nvgFillColor(nvg, nvgRGB(23, 23, 23));
+    nvgFillColor(nvg, nvgRGB(20, 20, 20));
     nvgFillRect(nvg, 0, 0, width, height);
 
     if (mode == Canvas::DisplayMode::Edit)
     {
-        // Draw bg lines
+        // Offset by canvasOrigin so the texture starts at canvas 0,0 point
+        NVGpaint paint = nvgImagePattern(nvg, canvasOrigin, canvasOrigin, 512, 512, 0, tileFB->image, 1.0f);
         nvgBeginPath(nvg);
-        nvgLineStyle(nvg, NVG_SOLID);
-        nvgStrokeColor(nvg, nvgRGB(33, 33, 33)); // Set stroke color
-
-        // Draw vertical dashed lines
-        for (float x = 0; x <= infinteCanvasSize; x += 100)
-        {
-            nvgMoveTo(nvg, x, 0);
-            nvgLineTo(nvg, x, infinteCanvasSize);
-        }
-
-        // Draw horizontal dashed lines
-        for (float y = 0; y <= infinteCanvasSize; y += 100)
-        {
-            nvgMoveTo(nvg, 0, y);
-            nvgLineTo(nvg, infinteCanvasSize, y);
-        }
-
-        nvgStroke(nvg);
+        nvgRect(nvg, 0, 0, width, height);
+        nvgFillPaint(nvg, paint);
+        nvgFill(nvg);
     }
 
     // Draw dashed origin lines
@@ -416,11 +406,83 @@ void Canvas::render(NVGcontext* nvg)
     nvgMoveTo(nvg, canvasOrigin, canvasOrigin);
     nvgLineTo(nvg, canvasOrigin, infinteCanvasSize);
 
-    nvgStrokeColor(nvg, nvgRGB(43, 43, 43)); // Set stroke color
-    nvgStrokeWidth(nvg, 2.0f);   // Set line width
+    nvgStrokeColor(nvg, nvgRGB(55, 55, 55)); // Set stroke color
+
+    // When canvas is zoomed out (scaled smaller than 1.0f) we increase the size of the lines
+    // So they don't disappear or create morie patterns
+    auto scaledStroke = 2.0f / std::clamp(scale, 0.01f, 0.5f);
+    nvgStrokeWidth(nvg, scaledStroke);
     nvgDashLength(nvg, 10.0f);
     nvgLineStyle(nvg, NVG_LINE_DASHED);
     nvgStroke(nvg);
+}
+
+void Canvas::updateFrameBuffer(NVGcontext* nvg)
+{
+    int tileSize = 1024;
+    // TODO: We need to recreate when the opengl context is re-created
+    if (tileFB == nullptr)
+    {
+        tileFB = nvgCreateFramebuffer(nvg, tileSize, tileSize, NVG_IMAGE_PREMULTIPLIED | NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+    }
+
+    if (frameBufferRepaint)
+    {
+        std::cout << "regenerate fb" << std::endl;
+        frameBufferRepaint = false;
+        nvgBindFramebuffer(tileFB); // Render to the tile framebuffer
+        nvgViewport(0, 0, tileSize, tileSize);
+        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        nvgBeginFrame(nvg, tileSize, tileSize, 1.0f);
+        nvgScissor(nvg, 0, 0, tileSize, tileSize);
+
+        nvgBeginPath(nvg);
+        nvgRect(nvg, 0, 0, tileSize, tileSize);
+        nvgFillColor(nvg, nvgRGBA(20, 20, 20, 255));
+        nvgFill(nvg);
+
+        nvgBeginPath(nvg);
+        // Grid spacing setup
+        int majorSpacing = tileSize / 4;  // 4x4 major grid
+        int minorSpacing = tileSize / 16; // Inner thin grid (4x4 within each major block)
+
+        // When canvas is zoomed out (scaled smaller than 1.0f) we increase the size of the lines
+        // So they don't disappear or create morie patterns
+        auto scaledStroke = 2.0f / std::clamp(scale, 0.01f, 0.5f);
+
+        // Draw minor grid lines
+        nvgStrokeColor(nvg, nvgRGBA(22, 22, 22, 255));
+        nvgStrokeWidth(nvg, scaledStroke);
+        nvgBeginPath(nvg);
+        for (int x = 0; x <= tileSize; x += minorSpacing) {
+            nvgMoveTo(nvg, x, 0);
+            nvgLineTo(nvg, x, tileSize);
+        }
+        for (int y = 0; y <= tileSize; y += minorSpacing) {
+            nvgMoveTo(nvg, 0, y);
+            nvgLineTo(nvg, tileSize, y);
+        }
+        nvgStroke(nvg);
+
+        // Draw major grid lines (thicker)
+        nvgStrokeColor(nvg, nvgRGBA(26, 26, 26, 255)); // Lighter gray for major grid
+        nvgStrokeWidth(nvg, scaledStroke);
+        nvgBeginPath(nvg);
+        for (int x = 0; x <= tileSize; x += majorSpacing) {
+            nvgMoveTo(nvg, x, 0);
+            nvgLineTo(nvg, x, tileSize);
+        }
+        for (int y = 0; y <= tileSize; y += majorSpacing) {
+            nvgMoveTo(nvg, 0, y);
+            nvgLineTo(nvg, tileSize, y);
+        }
+        nvgStroke(nvg);
+
+        nvgGlobalScissor(nvg, 0, 0, tileSize, tileSize);
+        nvgEndFrame(nvg);
+        nvgBindFramebuffer(nullptr);
+    }
 }
 
 // TODO: We don't need to do this if we deal with it at the component level- remove soon!

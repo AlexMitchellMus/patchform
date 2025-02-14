@@ -13,11 +13,7 @@
 #include <utility>
 #include <vector>
 
-#ifndef NANOVG_GL3_IMPLEMENTATION
-#define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg.h"
-#endif
-
 
 #include <functional>
 #include <iostream>

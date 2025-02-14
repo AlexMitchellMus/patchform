@@ -6,6 +6,21 @@
 
 #pragma once
 
+#include <sstream>
+#include <unordered_map>
+
+#ifndef GLAD_GL_H_
+#include <../Glad/gl.h>
+#endif
+
+#include <nanovg.h>
+#ifdef NANOVG_GL_IMPLEMENTATION
+#    undef NANOVG_GL_IMPLEMENTATION
+#    include <nanovg_gl_utils.h>
+#    define NANOVG_GL_IMPLEMENTATION 1
+#endif
+
+
 #include "../UI_Toolkit/Component.h"
 
 #include "Connection.h"
@@ -106,6 +121,8 @@ public:
     Component objectsLayer;
     Component connectionsLayer;
 
+    void updateFrameBuffer(NVGcontext* nvg);
+
 private:
     void dragCanvas(const pptk::Point&);
 
@@ -127,6 +144,9 @@ private:
     bool inDragMode = false;
 
     std::string patchName;
+
+    NVGframebuffer* tileFB = nullptr;
+    bool frameBufferRepaint = true;
 
 #ifdef GENERATE_TEST_OBJECTS
     // ONLY FOR TESTING! These objects are not connected to the DSP system

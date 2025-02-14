@@ -77,6 +77,12 @@ public:
         rightPanel->setBounds(getWidth() - 200, topBarHeight, 200, getHeight() - topBarHeight);
     }
 
+    void updateFrameBuffers(NVGcontext* nvg)
+    {
+        canvas->updateFrameBuffer(nvg);
+    }
+
+
     GraphManager* graphManager;
 
 private:

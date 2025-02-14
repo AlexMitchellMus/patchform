@@ -1,21 +1,34 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
 
-#include "PortAudio.h"
-
-#include "Graph/AudioGraph.h"
-
-#define GLAD_GL_IMPLEMENTATION
+#ifndef GLAD_GL_H_
 #include "Glad/gl.h"
+#endif
+
+#include <Windows.h>
 
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_main.h"
 
-#define NANOVG_GL3_IMPLEMENTATION
-#include "nanovg.h"
-#include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"
+#include <nanovg.h>
+#ifdef NANOVG_GL_IMPLEMENTATION
+#    include <nanovg_gl.h>
+#    include <nanovg_gl_utils.h>
+#endif
+
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
+
+#include "PortAudio.h"
+
+#include "Graph/AudioGraph.h"
 
 #include "UI/Editor.h"
 #include "UI_ToolKit/EventManager.h"
@@ -338,6 +351,8 @@ int main(int argc, char* argv[])
         app->updateObjectsFromDSP();
 
         app->handleTime(currentFrameTime);
+
+        app->updateFrameBuffers(nvg);
 
         if (!app->needsRepaint()){
             SDL_Delay(1);
