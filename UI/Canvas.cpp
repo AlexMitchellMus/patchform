@@ -412,7 +412,7 @@ void Canvas::render(NVGcontext* nvg)
     // So they don't disappear or create morie patterns
     auto scaledStroke = 2.0f / std::clamp(scale, 0.01f, 0.5f);
     nvgStrokeWidth(nvg, scaledStroke);
-    nvgDashLength(nvg, 10.0f);
+    nvgDashLength(nvg, 10.0f * std::clamp(scale, 0.01f, 0.5f) * 2.0f);
     nvgLineStyle(nvg, NVG_LINE_DASHED);
     nvgStroke(nvg);
 }
@@ -428,8 +428,8 @@ void Canvas::updateFrameBuffer(NVGcontext* nvg)
 
     if (frameBufferRepaint)
     {
-        std::cout << "regenerate fb" << std::endl;
         frameBufferRepaint = false;
+
         nvgBindFramebuffer(tileFB); // Render to the tile framebuffer
         nvgViewport(0, 0, tileSize, tileSize);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
