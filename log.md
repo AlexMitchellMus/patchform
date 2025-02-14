@@ -27,8 +27,10 @@ Project Goals
             * Simple set of objects
             * Copy/Paste functionality (using JSON as the interchange format)
         * User Interface:
+            * Central nested popup window for settings / about
             * Theme support
-              Initial Plugin View
+            * Initial Plugin View
+            * Non-modal open/save system dialog
         * I/O Capabilities:
             * MIDI in/out
             * Audio in/out
