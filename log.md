@@ -26,6 +26,8 @@ Project Goals
         * Editing Essentials:
             * Simple set of objects
             * Copy/Paste functionality (using JSON as the interchange format)
+            * DnD to make new objects
+            * All object params to be saved in patch
         * User Interface:
             * Central nested popup window for settings / about
             * Theme support
