@@ -95,7 +95,7 @@ public:
         }
 
     private:
-        BufferType spectrum;
+        BufferType spectrum { 0.0f };
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override
@@ -208,7 +208,7 @@ public:
 private:
 #ifdef PATCHFORM_WITH_GUI
     PFFFT_Setup* fftSetup;
-    std::array<float, FFT_SIZE> dspBuffer{};
+    std::array<float, FFT_SIZE> dspBuffer { 0.0f };
     size_t dspBufferIndex = 0;
 #endif
 };
