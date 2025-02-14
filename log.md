@@ -16,20 +16,23 @@ Project Goals
 [ PROJECT ROADMAP ]
 
 [ V 0.1 ] Core Application & Basic Editor:
-        * Platform & Engine:
-            * SDL3 standalone application for MS Windows.
+        * Platform:
+            * SDL3 standalone application for MS Windows
+        * Engine:
+            * Event's with data pool (linked list of data atoms for RT safe transmutation)
         * Basic Functionality:
-            * Save, Load, and Save-as for patches.
-            * Basic undo/redo support.
+            * Save, Load, and Save-as for patches
+            * Basic undo/redo support
         * Editing Essentials:
-            * Simple set of objects.
-            * Copy/Paste functionality (using JSON as the interchange format).
+            * Simple set of objects
+            * Copy/Paste functionality (using JSON as the interchange format)
         * User Interface:
-            * Theme support.
-              Initial Plugin View.
+            * Theme support
+              Initial Plugin View
         * I/O Capabilities:
-            * MIDI in/out.
-            * Audio in/out.
+            * MIDI in/out
+            * Audio in/out
+            * Multichannel Audio in/out
 
 [ V 0.2 ]
         * Make cross-platform: macOS, Linux, Windows
