@@ -46,6 +46,8 @@ Project Goals
         
 [ V 0.4 ]
         * Type in object names in canvas editor
+        * Feedback loops (audio buffer sent to next cycle of graph)
+        * Per-patch state (sample-rate & buffer-size)
         
 [ v 0.5 ]
         * Sub-patches
