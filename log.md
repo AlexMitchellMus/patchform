@@ -13,6 +13,52 @@ Project Goals
 * Set values for nodes from external controls (UI etc)
 * Expressive and feature rich ABI for external / plugin c++ creation
 
+[ PROJECT ROADMAP ]
+
+[ V 0.1 ] Core Application & Basic Editor:
+        * Platform & Engine:
+            * SDL3 standalone application for MS Windows.
+        * Basic Functionality:
+            * Save, Load, and Save-as for patches.
+            * Basic undo/redo support.
+        * Editing Essentials:
+            * Simple set of objects.
+            * Copy/Paste functionality (using JSON as the interchange format).
+        * User Interface:
+            * Theme support.
+              Initial Plugin View.
+        * I/O Capabilities:
+            * MIDI in/out.
+            * Audio in/out.
+
+[ V 0.2 ]
+        * Make cross-platform: macOS, Linux, Windows
+
+[ V 0.3 ]
+        * CLAP plugin port
+        
+[ V 0.4 ]
+        * Type in object names in canvas editor
+        
+[ v 0.5 ]
+        * Sub-patches
+        * Patch Abstractions
+        
+[ V 0.6 ]
+        * Tabbed editor (Load multiple patches) - not split-view
+
+[ V 0.7 ]
+        * Compiled Abstractions
+        
+[ V 0.8 ]
+        * Support more plugin formats via CLAP wrapper
+        
+[ V 0.9 ]
+        * Refine plugin support (parameters etc)
+
+
+
+
 [UI TODO]
 
 * [DONE] correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)

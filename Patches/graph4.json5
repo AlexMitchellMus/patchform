@@ -23,11 +23,29 @@
             "sourcePort": 0,
             "targetNode": "3",
             "targetPort": 1
+        },
+        {
+            "sourceNode": "1",
+            "sourcePort": 0,
+            "targetNode": "5",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "1",
+            "sourcePort": 0,
+            "targetNode": "6",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "4",
+            "sourcePort": 0,
+            "targetNode": "7",
+            "targetPort": 0
         }
     ],
     "nodes": [
         {
-            "hz": 8.0,
+            "hz": 90.0,
             "id": "0",
             "obj": "Metro",
             "pos": [
@@ -65,14 +83,38 @@
         },
         {
             "id": "4",
-            "max": 1000.0,
-            "min": 0.0,
+            "max": 188.0,
+            "min": 175.0,
             "obj": "dial",
             "pos": [
                 305.0,
                 129.0
             ],
-            "value": 799.9998168945313
+            "value": 179.5500030517578
+        },
+        {
+            "id": "5",
+            "obj": "scope",
+            "pos": [
+                174.54296875,
+                421.4375
+            ]
+        },
+        {
+            "id": "6",
+            "obj": "spec",
+            "pos": [
+                174.546875,
+                523.24609375
+            ]
+        },
+        {
+            "id": "7",
+            "obj": "floatbox",
+            "pos": [
+                396.81640625,
+                249.62890625
+            ]
         }
     ]
 }
