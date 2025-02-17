@@ -130,9 +130,7 @@ int main(int argc, char* argv[])
 
     //===================== PLUGPATCH AUDIO ENGINE =====================
 
-    auto context = std::make_unique<NodeContext>(sampleRate, frameCount);
-
-    GraphManager graphs(context.get());
+    GraphManager graphManager(sampleRate, frameCount);
 
     //===================== ASIO DEVICE SELECTION / SETUP =====================
 
@@ -153,7 +151,7 @@ int main(int argc, char* argv[])
     outputParams.sampleFormat = paFloat32; // 32-bit float samples
     outputParams.suggestedLatency = deviceInfo->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
-    err = Pa_OpenStream(&stream, nullptr, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, &graphs);
+    err = Pa_OpenStream(&stream, nullptr, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, &graphManager);
     if (err != paNoError) {
         std::cerr << "PortAudio stream setup failed: " << Pa_GetErrorText(err) << std::endl;
         return 1;
@@ -283,7 +281,7 @@ int main(int argc, char* argv[])
 
     app->cacheFontMetrics(nvg, fonts, sizes);
 
-    app->init(&graphs);
+    app->init(&graphManager);
 
     // FIXME: hack to make the app have a starting size!
     app->setBounds(0, 0, newWidth, newHeight);

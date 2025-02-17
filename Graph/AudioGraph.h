@@ -1022,8 +1022,8 @@ public:
 class GraphManager
 {
 public:
-    GraphManager(NodeContext* context)
-        : ctx(context)
+    GraphManager(int sampleRate, unsigned long frameCount)
+        : ctx(std::make_unique<NodeContext>(sampleRate, frameCount))
     {
         Logger::getInstance().startProcessingThread();
     }
@@ -1037,7 +1037,7 @@ public:
     {
         if (!activeGraph)
         {
-            activeGraph = std::make_unique<GraphHolder>(ctx);
+            activeGraph = std::make_unique<GraphHolder>(ctx.get());
         }
 
         // TODO: Lock the graph, or communicate via a queue
@@ -1053,7 +1053,7 @@ public:
 
         if (!activeGraph)
         {
-            activeGraph = std::make_unique<GraphHolder>(ctx);
+            activeGraph = std::make_unique<GraphHolder>(ctx.get());
         }
 
         // TODO: Lock the graph, or communicate via a queue
@@ -1225,7 +1225,7 @@ public:
 
         filePath = patchPath;
 
-        transitioningGraph = std::make_shared<GraphHolder>(ctx);
+        transitioningGraph = std::make_shared<GraphHolder>(ctx.get());
 
         transitioningGraph->loadPatch(patch, logVerbose);
 
@@ -1360,5 +1360,5 @@ protected:
     std::shared_ptr<GraphHolder> activeGraph;         // Actively processed graph
     std::shared_ptr<GraphHolder> transitioningGraph;  // New graph prepared for swapping
     std::atomic<bool> swapGraph = false;             // Signal for readiness to swap
-    NodeContext* ctx;
+    std::unique_ptr<NodeContext> ctx;
 };
