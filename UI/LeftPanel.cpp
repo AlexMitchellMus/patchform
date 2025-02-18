@@ -6,7 +6,6 @@
 
 #include "LeftPanel.h"
 #include "SDL3/SDL.h"
-#include "nanovg.h"
 #include "Object.h"
 #include "Canvas.h"
 

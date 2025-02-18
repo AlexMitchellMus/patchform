@@ -13,6 +13,15 @@
 #include <string>
 #include <iostream>
 
+#include "../Glad/gl.h"
+
+#include <nanovg.h>
+#ifdef NANOVG_GL_IMPLEMENTATION
+#    undef NANOVG_GL_IMPLEMENTATION
+#    include <nanovg_gl_utils.h>
+#    define NANOVG_GL_IMPLEMENTATION 1
+#endif
+
 class Port : public pptk::Component {
 public:
     enum class Direction { Input, Output };

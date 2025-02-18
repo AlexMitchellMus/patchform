@@ -22,6 +22,13 @@
 #include "Object.h"
 #include "TopBar.h"
 
+#include <nanovg.h>
+#ifdef NANOVG_GL_IMPLEMENTATION
+#    undef NANOVG_GL_IMPLEMENTATION
+#    include <nanovg_gl_utils.h>
+#    define NANOVG_GL_IMPLEMENTATION 1
+#endif
+
 #ifdef max
 #undef max
 #endif

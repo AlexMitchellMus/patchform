@@ -4,6 +4,14 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
+#include <cstdint>
+#include <sstream>
+#include <unordered_map>
+
+#ifndef GLAD_GL_H_
+#include "../Glad/gl.h"
+#endif
+
 #include "Canvas.h"
 
 #include <glaze/core/common.hpp>

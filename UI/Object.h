@@ -11,6 +11,8 @@
 #include "Editor.h"
 #include "Port.h"
 
+#include "../Glad/gl.h"
+
 class AudioNode;
 class Canvas;
 class Object : public CanvasItem {
