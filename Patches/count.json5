@@ -1,284 +1,302 @@
 {
     "connections": [
         {
-            "sourceNode": 0,
+            "sourceNode": "0",
             "sourcePort": 0,
-            "targetNode": 1,
+            "targetNode": "1",
             "targetPort": 0
         },
         {
-            "sourceNode": 1,
+            "sourceNode": "1",
             "sourcePort": 0,
-            "targetNode": 2,
+            "targetNode": "2",
             "targetPort": 0
         },
         {
-            "sourceNode": 1,
+            "sourceNode": "1",
             "sourcePort": 0,
-            "targetNode": 3,
+            "targetNode": "3",
             "targetPort": 0
         },
         {
-            "sourceNode": 1,
+            "sourceNode": "1",
             "sourcePort": 0,
-            "targetNode": 4,
+            "targetNode": "4",
             "targetPort": 0
         },
         {
-            "sourceNode": 1,
+            "sourceNode": "1",
             "sourcePort": 0,
-            "targetNode": 5,
+            "targetNode": "5",
             "targetPort": 0
         },
         {
-            "sourceNode": 2,
+            "sourceNode": "2",
             "sourcePort": 0,
-            "targetNode": 6,
+            "targetNode": "6",
             "targetPort": 1
         },
         {
-            "sourceNode": 3,
+            "sourceNode": "3",
             "sourcePort": 0,
-            "targetNode": 7,
+            "targetNode": "7",
             "targetPort": 1
         },
         {
-            "sourceNode": 4,
+            "sourceNode": "4",
             "sourcePort": 0,
-            "targetNode": 8,
+            "targetNode": "8",
             "targetPort": 1
         },
         {
-            "sourceNode": 5,
+            "sourceNode": "5",
             "sourcePort": 0,
-            "targetNode": 9,
+            "targetNode": "9",
             "targetPort": 1
         },
         {
-            "sourceNode": 2,
+            "sourceNode": "2",
             "sourcePort": 0,
-            "targetNode": 6,
+            "targetNode": "6",
             "targetPort": 0
         },
         {
-            "sourceNode": 3,
+            "sourceNode": "3",
             "sourcePort": 0,
-            "targetNode": 7,
+            "targetNode": "7",
             "targetPort": 0
         },
         {
-            "sourceNode": 4,
+            "sourceNode": "4",
             "sourcePort": 0,
-            "targetNode": 8,
+            "targetNode": "8",
             "targetPort": 0
         },
         {
-            "sourceNode": 5,
+            "sourceNode": "5",
             "sourcePort": 0,
-            "targetNode": 9,
+            "targetNode": "9",
             "targetPort": 0
         },
         {
-            "sourceNode": 6,
+            "sourceNode": "6",
             "sourcePort": 0,
-            "targetNode": 10,
+            "targetNode": "10",
             "targetPort": 1
         },
         {
-            "sourceNode": 7,
+            "sourceNode": "7",
             "sourcePort": 0,
-            "targetNode": 11,
+            "targetNode": "11",
             "targetPort": 1
         },
         {
-            "sourceNode": 8,
+            "sourceNode": "8",
             "sourcePort": 0,
-            "targetNode": 12,
+            "targetNode": "12",
             "targetPort": 1
         },
         {
-            "sourceNode": 9,
+            "sourceNode": "9",
             "sourcePort": 0,
-            "targetNode": 13,
+            "targetNode": "13",
             "targetPort": 1
         },
         {
-            "sourceNode": 2,
+            "sourceNode": "2",
             "sourcePort": 0,
-            "targetNode": 10,
+            "targetNode": "10",
             "targetPort": 0
         },
         {
-            "sourceNode": 3,
+            "sourceNode": "3",
             "sourcePort": 0,
-            "targetNode": 11,
+            "targetNode": "11",
             "targetPort": 0
         },
         {
-            "sourceNode": 4,
+            "sourceNode": "4",
             "sourcePort": 0,
-            "targetNode": 12,
+            "targetNode": "12",
             "targetPort": 0
         },
         {
-            "sourceNode": 5,
+            "sourceNode": "5",
             "sourcePort": 0,
-            "targetNode": 13,
+            "targetNode": "13",
             "targetPort": 0
         },
         {
-            "sourceNode": 13,
+            "sourceNode": "13",
             "sourcePort": 0,
-            "targetNode": 14,
+            "targetNode": "14",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "12",
+            "sourcePort": 0,
+            "targetNode": "14",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "11",
+            "sourcePort": 0,
+            "targetNode": "14",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "10",
+            "sourcePort": 0,
+            "targetNode": "14",
             "targetPort": 0
         }
     ],
     "nodes": [
         {
-            "hz": 8,
-            "id": 0,
+            "hz": 8.0,
+            "id": "0",
             "obj": "Metro",
             "pos": [
-                -64000.0,
-                -64000.0
+                511.48046875,
+                46.1328125
             ]
         },
         {
-            "id": 1,
+            "id": "1",
             "max": 3,
             "min": 0,
             "obj": "Count",
             "pos": [
-                -64000.0,
-                -64000.0
+                512.3515625,
+                103.91796875
             ]
         },
         {
-            "id": 2,
+            "id": "2",
             "if": 0,
             "obj": "If",
             "pos": [
-                -64000.0,
-                -64000.0
+                835.921875,
+                231.015625
             ],
             "return": 240
         },
         {
-            "id": 3,
+            "id": "3",
             "if": 1,
             "obj": "If",
             "pos": [
-                -64000.0,
-                -64000.0
+                606.359375,
+                235.5625
             ],
             "return": 440
         },
         {
-            "id": 4,
+            "id": "4",
             "if": 2,
             "obj": "If",
             "pos": [
-                -64000.0,
-                -64000.0
+                350.15625,
+                292.6796875
             ],
             "return": 335
         },
         {
-            "id": 5,
+            "id": "5",
             "if": 3,
             "obj": "If",
             "pos": [
-                -64000.0,
-                -64000.0
+                115.1484375,
+                296.91015625
             ],
             "return": 660
         },
         {
             "freq": 660,
-            "id": 6,
+            "id": "6",
             "obj": "Osc",
             "pos": [
-                -64000.0,
-                -64000.0
+                868.36328125,
+                293.375
             ],
             "waveform": "sine"
         },
         {
             "freq": 660,
-            "id": 7,
+            "id": "7",
             "obj": "Osc",
             "pos": [
-                -64000.0,
-                -64000.0
+                638.6953125,
+                295.80078125
             ],
             "waveform": "sine"
         },
         {
             "freq": 660,
-            "id": 8,
+            "id": "8",
             "obj": "Osc",
             "pos": [
-                -64000.0,
-                -64000.0
+                371.69140625,
+                353.7890625
             ],
             "waveform": "sine"
         },
         {
             "freq": 660,
-            "id": 9,
+            "id": "9",
             "obj": "Osc",
             "pos": [
-                -64000.0,
-                -64000.0
+                151.25390625,
+                355.4765625
             ],
             "waveform": "sine"
         },
         {
             "attack": 0,
             "decay": 100,
-            "id": 10,
+            "id": "10",
             "obj": "Env",
             "pos": [
-                -64000.0,
-                -64000.0
+                839.2578125,
+                352.2578125
             ]
         },
         {
             "attack": 100,
             "decay": 0,
-            "id": 11,
+            "id": "11",
             "obj": "Env",
             "pos": [
-                -64000.0,
-                -64000.0
+                602.5859375,
+                355.359375
             ]
         },
         {
             "attack": 200,
             "decay": 200,
-            "id": 12,
+            "id": "12",
             "obj": "Env",
             "pos": [
-                506.0,
-                107.0
+                382.34375,
+                548.22265625
             ]
         },
         {
             "attack": 400,
             "decay": 0,
-            "id": 13,
+            "id": "13",
             "obj": "Env",
             "pos": [
-                259.0,
-                313.0
+                114.3046875,
+                548.47265625
             ]
         },
         {
-            "id": 14,
+            "id": "14",
             "obj": "AudioOut",
             "pos": [
-                349.0,
-                252.0
+                686.92578125,
+                696.4453125
             ]
         }
     ]
