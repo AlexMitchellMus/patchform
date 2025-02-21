@@ -244,9 +244,8 @@ bool PatchformApp::initUI() {
     editor = std::make_unique<Editor>();
 
     std::vector<std::string> fonts = { "Regular", "SemiBold", "icons", "object_icons" };
-    std::vector<float> sizes = { 14.0f, 16.0f, 100.0f };
 
-    editor->cacheFontMetrics(nvg, fonts, sizes);
+    editor->cacheFontMetrics(nvg, fonts, { 14.0f, 16.0f, 100.0f });
 
     editor->init(&graphManager);
 
