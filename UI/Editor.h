@@ -74,6 +74,7 @@ public:
 
     void resized() override
     {
+        std::cout << "resizing editor" << std::endl;
         constexpr auto topBarHeight = 40;
         topBar->setBounds(0, 0, getWidth(), topBarHeight);
         canvas->setBounds(-canvas->canvasOrigin, - canvas->canvasOrigin + topBarHeight, canvas->infinteCanvasSize, canvas->infinteCanvasSize);
