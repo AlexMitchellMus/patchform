@@ -70,6 +70,7 @@ Project Goals
 
 [UI TODO]
 
+*        Ping (Bang object) doesn't register mouse button down sometimes - (intermittent)
 * [DONE] correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)
 * [DONE] scale / position canvas - make a way for the canvas to have a viewport - per component scaling
 *        scrollbars - needed for canavs and side panels etc
