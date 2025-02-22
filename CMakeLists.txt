@@ -151,21 +151,40 @@ add_dependencies(PlugPatchCLI copy_patches)
 add_dependencies(PlugPatchStandalone copy_patches copy_fonts)
 
 # Installer configuration for CLI
+#TODO NOT WORKING ONLY FOR RELEASE for some reason! :-(
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(INSTALLER_DIR ${CMAKE_SOURCE_DIR}/installer)
+
+    # -------------------------- CLI --------------------------
     set(NSIS_SCRIPT ${INSTALLER_DIR}/windows/installer.nsi)
 
     # Define the location of the built application
-    set(APPLICATION_BINARY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlugPatchCLI.exe")
+    set(APPLICATION_BINARY_CLI "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlugPatchCLI.exe")
 
     add_custom_target(PackageInstaller
             COMMAND ${CMAKE_COMMAND} -E echo "Creating NSIS installer..."
-            COMMAND makensis.exe /DOUTPUT_DIR=$<TARGET_FILE_DIR:PlugPatchCLI> /DAPPLICATION_BINARY=${APPLICATION_BINARY} ${NSIS_SCRIPT}
+            COMMAND makensis.exe /DOUTPUT_DIR=$<TARGET_FILE_DIR:PlugPatchCLI> /DAPPLICATION_BINARY=${APPLICATION_BINARY_CLI} ${NSIS_SCRIPT}
             WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
             COMMENT "Packaging installer with NSIS"
             VERBATIM
     )
     add_dependencies(PackageInstaller PlugPatchCLI)
+
+    # -------------------------- GUI --------------------------
+
+    set(NSIS_SCRIPT ${INSTALLER_DIR}/windows/installerStandalone.nsi)
+
+    # Define the location of the built application
+    set(APPLICATION_BINARY_STANDALONE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlugPatchStandalone.exe")
+
+    add_custom_target(PackageInstallerStandalone
+            COMMAND ${CMAKE_COMMAND} -E echo "Creating NSIS installer..."
+            COMMAND makensis.exe /DOUTPUT_DIR=$<TARGET_FILE_DIR:PlugPatchStandalone> /DAPPLICATION_BINARY=${APPLICATION_BINARY_STANDALONE} ${NSIS_SCRIPT}
+            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+            COMMENT "Packaging installer with NSIS"
+            VERBATIM
+    )
+    add_dependencies(PackageInstallerStandalone PlugPatchStandalone)
 else()
-    message(WARNING "The PackageInstaller target is only available in Release mode.")
+    message(WARNING "The PackageInstallers target is only available in Release mode.")
 endif()
