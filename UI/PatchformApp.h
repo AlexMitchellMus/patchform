@@ -20,6 +20,8 @@
 #    define NANOVG_GL_IMPLEMENTATION 1
 #endif
 
+class WindowPeer;
+
 class PatchformApp {
 public:
     PatchformApp(int sampleRate, unsigned long frameCount);
@@ -39,8 +41,7 @@ private:
     std::unique_ptr<pptk::EventManager> eventManager;
     uint32_t lastFrameTime = 0;
     NVGcontext* nvg = nullptr;
-    SDL_Window* window = nullptr;
-    SDL_GLContext glContext = nullptr;
+    std::unique_ptr<WindowPeer> window;
 
     int windowWidth;
     int windowHeight;

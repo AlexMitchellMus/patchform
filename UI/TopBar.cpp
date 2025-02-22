@@ -20,7 +20,7 @@ MainMenu::MainMenu()
         if (auto* ed = findParentOfClass<Editor>())
         {
             setVisible(false);
-            auto fileToOpen = PlatformHelpers::OpenFileChooserDialog();
+            auto fileToOpen = PlatformHelpers::OpenFileChooserDialog(ed->getWindowPeer());
             ed->loadFile(fileToOpen);
             close();
         }

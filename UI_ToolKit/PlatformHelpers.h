@@ -6,7 +6,10 @@
 
 #include <string>
 #include <iostream>
+
+//#include "../external/SDL2/src/video/SDL_sysvideo.h"
 #include "SDL3/SDL.h"
+#include "../UI_ToolKit/WindowPeer.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -28,15 +31,17 @@
 namespace PlatformHelpers
 {
 #ifdef _WIN32
-    static std::string OpenFileChooserDialog()
+    static std::string OpenFileChooserDialog(WindowPeer* peer)
     {
+        HWND hwnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(peer->getSDLWindow()), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
+
         char filePath[MAX_PATH] = {0};  // Buffer to store the file path.
 
         // Initialize the OPENFILENAME structure.
         OPENFILENAME ofn;
         ZeroMemory(&ofn, sizeof(ofn));
-        ofn.lStructSize  = sizeof(ofn);       // Size of the structure.
-        ofn.hwndOwner    = nullptr;             // Owner window (can be set to a valid HWND).
+        ofn.lStructSize  = sizeof(ofn);         // Size of the structure.
+        ofn.hwndOwner    = hwnd;                // Owner window STOPS the base window from being selectable when modal dialog is shown.
         ofn.lpstrFile    = filePath;            // Buffer to store the file name.
         ofn.nMaxFile     = MAX_PATH;            // Size of the buffer.
         // Filter format: "Description\0Filter\0", terminated by an extra '\0'.

@@ -6,8 +6,9 @@
 
 #include "Editor.h"
 #include "../Graph/AudioGraph.h"
+#include "../UI_ToolKit/WindowPeer.h"
 
-Editor::Editor(){};
+Editor::Editor(WindowPeer* peer) : windowPeer(peer) {};
 
 void Editor::init(GraphManager* gm)
 {

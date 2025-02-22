@@ -24,6 +24,7 @@
 #endif
 
 #include "PatchformApp.h"
+#include "../UI_ToolKit/WindowPeer.h"
 
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     : graphManager(sampleRate, frameCount), sampleRate(sampleRate), frameCount(frameCount),
@@ -62,14 +63,8 @@ void PatchformApp::shutdown() {
         nvg = nullptr;
     }
 
-    if (glContext) {
-        SDL_GL_DestroyContext(glContext);
-        glContext = nullptr;
-    }
-
     if (window) {
-        SDL_DestroyWindow(window);
-        window = nullptr;
+        window.reset();
     }
 
     SDL_Quit();
@@ -203,35 +198,8 @@ void PatchformApp::shutdownAudio() {
 }
 
 bool PatchformApp::initUI() {
-    if (SDL_Init(SDL_INIT_VIDEO) == 0)
-    {
-        std::cerr << "Failed to initialize SDL" << SDL_GetError() << std::endl;
-        return false;
-    }
-
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-    window = SDL_CreateWindow("Patchform", windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    window = std::make_unique<WindowPeer>("Patchform", windowWidth, windowHeight);
     if (!window) return false;
-
-    SDL_SetWindowMinimumSize(window, 800, 600);
-
-    glContext = SDL_GL_CreateContext(window);
-    if (!glContext) return false;
-
-    SDL_GL_MakeCurrent(window, glContext);
-    if (!gladLoadGL(SDL_GL_GetProcAddress)) return false;
-
-    SDL_GL_SetSwapInterval(0);
-
-    SDL_ShowWindow(window);
 
     nvg = nvgCreateContext(0);
     if (!nvg) return false;
@@ -241,7 +209,7 @@ bool PatchformApp::initUI() {
         return false;
     }
 
-    editor = std::make_unique<Editor>();
+    editor = std::make_unique<Editor>(window.get());
 
     std::vector<std::string> fonts = { "Regular", "SemiBold", "icons", "object_icons" };
 
@@ -273,7 +241,7 @@ void PatchformApp::render() {
     nvgBindFramebuffer(nullptr);
     nvgBlitFramebuffer(nvg, invalidFB, 0, 0, windowWidth, windowHeight);
 
-    SDL_GL_SwapWindow(window);
+    window->swapBuffers();
 }
 
 bool PatchformApp::loadFonts() {

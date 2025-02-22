@@ -37,9 +37,10 @@
 #endif
 
 class GraphManager;
+class WindowPeer;
 class Editor : public pptk::RootComponent {
 public:
-    Editor();
+    Editor(WindowPeer* peer);
 
     void init(GraphManager* gm);
 
@@ -90,10 +91,16 @@ public:
         canvas->updateFrameBuffer(nvg);
     }
 
+    WindowPeer* getWindowPeer() const
+    {
+        return windowPeer;
+    }
+
 
     GraphManager* graphManager;
 
 private:
+    WindowPeer* windowPeer;
 
     std::unique_ptr<Canvas> canvas;
     std::unique_ptr<TopBar> topBar;
