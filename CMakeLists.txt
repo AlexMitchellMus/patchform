@@ -98,11 +98,10 @@ target_link_libraries(PlugPatchStandalone PRIVATE
 )
 target_compile_definitions(PlugPatchStandalone PRIVATE)
 
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
-set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG")
-
 # Apply optimizations for MSVC
 if (MSVC)
+    add_link_options($<$<CONFIG:Debug>:/DEBUG>)
+
     target_compile_options(PlugPatchStandalone PRIVATE
             /std:c++latest
             /Zc:preprocessor
