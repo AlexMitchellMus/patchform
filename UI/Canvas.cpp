@@ -167,9 +167,21 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
     float canvasMouseX = (mouseX - x) / scale;
     float canvasMouseY = (mouseY - y) / scale;
 
-    // Adjust scale with constraints
-    float newScale = scale + e.sdlEvent.wheel.y * 0.125f;
+    // Use logarithmic scaling so scaling feels consistent to user
+    // ie: It doesn't feel like scaling > 1.0f is slow, while < 1.0f is super fast
+    float logScale = std::log(scale);
+    float logDelta = e.sdlEvent.wheel.y * 0.3f;
+    float newScale = std::exp(logScale + logDelta);
+
+    // Clamp the new scale between 0.1f and 3.0f
     newScale = std::min(std::max(newScale, 0.1f), 3.0f);
+
+    // If scrolling crosses 1.0 from either side, snap exactly to 1.0f
+    // We use this to always allow users to scroll to 100% regardless of the last increment
+    if ((scale < 1.0f && newScale > 1.0f) || (scale > 1.0f && newScale < 1.0f))
+    {
+        newScale = 1.0f;
+    }
 
     // Apply the new scale
     if (scale != newScale)
