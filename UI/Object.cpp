@@ -105,10 +105,6 @@ Object::Object(const std::string& name) : name(name)
 Object::~Object()
 {
     std::cout << "object deleting: " << std::endl;
-    if (auto* cnv = findParentOfClass<Canvas>())
-    {
-        cnv->removeConnectionsFor(this);
-    }
 }
 
 void Object::resized()

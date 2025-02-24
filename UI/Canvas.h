@@ -78,7 +78,6 @@ public:
     std::unique_ptr<Connection> newConnection = nullptr;
     void addConnection(Port* port, Port* otherPort);
     void updateConnectionsPosition() const;
-    void removeConnectionsFor(Object*);
 
     void addObjectChangedListener(std::function<void()> callback);
     void removeObjectChangedListener(std::function<void()> callback);

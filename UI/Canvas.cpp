@@ -275,7 +275,6 @@ void Canvas::deleteSelectedObjects()
         {
             std::cout << "deleting object which is called: " << objPtr->getName() << std::endl;
             idsToDelete.push_back(objPtr->nodeID);
-            removeConnectionsFor(objPtr);
             objPtr->audioNode->destroyUI();
         } else if (auto* connPtr = dynamic_cast<Connection*>(obj))
         {
@@ -351,24 +350,6 @@ void Canvas::updateConnectionsPosition() const
     for (auto& con : connections)
     {
         con->updateConnectionGeometry();
-    }
-}
-
-void Canvas::removeConnectionsFor(Object* target)
-{
-    // TODO: Implement a SmartPointer system so we can give each object a list of connections, which will become null when removed
-    auto it = connections.begin();
-    while (it != connections.end())
-    {
-        if ((*it)->getOriginPort()->getParent() == target ||
-            (*it)->getDestPort()->getParent() == target)
-        {
-            it = connections.erase(it); // Erases and moves iterator to next element
-        }
-        else
-        {
-            ++it;
-        }
     }
 }
 
