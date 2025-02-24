@@ -105,7 +105,7 @@ void PatchformApp::run() {
                     editor->setBounds(0, 0, newWidth, newHeight);
                     break;
                 case SDL_EVENT_WINDOW_MOVED:
-                    std::cout << "----> window moved" << std::endl;
+                    //std::cout << "----> window moved" << std::endl;
                     break;
                 default:
                     break;
