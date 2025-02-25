@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 #include <iostream>
 
 #include "../Graph/Event.h"
@@ -34,7 +34,10 @@ public:
         Data   = 1 << 1
     };
 
-    AudioPort(AudioNode* parent, const std::string& portName, PortType type) : node(parent), name(portName), portType(type)
+    AudioPort(AudioNode* parent, const std::string& portName, PortType type)
+        : node(parent)
+        , name(portName)
+        , portType(type)
     {
         events.reserve(1024);
     }
@@ -74,6 +77,7 @@ public:
 
     void setSize(size_t size)
     {
+        //audioBuffer.resize(size);
         audioBuffer.assign(size, 0.0f);
     }
 

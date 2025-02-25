@@ -104,7 +104,7 @@ Object::Object(const std::string& name) : name(name)
 
 Object::~Object()
 {
-    std::cout << "object deleting: " << std::endl;
+    //std::cout << "object deleting: " << std::endl;
 }
 
 void Object::resized()

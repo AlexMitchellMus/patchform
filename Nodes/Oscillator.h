@@ -27,7 +27,7 @@ constexpr float pi = 3.14159265358979323846f;
 constexpr float twoPi = 6.28318530717958647692f;
 
 // A constexpr sine approximation.
-constexpr float constexpr_sin(float x)
+static constexpr float constexpr_sin(float x)
 {
     // Normalize x to [-pi, pi]
     while (x > pi) x -= twoPi;
@@ -48,7 +48,7 @@ constexpr float constexpr_sin(float x)
 // Waveform Table Generators (all produce FULL_TABLE_SIZE samples)
 //-----------------------------------------------------------
 
-constexpr std::array<float, FULL_TABLE_SIZE> generateSineWave()
+static constexpr std::array<float, FULL_TABLE_SIZE> generateSineWave()
 {
     std::array<float, FULL_TABLE_SIZE> table = {};
     // Use TABLE_SIZE as the denominator so that the extra sample is computed at 2*pi.
@@ -60,7 +60,7 @@ constexpr std::array<float, FULL_TABLE_SIZE> generateSineWave()
     return table;
 }
 
-constexpr std::array<float, FULL_TABLE_SIZE> generateSawWave()
+static constexpr std::array<float, FULL_TABLE_SIZE> generateSawWave()
 {
     std::array<float, FULL_TABLE_SIZE> table = {};
     // For TABLE_SIZE intervals, we generate TABLE_SIZE+1 samples.
@@ -73,7 +73,7 @@ constexpr std::array<float, FULL_TABLE_SIZE> generateSawWave()
     return table;
 }
 
-constexpr std::array<float, FULL_TABLE_SIZE> generateSquareWave()
+static constexpr std::array<float, FULL_TABLE_SIZE> generateSquareWave()
 {
     std::array<float, FULL_TABLE_SIZE> table = {};
     for (size_t i = 0; i < TABLE_SIZE; ++i)
@@ -85,7 +85,7 @@ constexpr std::array<float, FULL_TABLE_SIZE> generateSquareWave()
     return table;
 }
 
-constexpr std::array<float, FULL_TABLE_SIZE> generateTriangleWave()
+static constexpr std::array<float, FULL_TABLE_SIZE> generateTriangleWave()
 {
     std::array<float, FULL_TABLE_SIZE> table = {};
     for (size_t i = 0; i < TABLE_SIZE; ++i)
@@ -102,10 +102,10 @@ constexpr std::array<float, FULL_TABLE_SIZE> generateTriangleWave()
 }
 
 // Precomputed tables.
-constexpr auto sineWaveTable = generateSineWave();
-constexpr auto sawWaveTable = generateSawWave();
-constexpr auto squareWaveTable = generateSquareWave();
-constexpr auto triangleWaveTable = generateTriangleWave();
+static constexpr auto sineWaveTable = generateSineWave();
+static constexpr auto sawWaveTable = generateSawWave();
+static constexpr auto squareWaveTable = generateSquareWave();
+static constexpr auto triangleWaveTable = generateTriangleWave();
 
 //-----------------------------------------------------------
 // Oscillator Class Using the Tables
@@ -278,6 +278,7 @@ public:
                 }
 
                 // --- Optionally pass through the allpass filter ---
+                // WARNING! Make sure allpass has been reset (either in class or manually)
                 value = allpass(static_cast<float>(value));
 
                 // --- Write the output sample with scaling ---

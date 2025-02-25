@@ -73,6 +73,10 @@ public:
         , outputPort(this, "output", type)
         , nodeCreationData(std::move(creationData))
     {
+        // Needs to be done after member initialization!
+        // This happens outside the audio thread
+        // TODO: We need to allow ports to define larger than the frameCount - for wavetable / large audio buffer ports
+        outputPort.setSize(context->frameCount);
     }
 
     virtual ~AudioNode()

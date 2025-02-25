@@ -359,53 +359,14 @@ public:
         for (const auto& connection : patch["connections"])
         {
             // source and target ID needs to be set in the file format
-            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : objectIDMap[std::to_string(connection["sourceNode"].get<int>())];
-            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
+            auto source = connection["sourceNode"].is_string() ? connection["sourceNode"].get<std::string>() : std::to_string(connection["sourceNode"].get<int>());
+            auto target = connection["targetNode"].is_string() ? connection["targetNode"].get<std::string>() : std::to_string(connection["targetNode"].get<int>());
 
-            if (source >= objects.size())
-            {
-                std::cerr << "Error: Source index " << source << " is out of bounds (max index " << objects.size()-1 << "). Skipping connection.\n";
-                continue;
-            }
-            if (target >= objects.size())
-            {
-                std::cerr << "Error: Target index " << target << " is out of bounds (max index " << objects.size()-1 << "). Skipping connection.\n";
-                continue;
-            }
-
-            uint32_t sourcePort = connection["sourcePort"].get<int>();
-            uint32_t targetPort = connection["targetPort"].get<int>();
-
-            /*
-            if (sourcePort >= 1)
-            {
-                std::cerr << "Error: Source port index " << sourcePort << " is out of bounds for node at index " <<
-                    source << " (max index " << 0 << "). Skipping connection.\n";
-                continue;
-            }
-            if (targetPort >= objects[target]->inputPortBuffers.size())
-            {
-                std::cerr << "Error: Target port index " << targetPort << " is out of bounds for node at index " <<
-                    target << " (max index " << objects[target]->inputPortBuffers.size() - 1 << "). Skipping connection.\n";
-                continue;
-            }
-            */
-
-            //std::cout << "connecting: (" << source << " id: " << objects[source]->nodeID << ") -> (" << target << " id: " << objects[target]->nodeID << ")" << std::endl;
+            //std::cout << "connecting: (" << source <<  " -> " << target << ")" << std::endl;
 
             // connections use unique ID's for nodes
-            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
-        }
-
-        updateConnections();
-
-        sortNodes();
-
-        updateOutputInputPortMap();
-
-        if (logVerbose)
-        {
-            printAdjacencyList();
+            // FIXME: Is this really correct? we use the overloaded connect to connect with the stringID
+            connect(source, connection["sourcePort"], target, connection["targetPort"]);
         }
     }
 
@@ -682,41 +643,43 @@ public:
 
                 if (isPortSignal)
                 {
-                    // Clear and resize audio buffer only for signal ports
-                    port->setSize(frameCount);
+                    // Clear audio buffer only for signal ports
+                    port->clear(frameCount);
                 }
 
                 port->clearEvents();
                 auto& summingEventBuffer = port->getEvents();
                 auto summingAudioBuffer = port->getAudioBuffer();
 
+                // Reset this port incase it has been disconnected
+                // TODO: move this outside of process - do it in graph construction!
+                port->isAnyConnectedPortSignal = false;
+
+                // Track the first signal connection, we use direct copy of the buffer here
+                // As this saves CPU for single connection ports
+                bool firstConnection = true;
+
                 for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
                 {
                     auto* connection = portGroup.connectedPorts[connIndex];
                     const auto outputBuffer = connection->getAudioBuffer();
 
-                    // FIXME! outputBuffer should always be non-null? It can be null! Why do we need to check it?
-                    if (outputBuffer && isPortSignal && connection->isSignal())
+                    if (isPortSignal && connection->isSignal())
                     {
                         // Update port status, any connected signal overrides events
                         port->isAnyConnectedPortSignal = true;
 
-                        if (connIndex == 0) // Check if this is the first connection
-                        {
-                            // For the first connection, perform direct assignment
+                        if (firstConnection) {
                             std::copy(outputBuffer, outputBuffer + frameCount, summingAudioBuffer);
+                            firstConnection = false;
                         }
-                        else
-                        {
+                        else {
                             // For subsequent connections, sum the buffer
                             for (size_t i = 0; i < frameCount; ++i)
                             {
                                 summingAudioBuffer[i] += outputBuffer[i];
                             }
                         }
-                    } else
-                    {
-                        port->isAnyConnectedPortSignal = false;
                     }
 
                     // Collect and merge events
@@ -1228,6 +1191,15 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(ctx.get());
 
         transitioningGraph->loadPatch(patch, logVerbose);
+
+        transitioningGraph->updateConnections();
+        transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
+
+        if (logVerbose)
+        {
+            transitioningGraph->printAdjacencyList();
+        }
 
         auto loadedObjects = getObjects();
         auto connections = transitioningGraph->getConnections();
