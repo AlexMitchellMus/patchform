@@ -6,6 +6,28 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+# Get the short commit hash
+execute_process(
+        COMMAND git rev-parse --short HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE PATCHFORM_GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get a descriptive version (tag, if available)
+execute_process(
+        COMMAND git describe --tags --always
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE PATCHFORM_GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+message(STATUS "Git hash: ${PATCHFORM_GIT_HASH}")
+message(STATUS "Git version: ${PATCHFORM_GIT_VERSION}")
+
+# Directly add compile definitions
+add_compile_definitions(PATCHFORM_GIT_HASH="${PATCHFORM_GIT_HASH}" PATCHFORM_GIT_VERSION="${PATCHFORM_GIT_VERSION}")
+
 # Toggle AVX2 for Glaze based on build type
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     set(glaze_ENABLE_AVX2 OFF CACHE BOOL "Disable AVX2 for Glaze in Debug mode" FORCE)
