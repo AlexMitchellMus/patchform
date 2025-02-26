@@ -75,6 +75,12 @@ void PatchformApp::run() {
     SDL_Event event;
 
     while (running) {
+        // Check if audio device was disconnected
+        if (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream)) {
+            std::cerr << "Audio stream stopped unexpectedly. Restarting..." << std::endl;
+            reinitializeAudio();
+        }
+
         Uint32 currentFrameTime = SDL_GetTicks();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -153,6 +159,10 @@ int PatchformApp::audioCallback(const void* input, void* output,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags,
                          void* userData) {
+    if (!output) {
+        return paAbort; // Prevent crashing if output buffer is invalid
+    }
+
     auto* graphs = static_cast<GraphManager*>(userData);
     float* out = static_cast<float*>(output);
 
@@ -160,13 +170,13 @@ int PatchformApp::audioCallback(const void* input, void* output,
 
     graphs->process(out, frameCount);  // Process the audio graph
 
-    if ((statusFlags & paOutputUnderflow) || (statusFlags & paInputOverflow)) {
+    if (statusFlags & (paOutputUnderflow | paInputOverflow)) {
         std::cerr << "Audio underflow or overflow detected" << std::endl;
+        //return paAbort; // Force PortAudio to restart stream
     }
 
     return paContinue;
 }
-
 
 bool PatchformApp::initAudio() {
     if (Pa_Initialize() != paNoError) return false;
