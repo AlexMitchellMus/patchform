@@ -21,22 +21,22 @@ class AboutDialog : public pptk::Component
         nvgDrawRoundedRect(nvg, - 3,  - 3, getWidth() + 6, getHeight() + 6, dropShadowCol, dropShadowCol, 13);
         nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bg, outline, 10.0f);
 
-        nvgFontSize(nvg, 18.0f);
+        nvgFontSize(nvg, 24.0f);
         nvgFontFace(nvg, "SemiBold");
         nvgTextAlign(nvg, NVG_ALIGN_CENTER);
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
 
         int yPos = 50;
         nvgText(nvg, getWidth() * 0.5f, yPos, "Patchform", nullptr);
-        yPos += 40;
+        yPos += 20;
 
         nvgFontSize(nvg, 14.0f);
         nvgFontFace(nvg, "Regular");
-        nvgText(nvg, getWidth() * 0.5f, yPos, "by Alex Mitchell", nullptr);
+        nvgText(nvg, getWidth() * 0.5f, yPos, "created by Alex Mitchell", nullptr);
         yPos += 70;
 
         std::stringstream versionText;
-        versionText << "Version: " << patchform_git_version << "      git hash: " << patchform_git_hash;
+        versionText << "Version: " << patchform_git_version << "      Git hash: " << patchform_git_hash;
         nvgText(nvg, getWidth() * 0.5f, yPos, versionText.str().c_str(), nullptr);
         yPos += 30;
 
