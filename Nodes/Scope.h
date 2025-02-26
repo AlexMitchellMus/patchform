@@ -194,67 +194,76 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-void processAudio(float* /*out*/, const unsigned long frameCount) override {
-    const float* inputBuffer = inputPortBuffers[0]->getAudioBuffer();
-    if (!inputBuffer)
-        return;
+    // DSP processing callback using a double-sized buffer and a constant fraction discriminator.
+    void processAudio(float* /*out*/, const unsigned long frameCount) override
+    {
+        // TODO: Use an atomic flag if the UI want's a buffer update?
+        // Currently we just check if the queue is empty
+        if (eventQueue.size_approx() > 0)
+            return;
 
-    // Define the sweep size (number of samples per sweep).
-    constexpr size_t SWEEP_SIZE = DSP_BUFFER_SIZE;
+        const float* inputBuffer = inputPortBuffers[0]->getAudioBuffer();
+        if (!inputBuffer)
+            return;
 
-    // Use the beginning of dspBuffer as the accumulation buffer.
-    // Use static variables to keep state between calls.
-    static size_t accumulationIndex = 0;
-    static bool triggeredState = false;
-    static bool waitingForFallingEdge = true;
+        for (unsigned long i = 0; i < frameCount; ++i)
+        {
+            float sample = inputBuffer[i];
+            dspBuffer[dspBufferIndex++] = sample;
 
-    // Trigger threshold and hysteresis (adjust as needed or expose as parameters)
-    float triggerThreshold = 0.0f;
-    float hysteresis = 0.05f; // margin to avoid chatter
-
-    // Process each incoming sample.
-    for (size_t i = 0; i < frameCount; i++) {
-        float sample = inputBuffer[i];
-
-        // If we haven't started a sweep (i.e. not triggered yet),
-        // then check for a trigger condition.
-        if (!triggeredState) {
-            // First, wait for a falling edge so we’re ready for a rising edge.
-            if (waitingForFallingEdge) {
-                if (sample < triggerThreshold - hysteresis) {
-                    waitingForFallingEdge = false; // now ready for a rising edge
+            // When the double-sized buffer (FULL_BUFFER_SIZE samples) is full...
+            if (dspBufferIndex >= DOUBLE_BUFFER_SIZE)
+            {
+                int detectedTrigger = 0;
+                bool found = false;
+                // We want to search in the first DSP_BUFFER_SIZE samples.
+                // We require a delay of at least cfdDelay samples.
+                // Compute the CFD output:
+                //   CFD(j) = dspBuffer[j] - cfdFraction * dspBuffer[j - cfdDelay]
+                // Then find the first index where CFD goes from negative to >= 0.
+                float prevCFD = 0.0f;
+                // Initialize the CFD value at j = cfdDelay.
+                if (cfdDelay < DSP_BUFFER_SIZE)
+                    prevCFD = dspBuffer[cfdDelay] - cfdFraction * dspBuffer[0];
+                for (size_t j = cfdDelay + 1; j < DSP_BUFFER_SIZE; ++j)
+                {
+                    float currCFD = dspBuffer[j] - cfdFraction * dspBuffer[j - cfdDelay];
+                    // Look for a zero crossing: previous CFD < 0 and current CFD >= 0.
+                    if (prevCFD < 0.0f && currCFD >= 0.0f)
+                    {
+                        detectedTrigger = static_cast<int>(j);
+                        found = true;
+                        break;
+                    }
+                    prevCFD = currCFD;
                 }
-            }
-            // When not waiting, look for a rising edge.
-            if (!waitingForFallingEdge && sample > triggerThreshold + hysteresis) {
-                // Rising edge detected: start accumulating the sweep.
-                triggeredState = true;
-                accumulationIndex = 0;
+                // If no zero crossing was found, default to 0.
+                if (!found)
+                    detectedTrigger = 0;
+
+                // Clamp the trigger index to the valid range.
+                if (detectedTrigger < 0 || detectedTrigger >= static_cast<int>(DSP_BUFFER_SIZE))
+                    detectedTrigger = 0;
+
+                // Copy DSP_BUFFER_SIZE contiguous samples starting at detectedTrigger.
+                BufferType buffer;
+                for (size_t j = 0; j < DSP_BUFFER_SIZE; ++j)
+                {
+                    buffer[j] = dspBuffer[detectedTrigger + j];
+                }
+                // Enqueue the synchronized block for the UI.
+                eventQueue.enqueue(buffer);
+
+                // Shift the second half of dspBuffer into the beginning so we keep the last DSP_BUFFER_SIZE samples.
+                std::copy(dspBuffer.begin() + DSP_BUFFER_SIZE, dspBuffer.end(), dspBuffer.begin());
+                dspBufferIndex = DSP_BUFFER_SIZE;
             }
         }
-
-        // If triggered, record the sample.
-        if (triggeredState) {
-            if (accumulationIndex < SWEEP_SIZE) {
-                dspBuffer[accumulationIndex] = sample;
-                accumulationIndex++;
-            }
-        }
+        // Optionally, pass through input to output:
+        // std::copy(inputBuffer, inputBuffer + frameCount, out);
     }
-
-    // When we've filled a complete sweep, publish it and reset the state.
-    if (accumulationIndex >= SWEEP_SIZE) {
-        BufferType buffer;
-        std::copy(dspBuffer.begin(), dspBuffer.begin() + SWEEP_SIZE, buffer.begin());
-        eventQueue.enqueue(buffer);
-
-        // Reset state for the next sweep.
-        accumulationIndex = 0;
-        triggeredState = false;
-        waitingForFallingEdge = true;
-    }
-}
 #endif
+
 
 private:
 #ifdef PATCHFORM_WITH_GUI
@@ -262,13 +271,6 @@ private:
     std::array<float, DOUBLE_BUFFER_SIZE> dspBuffer{};
     // Current index in dspBuffer.
     size_t dspBufferIndex = 0;
-
-    float lastSample = 0.0f;      // Last sample from the previous full buffer; used to detect crossings between blocks.
-    float triggerLevel = 0.0f;
-    int trigmode = 1;
-    float trigx = 0.0f;
-    bool retrigger = true;
-    int stableTriggerIndex = 0;
 
     // --- Constant Fraction Discriminator (CFD) parameters ---
     // The constant fraction (for example, 0.5 means the CFD is computed as: current sample minus 0.5 times the delayed sample).
