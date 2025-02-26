@@ -79,6 +79,7 @@ public:
     {
         std::cout << "editor focus lost" << std::endl;
         editorActive = false;
+        onTextReturned();
         repaint();
     }
 
