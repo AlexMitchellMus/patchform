@@ -74,16 +74,25 @@ void PatchformApp::run() {
     bool running = true;
     SDL_Event event;
 
-    while (running) {
+    while (running)
+    {
         // Check if audio device was disconnected
-        if (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream)) {
+        if (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream))
+        {
             std::cerr << "Audio stream stopped unexpectedly. Restarting..." << std::endl;
             reinitializeAudio();
         }
 
         Uint32 currentFrameTime = SDL_GetTicks();
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
+        Uint32 elapsedTime = currentFrameTime - lastFrameTime;
+        Uint32 waitTime = (elapsedTime < targetFrameTime) ? (targetFrameTime - elapsedTime) : 0;
+
+        if (SDL_WaitEventTimeout(nullptr, waitTime))
+        {
+            while (SDL_PollEvent(&event))
+            {
+                switch (event.type)
+                {
                 case SDL_EVENT_QUIT:
                     running = false;
                     break;
@@ -115,29 +124,27 @@ void PatchformApp::run() {
                     break;
                 default:
                     break;
+                }
             }
-        }
-
-        if ((currentFrameTime - lastFrameTime) < targetFrameTime) {
-            continue;
         }
 
         editor->updateObjectsFromDSP();
         editor->handleTime(currentFrameTime);
         editor->updateFrameBuffers(nvg);
 
-        if (!editor->needsRepaint()) {
+        if (!editor->needsRepaint())
+        {
             SDL_Delay(1);
             continue;
         }
 
-        lastFrameTime = currentFrameTime;
-
-        if (!invalidFB || newWidth != windowWidth || newHeight != windowHeight) {
+        if (!invalidFB || newWidth != windowWidth || newHeight != windowHeight)
+        {
             windowWidth = newWidth;
             windowHeight = newHeight;
 
-            if (invalidFB) {
+            if (invalidFB)
+            {
                 nvgDeleteFramebuffer(invalidFB);
                 invalidFB = nullptr;
             }
@@ -146,6 +153,8 @@ void PatchformApp::run() {
         }
 
         render();
+
+        lastFrameTime = SDL_GetTicks();
     }
 }
 
