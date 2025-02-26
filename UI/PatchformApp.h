@@ -59,8 +59,8 @@ private:
 
     // Capping to 60fps reduces CPU time by a factor of 10 (for now before invalidation)
     // But even with invalidation - there will still be a worst case (when everything is updating on canvas drag)
-    const int targetFPS = 60;                       // Desired frame rate
-    const int targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
+    const float targetFPS = 60;                       // Desired frame rate
+    const float targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
 
     bool initAudio();
     void shutdownAudio();

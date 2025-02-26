@@ -200,25 +200,25 @@ public:
         if (!inputBuffer)
             return;
 
-        // Shift the buffer left by frameCount
+        // Shift the dspBuffer left by frameCount and append new input at the end
         std::memmove(dspBuffer.data(), dspBuffer.data() + frameCount, (DOUBLE_BUFFER_SIZE - frameCount) * sizeof(float));
-
-        // Copy new input to the end of dspBuffer
         std::memcpy(dspBuffer.data() + (DOUBLE_BUFFER_SIZE - frameCount), inputBuffer, frameCount * sizeof(float));
 
         if (eventQueue.size_approx() > 0)
             return;
 
-        // Process CFD detection on the latest DSP_BUFFER_SIZE samples
+        // Only search for the trigger in the first DSP_BUFFER_SIZE (1024) samples.
         int detectedTrigger = 0;
         bool found = false;
         float prevCFD = 0.0f;
 
+        // Initialize using the sample at index 0 and the one at index cfdDelay,
+        // provided cfdDelay is less than DSP_BUFFER_SIZE.
         if (cfdDelay < DSP_BUFFER_SIZE)
-            prevCFD = dspBuffer[DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE + cfdDelay] -
-                      cfdFraction * dspBuffer[DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE];
+            prevCFD = dspBuffer[cfdDelay] - cfdFraction * dspBuffer[0];
 
-        for (size_t j = DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE + cfdDelay + 1; j < DOUBLE_BUFFER_SIZE; ++j)
+        // Search for the zero-crossing (CFD trigger) in the first 1024 samples.
+        for (size_t j = cfdDelay + 1; j < DSP_BUFFER_SIZE; ++j)
         {
             float currCFD = dspBuffer[j] - cfdFraction * dspBuffer[j - cfdDelay];
             if (prevCFD < 0.0f && currCFD >= 0.0f)
@@ -230,22 +230,23 @@ public:
             prevCFD = currCFD;
         }
 
+        // If no trigger is found, default to the start.
         if (!found)
-            detectedTrigger = DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE;  // Default to the start of new buffer data
+            detectedTrigger = 0;
 
-        detectedTrigger = (detectedTrigger + DOUBLE_BUFFER_SIZE) % DOUBLE_BUFFER_SIZE;
-
-        // Copy DSP_BUFFER_SIZE samples starting at detectedTrigger
+        // Now output a 1024-sample window starting at the trigger.
         BufferType buffer;
         for (size_t j = 0; j < DSP_BUFFER_SIZE; ++j)
         {
-            buffer[j] = dspBuffer[detectedTrigger + j - (DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE)];
+            // Assumes that (detectedTrigger + j) is within dspBuffer's bounds.
+            buffer[j] = dspBuffer[detectedTrigger + j];
         }
 
         // Enqueue for UI
         eventQueue.enqueue(buffer);
     }
 #endif
+
 
 private:
 #ifdef PATCHFORM_WITH_GUI
