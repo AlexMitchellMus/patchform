@@ -98,9 +98,9 @@ target_compile_options(linenoise PRIVATE
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
-add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
-target_compile_definitions(PlugPatchStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
-target_include_directories(PlugPatchStandalone PRIVATE
+add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
+target_compile_definitions(PatchformStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
+target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
@@ -112,7 +112,7 @@ target_include_directories(PlugPatchStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/SDL2/include"
         "${CMAKE_SOURCE_DIR}/external/pffft"
 )
-target_link_libraries(PlugPatchStandalone PRIVATE
+target_link_libraries(PatchformStandalone PRIVATE
         SDL3::SDL3-static
         portaudio
         moodycamel_concurrentqueue
@@ -122,13 +122,13 @@ target_link_libraries(PlugPatchStandalone PRIVATE
         nanovg
         pffft
 )
-target_compile_definitions(PlugPatchStandalone PRIVATE)
+target_compile_definitions(PatchformStandalone PRIVATE)
 
 # Apply optimizations for MSVC
 if (MSVC)
     add_link_options($<$<CONFIG:Debug>:/DEBUG>)
 
-    target_compile_options(PlugPatchStandalone PRIVATE
+    target_compile_options(PatchformStandalone PRIVATE
             /std:c++latest
             /Zc:preprocessor
             $<$<CONFIG:Debug>:/Od /Zi /RTC1>
@@ -140,7 +140,7 @@ endif ()
 if (WIN32)
     # Add Windows-specific resources
     set(APP_ICON_RESOURCE "installer/windows/resources.rc")
-    target_sources(PlugPatchStandalone PRIVATE ${APP_ICON_RESOURCE})
+    target_sources(PatchformStandalone PRIVATE ${APP_ICON_RESOURCE})
 endif ()
 
 # files to copy
@@ -168,13 +168,13 @@ add_custom_target(copy_patches
 add_custom_target(copy_fonts
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
-        "$<TARGET_FILE_DIR:PlugPatchStandalone>/Assets"
+        "$<TARGET_FILE_DIR:PatchformStandalone>/Assets"
         COMMENT "Copying Fonts directory to the output directory"
 )
 
 # Add dependencies to ensure the directory is copied whenever these targets are built
 add_dependencies(PlugPatchCLI copy_patches)
-add_dependencies(PlugPatchStandalone copy_patches copy_fonts update_git_version)
+add_dependencies(PatchformStandalone copy_patches copy_fonts update_git_version)
 
 # Installer configuration for CLI
 #TODO NOT WORKING ONLY FOR RELEASE for some reason! :-(
@@ -201,16 +201,16 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(NSIS_SCRIPT ${INSTALLER_DIR}/windows/installerStandalone.nsi)
 
     # Define the location of the built application
-    set(APPLICATION_BINARY_STANDALONE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlugPatchStandalone.exe")
+    set(APPLICATION_BINARY_STANDALONE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PatchformStandalone.exe")
 
     add_custom_target(PackageInstallerStandalone
             COMMAND ${CMAKE_COMMAND} -E echo "Creating NSIS installer..."
-            COMMAND makensis.exe /DOUTPUT_DIR=$<TARGET_FILE_DIR:PlugPatchStandalone> /DAPPLICATION_BINARY=${APPLICATION_BINARY_STANDALONE} ${NSIS_SCRIPT}
+            COMMAND makensis.exe /DOUTPUT_DIR=$<TARGET_FILE_DIR:PatchformStandalone> /DAPPLICATION_BINARY=${APPLICATION_BINARY_STANDALONE} ${NSIS_SCRIPT}
             WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
             COMMENT "Packaging installer with NSIS"
             VERBATIM
     )
-    add_dependencies(PackageInstallerStandalone PlugPatchStandalone)
+    add_dependencies(PackageInstallerStandalone PatchformStandalone)
 else()
     message(WARNING "The PackageInstallers target is only available in Release mode.")
 endif()

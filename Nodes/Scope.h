@@ -194,76 +194,58 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    // DSP processing callback using a double-sized buffer and a constant fraction discriminator.
     void processAudio(float* /*out*/, const unsigned long frameCount) override
     {
-        // TODO: Use an atomic flag if the UI want's a buffer update?
-        // Currently we just check if the queue is empty
-        if (eventQueue.size_approx() > 0)
-            return;
-
         const float* inputBuffer = inputPortBuffers[0]->getAudioBuffer();
         if (!inputBuffer)
             return;
 
-        for (unsigned long i = 0; i < frameCount; ++i)
+        // Shift the buffer left by frameCount
+        std::memmove(dspBuffer.data(), dspBuffer.data() + frameCount, (DOUBLE_BUFFER_SIZE - frameCount) * sizeof(float));
+
+        // Copy new input to the end of dspBuffer
+        std::memcpy(dspBuffer.data() + (DOUBLE_BUFFER_SIZE - frameCount), inputBuffer, frameCount * sizeof(float));
+
+        if (eventQueue.size_approx() > 0)
+            return;
+
+        // Process CFD detection on the latest DSP_BUFFER_SIZE samples
+        int detectedTrigger = 0;
+        bool found = false;
+        float prevCFD = 0.0f;
+
+        if (cfdDelay < DSP_BUFFER_SIZE)
+            prevCFD = dspBuffer[DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE + cfdDelay] -
+                      cfdFraction * dspBuffer[DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE];
+
+        for (size_t j = DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE + cfdDelay + 1; j < DOUBLE_BUFFER_SIZE; ++j)
         {
-            float sample = inputBuffer[i];
-            dspBuffer[dspBufferIndex++] = sample;
-
-            // When the double-sized buffer (FULL_BUFFER_SIZE samples) is full...
-            if (dspBufferIndex >= DOUBLE_BUFFER_SIZE)
+            float currCFD = dspBuffer[j] - cfdFraction * dspBuffer[j - cfdDelay];
+            if (prevCFD < 0.0f && currCFD >= 0.0f)
             {
-                int detectedTrigger = 0;
-                bool found = false;
-                // We want to search in the first DSP_BUFFER_SIZE samples.
-                // We require a delay of at least cfdDelay samples.
-                // Compute the CFD output:
-                //   CFD(j) = dspBuffer[j] - cfdFraction * dspBuffer[j - cfdDelay]
-                // Then find the first index where CFD goes from negative to >= 0.
-                float prevCFD = 0.0f;
-                // Initialize the CFD value at j = cfdDelay.
-                if (cfdDelay < DSP_BUFFER_SIZE)
-                    prevCFD = dspBuffer[cfdDelay] - cfdFraction * dspBuffer[0];
-                for (size_t j = cfdDelay + 1; j < DSP_BUFFER_SIZE; ++j)
-                {
-                    float currCFD = dspBuffer[j] - cfdFraction * dspBuffer[j - cfdDelay];
-                    // Look for a zero crossing: previous CFD < 0 and current CFD >= 0.
-                    if (prevCFD < 0.0f && currCFD >= 0.0f)
-                    {
-                        detectedTrigger = static_cast<int>(j);
-                        found = true;
-                        break;
-                    }
-                    prevCFD = currCFD;
-                }
-                // If no zero crossing was found, default to 0.
-                if (!found)
-                    detectedTrigger = 0;
-
-                // Clamp the trigger index to the valid range.
-                if (detectedTrigger < 0 || detectedTrigger >= static_cast<int>(DSP_BUFFER_SIZE))
-                    detectedTrigger = 0;
-
-                // Copy DSP_BUFFER_SIZE contiguous samples starting at detectedTrigger.
-                BufferType buffer;
-                for (size_t j = 0; j < DSP_BUFFER_SIZE; ++j)
-                {
-                    buffer[j] = dspBuffer[detectedTrigger + j];
-                }
-                // Enqueue the synchronized block for the UI.
-                eventQueue.enqueue(buffer);
-
-                // Shift the second half of dspBuffer into the beginning so we keep the last DSP_BUFFER_SIZE samples.
-                std::copy(dspBuffer.begin() + DSP_BUFFER_SIZE, dspBuffer.end(), dspBuffer.begin());
-                dspBufferIndex = DSP_BUFFER_SIZE;
+                detectedTrigger = static_cast<int>(j);
+                found = true;
+                break;
             }
+            prevCFD = currCFD;
         }
-        // Optionally, pass through input to output:
-        // std::copy(inputBuffer, inputBuffer + frameCount, out);
+
+        if (!found)
+            detectedTrigger = DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE;  // Default to the start of new buffer data
+
+        detectedTrigger = (detectedTrigger + DOUBLE_BUFFER_SIZE) % DOUBLE_BUFFER_SIZE;
+
+        // Copy DSP_BUFFER_SIZE samples starting at detectedTrigger
+        BufferType buffer;
+        for (size_t j = 0; j < DSP_BUFFER_SIZE; ++j)
+        {
+            buffer[j] = dspBuffer[detectedTrigger + j - (DOUBLE_BUFFER_SIZE - DSP_BUFFER_SIZE)];
+        }
+
+        // Enqueue for UI
+        eventQueue.enqueue(buffer);
     }
 #endif
-
 
 private:
 #ifdef PATCHFORM_WITH_GUI

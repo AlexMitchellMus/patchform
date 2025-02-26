@@ -1,12 +1,12 @@
 !include "MUI2.nsh"
 
-!define APP_NAME "PlugPatchStandalone"
+!define APP_NAME "PatchformStandalone"
 !define APP_VERSION "1.0"
 !define INSTALL_DIR "$PROGRAMFILES64\${APP_NAME}"
 !define MUI_ICON plugpatchicon.ico
 !define MUI_UNICON plugpatchicon.ico
 
-OutFile "PlugPatchStandaloneInstaller.exe"
+OutFile "PatchformStandaloneInstaller.exe"
 InstallDir "${INSTALL_DIR}"
 
 Name "PlugPatch"
@@ -32,7 +32,7 @@ Page custom CustomOptions CustomOptionsLeave
 
 Section "Install"
     SetOutPath "$INSTDIR"
-    File "${OUTPUT_DIR}\PlugPatchStandalone.exe"
+    File "${OUTPUT_DIR}\PatchformStandalone.exe"
     File "${PATCH_DIR}\count.json5"
     File "${PATCH_DIR}\graph.json"
     File "${PATCH_DIR}\graph1.json"
@@ -56,17 +56,17 @@ Section "Install"
 
     ; Create shortcuts based on user selections
     StrCmp $SHORTCUT_STARTMENU "1" 0 +2
-        CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\PlugPatchStandalone.exe" "" "$INSTDIR\plugpatchicon.ico" 0
+        CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\PatchformStandalone.exe" "" "$INSTDIR\plugpatchicon.ico" 0
 
     StrCmp $SHORTCUT_DESKTOP "1" 0 +2
-        CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\PlugPatchStandalone.exe" "" "$INSTDIR\plugpatchicon.ico" 0
+        CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\PatchformStandalone.exe" "" "$INSTDIR\plugpatchicon.ico" 0
 
     ; Create Start Menu uninstaller shortcut
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall ${APP_NAME}.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\plugpatchicon.ico" 0
 SectionEnd
 
 Section "Uninstall"
-    Delete "$INSTDIR\PlugPatchStandalone.exe"
+    Delete "$INSTDIR\PatchformStandalone.exe"
     Delete "$INSTDIR\graph.json"
     Delete "$INSTDIR\graph1.json"
     Delete "$INSTDIR\graph2.json"
