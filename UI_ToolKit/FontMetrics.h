@@ -111,7 +111,7 @@ namespace pptk
                 }
                 kerningCacheMap[fontName] = std::move(kernings); // Store kerning once at base size
 
-                std::cout << "Cached metrics for font: " << fontName << std::endl;
+                //std::cout << "Cached metrics for font: " << fontName << std::endl;
             }
         }
 

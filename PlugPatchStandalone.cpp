@@ -9,6 +9,10 @@ int main(int argc, char* argv[]) {
 
     PatchformApp app(sampleRate, frameCount);
 
+#ifdef PATCHFORM_GIT_VERSION && PATCHFORM_GIT_HASH
+    std::cout << "Patchform version: " << PATCHFORM_GIT_VERSION << " hash: " << PATCHFORM_GIT_HASH << std::endl;
+#endif
+
     if (!app.initialize()) {
         std::cerr << "Failed to initialize PatchformApp" << std::endl;
         return 1;
