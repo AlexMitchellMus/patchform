@@ -6,27 +6,20 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-# Get the short commit hash
-execute_process(
-        COMMAND git rev-parse --short HEAD
+# Define the Git command to get the full commit hash
+set(BUILDINFO_CPP ${CMAKE_BINARY_DIR}/GitInfo.cpp)
+
+# Custom command: invoke the CMake script to generate buildinfo.cpp.
+add_custom_command(
+        OUTPUT ${BUILDINFO_CPP}
+        COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${BUILDINFO_CPP} -P ${CMAKE_SOURCE_DIR}/GenerateGitInfo.cmake
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE PATCHFORM_GIT_HASH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
+        DEPENDS ${CMAKE_SOURCE_DIR}/.git/HEAD  # Regenerate when the Git HEAD changes.
+        COMMENT "Generating buildinfo.cpp with updated Git info"
+        VERBATIM
 )
 
-# Get a descriptive version (tag, if available)
-execute_process(
-        COMMAND git describe --tags --always
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE PATCHFORM_GIT_VERSION
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-message(STATUS "Git hash: ${PATCHFORM_GIT_HASH}")
-message(STATUS "Git version: ${PATCHFORM_GIT_VERSION}")
-
-# Directly add compile definitions
-add_compile_definitions(PATCHFORM_GIT_HASH="${PATCHFORM_GIT_HASH}" PATCHFORM_GIT_VERSION="${PATCHFORM_GIT_VERSION}")
+add_custom_target(update_git_version ALL DEPENDS ${BUILDINFO_CPP})
 
 # Toggle AVX2 for Glaze based on build type
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -95,9 +88,10 @@ target_compile_options(linenoise PRIVATE
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
-add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
+add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
 target_compile_definitions(PlugPatchStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
 target_include_directories(PlugPatchStandalone PRIVATE
+        "${CMAKE_SOURCE_DIR}"
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
         "${CMAKE_SOURCE_DIR}/external/unordered_dense/include/ankerl"
@@ -165,12 +159,12 @@ add_custom_target(copy_fonts
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
         "$<TARGET_FILE_DIR:PlugPatchStandalone>/Assets"
-        COMMENT "Copying Patches directory to the output directory"
+        COMMENT "Copying Fonts directory to the output directory"
 )
 
 # Add dependencies to ensure the directory is copied whenever these targets are built
 add_dependencies(PlugPatchCLI copy_patches)
-add_dependencies(PlugPatchStandalone copy_patches copy_fonts)
+add_dependencies(PlugPatchStandalone copy_patches copy_fonts update_git_version)
 
 # Installer configuration for CLI
 #TODO NOT WORKING ONLY FOR RELEASE for some reason! :-(
