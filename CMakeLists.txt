@@ -9,12 +9,22 @@ set(CMAKE_CXX_EXTENSIONS ON)
 # Define the Git command to get the full commit hash
 set(BUILDINFO_CPP ${CMAKE_BINARY_DIR}/GitInfo.cpp)
 
-# Custom command: invoke the CMake script to generate buildinfo.cpp.
+# Read .git/HEAD to determine the current ref file.
+file(READ "${CMAKE_SOURCE_DIR}/.git/HEAD" HEAD_CONTENTS)
+string(REGEX MATCH "ref: (.*)" _ ${HEAD_CONTENTS})
+if(CMAKE_MATCH_1)
+    # Construct the full path to the ref file.
+    set(GIT_REF_FILE "${CMAKE_SOURCE_DIR}/.git/${CMAKE_MATCH_1}")
+    message(STATUS "Git ref file: ${GIT_REF_FILE}")
+else()
+    # If HEAD doesn't contain a ref (detached head), fallback to HEAD.
+    set(GIT_REF_FILE "${CMAKE_SOURCE_DIR}/.git/HEAD")
+endif()
+
 add_custom_command(
         OUTPUT ${BUILDINFO_CPP}
         COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${BUILDINFO_CPP} -P ${CMAKE_SOURCE_DIR}/GenerateGitInfo.cmake
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        DEPENDS ${CMAKE_SOURCE_DIR}/.git/HEAD  # Regenerate when the Git HEAD changes.
+        DEPENDS ${CMAKE_SOURCE_DIR}/.git/HEAD ${GIT_REF_FILE}  # Now depends on the ref file as well.
         COMMENT "Generating buildinfo.cpp with updated Git info"
         VERBATIM
 )
