@@ -74,6 +74,8 @@ private:
     int peakMeterPos = 0;
 };
 
+class AboutDialog;
+
 class MainMenu : public pptk::PopupComponent
 {
 public:
@@ -147,8 +149,8 @@ public:
         if (applicationSettings)
             applicationSettings->setBounds(b);
         b.y += 35;
-        if (aboutApplication)
-            aboutApplication->setBounds(b);
+        if (aboutApp)
+            aboutApp->setBounds(b);
         b.y += 35;
         if (quitApplication)
             quitApplication->setBounds(b);
@@ -166,12 +168,14 @@ private:
     std::unique_ptr<MenuItem> savePatch;
     std::unique_ptr<MenuItem> saveAsPatch;
     std::unique_ptr<MenuItem> applicationSettings;
-    std::unique_ptr<MenuItem> aboutApplication;
+    std::unique_ptr<MenuItem> aboutApp;
     std::unique_ptr<MenuItem> quitApplication;
 
     NVGcolor bg = nvgRGB(43, 43, 43);
     NVGcolor outline = nvgRGB(53, 53, 53);
     NVGcolor dropShadowCol = nvgRGBA(0, 0, 0, 30);
+
+    std::unique_ptr<AboutDialog> aboutDialog;
 };
 
 class TopBar : public pptk::Component {
