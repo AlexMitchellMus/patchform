@@ -12,13 +12,19 @@
 class LibraryList : public pptk::Component
 {
 public:
+    LibraryList()
+    {
+        //setSize(500, 1000);
+    }
+
     void render(NVGcontext* nvg) override
     {
         nvgBeginPath(nvg);
+        nvgFillColor(nvg, nvgRGB(220, 220, 220)); // text colour
         nvgFontSize(nvg, 14.0f);
         nvgFontFace(nvg, "Regular");
 
-        int yPos = 0.0f;
+        int yPos = 20.0f;
 
         for (auto lib : libraries) {
             drawLibraryEntry(nvg, getWidth() * 0.5f, yPos, lib);
@@ -54,33 +60,48 @@ private:
         }
     }
 
-    static constexpr std::array<std::string_view, 6> libraries = {{
-        R"(linenoise-ng (CLI REPL)
+    static constexpr std::array<std::string_view, 9> libraries = {{
+R"(linenoise-ng (CLI REPL)
 Martijn van Steenbergen
 BSD-3-Clause License
 https://github.com/arangodb/linenoise-ng)",
 
-        R"(moodycamel ConcurrentQueue (Lockfree queue)
+R"(moodycamel ConcurrentQueue (Lockfree queue)
 Cameron Desrochers
 Simplified BSD License
 https://github.com/cameron314/concurrentqueue)",
 
-        R"(nlohmann/json (JSON file parsing)
+R"(nlohmann/json (JSON file parsing)
 Niels Lohmann
 MIT License
 https://github.com/nlohmann/json)",
 
-        R"(PortAudio (CLI Audio I/O)
+R"(PortAudio (Standalone Audio I/O)
 PortAudio Team
 MIT License
 https://github.com/PortAudio/portaudio)",
 
-        R"(unordered_dense (Replacement for std::unordered_map)
+R"(NanoVG (Vector Graphics Rendering)
+Mikko Mononen / Timothy Schoen
+Zlib License
+https://github.com/timothyschoen/nanovg)",
+
+R"(PFFFT (Fast Fourier Transform)
+Julien Pommier
+BSD-Like License
+https://bitbucket.org/jpommier/pffft/src/master/)",
+
+R"(SDL2 (Simple DirectMedia Layer)
+SDL Team
+zlib License
+https://github.com/libsdl-org/SDL)",
+
+R"(unordered_dense (Replacement for std::unordered_map)
 Martin Ankerl
 MIT License
 https://github.com/martinus/unordered_dense)",
 
-        R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
+R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
 Stephen Berry
 MIT License
 https://github.com/stephenberry/glaze)",
@@ -94,15 +115,25 @@ public:
     LibraryListView()
     {
         viewedComp = std::make_unique<LibraryList>();
-        addComponent(viewedComp.get());
+        viewedComp->setBounds(0, 0, getWidth(), 640);
+        setViewport(viewedComp.get());
+    }
+
+    void renderViewportBackground(NVGcontext* nvg) override
+    {
+        nvgBeginPath(nvg);
+        nvgDrawRoundedRect(nvg, 0, 0, width, height, bg, outline, 6.0f);
     }
 
     void resized() override
     {
-        viewedComp->setBounds(0, 0, getWidth(), getHeight());
+        viewedComp->setBounds(0, 0, getWidth(), 640);
     }
 private:
     std::unique_ptr<LibraryList> viewedComp;
+
+    NVGcolor bg = nvgRGB(46, 46, 46);
+    NVGcolor outline = nvgRGB(53, 53, 53);
 };
 
 class AboutDialog : public pptk::Component
@@ -166,7 +197,7 @@ class AboutDialog : public pptk::Component
     void resized() override
     {
         setBounds(getRootComponent()->getWidth() * 0.5f - 400, getRootComponent()->getHeight() * 0.5f - 300, 800, 600);
-        libraries->setBounds(0, getHeight() * 0.5f, getWidth(), getHeight() * 0.5f - 30);
+        libraries->setBounds(20, getHeight() * 0.4f, getWidth() - 40, getHeight() * 0.6f - 20);
     }
 
 private:
