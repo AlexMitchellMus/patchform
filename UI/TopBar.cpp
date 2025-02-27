@@ -6,53 +6,9 @@
 
 #include "TopBar.h"
 #include "Editor.h"
+#include "AboutDialog.h"
 #include "../Graph/AudioGraph.h"
 #include "../UI_ToolKit/PlatformHelpers.h"
-#include "../GitInfo.h"
-
-class AboutDialog : public pptk::Component
-{
-    public:
-    AboutDialog(){}
-
-    void render(NVGcontext* nvg) override
-    {
-        nvgBeginPath(nvg);
-        nvgDrawRoundedRect(nvg, - 3,  - 3, getWidth() + 6, getHeight() + 6, dropShadowCol, dropShadowCol, 13);
-        nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bg, outline, 10.0f);
-
-        nvgFontSize(nvg, 24.0f);
-        nvgFontFace(nvg, "SemiBold");
-        nvgTextAlign(nvg, NVG_ALIGN_CENTER);
-        nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
-
-        int yPos = 50;
-        nvgText(nvg, getWidth() * 0.5f, yPos, "Patchform", nullptr);
-        yPos += 20;
-
-        nvgFontSize(nvg, 14.0f);
-        nvgFontFace(nvg, "Regular");
-        nvgText(nvg, getWidth() * 0.5f, yPos, "created by Alex Mitchell", nullptr);
-        yPos += 70;
-
-        std::stringstream versionText;
-        versionText << "Version: " << patchform_git_version << "      Git hash: " << patchform_git_hash;
-        nvgText(nvg, getWidth() * 0.5f, yPos, versionText.str().c_str(), nullptr);
-        yPos += 30;
-
-
-    }
-
-    void resized() override
-    {
-        setBounds(getRootComponent()->getWidth() * 0.5f - 400, getRootComponent()->getHeight() * 0.5f - 300, 800, 600);
-    }
-
-private:
-    NVGcolor bg = nvgRGB(43, 43, 43);
-    NVGcolor outline = nvgRGB(53, 53, 53);
-    NVGcolor dropShadowCol = nvgRGBA(0, 0, 0, 30);
-};
 
 MainMenu::MainMenu()
 {

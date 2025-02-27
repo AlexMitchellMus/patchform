@@ -67,7 +67,7 @@ namespace pptk
         [[nodiscard]] Component* getFocusedComponent() const { return focusedComponent.get(); }
         void setFocusedComponent(Component* c)
         {
-            if (!c && lastFocusedComponent)
+            if (!c && lastFocusedComponent && focusedComponent)
             {
                 std::cout << "FocusedComponent swapping." << std::endl;
                 focusedComponent->focusLost();

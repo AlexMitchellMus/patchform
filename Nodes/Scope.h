@@ -29,15 +29,17 @@ public:
     float negRange;
     float posRange;
 
+    static constexpr size_t DATA_BUFFER_QUANT_RES = 4096;
     // Use a fixed DSP buffer size.
     static constexpr size_t DSP_BUFFER_SIZE = 1024;
     // FULL_BUFFER_SIZE is 2x DSP_BUFFER_SIZE to allow a contiguous block after rotation.
     static constexpr size_t DOUBLE_BUFFER_SIZE = 2 * DSP_BUFFER_SIZE;
     // Define BufferType as a fixed-size std::array of DSP_BUFFER_SIZE samples.
     using BufferType = std::array<float, DSP_BUFFER_SIZE>;
+    using BufferTypeInt = std::array<int, DSP_BUFFER_SIZE>;
 
     // Enqueue fixed–size buffers.
-    moodycamel::ConcurrentQueue<BufferType> eventQueue = moodycamel::ConcurrentQueue<BufferType>(6);
+    moodycamel::ConcurrentQueue<BufferTypeInt> eventQueue = moodycamel::ConcurrentQueue<BufferTypeInt>(6);
 
     class UI final : public AudioNode::UI
     {
@@ -59,17 +61,28 @@ public:
         void updateGraphValues() override
         {
             auto scope = reinterpret_cast<Scope*>(audioNode);
-            BufferType newBuffer;
-            bool newData = false;
+            BufferTypeInt newBuffer;
+            bool gotNewBuffer = false;
 
             // Drain any new fixed-size buffers from the queue.
             while (scope->eventQueue.try_dequeue(newBuffer))
             {
-                if (!freeze)
+                gotNewBuffer = true;
+            };
+
+            if (!freeze && gotNewBuffer)
+            {
+                // Compare the current waveform data to the new data.
+                // We can do this because the waveform data is in int (as the resolution of display is much less than float precision)
+                if (waveformData != newBuffer)
                 {
-                    waveform = newBuffer;
+                    waveformData = newBuffer;
                     waveformValid = true;
                     newData = true;
+                    for (int i = 0; i < waveformData.size(); i++)
+                    {
+                        waveform[i] = waveformData[i] / static_cast<float>(DATA_BUFFER_QUANT_RES);
+                    }
                 }
             }
 
@@ -84,6 +97,7 @@ public:
                 posRange = newPosRange;
                 negRange = newNegRange;
                 repaint();
+                newData = false;
             }
         }
 
@@ -121,8 +135,8 @@ public:
             auto bg = nvgRGBA(11, 11, 11, 255);
             nvgDrawRoundedRect(nvg, 1, 1, w - 2, h - 2, bg, bg, 5);
 
-            if (!waveformValid)
-                return;
+            //if (!waveformValid)
+            //return;
 
             // Calculate the full range width.
             float rangeWidth = posRange - negRange;
@@ -169,9 +183,11 @@ public:
 
     private:
         // Buffer holding the most recent DSP_BUFFER_SIZE samples.
+        BufferTypeInt waveformData;
         BufferType waveform;
         bool waveformValid = false;
         bool freeze = false;
+        bool newData = true;
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override
@@ -235,11 +251,11 @@ public:
             detectedTrigger = 0;
 
         // Now output a 1024-sample window starting at the trigger.
-        BufferType buffer;
+        BufferTypeInt buffer;
         for (size_t j = 0; j < DSP_BUFFER_SIZE; ++j)
         {
             // Assumes that (detectedTrigger + j) is within dspBuffer's bounds.
-            buffer[j] = dspBuffer[detectedTrigger + j];
+            buffer[j] = static_cast<int>(dspBuffer[detectedTrigger + j] * DATA_BUFFER_QUANT_RES);
         }
 
         // Enqueue for UI
