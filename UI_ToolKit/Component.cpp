@@ -10,6 +10,7 @@
 #include "PopupComponent.h"
 #include "CompEvent.h"
 #include "Resizer.h"
+#include "ComponentViewport.h"
 
 namespace pptk {
 
@@ -41,12 +42,20 @@ Component* Component::findComponentAt(int globalX, int globalY)
 
 Component* Component::findComponentAt(int globalX, int globalY, Component* selfComponent)
 {
+    Point localPos = globalToLocalWithScale(globalX, globalY);
     // Always check children first, in reverse order for topmost components
     for (auto it = children.rbegin(); it != children.rend(); ++it)
     {
         Component* child = *it;
         if (child->isVisible())
         {
+            if (dynamic_cast<ComponentViewport*>(this))
+            {
+                if (localPos.x < 0 || localPos.x > getWidth() || localPos.y < 0 || localPos.y > getHeight())
+                {
+                    continue; // Skip this child if it's outside the viewport's visible bounds
+                }
+            }
             // Pass the original global coordinates to the child
             Component* found = child->findComponentAt(globalX, globalY, selfComponent);
             if (found && found != selfComponent)
@@ -55,8 +64,6 @@ Component* Component::findComponentAt(int globalX, int globalY, Component* selfC
             }
         }
     }
-
-    Point localPos = globalToLocalWithScale(globalX, globalY);
 
     // Check this component only after its children
     if (hitTest(localPos.x, localPos.y))
