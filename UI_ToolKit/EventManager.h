@@ -132,7 +132,7 @@ private:
         Point globalMouse(e.sdlEvent.motion.x, e.sdlEvent.motion.y);
 
         // Use findComponentAt with global coordinates
-        Component* newHovered = root->findComponentAt(globalMouse.x, globalMouse.y);
+        Component* newHovered = root->findComponentFromRootAt(globalMouse.x, globalMouse.y);
 
         Component* oldHovered = rootComponent->getHoveredComponent();
 

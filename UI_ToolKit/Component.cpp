@@ -35,9 +35,14 @@ void Component::handleMouseMove(CompEvent& e)
     }
 }
 
-Component* Component::findComponentAt(int globalX, int globalY)
+Component* Component::findComponentFromRootAt(int globalX, int globalY)
 {
     return (getRootComponent())->findComponentAt(globalX, globalY, this);
+}
+
+Component* Component::findComponentAt(int x, int y)
+{
+    return findComponentAt(x, y, this);
 }
 
 Component* Component::findComponentAt(int globalX, int globalY, Component* selfComponent)

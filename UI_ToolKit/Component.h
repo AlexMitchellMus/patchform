@@ -241,6 +241,12 @@ public:
 
     // Finds the component at global coordinate.
     // Disregards self, so make sure to call it from the Component you want to disregard from
+
+    // Find the component from root of component tree
+    Component* findComponentFromRootAt(int globalX, int globalY);
+
+    // Find the component from the current component
+    // This allows us to only search inside a layer (for example finding a port inside the objects layer)
     Component* findComponentAt(int globalX, int globalY);
 
     template <typename T>

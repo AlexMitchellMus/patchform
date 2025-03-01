@@ -116,6 +116,8 @@ public:
 
     pptk::Point canvasOffset;
 
+    Port* findPort(int x, int y);
+
 private:
     void dragCanvas(const pptk::Point&);
 

@@ -113,9 +113,9 @@ class LibraryListView : public pptk::ComponentViewport
 public:
     LibraryListView()
     {
-        viewedComp = std::make_unique<LibraryList>();
+        auto viewedComp = std::make_unique<LibraryList>();
         viewedComp->setBounds(0, 0, getWidth(), 640);
-        setViewport(viewedComp.get());
+        setViewport(std::move(viewedComp));
     }
 
     void renderViewportBackground(NVGcontext* nvg) override
@@ -126,12 +126,12 @@ public:
 
     void resized() override
     {
-        viewedComp->setBounds(0, 0, getWidth(), 640);
+        if (auto viewed = getViewedComponent<LibraryList>())
+            viewed->setBounds(0, 0, getWidth(), 640);
+
         ComponentViewport::resized();
     }
 private:
-    std::unique_ptr<LibraryList> viewedComp;
-
     NVGcolor bg = nvgRGB(46, 46, 46);
     NVGcolor outline = nvgRGB(53, 53, 53);
 };

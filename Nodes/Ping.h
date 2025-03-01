@@ -74,8 +74,9 @@ public:
             triggered = true;
             repaint();
             auto triggerStartTime = SDL_GetTicks();
+
             startFrameTimer([this, triggerStartTime](uint32_t time) mutable {
-                if (time - triggerStartTime >= 90)
+                if ((int32_t)(time - triggerStartTime) >= 90)  // Cast to handle wraparound correctly
                 {
                     stopFrameTimer();
                     triggered = false;
@@ -88,7 +89,7 @@ public:
         {
             const auto centre = getWidth() * 0.5f;
             const auto radius = getWidth() * 0.3f;
-            // Draw dial background
+
             nvgBeginPath(nvg);
             nvgCircle(nvg, centre, centre, radius);
             auto blue = nvgRGB(28, 73, 119);

@@ -260,6 +260,11 @@ bool Canvas::consumeEvent(pptk::CompEvent& e)
     return isDragging = false;
 }
 
+Port* Canvas::findPort(int x, int y)
+{
+    return dynamic_cast<Port*>(objectsLayer.findComponentAt(x, y));
+}
+
 
 void Canvas::deleteSelectedObjects()
 {

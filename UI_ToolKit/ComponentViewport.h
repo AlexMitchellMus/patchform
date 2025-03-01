@@ -13,8 +13,10 @@ namespace pptk
 
             ~Scrollbar()
             {
-                //stopFrameTimer(0);
-                //stopFrameTimer(1);
+                // Manually manage the lifetime of the frametimer!
+                // FIXME! we shouldn't need to, this should be handled by the timer!
+                stopFrameTimer(0);
+                stopFrameTimer(1);
             }
 
             std::function<void(float)> onScroll = [](float){};
@@ -156,16 +158,22 @@ namespace pptk
             updateScrollbar();
         }
 
-        void setViewport(Component* child)
+        void setViewport(std::unique_ptr<Component> child)
         {
-            viewportChild = child;
-            if (child)
+            viewportChild = std::move(child);
+            if (viewportChild)
             {
-                addComponent(child);
-                child->toBack();
-                setContentHeight(child->getHeight());
+                addComponent(viewportChild.get());
+                viewportChild->toBack();
+                setContentHeight(viewportChild->getHeight());
                 ComponentViewport::resized();
             }
+        }
+
+        template <typename T>
+        T* getViewedComponent()
+        {
+            return dynamic_cast<T*>(viewportChild.get());
         }
 
         virtual void renderViewportBackground(NVGcontext* nvg) {};
@@ -234,13 +242,13 @@ namespace pptk
 
     private:
         std::unique_ptr<Scrollbar> scrollbar;
+        std::unique_ptr<Component> viewportChild;
 
         void clampScroll()
         {
             scrollOffset = std::clamp(scrollOffset, 0.0f, maxScroll);
         }
 
-        Component* viewportChild = nullptr;
         float scrollOffset = 0.0f;
         float maxScroll = 0.0f;
 
