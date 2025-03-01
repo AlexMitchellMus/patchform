@@ -22,7 +22,7 @@ namespace pptk
         {
             auto callbacksCopy = timerCallbacks; // Copy to avoid iterator invalidation
 
-            for (auto& [componentPtr, callback] : callbacksCopy)
+            for (auto& [componentPtr, callback, id] : callbacksCopy)
             {
                 if (componentPtr) // Ensure component still exists
                 {
@@ -31,19 +31,18 @@ namespace pptk
             }
         }
 
-
-        void registerTimerCallback(Component* c, const std::function<void(uint32_t)>& callback)
+        void registerTimerCallback(Component* c, const std::function<void(uint32_t)>& callback, int timerID = 0)
         {
-            unregisterTimerCallback(c);
+            unregisterTimerCallback(c, timerID);
 
-            timerCallbacks.emplace_back(c, callback);
+            timerCallbacks.emplace_back(c, callback, timerID);
         }
 
-        void unregisterTimerCallback(const Component* component)
+        void unregisterTimerCallback(const Component* component, int timerID = 0)
         {
-            for (auto& [c, callback] : timerCallbacks)
+            for (auto& [c, callback, id] : timerCallbacks)
             {
-                if (c == component)
+                if (c == component && id == timerID)
                     c = nullptr; // Mark for deletion
             }
 
@@ -133,6 +132,6 @@ namespace pptk
         SafePointer<Component> focusedComponent;
         SafePointer<Component> lastFocusedComponent;
 
-        std::vector<std::tuple<Component*, std::function<void(uint32_t)>>> timerCallbacks;
+        std::vector<std::tuple<Component*, std::function<void(uint32_t)>, int>> timerCallbacks;
     };
 }

@@ -56,6 +56,18 @@ struct Point {
         return Point(x - other.x, y - other.y);
     }
 
+    Point operator+=(const Point& other) {
+        return Point(x += other.x, y += other.y);
+    }
+
+    Point operator*(float factor) const {
+        return Point(x * factor, y * factor);
+    }
+
+    Point operator/(float factor) const {
+        return Point(x / factor, y / factor);
+    }
+
     [[nodiscard]] float length(const pptk::Point& other) const
     {
         float dx = x - other.x;
@@ -314,9 +326,9 @@ public:
         return Point(x, y);
     }
 
-    void startFrameTimer(std::function<void(uint32_t)> callback);
+    void startFrameTimer(std::function<void(uint32_t)> callback, int timerID = 0);
 
-    void stopFrameTimer();
+    void stopFrameTimer(int timerID = 0);
 
     void registerGlobalMouseListener(std::function<void(Component*)> callback);
 

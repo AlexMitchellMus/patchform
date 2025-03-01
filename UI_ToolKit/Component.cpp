@@ -253,14 +253,14 @@ void Component::setPosition(const Point& point)
     setPosition(point.x, point.y);
 }
 
-void Component::startFrameTimer(std::function<void(uint32_t)> callback)
+void Component::startFrameTimer(std::function<void(uint32_t)> callback, int timerID)
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->registerTimerCallback(this, std::move(callback));
+    reinterpret_cast<RootComponent*>(getRootComponent())->registerTimerCallback(this, std::move(callback), timerID);
 }
 
-void Component::stopFrameTimer()
+void Component::stopFrameTimer(int timerID)
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->unregisterTimerCallback(this);
+    reinterpret_cast<RootComponent*>(getRootComponent())->unregisterTimerCallback(this, timerID);
 }
 
 void Component::registerGlobalMouseListener(std::function<void(Component*)> callback)

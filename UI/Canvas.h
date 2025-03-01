@@ -114,6 +114,8 @@ public:
 
     void updateFrameBuffer(NVGcontext* nvg);
 
+    pptk::Point canvasOffset;
+
 private:
     void dragCanvas(const pptk::Point&);
 

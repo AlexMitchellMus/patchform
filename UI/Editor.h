@@ -36,6 +36,30 @@
 #undef min
 #endif
 
+// Class to darken the background of the central dialog window
+// This isn't really modal in the sense that it pauses the main thread,
+// but we use this component to both darken the whole editor
+// and catch any mouse clicks outside the dialog component
+class ModalBackground : public pptk::Component
+{
+public:
+    std::function<void()> onClick = [](){};
+
+    void mouseButtonDown(pptk::CompEvent& e) override
+    {
+        std::cout << "clicking on modal background" << std::endl;
+        onClick();
+    }
+
+    void render(NVGcontext* nvg) override
+    {
+        nvgBeginPath(nvg);
+        nvgDrawRoundedRect(nvg, 0, 0, width, height, darkenBg, darkenBg, 0);
+    }
+
+    NVGcolor darkenBg = nvgRGBA(0, 0, 0, 80);
+};
+
 class GraphManager;
 class WindowPeer;
 class Editor : public pptk::RootComponent {
@@ -78,12 +102,17 @@ public:
         std::cout << "resizing editor" << std::endl;
         constexpr auto topBarHeight = 40;
         topBar->setBounds(0, 0, getWidth(), topBarHeight);
-        canvas->setBounds(-canvas->canvasOrigin, - canvas->canvasOrigin + topBarHeight, canvas->infinteCanvasSize, canvas->infinteCanvasSize);
+        canvas->setBounds(-canvas->canvasOrigin * canvas->scale + canvas->canvasOffset.x, - canvas->canvasOrigin * canvas->scale + canvas->canvasOffset.y, canvas->infinteCanvasSize, canvas->infinteCanvasSize);
         leftPanel->setBounds(0, topBarHeight, 200, getHeight() - topBarHeight);
 
         resizeToolDock(true);
 
         rightPanel->setBounds(getWidth() - 200, topBarHeight, 200, getHeight() - topBarHeight);
+
+        if (dialogWindow)
+        {
+            dialogWindow->setBounds(getWidth() * 0.5f - 400, getHeight() * 0.5f - 300, 800, 600);
+        }
     }
 
     void updateFrameBuffers(NVGcontext* nvg)
@@ -96,10 +125,39 @@ public:
         return windowPeer;
     }
 
+    void openDialogWindow(std::unique_ptr<Component> comp)
+    {
+        dialogWindow = std::move(comp);
+        dialogWindowModalBackground = std::make_unique<ModalBackground>();
+        dialogWindowModalBackground->setBounds(0, 0, getWidth(), getHeight());
+        dialogWindowModalBackground->onClick = [this]()
+        {
+            if (dialogWindow)
+            {
+                dialogWindow.reset();
+                dialogWindowModalBackground->setVisible(false);
+                // FIXME: repaints that need to occur due to component changes should be handled by the toolkit!
+                repaint();
+            }
+        };
+        addComponent(dialogWindowModalBackground.get());
+        addComponent(dialogWindow.get());
+        resized();
+    }
+
+    void closeDialogWindow()
+    {
+        dialogWindow.reset();
+        repaint();
+    }
 
     GraphManager* graphManager;
 
 private:
+    std::unique_ptr<ModalBackground> dialogWindowModalBackground;
+    std::unique_ptr<Component> dialogWindow;
+
+    // TODO: Move to Toolkit
     WindowPeer* windowPeer;
 
     std::unique_ptr<Canvas> canvas;

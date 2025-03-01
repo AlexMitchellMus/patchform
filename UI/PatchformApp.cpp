@@ -135,6 +135,7 @@ void PatchformApp::run() {
         if (!editor->needsRepaint())
         {
             SDL_Delay(1);
+            lastFrameTime = SDL_GetTicks();
             continue;
         }
 

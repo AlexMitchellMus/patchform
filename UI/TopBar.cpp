@@ -46,7 +46,7 @@ MainMenu::MainMenu()
             std::ofstream outputFile(filePath, std::ios::out | std::ios::trunc);
 
             if (!outputFile.is_open()) {
-                throw std::ios_base::failure("Failed to open the file for writing.");
+                std::cerr << "Unable to write to: " << std::filesystem::absolute(filePath).string() << std::endl;
             }
 
             // Write the JSON to the file with pretty formatting
@@ -71,8 +71,7 @@ MainMenu::MainMenu()
         if (auto* ed = findParentOfClass<Editor>())
         {
             setVisible(false);
-            aboutDialog = std::make_unique<AboutDialog>();
-            ed->addComponent(aboutDialog.get());
+            ed->openDialogWindow(std::make_unique<AboutDialog>());
         }
     };
 

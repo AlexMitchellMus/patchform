@@ -11,6 +11,7 @@
 
 #include "CompEvent.h"
 #include "RootComponent.h"
+#include "ComponentViewport.h"
 
 namespace pptk {
 
@@ -165,6 +166,14 @@ private:
         // Convert global coordinates to the component’s local space.
         Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
 
+        if (dynamic_cast<ComponentViewport*>(component))
+        {
+            if (localPos.x < 0 || localPos.x > component->getWidth() || localPos.y < 0 || localPos.y > component->getHeight())
+            {
+                return nullptr; // Skip this child if it's outside the viewport's visible bounds
+            }
+        }
+
         // Determine if this component would normally be hit.
         bool isHit = component->hitTest(localPos.x, localPos.y);
 
@@ -182,6 +191,7 @@ private:
 
         // Check children in reverse order (topmost first).
         auto& children = component->getChildren();
+
         for (size_t i = children.size(); i > 0; --i) {
             Component* child = children.at(i - 1);
             Component* hitChild = findDeepestHitComponent(child, e);

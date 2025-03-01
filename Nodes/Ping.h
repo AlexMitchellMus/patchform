@@ -44,7 +44,7 @@ public:
         {
             if (isDirty.load())
             {
-                isDirty.store(false, std::memory_order::memory_order_acquire);
+                isDirty.store(false, std::memory_order::release);
                 auto ping = reinterpret_cast<Ping*>(audioNode);
 
                 bool receivedEvent = false;
@@ -73,8 +73,8 @@ public:
         {
             triggered = true;
             repaint();
-            triggerStartTime = SDL_GetTicks();
-            startFrameTimer([this](uint32_t time) mutable {
+            auto triggerStartTime = SDL_GetTicks();
+            startFrameTimer([this, triggerStartTime](uint32_t time) mutable {
                 if (time - triggerStartTime >= 90)
                 {
                     stopFrameTimer();
@@ -97,7 +97,6 @@ public:
         }
     private:
         bool triggered = false;
-        uint32_t triggerStartTime = 0;
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override

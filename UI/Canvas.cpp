@@ -145,6 +145,8 @@ void Canvas::dragCanvas(const pptk::Point& delta)
     x += delta.x * scale;
     y += delta.y * scale;
 
+    canvasOffset += delta * scale;
+
     repaint();
 }
 
@@ -189,6 +191,10 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
         // Adjust canvas offset to scale around the mouse point
         x -= canvasMouseX * (newScale - scale);
         y -= canvasMouseY * (newScale - scale);
+
+        // TODO: Canvas should be in a viewport! We will not need to keep both x and offset then!
+        canvasOffset.x = x + canvasOrigin * newScale;
+        canvasOffset.y = y + canvasOrigin * newScale;
 
         scale = newScale;
         onScaleChange(scale);

@@ -14,7 +14,6 @@ class LibraryList : public pptk::Component
 public:
     LibraryList()
     {
-        //setSize(500, 1000);
     }
 
     void render(NVGcontext* nvg) override
@@ -128,6 +127,7 @@ public:
     void resized() override
     {
         viewedComp->setBounds(0, 0, getWidth(), 640);
+        ComponentViewport::resized();
     }
 private:
     std::unique_ptr<LibraryList> viewedComp;
@@ -141,8 +141,10 @@ class AboutDialog : public pptk::Component
     public:
     AboutDialog()
     {
-        libraries = std::make_unique<LibraryListView>();
-        addComponent(libraries.get());
+        librariesPanel = std::make_unique<LibraryListView>();
+        addComponent(librariesPanel.get());
+
+        AboutDialog::resized();
     }
 
     void render(NVGcontext* nvg) override
@@ -196,12 +198,12 @@ class AboutDialog : public pptk::Component
 
     void resized() override
     {
-        setBounds(getRootComponent()->getWidth() * 0.5f - 400, getRootComponent()->getHeight() * 0.5f - 300, 800, 600);
-        libraries->setBounds(20, getHeight() * 0.4f, getWidth() - 40, getHeight() * 0.6f - 20);
+        std::cout << "resizing the viewport" << std::endl;
+        librariesPanel->setBounds(20, getHeight() * 0.4f, getWidth() - 40, getHeight() * 0.6f - 20);
     }
 
 private:
-    std::unique_ptr<LibraryListView> libraries;
+    std::unique_ptr<LibraryListView> librariesPanel;
 
     NVGcolor bg = nvgRGB(43, 43, 43);
     NVGcolor outline = nvgRGB(53, 53, 53);
