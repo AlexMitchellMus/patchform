@@ -47,7 +47,7 @@ Component* Component::findComponentAt(int x, int y)
 
 Component* Component::findComponentAt(int globalX, int globalY, Component* selfComponent)
 {
-    Point localPos = globalToLocalWithScale(globalX, globalY);
+    Point localPos = globalToLocal(globalX, globalY);
     // Always check children first, in reverse order for topmost components
     for (auto it = children.rbegin(); it != children.rend(); ++it)
     {
@@ -299,13 +299,12 @@ void Component::loseFocus()
     reinterpret_cast<RootComponent*>(getRootComponent())->setFocusedComponent(nullptr);
 }
 
-Point Component::globalToLocalWithScale(float globalX, float globalY) const
+Point Component::globalToLocal(float globalX, float globalY) const
 {
     // If there's a parent, first convert to the parent's local space
     if (parent)
     {
-        // First, transform into parent's coordinate space
-        Point parentLocal = parent->globalToLocalWithScale(globalX, globalY);
+        Point parentLocal = parent->globalToLocal(globalX, globalY);
         globalX = parentLocal.x;
         globalY = parentLocal.y;
     }
@@ -314,58 +313,12 @@ Point Component::globalToLocalWithScale(float globalX, float globalY) const
     globalX -= x;
     globalY -= y;
 
-    // **Apply parent's scale recursively**
-    if (scale != 1.0f && scale > 0.0f)
+    // Apply parent's scale recursively
+    if (scale > 0.0f)
     {
         globalX /= scale;
         globalY /= scale;
     }
-
-    return Point(globalX, globalY);
-}
-
-Point Component::globalToLocal2(float globalX, float globalY) const
-{
-    // Recursively transform to parent's local coordinates
-    if (parent)
-    {
-        Point parentLocal = parent->globalToLocal(globalX, globalY);
-        globalX = parentLocal.x;
-        globalY = parentLocal.y;
-    }
-
-    // Optionally handle viewport and scaling (if applicable)
-    globalX -= x;
-    globalY -= y;
-
-    // Optionally apply scaling (uncomment if scaling is used)
-    // globalX /= scale;
-    // globalY /= scale;
-
-    return Point(globalX, globalY);
-}
-
-Point Component::globalToLocal(float globalX, float globalY) const
-{
-    // Recursively transform to parent's local coordinates
-    if (parent)
-    {
-        Point parentLocal = parent->globalToLocal(globalX, globalY);
-        globalX = parentLocal.x;
-        globalY = parentLocal.y;
-    }
-
-    // Offset by this component's position
-    //globalX -= x;
-    //globalY -= y;
-
-    // Optionally handle viewport and scaling (if applicable)
-    globalX -= viewportX;
-    globalY -= viewportY;
-
-    // Optionally apply scaling (uncomment if scaling is used)
-    globalX /= scale;
-    globalY /= scale;
 
     return Point(globalX, globalY);
 }

@@ -1112,6 +1112,45 @@ public:
         return allConnections;
     }
 
+    std::vector<Edge*> connectMultiple(std::vector<std::tuple<int, int, int, int>> conns)
+    {
+        std::cout << "connecting from UI: " << std::endl;
+        if (!activeGraph) {
+            std::cerr << "No active graph available to connect objects." << std::endl;
+            return { };
+        }
+
+        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
+
+        int failedCount = 0;
+
+        // Add the connection to the transitioning graph
+        for (auto& [oObj, oPort, iObj, iPort] : conns)
+        {
+            if (!transitioningGraph->connect(oObj, oPort, iObj, iPort))
+            {
+                failedCount++;
+            }
+        }
+
+        if (failedCount == conns.size())
+        {
+            std::cerr << "Failed to multi-connect any objects in the transitioning graph." << std::endl;
+            transitioningGraph.reset(); // Discard transitioning graph
+            return activeGraph->getConnections();
+        }
+
+        transitioningGraph->updateConnections();
+        transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
+
+        auto allConnections = transitioningGraph->getConnections();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+        return allConnections;
+    }
+
     bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
     {
         if (!activeGraph) {

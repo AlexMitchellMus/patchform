@@ -68,4 +68,6 @@ private:
 
     bool isHovered = false;
     bool isHoveredFromCable = false;
+
+    bool parentAddedToMultiConnect = false;
 };

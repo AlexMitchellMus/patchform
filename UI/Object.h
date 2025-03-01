@@ -43,6 +43,24 @@ public:
 
     [[nodiscard]] uint8_t getNumOutputs() const { return outPorts.size(); };
 
+    // Return the input port from an index, if it doesn't exist, return nullptr
+    Port* getInPort(int index) const
+    {
+        if (index < inPorts.size())
+            return inPorts[index].get();
+
+        return nullptr;
+    }
+
+    // Return the output port from an index, if it doesn't exist, return nullptr
+    Port* getOutPort(int index) const
+    {
+        if (index < outPorts.size())
+            return outPorts[index].get();
+
+        return nullptr;
+    }
+
     json getObjectDefinition()
     {
         return definition;

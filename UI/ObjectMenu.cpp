@@ -43,7 +43,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
                 {
                     auto objectOffset = pptk::Point(dndObject->getWidth() * 0.5f * dndObject->scale, dndObject->getHeight() * 0.5f * dndObject->scale);
                     auto finalPos = position - objectOffset;
-                    auto droppedPos = cnv->globalToLocalWithScale(finalPos.x, finalPos.y);
+                    auto droppedPos = cnv->globalToLocal(finalPos.x, finalPos.y);
 
                     cnv->addFromDnDMenu(dndObject.get(), droppedPos);
                     repaint();

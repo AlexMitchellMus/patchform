@@ -27,7 +27,7 @@ public:
             rootComponent->setDraggingComponent(comp);
             rootComponent->setClickedComponent(comp);
 
-            Point localPos = comp->globalToLocalWithScale(wrappedEvent.sdlEvent.button.x, wrappedEvent.sdlEvent.button.y);
+            Point localPos = comp->globalToLocal(wrappedEvent.sdlEvent.button.x, wrappedEvent.sdlEvent.button.y);
 
             wrappedEvent.sdlEvent.button.x = localPos.x;
             wrappedEvent.sdlEvent.button.y = localPos.y;
@@ -75,7 +75,7 @@ public:
         }
 
         if (auto draggedComp = rootComponent->getDraggingComponent()) {
-            auto posLocal = draggedComp->globalToLocalWithScale(currentPosition.x, currentPosition.y);
+            auto posLocal = draggedComp->globalToLocal(currentPosition.x, currentPosition.y);
             auto accScale = draggedComp->getAccumulatedScale();
             auto localDelta = Point(delta.x / accScale, delta.y / accScale);
             draggedComp->mouseDrag(posLocal, localDelta, buttonPressed);
@@ -150,7 +150,7 @@ private:
         // Forward the mouse move event to the hovered component
         if (auto hovered = rootComponent->getHoveredComponent()) {
             // Use global-to-local transformation including scaling
-            Point localMouse = hovered->globalToLocalWithScale(globalMouse.x, globalMouse.y);
+            Point localMouse = hovered->globalToLocal(globalMouse.x, globalMouse.y);
             e.sdlEvent.motion.x = static_cast<int>(localMouse.x);
             e.sdlEvent.motion.y = static_cast<int>(localMouse.y);
 
@@ -164,7 +164,7 @@ private:
         }
 
         // Convert global coordinates to the component’s local space.
-        Point localPos = component->globalToLocalWithScale(e.sdlEvent.button.x, e.sdlEvent.button.y);
+        Point localPos = component->globalToLocal(e.sdlEvent.button.x, e.sdlEvent.button.y);
 
         if (dynamic_cast<ComponentViewport*>(component))
         {

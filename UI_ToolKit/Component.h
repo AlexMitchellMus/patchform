@@ -340,11 +340,7 @@ public:
 
     void unregisterGlobalMouseListener();
 
-    // TODO: we don't need 4, only 2 (from and to)
-    Point globalToLocalWithScale(float globalX, float globalY) const;
-    Point globalToLocal2(float globalX, float globalY) const;
     Point globalToLocal(float globalX, float globalY) const;
-
     Point localToGlobal(float localX, float localY) const;
 
     bool isOrHasChild(Component* target) {

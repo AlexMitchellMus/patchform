@@ -75,8 +75,10 @@ public:
 
     void updateGraphValuesIfNeeded();
 
-    std::unique_ptr<Connection> newConnection = nullptr;
+    std::vector<std::unique_ptr<Connection>> newConnections;
     void addConnection(Port* port, Port* otherPort);
+    void addMultipleConnections(std::vector<std::tuple<Port*, Port*>> portConns);
+
     void updateConnectionsPosition() const;
 
     void addObjectChangedListener(std::function<void()> callback);

@@ -519,14 +519,17 @@ void Canvas::renderAll(NVGcontext* nvg)
         renderAllObjects(nvg);
     }
 
-    if (newConnection)
+    if (newConnections.size() > 0)
     {
-        nvgSave(nvg);
-        nvgTranslate(nvg, newConnection->getX(), newConnection->getY());
+        for (auto& conn : newConnections)
+        {
+            nvgSave(nvg);
+            nvgTranslate(nvg, conn->getX(), conn->getY());
 
-        newConnection->render(nvg);
+            conn->render(nvg);
 
-        nvgRestore(nvg);
+            nvgRestore(nvg);
+        }
     }
 
     if (lasso)
@@ -698,7 +701,25 @@ void Canvas::reloadConnections(std::vector<Edge*> edges)
         }
     }
 }
+void Canvas::addMultipleConnections(std::vector<std::tuple<Port*, Port*>> connections)
+{
+    std::vector<std::tuple<int, int, int, int>> newConnections;
 
+    for (auto& [origin, dest] : connections)
+    {
+        if (!origin->isOutput())
+            std::swap(origin, dest);
+
+        auto outputObj = reinterpret_cast<Object*>(origin->getParent());
+        auto inputObj = reinterpret_cast<Object*>(dest->getParent());
+
+        newConnections.emplace_back(outputObj->nodeID, origin->getPortNum(), inputObj->nodeID, dest->getPortNum());
+    }
+
+    auto newConnState = graphManager->connectMultiple(newConnections);
+
+    reloadConnections(newConnState);
+}
 
 void Canvas::addConnection(Port* origin, Port* dest)
 {

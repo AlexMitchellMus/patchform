@@ -19,6 +19,11 @@ Connection::Connection(Port* port, Port* dest, uint64_t connEdgeHash) : originPo
 
     if (dest && originPort->isSignal() && destPort->isSignal())
         cableType = CableType::Signal;
+
+    auto cnv = port->findParentOfClass<Canvas>();
+    auto inputPortPos = originPort->getPositionInParent(cnv);
+
+    setPosition(inputPortPos);
 }
 
 Connection::~Connection()
@@ -167,10 +172,10 @@ void Connection::updateConnectionGeometry()
     }
 }
 
-void Connection::setConnectionDest(const pptk::Point& p)
+void Connection::setConnectionDest(const pptk::Point& globalPos)
 {
-    destPos = p;
-    setSize(abs(p.x), abs(p.y));
+    destPos = globalToLocal(globalPos.x, globalPos.y);
+    setSize(abs(destPos.x), abs(destPos.y));
     updateConnectionGeometry();
 }
 

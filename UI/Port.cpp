@@ -14,11 +14,33 @@ void Port::mouseButtonDown(pptk::CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {
-        cnv->newConnection = std::make_unique<Connection>(this);
-        // We get the position of the port in the canvas
-        auto conpos = getPositionInParent(cnv);
-        cnv->addComponent(cnv->newConnection.get());
-        cnv->newConnection->setPosition(conpos);
+        if (SDL_GetModState() & SDL_KMOD_SHIFT)
+        {
+            // Any object that user drags out while also in multi-drag mode becomes selected
+            if (auto parentObj = dynamic_cast<Object*>(getParent()))
+            {
+                if (!parentObj->getIsSelected())
+                {
+                    parentAddedToMultiConnect = true;
+                    cnv->addToSelection(parentObj);
+                }
+            }
+
+            for (auto obj : cnv->getSelectedObjects())
+            {
+                auto portToDragFrom = isOutput() ? obj->getOutPort(portNum) : obj->getInPort(portNum);
+                // If the dragging port doesn't exist in the other selected objects, skip that object
+                if (portToDragFrom)
+                {
+                    cnv->newConnections.emplace_back(std::make_unique<Connection>(isOutput() ? obj->getOutPort(portNum) : obj->getInPort(portNum)));
+                    cnv->addComponent(cnv->newConnections.back().get());
+                }
+            }
+        } else
+        {
+            cnv->newConnections.emplace_back(std::make_unique<Connection>(this));
+            cnv->addComponent(cnv->newConnections.back().get());
+        }
     }
 }
 
@@ -26,20 +48,42 @@ void Port::mouseButtonUp(pptk::CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {
-        cnv->newConnection.reset();
-
         if (foundPort)
         {
             foundPort->isHoveredFromCable = false;
 
-            auto thisObj = findParentOfClass<Object>();
-            auto otherObj = foundPort->findParentOfClass<Object>();
-
-            if (thisObj && otherObj && (thisObj != otherObj))
+            if (cnv->newConnections.size() > 0)
             {
-                cnv->addConnection(this, foundPort.get());
-                //std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
+                auto dest = foundPort.get();
+
+                std::vector<std::tuple<Port*, Port*>> portCons;
+
+                for (auto& con : cnv->newConnections)
+                {
+                    auto origin = con->getOriginPort();
+                    portCons.emplace_back(origin, dest);
+                }
+                cnv->addMultipleConnections(portCons);
             }
+            else
+            {
+                auto thisObj = findParentOfClass<Object>();
+                auto otherObj = foundPort->findParentOfClass<Object>();
+
+                if (thisObj && otherObj && (thisObj != otherObj))
+                {
+                    cnv->addConnection(this, foundPort.get());
+                    //std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
+                }
+            }
+        }
+        cnv->newConnections.clear();
+        foundPort.reset();
+
+        if (parentAddedToMultiConnect)
+        {
+            cnv->removeFromSelection(reinterpret_cast<Object*>(getParent()));
+            parentAddedToMultiConnect = false;
         }
     }
 }
@@ -52,11 +96,14 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
             if (cnv->isInLockedMode())
                 return;
 
-            if (cnv->newConnection)
+            if (cnv->newConnections.size())
             {
-                cnv->newConnection->setConnectionDest(currentPosition);
-
                 auto globalPos = localToGlobal(currentPosition.x, currentPosition.y);
+
+                for (auto& conn : cnv->newConnections)
+                {
+                    conn->setConnectionDest(globalPos);
+                }
 
                 if (auto* port = cnv->findPort(globalPos.x, globalPos.y))
                 {
