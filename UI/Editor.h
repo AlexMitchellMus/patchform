@@ -138,8 +138,6 @@ public:
             {
                 dialogWindow.reset();
                 dialogWindowModalBackground->setVisible(false);
-                // FIXME: repaints that need to occur due to component changes should be handled by the toolkit!
-                repaint();
             }
         };
         addComponent(dialogWindowModalBackground.get());
