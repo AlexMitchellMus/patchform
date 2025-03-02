@@ -380,7 +380,7 @@ public:
         return patch;
     }
 
-    void loadPatch(const json& patch, bool logVerbose)
+    bool loadPatch(const json& patch, bool logVerbose)
     {
         // Create nodes
         for (const auto& node : patch["nodes"])
@@ -391,6 +391,9 @@ public:
         // Create connections
         for (const auto& connection : patch["connections"])
         {
+            if ((connection["sourceNode"].is_string() && connection["sourceNode"].get<std::string>().empty()) ||
+                (connection["targetNode"].is_string() && connection["targetNode"].get<std::string>().empty()) )
+                return false;
             // source and target ID needs to be set in the file format
             uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : objectIDMap[std::to_string(connection["sourceNode"].get<int>())];
             uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
@@ -401,6 +404,7 @@ public:
             // FIXME: Is this really correct? we use the overloaded connect to connect with the stringID
             connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
         }
+        return true;
     }
 
     void updateOutputInputPortMap()
@@ -547,17 +551,26 @@ public:
     }
 
     bool connect(int oNode, int oPort, int iNode, int iPort) {
+        std::cout << "connecting: (" << oNode << " : " << oPort <<  " -> " << iNode << " : " << iPort << ")" << std::endl;
+
         ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
-        //std::cout << "=========== objectIDMap ==========" << std::endl;
+
+        std::cout << "=========== objectIDMap ==========" << std::endl;
         for (const auto& [name, id] : objectIDMap) {
-            //std::cout << "id: " << id << " name: " << name << std::endl;
+            std::cout << "id: " << id << " name: " << name << std::endl;
             invertedMap[id] = name;
         }
 
+        std::cout << invertedMap.contains(oNode) << " " << invertedMap.contains(iNode) << std::endl;
+
         if (invertedMap.contains(oNode) && invertedMap.contains(iNode))
         {
+            std::cout << "connecting oNode " << oNode << " -> " << iNode << std::endl;
             connect(invertedMap[oNode], oPort, invertedMap[iNode], iPort);
             return true;
+        } else
+        {
+            std::cerr << "issue connectiong: " << "connecting oNode " << oNode << " -> " << iNode << std::endl;
         }
         return false;
     }
@@ -816,7 +829,7 @@ public:
     }
 
     template <typename NodeType>
-    AudioNode* addNode(const std::optional<std::string>& idString, json& nodeCreationData)
+    AudioNode* addNode(const std::string& finalID, json& nodeCreationData)
     {
         auto node = std::make_unique<NodeType>(context, nodeCreationData);
         auto rawNode = node.get();
@@ -830,17 +843,17 @@ public:
             );
         }
 
-        const auto nodeID = generateID();
+        // Generate a unique node ID
+        uint32_t nodeID = generateID();
 
-        // Preserve the custom id from the JSON if provided, else use nodeID converted to a string.
-        const std::string finalID = (idString.has_value() && !idString->empty())
-            ? idString.value()
-            : std::to_string(nodeID);
+        // Assign both integer ID and string ID
+        node->nodeID = nodeID;
+        node->nodeIDString = finalID;
+
+        // Ensure mapping is correct
         objectIDMap[finalID] = nodeID;
 
-        node->nodeID = nodeID;
-        std::cout << "node id: "  << nodeID << " id string: " << finalID << std::endl;
-        node->nodeIDString = finalID;
+        std::cout << "Node added: ID " << nodeID << " (" << finalID << ")" << std::endl;
 
         setSummingFunctionForNode(node.get());
         objects.push_back(std::move(node));
@@ -848,17 +861,19 @@ public:
         return rawNode;
     }
 
-
+    // Generate a unique node ID (integer)
     uint32_t generateID() const
     {
         std::set<unsigned int> usedIDs;
-        for (const auto& obj : objects) {
+        for (const auto& obj : objects)
+        {
             usedIDs.insert(obj->nodeID);
         }
 
         // Find the lowest unused ID starting from 0
         unsigned int idCounter = 0;
-        while (usedIDs.find(idCounter) != usedIDs.end()) {
+        while (usedIDs.find(idCounter) != usedIDs.end())
+        {
             idCounter++; // Increment until an unused ID is found
         }
 
@@ -872,14 +887,30 @@ public:
 
         auto const object = ppl::string(node["obj"].get<std::string>()).toLower();
 
-        // Attempt to get the ID as a string,
-        // if no string dump the value (int or float into string)
-        // otherwise return empty value which makes the object use the index in patch
-        const std::optional<std::string> idString = node.contains("id")
-            ? (node["id"].is_string()
-                ? std::make_optional(node["id"].get<std::string>())
-                : std::make_optional(node["id"].dump()))
-            : std::nullopt;
+        // Handle both string-based IDs (e.g., "osc_1") and numeric IDs (e.g., 5)
+        std::string idString;
+        if (node.contains("id"))
+        {
+            if (node["id"].is_string())
+            {
+                idString = node["id"].get<std::string>(); // e.g., "osc_1"
+            }
+            else if (node["id"].is_number())
+            {
+                idString = std::to_string(node["id"].get<int>()); // Convert 5 → "5"
+            }
+        }
+        else
+        {
+            idString = std::to_string(generateID()); // Assign new ID if missing
+        }
+
+        // Ensure the ID is unique
+        if (objectIDMap.contains(idString))
+        {
+            std::cerr << "Duplicate node ID detected: " << idString << ". Renaming..." << std::endl;
+            idString = std::to_string(generateID());
+        }
 
         switch (hash(object))
         {
@@ -1062,34 +1093,7 @@ public:
         return connectionState;
     }
 
-    std::vector<Edge*> connect(const int oObj, int oPort, const int iObj, int iPort)
-    {
-        std::cout << "connecting from UI: " << std::endl;
-        if (!activeGraph) {
-            std::cerr << "No active graph available to connect objects." << std::endl;
-            return { };
-        }
-
-        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
-        // Add the connection to the transitioning graph
-        if (!transitioningGraph->connect(oObj, oPort, iObj, iPort)) {
-            std::cerr << "Failed to connect objects in the transitioning graph." << std::endl;
-            transitioningGraph.reset(); // Discard transitioning graph
-            return activeGraph->getConnections();
-        }
-
-        transitioningGraph->updateConnections();
-        transitioningGraph->sortNodes();
-        transitioningGraph->updateOutputInputPortMap();
-
-        auto allConnections = transitioningGraph->getConnections();
-
-        // Mark the transitioning graph as ready to replace the active graph
-        swapGraph.store(true, std::memory_order_release);
-        return allConnections;
-    }
-
-    std::vector<Edge*> connectMultiple(std::vector<std::tuple<int, int, int, int>> conns)
+    std::vector<Edge*> connectMultiple(const std::vector<std::tuple<int, int, int, int>>& conns)
     {
         std::cout << "connecting from UI: " << std::endl;
         if (!activeGraph) {
@@ -1126,30 +1130,6 @@ public:
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
         return allConnections;
-    }
-
-    bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
-    {
-        if (!activeGraph) {
-            std::cerr << "No active graph available to connect objects." << std::endl;
-            return false;
-        }
-
-        transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
-        // Add the connection to the transitioning graph
-        if (!transitioningGraph->connect(oObj, oPort, iObj, iPort)) {
-            std::cerr << "Failed to connect objects in the transitioning graph." << std::endl;
-            transitioningGraph.reset(); // Discard transitioning graph
-            return false;
-        }
-
-        transitioningGraph->updateConnections();
-        transitioningGraph->sortNodes();
-        transitioningGraph->updateOutputInputPortMap();
-
-        // Mark the transitioning graph as ready to replace the active graph
-        swapGraph.store(true, std::memory_order_release);
-        return true;
     }
 
     bool disconnect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
@@ -1197,6 +1177,8 @@ public:
     }
 
     std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch, const bool logVerbose) {
+        patchLoadSuccess = false;
+
         if (swapGraph.load(std::memory_order_acquire)) {
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
             return { };
@@ -1206,7 +1188,14 @@ public:
 
         transitioningGraph = std::make_shared<GraphHolder>(ctx.get());
 
-        transitioningGraph->loadPatch(patch, logVerbose);
+        if (!transitioningGraph->loadPatch(patch, logVerbose))
+        {
+            transitioningGraph.reset();
+            std::cerr << "Corrupt patch, failed to load." << std::endl;
+            return { };
+        }
+
+        patchLoadSuccess = true;
 
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
@@ -1223,6 +1212,11 @@ public:
         swapGraph.store(true, std::memory_order_release);
 
         return { loadedObjects, connections };
+    }
+
+    bool wasPatchLoadSuccessful()
+    {
+        return patchLoadSuccess;
     }
 
     std::vector<Object*> getObjects()
@@ -1349,4 +1343,6 @@ protected:
     std::shared_ptr<GraphHolder> transitioningGraph;  // New graph prepared for swapping
     std::atomic<bool> swapGraph = false;             // Signal for readiness to swap
     std::unique_ptr<NodeContext> ctx;
+
+    bool patchLoadSuccess = false;
 };

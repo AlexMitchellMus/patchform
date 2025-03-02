@@ -52,7 +52,7 @@ void Port::mouseButtonUp(pptk::CompEvent& e)
         {
             foundPort->isHoveredFromCable = false;
 
-            if (cnv->newConnections.size() > 0)
+            if (cnv->newConnections.size())
             {
                 auto dest = foundPort.get();
 
@@ -64,17 +64,6 @@ void Port::mouseButtonUp(pptk::CompEvent& e)
                     portCons.emplace_back(origin, dest);
                 }
                 cnv->addMultipleConnections(portCons);
-            }
-            else
-            {
-                auto thisObj = findParentOfClass<Object>();
-                auto otherObj = foundPort->findParentOfClass<Object>();
-
-                if (thisObj && otherObj && (thisObj != otherObj))
-                {
-                    cnv->addConnection(this, foundPort.get());
-                    //std::cout << thisObj->getName() << " : " << portNum << " -> " << otherObj->getName() << " : " << foundPort->portNum << std::endl;
-                }
             }
         }
         cnv->newConnections.clear();

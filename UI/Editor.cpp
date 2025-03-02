@@ -79,6 +79,12 @@ void Editor::loadFile(const std::string& fileName) const
         if (!patch.empty()) {
             auto filePath = std::filesystem::absolute(fileName).string();
             auto [ graphObjects, connEdges ] = graphManager->setActiveGraph(filePath, patch, false);
+
+            if (!graphManager->wasPatchLoadSuccessful())
+            {
+                std::cerr << "Failed to load graph: " << filePath << std::endl;
+                return;
+            }
             std::filesystem::path filePathObj(fileName);
             canvas->setPatchName(filePathObj.stem().string());
             canvas->reloadAllCanvasObjects(graphObjects);

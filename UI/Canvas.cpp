@@ -710,29 +710,25 @@ void Canvas::addMultipleConnections(std::vector<std::tuple<Port*, Port*>> connec
         if (!origin->isOutput())
             std::swap(origin, dest);
 
-        auto outputObj = reinterpret_cast<Object*>(origin->getParent());
-        auto inputObj = reinterpret_cast<Object*>(dest->getParent());
+        auto* outputObj = reinterpret_cast<Object*>(origin->getParent());
+        auto* inputObj = reinterpret_cast<Object*>(dest->getParent());
 
-        newConnections.emplace_back(outputObj->nodeID, origin->getPortNum(), inputObj->nodeID, dest->getPortNum());
+        if (!outputObj || !inputObj) {
+            std::cerr << "Error: Null object found while adding connection." << std::endl;
+            continue;
+        }
+
+        // Ensure nodeID is used, not nodeIDString
+        const int outputNodeID = outputObj->nodeID;
+        const int inputNodeID = inputObj->nodeID;
+
+        std::cout << "Connecting from node: " << outputObj->getName() << " ID: " << outputNodeID << " (port " << origin->getPortNum() << ") "
+                  << "to node " << inputObj->getName() << " ID: " << inputNodeID << " (port " << dest->getPortNum() << ")" << std::endl;
+
+        newConnections.emplace_back(outputNodeID, origin->getPortNum(), inputNodeID, dest->getPortNum());
     }
 
     auto newConnState = graphManager->connectMultiple(newConnections);
-
-    reloadConnections(newConnState);
-}
-
-void Canvas::addConnection(Port* origin, Port* dest)
-{
-    if (!origin->isOutput())
-        std::swap(origin, dest);
-
-    auto outputObj = reinterpret_cast<Object*>(origin->getParent());
-    auto inputObj = reinterpret_cast<Object*>(dest->getParent());
-
-    std::cout << "Connecting from node: " << outputObj->getName() << " ID: " << outputObj->nodeID << " (port " << origin->getPortNum() << ") "
-          << "to node " << inputObj->getName() << " ID: " << inputObj->nodeID << " (port " << dest->getPortNum() << ")" << std::endl;
-
-    auto newConnState = graphManager->connect(outputObj->nodeID, origin->getPortNum(), inputObj->nodeID, dest->getPortNum());
 
     reloadConnections(newConnState);
 }
