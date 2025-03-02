@@ -788,9 +788,6 @@ public:
         auto node = std::make_unique<NodeType>(context, nodeCreationData);
         auto rawNode = node.get();
 
-        const auto nodeID = generateID();
-        node->nodeID = nodeID;
-
         if (nodeCreationData.contains("pos") && nodeCreationData["pos"].is_array() &&
             nodeCreationData["pos"].size() >= 2)
         {
@@ -800,14 +797,17 @@ public:
             );
         }
 
+        const auto nodeID = generateID();
+
         // Preserve the custom id from the JSON if provided, else use nodeID converted to a string.
         const std::string finalID = (idString.has_value() && !idString->empty())
             ? idString.value()
             : std::to_string(nodeID);
         objectIDMap[finalID] = nodeID;
 
-        // Optionally, store the final id in the node so that you can reference it later (if AudioNode has such a field)
-        // e.g., node->idString = finalID;
+        node->nodeID = nodeID;
+        std::cout << "node id: "  << nodeID << " id string: " << finalID << std::endl;
+        node->nodeIDString = finalID;
 
         setSummingFunctionForNode(node.get());
         objects.push_back(std::move(node));

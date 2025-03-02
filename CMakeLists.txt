@@ -157,6 +157,8 @@ if(RUN_TESTS)
     catch_discover_tests(Tests)
 endif()
 
+# ======================== RESOURCE SETUP ========================
+
 if (WIN32)
     # Add Windows-specific resources
     set(APP_ICON_RESOURCE "installer/windows/resources.rc")

@@ -145,6 +145,7 @@ public:
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> sumInputBuffers;
 
     uint32_t nodeID;
+    std::string nodeIDString;
 
     template<typename T, typename... Args>
     T* addParameter(const std::string& name, Args&&... args) {
