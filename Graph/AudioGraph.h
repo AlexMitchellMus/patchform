@@ -359,14 +359,14 @@ public:
         for (const auto& connection : patch["connections"])
         {
             // source and target ID needs to be set in the file format
-            auto source = connection["sourceNode"].is_string() ? connection["sourceNode"].get<std::string>() : std::to_string(connection["sourceNode"].get<int>());
-            auto target = connection["targetNode"].is_string() ? connection["targetNode"].get<std::string>() : std::to_string(connection["targetNode"].get<int>());
+            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : objectIDMap[std::to_string(connection["sourceNode"].get<int>())];
+            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
 
             //std::cout << "connecting: (" << source <<  " -> " << target << ")" << std::endl;
 
             // connections use unique ID's for nodes
             // FIXME: Is this really correct? we use the overloaded connect to connect with the stringID
-            connect(source, connection["sourcePort"], target, connection["targetPort"]);
+            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
         }
     }
 
