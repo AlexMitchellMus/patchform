@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+option(RUN_TESTS "Build and run tests" ON)
+
 # Define the Git command to get the full commit hash
 set(BUILDINFO_CPP ${CMAKE_BINARY_DIR}/GitInfo.cpp)
 
@@ -136,6 +138,24 @@ if (MSVC)
             $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
     )
 endif ()
+
+# ======================== TEST SETUP ========================
+
+if(RUN_TESTS)
+    message(STATUS "Building tests")
+    add_subdirectory(external/catch2)
+    include(Catch)
+    include(CTest)
+
+    add_executable(Tests Tests/test_main.cpp)
+
+    target_include_directories(Tests PRIVATE
+        "${CMAKE_SOURCE_DIR}/external/catch2"
+    )
+    target_link_libraries(Tests PRIVATE Catch2::Catch2)
+    # Auto-discover Catch2 tests
+    catch_discover_tests(Tests)
+endif()
 
 if (WIN32)
     # Add Windows-specific resources

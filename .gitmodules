@@ -25,3 +25,6 @@
 [submodule "external/pffft"]
 	path = external/pffft
 	url = https://bitbucket.org/jpommier/pffft.git
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = https://github.com/catchorg/Catch2.git
