@@ -84,8 +84,7 @@ void PatchformApp::run() {
         }
 
         Uint32 currentFrameTime = SDL_GetTicks();
-        float elapsedTime = currentFrameTime - lastFrameTime;
-        //std::cout << "dt: " << elapsedTime << " ct: " << currentFrameTime << " lt: " << lastFrameTime << std::endl;
+        Uint32 elapsedTime = currentFrameTime - lastFrameTime;
         Uint32 waitTime = (elapsedTime < targetFrameTime) ? (targetFrameTime - elapsedTime) : 0;
 
         if (SDL_WaitEventTimeout(nullptr, waitTime))
@@ -121,7 +120,9 @@ void PatchformApp::run() {
                     editor->setBounds(0, 0, newWidth, newHeight);
                     break;
                 case SDL_EVENT_WINDOW_MOVED:
-                    //std::cout << "----> window moved" << std::endl;
+                    // If editor was moved from outside screen bound the framebuffer will not repaint
+                    // the out of bounds region, so force a repaint when moved has finished
+                    editor->repaint();
                     break;
                 default:
                     break;
