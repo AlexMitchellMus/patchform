@@ -27,3 +27,4 @@
 #include "BandPassFilter.h"
 #include "Spec.h"
 #include "MidiToFreq.h"
+#include "Changed.h"

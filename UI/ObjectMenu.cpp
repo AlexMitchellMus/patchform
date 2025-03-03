@@ -27,7 +27,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "scope"})", "Scp", false },
         { R"({"obj": "bpf"})", "bpf", false },
         { R"({"obj": "spec"})", "spec", false },
-        { R"({"obj": "mtof"})", "mtof", false }
+        { R"({"obj": "mtof"})", "mtof", false },
+        { R"({"obj": "changed"})", "chg", false }
     };
 
     for (int i = 0; i < 2; i++)

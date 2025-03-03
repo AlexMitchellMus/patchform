@@ -977,6 +977,11 @@ public:
         case hash("midi2freq"):
             return addNode<MidiToFreq>(idString, node);
 
+        case hash("chg"):
+        case hash("change"):
+        case hash("changed"):
+            return addNode<Changed>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
