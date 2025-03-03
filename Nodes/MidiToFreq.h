@@ -35,6 +35,9 @@ public:
             int noteValue = e->data;
             noteValue = std::clamp(noteValue, 0, 128);
 
+            // 12 tone equal tempered for now. Tuning 440hz
+            // TODO: make tuning a parameter / value
+            // TODO: use scala format for tuning table
             float frequency = 440.0f * std::pow(2.0f, (noteValue - 69.0f) / 12.0f);
 
             Event* outEvent = context->eventPool.getFreeEvent();

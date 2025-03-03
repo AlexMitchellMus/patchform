@@ -123,15 +123,17 @@ public:
 
         if (!inputEvents.empty())
         {
-            for (const auto* ev : inputEvents)
+            for (auto* ev : inputEvents)
             {
-                Event* e = context->eventPool.getFreeEvent();
+                //Event* e = context->eventPool.getFreeEvent();
+                //if (e)
+                //{
+                //    e->setTimeStamp(ev->getTimeStamp());
+                //    outputPort.addEvent(e);
+                //}
 
-                if (e)
-                {
-                    e->setTimeStamp(ev->getTimeStamp());
-                    outputPort.addEvent(e);
-                }
+                // Forward the same event from input to output (this should work, but just for now lets see how it goes)
+                outputPort.addEvent(ev);
             }
             eventQueueFromDSP.enqueue(true);
             repaintFromDSP();
