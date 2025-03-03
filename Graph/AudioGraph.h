@@ -973,6 +973,10 @@ public:
         case hash("bandpassfilter"):
             return addNode<BandPassFilter>(idString, node);
 
+        case hash("mtof"):
+        case hash("midi2freq"):
+            return addNode<MidiToFreq>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

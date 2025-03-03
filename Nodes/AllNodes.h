@@ -26,3 +26,4 @@
 #include "Scope.h"
 #include "BandPassFilter.h"
 #include "Spec.h"
+#include "MidiToFreq.h"

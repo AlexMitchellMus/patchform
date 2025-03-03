@@ -26,7 +26,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false },
         { R"({"obj": "scope"})", "Scp", false },
         { R"({"obj": "bpf"})", "bpf", false },
-        { R"({"obj": "spec"})", "spec", false }
+        { R"({"obj": "spec"})", "spec", false },
+        { R"({"obj": "mtof"})", "mtof", false }
     };
 
     for (int i = 0; i < 2; i++)
