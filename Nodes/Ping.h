@@ -146,6 +146,7 @@ public:
 
             if (e)
             {
+                // We don't need to set the timestamp, as events from UI will not be sample accurate anyway
                 outputPort.addEvent(e);
             }
         };
