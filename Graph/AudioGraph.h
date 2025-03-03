@@ -551,27 +551,26 @@ public:
     }
 
     bool connect(int oNode, int oPort, int iNode, int iPort) {
-        std::cout << "connecting: (" << oNode << " : " << oPort <<  " -> " << iNode << " : " << iPort << ")" << std::endl;
+        //std::cout << "connecting: (" << oNode << " : " << oPort <<  " -> " << iNode << " : " << iPort << ")" << std::endl;
 
         ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
 
-        std::cout << "=========== objectIDMap ==========" << std::endl;
+        //std::cout << "=========== objectIDMap ==========" << std::endl;
         for (const auto& [name, id] : objectIDMap) {
-            std::cout << "id: " << id << " name: " << name << std::endl;
+            //std::cout << "id: " << id << " name: " << name << std::endl;
             invertedMap[id] = name;
         }
 
-        std::cout << invertedMap.contains(oNode) << " " << invertedMap.contains(iNode) << std::endl;
+        //std::cout << invertedMap.contains(oNode) << " " << invertedMap.contains(iNode) << std::endl;
 
         if (invertedMap.contains(oNode) && invertedMap.contains(iNode))
         {
-            std::cout << "connecting oNode " << oNode << " -> " << iNode << std::endl;
+            //std::cout << "connecting oNode " << oNode << " -> " << iNode << std::endl;
             connect(invertedMap[oNode], oPort, invertedMap[iNode], iPort);
             return true;
-        } else
-        {
-            std::cerr << "issue connectiong: " << "connecting oNode " << oNode << " -> " << iNode << std::endl;
         }
+
+        std::cerr << "issue connectiong: " << "connecting oNode " << oNode << " -> " << iNode << std::endl;
         return false;
     }
 
@@ -853,7 +852,7 @@ public:
         // Ensure mapping is correct
         objectIDMap[finalID] = nodeID;
 
-        std::cout << "Node added: ID " << nodeID << " (" << finalID << ")" << std::endl;
+        //std::cout << "Node added: ID " << nodeID << " (" << finalID << ")" << std::endl;
 
         setSummingFunctionForNode(node.get());
         objects.push_back(std::move(node));

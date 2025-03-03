@@ -332,7 +332,7 @@ public:
         return Point(x, y);
     }
 
-    void startFrameTimer(std::function<void(uint32_t)> callback, int timerID = 0);
+    void startFrameTimer(std::function<void(uint32_t, uint32_t)> callback, int timerID = 0);
 
     void stopFrameTimer(int timerID = 0);
 

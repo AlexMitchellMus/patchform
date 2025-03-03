@@ -75,7 +75,7 @@ public:
             repaint();
             auto triggerStartTime = SDL_GetTicks();
 
-            startFrameTimer([this, triggerStartTime](uint32_t time) mutable {
+            startFrameTimer([this, triggerStartTime](uint32_t time, uint32_t deltaTime) mutable {
                 if ((int32_t)(time - triggerStartTime) >= 90)  // Cast to handle wraparound correctly
                 {
                     stopFrameTimer();

@@ -18,7 +18,7 @@ namespace pptk
     class RootComponent : public Component
     {
     public:
-        void handleTime(uint32_t time)
+        void handleTime(uint32_t time, uint32_t deltaTime)
         {
             auto callbacksCopy = timerCallbacks; // Copy to avoid iterator invalidation
 
@@ -26,12 +26,12 @@ namespace pptk
             {
                 if (componentPtr) // Ensure component still exists
                 {
-                    callback(time); // Execute the callback (even if the original vector changed)
+                    callback(time, deltaTime); // Execute the callback (even if the original vector changed)
                 }
             }
         }
 
-        void registerTimerCallback(Component* c, const std::function<void(uint32_t)>& callback, int timerID = 0)
+        void registerTimerCallback(Component* c, const std::function<void(uint32_t, uint32_t)>& callback, int timerID = 0)
         {
             unregisterTimerCallback(c, timerID);
 
@@ -132,6 +132,6 @@ namespace pptk
         SafePointer<Component> focusedComponent;
         SafePointer<Component> lastFocusedComponent;
 
-        std::vector<std::tuple<Component*, std::function<void(uint32_t)>, int>> timerCallbacks;
+        std::vector<std::tuple<Component*, std::function<void(uint32_t, uint32_t)>, int>> timerCallbacks;
     };
 }

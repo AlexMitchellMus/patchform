@@ -84,7 +84,8 @@ void PatchformApp::run() {
         }
 
         Uint32 currentFrameTime = SDL_GetTicks();
-        Uint32 elapsedTime = currentFrameTime - lastFrameTime;
+        float elapsedTime = currentFrameTime - lastFrameTime;
+        //std::cout << "dt: " << elapsedTime << " ct: " << currentFrameTime << " lt: " << lastFrameTime << std::endl;
         Uint32 waitTime = (elapsedTime < targetFrameTime) ? (targetFrameTime - elapsedTime) : 0;
 
         if (SDL_WaitEventTimeout(nullptr, waitTime))
@@ -129,13 +130,12 @@ void PatchformApp::run() {
         }
 
         editor->updateObjectsFromDSP();
-        editor->handleTime(currentFrameTime);
+        editor->handleTime(currentFrameTime, std::min(elapsedTime, targetFrameTime));
         editor->updateFrameBuffers(nvg);
 
         if (!editor->needsRepaint())
         {
             SDL_Delay(1);
-            lastFrameTime = SDL_GetTicks();
             continue;
         }
 
@@ -155,7 +155,7 @@ void PatchformApp::run() {
 
         render();
 
-        lastFrameTime = SDL_GetTicks();
+        lastFrameTime = currentFrameTime;
     }
 }
 

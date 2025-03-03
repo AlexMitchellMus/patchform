@@ -40,12 +40,13 @@ namespace pptk
             void mouseEnter(CompEvent& e) override
             {
                 isHovered = true;
-                stopFrameTimer(1); // Stop any running shrink timer
+                stopFrameTimer(1);
 
-                startFrameTimer([this](uint32_t time)
+                startFrameTimer([this](uint32_t currentTime, uint32_t deltaTime)
                 {
+                    animatedGrowth += (deltaTime / 1000.0f) / animationTime;
+
                     growing = true;
-                    animatedGrowth += 0.02f;
 
                     if (animatedGrowth >= 1.0f)
                     {
@@ -58,12 +59,11 @@ namespace pptk
 
                 repaint();
             }
-
             void mouseLeave(CompEvent& e) override
             {
                 uint32_t leaveTime = SDL_GetTicks(); // Capture leave time
 
-                startFrameTimer([this, leaveTime](uint32_t time)
+                startFrameTimer([this, leaveTime](uint32_t time, uint32_t deltaTime)
                 {
                     // Wait half a seconds AFTER growth is fully done
                     if (growing || time - leaveTime < 500)
@@ -71,7 +71,7 @@ namespace pptk
                         return;
                     }
 
-                    animatedGrowth -= 0.02f;
+                    animatedGrowth -= (deltaTime / 1000.0f) / animationTime;
                     if (animatedGrowth <= 0.0f)
                     {
                         animatedGrowth = 0.0f;
@@ -119,6 +119,7 @@ namespace pptk
             float scrollbarHeight = 0;
             float dragOffset = 0.0f;
             float animatedGrowth = 0.0f;
+            const float animationTime = 0.125f;
             bool growing = false;
         };
         ComponentViewport()
