@@ -35,6 +35,12 @@ PatchformApp::~PatchformApp() {
 }
 
 bool PatchformApp::initialize() {
+    if (!initMidi())
+    {
+        std::cerr << "Failed to initialize MIDI" << std::endl;
+        return false;
+    }
+
     if (!initAudio())
     {
         std::cerr << "Failed to initialize Audio" << std::endl;
@@ -174,12 +180,20 @@ int PatchformApp::audioCallback(const void* input, void* output,
         return paAbort; // Prevent crashing if output buffer is invalid
     }
 
-    auto* graphs = static_cast<GraphManager*>(userData);
+    auto* app = static_cast<PatchformApp*>(userData);
+
     float* out = static_cast<float*>(output);
 
     std::fill(out, out + frameCount, 0.0f);
 
-    graphs->process(out, frameCount);  // Process the audio graph
+    // Process any pending MIDI messages from the queue
+    MidiMessage midiMsg;
+    while (app->midiQueue.try_dequeue(midiMsg)) {
+        // Pass the MIDI data and timestamp to your graph manager
+        app->graphManager.processMidi(midiMsg);
+    }
+
+    app->graphManager.process(out, frameCount);  // Process the audio graph
 
     if (statusFlags & (paOutputUnderflow | paInputOverflow)) {
         std::cerr << "Audio underflow or overflow detected" << std::endl;
@@ -203,7 +217,7 @@ bool PatchformApp::initAudio() {
     outputParams.sampleFormat = paFloat32;
     outputParams.suggestedLatency = deviceInfo->defaultLowOutputLatency;
 
-    if (Pa_OpenStream(&stream, nullptr, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, &graphManager) != paNoError)
+    if (Pa_OpenStream(&stream, nullptr, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, this) != paNoError)
         return false;
 
     return (Pa_StartStream(stream) == paNoError);
@@ -216,6 +230,57 @@ void PatchformApp::shutdownAudio() {
         stream = nullptr;
     }
     Pa_Terminate();
+}
+
+bool PatchformApp::initMidi()
+{
+    try {
+        // Create the RtMidiIn instance
+        midiIn = std::make_unique<RtMidiIn>();
+
+        unsigned int nPorts = midiIn->getPortCount();
+        if (nPorts == 0) {
+            std::cerr << "No MIDI input ports available." << std::endl;
+            // Depending on your design, you might return false or continue
+            return true;
+        }
+
+        // Set the callback. The lambda captures no variables and uses the provided userData.
+        midiIn->setCallback([](double timeStamp, std::vector<unsigned char>* message, void* userData) {
+            // Cast userData back to PatchformApp
+            auto* app = static_cast<PatchformApp*>(userData);
+            if (message && !message->empty()) {
+                MidiMessage midiMsg;
+                midiMsg.timestamp = timeStamp;
+                midiMsg.message = *message;
+                // Push the message into the lock-free queue
+                app->midiQueue.enqueue(std::move(midiMsg));
+            }
+        }, this);
+
+        // Open the first available MIDI input port
+        midiIn->openPort(1);
+
+        // Optionally, set the types of MIDI messages to ignore:
+        midiIn->ignoreTypes(true, true, true);
+
+        std::cout << "MIDI initialized: " << nPorts << " port(s) found." << std::endl;
+    }
+    catch (RtMidiError &error) {
+        error.printMessage();
+        return false;
+    }
+    return true;
+}
+
+void PatchformApp::shutdownMidi()
+{
+    if (midiIn) {
+        // Close the MIDI port if open
+        midiIn->closePort();
+        // Release the object
+        midiIn.reset();
+    }
 }
 
 bool PatchformApp::initUI() {

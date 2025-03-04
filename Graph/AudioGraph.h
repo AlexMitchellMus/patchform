@@ -33,6 +33,11 @@ using json = nlohmann::json;
 
 #undef max
 
+struct MidiMessage {
+    std::vector<unsigned char> message;
+    double timestamp;
+};
+
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
 public:
@@ -1262,6 +1267,128 @@ public:
             return activeGraph->serializeSelectedNodes(selectedNodeIDs);
         }
     }
+
+void processMidi(MidiMessage message)
+{
+#ifdef DEBUG_MIDI
+    if (message.message.empty()) {
+        std::cout << "Empty MIDI message received" << std::endl;
+        return;
+    }
+
+    // The first byte is the status byte
+    unsigned char status = message.message[0];
+    // High nibble gives the message type, low nibble gives the channel (0-indexed)
+    unsigned char messageType = status & 0xF0;
+    unsigned char channel = (status & 0x0F) + 1;  // Channels 1-16 for human readability
+
+    std::cout << "MIDI message at timestamp " << message.timestamp << ": ";
+
+    switch (messageType)
+    {
+        case 0x80: // Note Off
+        {
+            if (message.message.size() >= 3) {
+                unsigned char note = message.message[1];
+                unsigned char velocity = message.message[2];
+                std::cout << "Note Off on channel " << static_cast<int>(channel)
+                          << ", note " << static_cast<int>(note)
+                          << ", velocity " << static_cast<int>(velocity);
+            } else {
+                std::cout << "Invalid Note Off message";
+            }
+            break;
+        }
+        case 0x90: // Note On
+        {
+            if (message.message.size() >= 3) {
+                unsigned char note = message.message[1];
+                unsigned char velocity = message.message[2];
+                if (velocity == 0)
+                    std::cout << "Note Off (via Note On with zero velocity) on channel " << static_cast<int>(channel)
+                              << ", note " << static_cast<int>(note);
+                else
+                    std::cout << "Note On on channel " << static_cast<int>(channel)
+                              << ", note " << static_cast<int>(note)
+                              << ", velocity " << static_cast<int>(velocity);
+            } else {
+                std::cout << "Invalid Note On message";
+            }
+            break;
+        }
+        case 0xA0: // Polyphonic Key Pressure (Aftertouch)
+        {
+            if (message.message.size() >= 3) {
+                unsigned char note = message.message[1];
+                unsigned char pressure = message.message[2];
+                std::cout << "Polyphonic Key Pressure on channel " << static_cast<int>(channel)
+                          << ", note " << static_cast<int>(note)
+                          << ", pressure " << static_cast<int>(pressure);
+            } else {
+                std::cout << "Invalid Polyphonic Key Pressure message";
+            }
+            break;
+        }
+        case 0xB0: // Control Change
+        {
+            if (message.message.size() >= 3) {
+                unsigned char controller = message.message[1];
+                unsigned char value = message.message[2];
+                std::cout << "Control Change on channel " << static_cast<int>(channel)
+                          << ", controller " << static_cast<int>(controller)
+                          << ", value " << static_cast<int>(value);
+            } else {
+                std::cout << "Invalid Control Change message";
+            }
+            break;
+        }
+        case 0xC0: // Program Change
+        {
+            if (message.message.size() >= 2) {
+                unsigned char program = message.message[1];
+                std::cout << "Program Change on channel " << static_cast<int>(channel)
+                          << ", program " << static_cast<int>(program);
+            } else {
+                std::cout << "Invalid Program Change message";
+            }
+            break;
+        }
+        case 0xD0: // Channel Pressure (Aftertouch)
+        {
+            if (message.message.size() >= 2) {
+                unsigned char pressure = message.message[1];
+                std::cout << "Channel Pressure on channel " << static_cast<int>(channel)
+                          << ", pressure " << static_cast<int>(pressure);
+            } else {
+                std::cout << "Invalid Channel Pressure message";
+            }
+            break;
+        }
+        case 0xE0: // Pitch Bend
+        {
+            if (message.message.size() >= 3) {
+                // Pitch Bend uses two data bytes (LSB and MSB) to form a 14-bit value
+                unsigned char lsb = message.message[1];
+                unsigned char msb = message.message[2];
+                int pitchValue = (static_cast<int>(msb) << 7) | static_cast<int>(lsb);
+                std::cout << "Pitch Bend on channel " << static_cast<int>(channel)
+                          << ", value " << pitchValue;
+            } else {
+                std::cout << "Invalid Pitch Bend message";
+            }
+            break;
+        }
+        default:
+        {
+            std::cout << "Unknown MIDI message (status: 0x" << std::hex << static_cast<int>(status)
+                      << std::dec << ")";
+            break;
+        }
+    }
+
+    std::cout << std::endl;
+#endif
+}
 
     void process(float* buffer, unsigned long frameCount)
     {

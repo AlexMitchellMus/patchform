@@ -48,6 +48,7 @@ add_subdirectory(external/unordered_dense)
 add_subdirectory(external/glaze)
 add_subdirectory(external/SDL2)
 add_subdirectory(external/nanovg)
+add_subdirectory(external/rtmidi)
 
 # Enable static SDL2 build
 #set(SDL_SHARED OFF CACHE BOOL "Disable SDL shared library" FORCE)
@@ -113,6 +114,7 @@ target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/nanovg/src/"
         "${CMAKE_SOURCE_DIR}/external/SDL2/include"
         "${CMAKE_SOURCE_DIR}/external/pffft"
+        "${CMAKE_SOURCE_DIR}/external/rtmidi"
 )
 target_link_libraries(PatchformStandalone PRIVATE
         SDL3::SDL3-static
@@ -123,6 +125,7 @@ target_link_libraries(PatchformStandalone PRIVATE
         glad
         nanovg
         pffft
+        rtmidi
 )
 target_compile_definitions(PatchformStandalone PRIVATE)
 

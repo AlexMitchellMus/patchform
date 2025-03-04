@@ -5,7 +5,8 @@
 #include <vector>
 
 #include "SDL3/SDL.h"
-#include <PortAudio.h>
+#include "portaudio.h"
+#include "rtmidi.h"
 
 #include "../Graph/AudioGraph.h"
 #include "Editor.h"
@@ -36,7 +37,12 @@ private:
     int sampleRate;
     unsigned long frameCount;
     PaStream* stream = nullptr;
+
+    std::unique_ptr<RtMidiIn> midiIn;
+    moodycamel::ConcurrentQueue<MidiMessage> midiQueue;
+
     GraphManager graphManager;
+
     std::unique_ptr<Editor> editor;
     std::unique_ptr<pptk::EventManager> eventManager;
     uint32_t lastFrameTime = 0;
@@ -64,6 +70,10 @@ private:
 
     bool initAudio();
     void shutdownAudio();
+
+    bool initMidi();
+    void shutdownMidi();
+
     bool initUI();
     void render();
 
