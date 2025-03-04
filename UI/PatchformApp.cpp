@@ -188,12 +188,13 @@ int PatchformApp::audioCallback(const void* input, void* output,
 
     // Process any pending MIDI messages from the queue
     MidiMessage midiMsg;
+    std::vector<MidiMessage> midiMessages;
     while (app->midiQueue.try_dequeue(midiMsg)) {
         // Pass the MIDI data and timestamp to your graph manager
-        app->graphManager.processMidi(midiMsg);
+        midiMessages.push_back(midiMsg);
     }
 
-    app->graphManager.process(out, frameCount);  // Process the audio graph
+    app->graphManager.process(out, frameCount, midiMessages);  // Process the audio graph
 
     if (statusFlags & (paOutputUnderflow | paInputOverflow)) {
         std::cerr << "Audio underflow or overflow detected" << std::endl;

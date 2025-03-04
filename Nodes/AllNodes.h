@@ -29,3 +29,7 @@
 #include "MidiToFreq.h"
 #include "Changed.h"
 #include "ReverbFDN.h"
+
+#include "MidiNodeBase.h"
+
+#include "MidiNoteIn.h"

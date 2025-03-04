@@ -33,11 +33,6 @@ using json = nlohmann::json;
 
 #undef max
 
-struct MidiMessage {
-    std::vector<unsigned char> message;
-    double timestamp;
-};
-
 // AudioGraph to manage nodes and process them in the correct order
 class AudioGraph {
 public:
@@ -205,6 +200,9 @@ public:
         for (auto& obj : objectList)
         {
             objectsListCopy.push_back(obj.get());
+            // All MIDI nodes are input only, so we can simply call them all at once without an order
+            if (auto* midiNode = dynamic_cast<MidiNode*>(obj.get()))
+                midiInputNodes.push_back(midiNode);
         }
 
         topologicalSort(objectsSorted);
@@ -232,8 +230,13 @@ public:
 #endif
     }
 
-    void process(float* buffer, unsigned long frameCount)
+    void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
+        for (auto midiNodes : midiInputNodes)
+        {
+            midiNodes->processMidi(midiMessage);
+        }
+
         for (size_t i = 0; i < objectsSorted.size(); i++) {
             objectsSorted[i]->process(buffer, frameCount, *this, i);
         }
@@ -255,6 +258,7 @@ public:
     OutputPortMap outputInputPortMap;
 
     std::vector<AudioNode*> objectsSorted;
+    std::vector<MidiNode*> midiInputNodes;
 
     // Only for sorting
     std::vector<unsigned int> zeroInDegreeNodes;
@@ -657,9 +661,9 @@ public:
     }
 
 
-    void process(float* buffer, unsigned long frameCount)
+    void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
-        graph->process(buffer, frameCount);
+        graph->process(buffer, frameCount, midiMessage);
     }
 
     void sortNodes()
@@ -991,6 +995,10 @@ public:
         case hash("fdn"):
             return addNode<ReverbFDN>(idString, node);
 
+        case hash("midinotein"):
+        case hash("notein"):
+            return addNode<MidiNoteIn>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
@@ -1268,8 +1276,21 @@ public:
         }
     }
 
-void processMidi(MidiMessage message)
-{
+    void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& message)
+    {
+//#define DSP_TIMING
+#ifdef DSP_TIMING
+        //=====================
+        // 1) Timing the DSP
+        //=====================
+        static auto lastPrintTime = std::chrono::high_resolution_clock::now();
+
+        static double accumulatedCallbackTimeMs = 0.0;  // Sum of times in ms
+        static int    callCount                 = 0;    // Number of callbacks since last print
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+#endif
+
 #ifdef DEBUG_MIDI
     if (message.message.empty()) {
         std::cout << "Empty MIDI message received" << std::endl;
@@ -1388,22 +1409,6 @@ void processMidi(MidiMessage message)
 
     std::cout << std::endl;
 #endif
-}
-
-    void process(float* buffer, unsigned long frameCount)
-    {
-//#define DSP_TIMING
-#ifdef DSP_TIMING
-        //=====================
-        // 1) Timing the DSP
-        //=====================
-        static auto lastPrintTime = std::chrono::high_resolution_clock::now();
-
-        static double accumulatedCallbackTimeMs = 0.0;  // Sum of times in ms
-        static int    callCount                 = 0;    // Number of callbacks since last print
-
-        auto startTime = std::chrono::high_resolution_clock::now();
-#endif
         if (swapGraph.load(std::memory_order_acquire)) {
             // Perform the swap on the audio thread
             activeGraph.swap(transitioningGraph);
@@ -1413,7 +1418,7 @@ void processMidi(MidiMessage message)
         // Process the current graph
         auto graph = activeGraph;
         if (graph) {
-            graph->process(buffer, frameCount);
+            graph->process(buffer, frameCount, message);
         }
 
         processPeak(buffer, frameCount);

@@ -29,7 +29,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "spec"})", "spec", false },
         { R"({"obj": "mtof"})", "mtof", false },
         { R"({"obj": "changed"})", "chg", false },
-        { R"({"obj": "fdn"})", "fdn", false }
+        { R"({"obj": "fdn"})", "fdn", false },
+        { R"({"obj": "notein"})", "MIDIIN", false }
     };
 
     for (int i = 0; i < 2; i++)
