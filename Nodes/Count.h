@@ -47,7 +47,7 @@ public:
                 if (countValue > maxCount)
                     countValue = minCount;
 
-                e->data = countValue++;
+                e->addAtom(countValue++);
 
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);

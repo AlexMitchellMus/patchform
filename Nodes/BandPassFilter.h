@@ -56,7 +56,7 @@ public:
             // Process frequency events at correct timestamp
             while (nextFreqEventIndex < freqEvents.size() && freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
             {
-                freq = std::clamp(freqEvents[nextFreqEventIndex]->data, 10.0f, context->sampleRate * 0.45f);
+                freq = std::clamp(freqEvents[nextFreqEventIndex]->getAtomValue(0), 10.0f, context->sampleRate * 0.45f);
                 nextFreqEventIndex++;
                 updateCoefficients();
             }
@@ -64,7 +64,7 @@ public:
             // Process Q events at correct timestamp
             while (nextQEventIndex < qEvents.size() && qEvents[nextQEventIndex]->getTimeStamp() == i)
             {
-                q = std::clamp(qEvents[nextQEventIndex]->data, 0.1f, 300.0f);
+                q = std::clamp(qEvents[nextQEventIndex]->getAtomValue(0), 0.1f, 300.0f);
                 nextQEventIndex++;
                 updateCoefficients();
             }

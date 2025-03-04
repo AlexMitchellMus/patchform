@@ -31,7 +31,7 @@ public:
 
         for (Event* e : events)
         {
-            float value = e->data;
+            float value = e->getAtomValue(0);
 
             if (std::isnan(lastValue) || value != lastValue)
             {
@@ -41,7 +41,7 @@ public:
                 if (outEvent)
                 {
                     outEvent->setTimeStamp(e->getTimeStamp());
-                    outEvent->data = value;
+                    outEvent->addAtom(value);
                     outputPort.addEvent(outEvent);
                 }
             }

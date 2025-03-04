@@ -999,6 +999,9 @@ public:
         case hash("notein"):
             return addNode<MidiNoteIn>(idString, node);
 
+        case hash("get"):
+            return addNode<Get>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

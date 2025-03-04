@@ -40,7 +40,9 @@ public:
                         unsigned char noteNumber = midiMessage.message[1];
                         if (auto* e = context->eventPool.getFreeEvent())
                         {
-                            e->data = noteNumber;
+                            e->addAtom(noteNumber);
+                            e->addAtom(velocity);
+
                             outputPort.addEvent(e);
                         }
                     }

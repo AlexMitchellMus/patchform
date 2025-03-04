@@ -130,7 +130,7 @@ public:
             if (!useSignalFreq)
             {
                 while (nextFreqEventIndex < port1Events.size() && port1Events[nextFreqEventIndex]->getTimeStamp() == i) {
-                    port1val = port1Events[nextFreqEventIndex]->data;
+                    port1val = port1Events[nextFreqEventIndex]->getAtomValue(0);
                     nextFreqEventIndex++;
                 }
             }

@@ -42,7 +42,7 @@ public:
             {
                 while (nextVolEventIndex1 < volEvents1.size() && volEvents1[nextVolEventIndex1]->getTimeStamp() == i)
                 {
-                    eventVal1 = volEvents1[nextVolEventIndex1]->data;
+                    eventVal1 = volEvents1[nextVolEventIndex1]->getAtomValue(0);
                     nextVolEventIndex1++;
                 }
                 output[i] = eventVal1 * buffer2[i];
@@ -51,7 +51,7 @@ public:
             {
                 while (nextVolEventIndex2 < volEvents2.size() && volEvents2[nextVolEventIndex2]->getTimeStamp() == i)
                 {
-                    eventVal2 = volEvents2[nextVolEventIndex2]->data;
+                    eventVal2 = volEvents2[nextVolEventIndex2]->getAtomValue(0);
                     nextVolEventIndex2++;
                 }
 
@@ -61,12 +61,12 @@ public:
             {
                 while (nextVolEventIndex1 < volEvents1.size() && volEvents1[nextVolEventIndex1]->getTimeStamp() == i)
                 {
-                    eventVal1 = volEvents1[nextVolEventIndex1]->data;
+                    eventVal1 = volEvents1[nextVolEventIndex1]->getAtomValue(0);
                     nextVolEventIndex1++;
                 }
                 while (nextVolEventIndex2 < volEvents2.size() && volEvents2[nextVolEventIndex2]->getTimeStamp() == i)
                 {
-                    eventVal2 = volEvents2[nextVolEventIndex2]->data;
+                    eventVal2 = volEvents2[nextVolEventIndex2]->getAtomValue(0);
                     nextVolEventIndex2++;
                 }
                 output[i] = eventVal1 * eventVal2;

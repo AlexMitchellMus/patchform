@@ -141,8 +141,7 @@ public:
         {
             if (Event* e = context->eventPool.getFreeEvent())
             {
-                e->data = dialValue * (maxValue - minValue) + minValue;
-                e->setTimeStamp(0); // Set event at time 0
+                e->addAtom(dialValue * (maxValue - minValue) + minValue);
                 outputPort.addEvent(e);
             }
         };

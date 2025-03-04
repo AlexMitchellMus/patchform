@@ -32,7 +32,7 @@ public:
 
         for (Event* e : events)
         {
-            int noteValue = e->data;
+            int noteValue = e->getAtomValue(0);
             noteValue = std::clamp(noteValue, 0, 128);
 
             // 12 tone equal tempered for now. Tuning 440hz
@@ -44,7 +44,7 @@ public:
             if (outEvent)
             {
                 outEvent->setTimeStamp(e->getTimeStamp());
-                outEvent->data = frequency;
+                outEvent->addAtom(frequency);
                 outputPort.addEvent(outEvent);
             }
         }

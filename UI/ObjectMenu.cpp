@@ -22,7 +22,6 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "If"})", "if", false },
         { R"({"obj": "aout"})", ICONS::Aout, true },
         { R"({"obj": "floatbox"})", "fb", false },
-        { R"({"obj": "ping"})", "Png", false },
         { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false },
         { R"({"obj": "scope"})", "Scp", false },
         { R"({"obj": "bpf"})", "bpf", false },
@@ -30,7 +29,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "mtof"})", "mtof", false },
         { R"({"obj": "changed"})", "chg", false },
         { R"({"obj": "fdn"})", "fdn", false },
-        { R"({"obj": "notein"})", "MIDIIN", false }
+        { R"({"obj": "notein"})", "MIDIIN", false },
+        { R"({"obj": "get"})", "get", false }
     };
 
     for (int i = 0; i < 2; i++)

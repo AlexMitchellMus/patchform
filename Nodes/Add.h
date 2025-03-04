@@ -28,14 +28,16 @@ public:
     {
         auto aEvents = inputPortBuffers[0]->getEvents();
         if (auto bEvent = inputPortBuffers[1]->getEvents(); bEvent.size())
-            coldValue = bEvent.back()->data;
+        {
+            coldValue= bEvent.back()->getAtomValue(0);
+        }
 
         for (auto event : aEvents)
         {
             if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(event->getTimeStamp());
-                e->data = event->data + coldValue;
+                e->addAtom(event->getAtomValue(0) + coldValue);
 
                 // Now add it to the output port’s event list
                 outputPort.addEvent(e);

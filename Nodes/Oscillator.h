@@ -233,7 +233,8 @@ public:
                     nextFreqEventIndex < freqEvents.size() &&
                     freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
                 {
-                    freq = freqEvents[nextFreqEventIndex]->data;
+                    if (auto newFreq = freqEvents[nextFreqEventIndex]->getAtom(0))
+                        freq = newFreq->atom;
                     nextFreqEventIndex++;
                 }
 

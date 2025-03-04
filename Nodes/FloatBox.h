@@ -96,7 +96,7 @@ public:
         {
             for (auto event : aEvents)
             {
-                queueFromDSP.enqueue(event->data);
+                queueFromDSP.enqueue(event->getAtomValue(0));
             }
             repaintFromDSP();
         }
