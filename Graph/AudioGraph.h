@@ -982,6 +982,10 @@ public:
         case hash("changed"):
             return addNode<Changed>(idString, node);
 
+        case hash("reverb_fdn"):
+        case hash("fdn"):
+            return addNode<ReverbFDN>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

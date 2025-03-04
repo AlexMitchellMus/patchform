@@ -28,3 +28,4 @@
 #include "Spec.h"
 #include "MidiToFreq.h"
 #include "Changed.h"
+#include "ReverbFDN.h"
