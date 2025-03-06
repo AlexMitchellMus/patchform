@@ -97,6 +97,7 @@ public:
             for (auto event : aEvents)
             {
                 queueFromDSP.enqueue(event->getAtomValue(0));
+                outputPort.addEvent(event);
             }
             repaintFromDSP();
         }

@@ -73,7 +73,7 @@ public:
         return nullptr;
     }
 
-    int getNumAtoms() const
+    [[nodiscard]] size_t getNumAtoms() const
     {
         return numAtoms;
     }

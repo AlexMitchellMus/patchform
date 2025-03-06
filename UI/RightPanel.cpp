@@ -20,7 +20,6 @@ ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
     // Hook TextBox updates to parameter
     textBox->onTextReturned = ([this]() {
         try {
-            std::cout << "setting to : " << textBox->getText() << std::endl;
             param->setFromString(textBox->getText());
         } catch (...) {
             // Invalid input, ignore it

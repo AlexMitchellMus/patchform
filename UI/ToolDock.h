@@ -112,8 +112,8 @@ public:
             addObjectMenu->registerMouseListener(addObjectButton.get());
             addObjectMenu->setBounds(
                 (getRootComponent()->getWidth() / 2) - 308,
-                getRootComponent()->getHeight() - 225,
-                616, 150
+                getRootComponent()->getHeight() - 255,
+                616, 180
             );
 
             addObjectButton->setActive(true);

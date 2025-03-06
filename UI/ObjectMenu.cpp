@@ -10,7 +10,7 @@
 
 ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
-    constexpr ObjectDef objectDef[20] = {
+    constexpr ObjectDef objectDef[30] = {
         { R"({"obj": "Metro"})", ICONS::Metro, true },
         { R"({"obj": "Osc", "waveform": "sine", "freq": 440})", ICONS::Osc, true },
         { R"({"obj": "Add"})", "add", false },
@@ -30,10 +30,11 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "changed"})", "chg", false },
         { R"({"obj": "fdn"})", "fdn", false },
         { R"({"obj": "notein"})", "MIDIIN", false },
-        { R"({"obj": "get"})", "get", false }
+        { R"({"obj": "get"})", "get", false },
+        { R"({"obj": "listbox"})", "lb", false }
     };
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 10; j++)
         {

@@ -1002,6 +1002,10 @@ public:
         case hash("get"):
             return addNode<Get>(idString, node);
 
+        case hash("lb"):
+        case hash("listbox"):
+            return addNode<ListBox>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
