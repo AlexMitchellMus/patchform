@@ -7,7 +7,6 @@
 #pragma once
 
 #include <numeric>
-#include <unordered_map>
 
 class EventPool {
 public:
