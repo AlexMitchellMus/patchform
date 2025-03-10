@@ -118,9 +118,9 @@ public:
         maxValue = objParams.value("max", 1.0f);
         dialValue = objParams.value("value", 0.0f);
 
-        defaultValueParam = addParameter<FloatParameter>("Default:", dialValue, 0.0f, std::numeric_limits<float>::max());
-        minValueParam     = addParameter<FloatParameter>("Min:", minValue, 0.0f, std::numeric_limits<float>::max());
-        maxValueParam     = addParameter<FloatParameter>("Max:", maxValue, 0.0f, std::numeric_limits<float>::max());
+        defaultValueParam = addParameter<FloatParameter>("Default:", dialValue, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        minValueParam     = addParameter<FloatParameter>("Min:", minValue, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        maxValueParam     = addParameter<FloatParameter>("Max:", maxValue, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     }
 
     json getSerializedNode() override
