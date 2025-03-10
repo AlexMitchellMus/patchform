@@ -130,7 +130,7 @@ struct EllipticBlep {
 	}
 	
 	void reset() {
-		for (auto &s : state) s = 0;
+		state.fill(0);
 	}
 	
 	/// Instantaneous filter output
