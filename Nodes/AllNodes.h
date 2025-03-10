@@ -8,6 +8,8 @@
 
 #include "AudioNodeBase.h"
 
+// Base Nodes
+
 #include "Value.h"
 #include "Oscillator.h"
 #include "Add.h"
@@ -20,20 +22,25 @@
 #include "Print.h"
 #include "Count.h"
 #include "If.h"
-#include "Dial.h"
-#include "FloatBox.h"
-#include "Ping.h"
-#include "Scope.h"
 #include "BandPassFilter.h"
 #include "Spec.h"
 #include "MidiToFreq.h"
 #include "Changed.h"
 #include "ReverbFDN.h"
 #include "Get.h"
-#include "ListBox.h"
 #include "Pack.h"
 #include "TagEvent.h"
 
+// UI Nodes
+
+#include "Dial.h"
+#include "FloatBox.h"
+#include "ListBox.h"
+#include "Ping.h"
+#include "Scope.h"
+
 #include "MidiNodeBase.h"
+
+// MIDI Nodes
 
 #include "MidiNoteIn.h"
