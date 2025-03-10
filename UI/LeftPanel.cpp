@@ -45,7 +45,7 @@ void LeftPanel::updateCanvasObjectList()
 void LeftPanel::resized()
 {
     getResizer().setBounds(getBounds());
-    //std::cout << "Text width for \"Objects\" in layout: " << getTextWidthForFont("SemiBold", 14.0f, "super---- duper") << std::endl;
+    std::cout << "left panel bounds: " << getBounds().toString() << std::endl;
 }
 
 void LeftPanel::render(NVGcontext* nvg)
@@ -67,7 +67,6 @@ void LeftPanel::render(NVGcontext* nvg)
 
 
     nvgText(nvg, textX, textY, "Objects", nullptr);
-    //std::cout << "OBJECTS TEXT WIDTH: " << nvgTextBounds(nvg, 0, 0, "super---- duper", nullptr, nullptr) << std::endl;
     textY += 40;
 
     nvgFontFace(nvg, "Regular");

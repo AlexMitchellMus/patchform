@@ -58,6 +58,13 @@ public:
         if (resizerMode == ResizerMode::None)
             return false;
 
+        // FIXME: We should have a base hitTest that checks if the point is inside the bounds
+        // Then call the user hitTest to further refine it - maybe?
+        if (y < 0 || y > height)
+            return false;
+
+        std::cout << "hit" << std::endl;
+
         switch (resizerMode)
         {
         case ResizerMode::Left:
@@ -121,7 +128,7 @@ public:
             break;
         }
     }
-//#define DEBUG_RESIZER
+#define DEBUG_RESIZER
 #ifdef DEBUG_RESIZER
     void render(NVGcontext* vg) override
     {
