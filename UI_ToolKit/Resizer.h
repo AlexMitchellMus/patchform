@@ -63,8 +63,6 @@ public:
         if (y < 0 || y > height)
             return false;
 
-        std::cout << "hit" << std::endl;
-
         switch (resizerMode)
         {
         case ResizerMode::Left:
