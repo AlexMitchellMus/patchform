@@ -79,13 +79,13 @@ public:
         return numAtoms;
     }
 
-    void shallowCopyFrom(const Event& src)
+    void shallowCopyFrom(const Event* src)
     {
-        data = src.data;
-        numAtoms = src.numAtoms;
-        tail = src.tail;
-        timeStamp = src.getTimeStamp();
-        tag = src.tag;
+        data = src->data;
+        numAtoms = src->numAtoms;
+        tail = src->tail;
+        timeStamp = src->getTimeStamp();
+        tag = src->tag;
     }
 
     void deepCopyFrom(const Event& src)

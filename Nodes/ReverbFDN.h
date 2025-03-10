@@ -22,7 +22,7 @@ class ReverbFDN : public AudioNode {
     std::array<float, numDelays> feedbackGains;
     std::array<float, numDelays> prevOut{};
 
-    float mix = 0.35f; // Less wet signal for better clarity
+    float mix = 0.90f; // Less wet signal for better clarity
 
 public:
     ReverbFDN(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)

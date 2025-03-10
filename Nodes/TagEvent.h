@@ -39,7 +39,7 @@ public:
         {
             if (auto* e = context->eventPool.getFreeEvent())
             {
-                e->shallowCopyFrom(*ev);
+                e->shallowCopyFrom(ev);
                 e->setTag(tag);
 
                 outputPort.addEvent(e);
