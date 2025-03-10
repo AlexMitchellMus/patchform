@@ -31,6 +31,8 @@
 #include "ReverbFDN.h"
 #include "Get.h"
 #include "ListBox.h"
+#include "Pack.h"
+#include "TagEvent.h"
 
 #include "MidiNodeBase.h"
 

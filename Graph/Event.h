@@ -15,10 +15,11 @@ public:
 class Tag
 {
 public:
-    std::string nameName;
     hash32 tagHash;
 
-    Tag(const std::string& tag) : nameName(tag), tagHash(hash(tag)) {}
+    Tag(const std::string& tag) : tagHash(hash(tag)) {}
+
+    Tag(const hash32 hash) : tagHash(hash) {}
 };
 
 class Event
@@ -30,7 +31,7 @@ public:
     // Pointer to the head of the linked list of data atoms.
     DataAtom* data;
 
-    std::function<void(float)> addAtom = [](float) {};
+    std::function<void(float)> addAtom = [](float){};
 
     Event() : data(nullptr), tail(nullptr)
     {
@@ -78,6 +79,51 @@ public:
         return numAtoms;
     }
 
+    void shallowCopyFrom(const Event& src)
+    {
+        data = src.data;
+        numAtoms = src.numAtoms;
+        tail = src.tail;
+        timeStamp = src.getTimeStamp();
+        tag = src.tag;
+    }
+
+    void deepCopyFrom(const Event& src)
+    {
+        timeStamp = src.getTimeStamp();
+        // Deep copy the data list.
+        data = cloneDataAtoms(src.data);
+        numAtoms = src.numAtoms;
+        // Recompute the tail pointer from the new data list.
+        tail = data;
+        if (tail) {
+            while (tail->next)
+                tail = tail->next;
+        }
+    }
+
+    static DataAtom* cloneDataAtoms(const DataAtom* src)
+    {
+        if (!src)
+            return nullptr;
+        // Allocate a new DataAtom for the head.
+        DataAtom* newHead = new DataAtom();
+        newHead->atom = src->atom;
+        newHead->next = nullptr;
+        DataAtom* currentNew = newHead;
+        const DataAtom* currentSrc = src->next;
+        while (currentSrc)
+        {
+            DataAtom* newAtom = new DataAtom();
+            newAtom->atom = currentSrc->atom;
+            newAtom->next = nullptr;
+            currentNew->next = newAtom;
+            currentNew = newAtom;
+            currentSrc = currentSrc->next;
+        }
+        return newHead;
+    }
+
     uint64_t getTimeStamp() const
     {
         return timeStamp;
@@ -95,6 +141,7 @@ public:
     {
         data = nullptr;
         tail = nullptr;
+        tag = Tag(hash("trigger"));
         timeStamp = 0;
         numAtoms = 0;
     }

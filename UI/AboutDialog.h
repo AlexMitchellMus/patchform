@@ -59,7 +59,7 @@ private:
         }
     }
 
-    static constexpr std::array<std::string_view, 9> libraries = {{
+    static constexpr std::array<std::string_view, 10> libraries = {{
 R"(linenoise-ng (CLI REPL)
 Martijn van Steenbergen
 BSD-3-Clause License
@@ -104,6 +104,11 @@ R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
 Stephen Berry
 MIT License
 https://github.com/stephenberry/glaze)",
+
+R"(RTMidi (Realtime MIDI I/O library for cross‐platform MIDI support)
+Gary P. Scavone
+MIT License
+https://www.music.mcgill.ca/~gary/rtmidi/)",
     }};
 };
 
@@ -114,7 +119,7 @@ public:
     LibraryListView()
     {
         auto viewedComp = std::make_unique<LibraryList>();
-        viewedComp->setBounds(0, 0, getWidth(), 640);
+        viewedComp->setBounds(0, 0, getWidth(), 750);
         setViewport(std::move(viewedComp));
     }
 

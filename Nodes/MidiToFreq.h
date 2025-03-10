@@ -1,22 +1,27 @@
 /*
-// Copyright (c) 2024-2025 Alex Mitchell
-// For information on usage and redistribution, and for a DISCLAIMER OF ALL
-// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+ // Copyright (c) 2024-2025 Alex Mitchell
+ // For information on usage and redistribution, and for a DISCLAIMER OF ALL
+ // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
 #pragma once
 
 #include "AudioNodeBase.h"
 #include <cmath>
+#include <algorithm>
 
 class MidiToFreq : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("MIDI2Freq", "mtof");
 
-    float midiNote = 60.0f; // Default to middle C
+    // Storage for the Scala tuning table.
+    // If set via a "scale" event, it is assumed to cover one octave.
+    float scalaRatios[128] = { 0.0f };
+    int tuningCount = 0; // Number of ratios provided
 
 public:
-    MidiToFreq(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    MidiToFreq(NodeContext* context, const json& objParams)
+        : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("MIDI Note", AudioPort::PortType::Data);
     }
@@ -32,20 +37,62 @@ public:
 
         for (Event* e : events)
         {
-            int noteValue = e->getAtomValue(0);
-            noteValue = std::clamp(noteValue, 0, 128);
-
-            // 12 tone equal tempered for now. Tuning 440hz
-            // TODO: make tuning a parameter / value
-            // TODO: use scala format for tuning table
-            float frequency = 440.0f * std::pow(2.0f, (noteValue - 69.0f) / 12.0f);
-
-            Event* outEvent = context->eventPool.getFreeEvent();
-            if (outEvent)
+            // If the event is a scale event, update the tuning table and do NOT output a frequency.
+            switch (e->getTagHash())
             {
-                outEvent->setTimeStamp(e->getTimeStamp());
-                outEvent->addAtom(frequency);
-                outputPort.addEvent(outEvent);
+            case hash("scale"):
+                {
+                    tuningCount = std::min(static_cast<int>(e->getNumAtoms()), 128);
+                    for (int i = 0; i < tuningCount; i++)
+                    {
+                        scalaRatios[i] = e->getAtomValue(i);
+                    }
+                }
+                break;
+            default:
+
+                // Otherwise, treat it as a note event.
+                    int noteValue = e->getAtomValue(0);
+                noteValue = std::clamp(noteValue, 0, 127);
+
+                float frequency = 0.0f;
+                if (tuningCount >= 2)
+                {
+                    // Use the stored tuning table to map the MIDI note to frequency.
+                    // We assume the table covers one octave.
+                    int steps = tuningCount;
+                    int noteOctave = noteValue / steps;
+                    int noteDegree = noteValue % steps;
+
+                    // Use A4 (MIDI 69) as a reference.
+                    int refOctave = 69 / steps;
+                    int refDegree = 69 % steps;
+
+                    if (scalaRatios[refDegree] != 0.0f)
+                    {
+                        float ratio = scalaRatios[noteDegree] / scalaRatios[refDegree];
+                        int octaveDiff = noteOctave - refOctave;
+                        frequency = 440.0f * ratio * std::pow(2.0f, octaveDiff);
+                    }
+                    else
+                    {
+                        // Fall back if reference ratio is zero.
+                        frequency = 440.0f * std::pow(2.0f, (noteValue - 69.0f) / 12.0f);
+                    }
+                }
+                else
+                {
+                    // No valid tuning table; use standard 12-tone equal temperament.
+                    frequency = 440.0f * std::pow(2.0f, (noteValue - 69.0f) / 12.0f);
+                }
+
+                // Output a frequency event for note events.
+                if (Event* outEvent = context->eventPool.getFreeEvent())
+                {
+                    outEvent->setTimeStamp(e->getTimeStamp());
+                    outEvent->addAtom(frequency);
+                    outputPort.addEvent(outEvent);
+                }
             }
         }
     }

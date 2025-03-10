@@ -34,7 +34,8 @@ using json = nlohmann::json;
 #undef max
 
 // AudioGraph to manage nodes and process them in the correct order
-class AudioGraph {
+class AudioGraph
+{
 public:
     explicit AudioGraph(NodeContext* context)
         : context(context)
@@ -67,7 +68,8 @@ public:
                     if (oNode == nodeIndex)
                     {
                         std::string namePart = "[" + node->getShortName() + "]";
-                        std::string leftSide = namePart + " " + std::to_string(objectsListCopy[oNode]->nodeID) + ", Port " + std::to_string(oPort);
+                        std::string leftSide = namePart + " " + std::to_string(objectsListCopy[oNode]->nodeID) +
+                            ", Port " + std::to_string(oPort);
 
                         maxNameWidth = std::max(maxNameWidth, namePart.length());
                         maxLeftWidth = std::max(maxLeftWidth, leftSide.length());
@@ -98,7 +100,9 @@ public:
                         std::string leftSide = namePart + " " + nodeAsID + ", Port " + std::to_string(oPort);
 
                         // Print the left side (name + node/port info) with alignment
-                        std::cout << std::setw(maxNameWidth) << std::left << namePart << " " << std::setw(maxLeftWidth - maxNameWidth) << (nodeAsID + ", Port " + std::to_string(oPort)) << " -> ";
+                        std::cout << std::setw(maxNameWidth) << std::left << namePart << " " <<
+                            std::setw(maxLeftWidth - maxNameWidth) << (nodeAsID + ", Port " + std::to_string(oPort)) <<
+                            " -> ";
 
                         // Print connections
                         if (!connections.empty())
@@ -114,7 +118,8 @@ public:
                                 }
                                 first = false;
                                 std::string iNodeAsID = std::to_string(objectsListCopy[iNode]->nodeID);
-                                std::cout << "[" << objectsListCopy[iNode]->getShortName() << "] " << iNodeAsID << ", Port " << std::to_string(iPort) << "] ";
+                                std::cout << "[" << objectsListCopy[iNode]->getShortName() << "] " << iNodeAsID <<
+                                    ", Port " << std::to_string(iPort) << "] ";
                             }
                         }
                         std::cout << "\n";
@@ -130,23 +135,29 @@ public:
     {
         const unsigned int nodeCount = objectsListCopy.size();
 
-        sortedNodes.reserve(nodeCount);
         sortedNodes.clear();
+        sortedNodes.reserve(nodeCount);
 
-        zeroInDegreeNodes.reserve(nodeCount);
         zeroInDegreeNodes.clear();
+        zeroInDegreeNodes.reserve(nodeCount);
 
         inDegree.assign(nodeCount, 0);
 
-        // Compute in-degrees in a single pass
-        for (const auto& [inputKey, outputKeys] : adjacencyMap.getBackward())
+        // Compute in-degrees directly from the forward map: for every outgoing edge,
+        // increment the in-degree of its destination node.
+        for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward())
         {
-            if (int nodeIndex = AdjacencyMap::getNodeID(inputKey); nodeIndex >= 0 && nodeIndex < nodeCount)
+            for (const auto& downstreamKey : downstreamKeys)
             {
-                ++inDegree[nodeIndex];
+                int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
+                if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
+                {
+                    ++inDegree[downstreamNodeIndex];
+                }
             }
         }
 
+        // Collect all nodes with zero in-degree.
         for (unsigned int i = 0; i < nodeCount; ++i)
         {
             if (inDegree[i] == 0)
@@ -155,31 +166,35 @@ public:
             }
         }
 
-        // Process nodes in topological order
+        // Process nodes in topological order.
         size_t processIndex = 0;
         while (processIndex < zeroInDegreeNodes.size())
         {
             const auto currentIndex = zeroInDegreeNodes[processIndex++];
             sortedNodes.push_back(objectsListCopy[currentIndex]);
 
-            // Reduce in-degree for downstream nodes
-            if (auto adjacencyIt = adjacencyMap.getForward().find(AdjacencyMap::packKey(currentIndex, 0)); adjacencyIt != adjacencyMap.getForward().end())
+            // For every outgoing edge from currentIndex (from any port),
+            // find all downstream nodes and decrement their in-degree.
+            for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward())
             {
-                for (const auto& downstreamKey : adjacencyIt->second)
+                if (AdjacencyMap::getNodeID(sourceKey) == static_cast<int>(currentIndex))
                 {
-                    int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
-                    if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
+                    for (const auto& downstreamKey : downstreamKeys)
                     {
-                        if (--inDegree[downstreamNodeIndex] == 0)
+                        int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
+                        if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
                         {
-                            zeroInDegreeNodes.push_back(downstreamNodeIndex);
+                            if (--inDegree[downstreamNodeIndex] == 0)
+                            {
+                                zeroInDegreeNodes.push_back(downstreamNodeIndex);
+                            }
                         }
                     }
                 }
             }
         }
 
-        // Check for cycles: If sortedNodes.size() != nodes.size(), there is a cycle
+        // If we haven't processed every node, there's a cycle.
         if (sortedNodes.size() != nodeCount)
         {
             sortedNodes.clear();
@@ -211,24 +226,24 @@ public:
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout << objectList.size() << " objects in graph " <<  objectsSorted.size() << " objects sorted, sort took " << elapsedNs << " ns" << std::endl;
+        std::cout << objectList.size() << " objects in graph " << objectsSorted.size() << " objects sorted, sort took "
+            << elapsedNs << " ns" << std::endl;
 #endif
-
-
 
 //#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
-        for (auto& node : nodes)
+        for (auto& node : objectsListCopy)
         {
             std::cout << "node: " << node->getName() << std::endl;
         }
 
         std::cout << "======== sorted =======" << std::endl;
-        for (auto node : sortedNodes)
+        for (auto node : objectsSorted)
             std::cout << "node graph: " << node->getName() << std::endl;
 #endif
     }
+
 
     void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
@@ -237,11 +252,13 @@ public:
             midiNodes->processMidi(midiMessage);
         }
 
-        for (size_t i = 0; i < objectsSorted.size(); i++) {
+        for (size_t i = 0; i < objectsSorted.size(); i++)
+        {
             objectsSorted[i]->process(buffer, frameCount, *this, i);
         }
 
-        for (auto& node : objectsSorted) {
+        for (auto& node : objectsSorted)
+        {
             if (auto outPort = node->getOutputPort())
                 outPort->clearEvents();
         }
@@ -289,7 +306,6 @@ class GraphHolder
     std::vector<std::shared_ptr<AudioNode>> removedObjects;
 
 public:
-
     std::unique_ptr<AudioGraph> graph;
 
     GraphHolder(NodeContext* ctx)
@@ -299,13 +315,13 @@ public:
     };
 
     GraphHolder(const GraphHolder* other)
-    : context(other->context) // Reuse the same context
-    , objects(other->objects)
-    , objectIDMap(other->objectIDMap)
-    , connections(other->connections)
-    , graph(std::make_unique<AudioGraph>(context))
-{
-}
+        : context(other->context) // Reuse the same context
+          , objects(other->objects)
+          , objectIDMap(other->objectIDMap)
+          , connections(other->connections)
+          , graph(std::make_unique<AudioGraph>(context))
+    {
+    }
 
     AudioGraph* getGraph() const
     {
@@ -401,17 +417,22 @@ public:
         for (const auto& connection : patch["connections"])
         {
             if ((connection["sourceNode"].is_string() && connection["sourceNode"].get<std::string>().empty()) ||
-                (connection["targetNode"].is_string() && connection["targetNode"].get<std::string>().empty()) )
+                (connection["targetNode"].is_string() && connection["targetNode"].get<std::string>().empty()))
                 return false;
             // source and target ID needs to be set in the file format
-            uint32_t source = connection["sourceNode"].is_string() ? objectIDMap[connection["sourceNode"].get<std::string>()] : objectIDMap[std::to_string(connection["sourceNode"].get<int>())];
-            uint32_t target = connection["targetNode"].is_string() ? objectIDMap[connection["targetNode"].get<std::string>()] : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
+            uint32_t source = connection["sourceNode"].is_string()
+                                  ? objectIDMap[connection["sourceNode"].get<std::string>()]
+                                  : objectIDMap[std::to_string(connection["sourceNode"].get<int>())];
+            uint32_t target = connection["targetNode"].is_string()
+                                  ? objectIDMap[connection["targetNode"].get<std::string>()]
+                                  : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
 
             //std::cout << "connecting: (" << source <<  " -> " << target << ")" << std::endl;
 
             // connections use unique ID's for nodes
             // FIXME: Is this really correct? we use the overloaded connect to connect with the stringID
-            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
+            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID,
+                    connection["targetPort"]);
         }
         return true;
     }
@@ -491,7 +512,7 @@ public:
 
         //std::cout << "PortPointerMap took " << elapsedNs << " ns.\n";
 
-//#define PORTPOINTER_DEBUG
+        //#define PORTPOINTER_DEBUG
 #ifdef PORTPOINTER_DEBUG
         // Debug print
         for (size_t i = 0; i < graph->outputInputPortMap.size(); ++i)
@@ -545,12 +566,14 @@ public:
 
         for (const auto& conn : connections)
         {
-            graph->addAdjacency(graph->objectIDtoIndex[conn->getoNode()], conn->getoPort(), graph->objectIDtoIndex[conn->getiNode()], conn->getiPort());
+            graph->addAdjacency(graph->objectIDtoIndex[conn->getoNode()], conn->getoPort(),
+                                graph->objectIDtoIndex[conn->getiNode()], conn->getiPort());
         }
     }
 
     // Create connections from idString:port pairs
-    bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
+    bool connect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
+    {
         if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
         {
             connectObjIndex(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
@@ -559,13 +582,15 @@ public:
         return false;
     }
 
-    bool connect(int oNode, int oPort, int iNode, int iPort) {
+    bool connect(int oNode, int oPort, int iNode, int iPort)
+    {
         //std::cout << "connecting: (" << oNode << " : " << oPort <<  " -> " << iNode << " : " << iPort << ")" << std::endl;
 
         ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
 
         //std::cout << "=========== objectIDMap ==========" << std::endl;
-        for (const auto& [name, id] : objectIDMap) {
+        for (const auto& [name, id] : objectIDMap)
+        {
             //std::cout << "id: " << id << " name: " << name << std::endl;
             invertedMap[id] = name;
         }
@@ -603,7 +628,8 @@ public:
     }
 
     // Remove connections from idString:port pairs
-    bool disconnect(const std::string& oObj, int oPort, const std::string& iObj, int iPort) {
+    bool disconnect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
+    {
         if (objectIDMap.contains(oObj) && objectIDMap.contains(iObj))
         {
             disconnect(objectIDMap[oObj], oPort, objectIDMap[iObj], iPort);
@@ -632,10 +658,10 @@ public:
     {
         // 1) Remove the object from the objects vector and move it to removedObjects.
         auto removeResult = std::ranges::remove_if(objects,
-            [nodeID](const std::shared_ptr<AudioNode>& obj)
-            {
-                return obj->nodeID == nodeID;
-            }
+                                                   [nodeID](const std::shared_ptr<AudioNode>& obj)
+                                                   {
+                                                       return obj->nodeID == nodeID;
+                                                   }
         );
         auto newEnd = removeResult.begin();
 
@@ -648,14 +674,16 @@ public:
 
         // 2) Find and remove the entry from objectIDMap by matching the value.
         auto mapIt = std::find_if(objectIDMap.begin(), objectIDMap.end(),
-            [nodeID](const auto& entry) { return entry.second == nodeID; }
+                                  [nodeID](const auto& entry) { return entry.second == nodeID; }
         );
-        if (mapIt != objectIDMap.end()) {
+        if (mapIt != objectIDMap.end())
+        {
             objectIDMap.erase(mapIt);
         }
 
         // 3) Remove any connections associated with this node.
-        std::erase_if(connections, [nodeID](const auto& con) {
+        std::erase_if(connections, [nodeID](const auto& con)
+        {
             return con->getiNode() == nodeID || con->getoNode() == nodeID;
         });
     }
@@ -679,7 +707,8 @@ public:
     void setSummingFunctionForNode(AudioNode* node)
     {
         auto nodeID = node->nodeID;
-        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts, const AudioGraph& runningGraph, const int index)
+        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
+                                         const AudioGraph& runningGraph, const int index)
         {
 #define USE_POINTER_MAP
 #ifdef USE_POINTER_MAP
@@ -723,11 +752,13 @@ public:
                         // Update port status, any connected signal overrides events
                         port->isAnyConnectedPortSignal = true;
 
-                        if (firstConnection) {
+                        if (firstConnection)
+                        {
                             std::copy(outputBuffer, outputBuffer + frameCount, summingAudioBuffer);
                             firstConnection = false;
                         }
-                        else {
+                        else
+                        {
                             // For subsequent connections, sum the buffer
                             for (size_t i = 0; i < frameCount; ++i)
                             {
@@ -1006,6 +1037,12 @@ public:
         case hash("listbox"):
             return addNode<ListBox>(idString, node);
 
+        case hash("pack"):
+            return addNode<Pack>(idString, node);
+
+        case hash("tag"):
+            return addNode<TagEvent>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
@@ -1052,7 +1089,7 @@ public:
 
     AudioNode* addObject(const json& jsonObj)
     {
-        std::cout << "adding object from UI" <<  std::endl;
+        std::cout << "adding object from UI" << std::endl;
 
         if (!activeGraph)
         {
@@ -1078,7 +1115,7 @@ public:
     std::vector<Edge*> removeObject(int id)
     {
         if (!activeGraph)
-            return { };
+            return {};
 
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
 
@@ -1099,7 +1136,7 @@ public:
     std::vector<Edge*> removeObjects(std::vector<int>& ids, std::vector<uint64_t>& edgeHashes)
     {
         if (!activeGraph)
-            return { };
+            return {};
 
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
 
@@ -1128,9 +1165,10 @@ public:
     std::vector<Edge*> connectMultiple(const std::vector<std::tuple<int, int, int, int>>& conns)
     {
         std::cout << "connecting from UI: " << std::endl;
-        if (!activeGraph) {
+        if (!activeGraph)
+        {
             std::cerr << "No active graph available to connect objects." << std::endl;
-            return { };
+            return {};
         }
 
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
@@ -1166,14 +1204,16 @@ public:
 
     bool disconnect(const std::string& oObj, int oPort, const std::string& iObj, int iPort)
     {
-        if (!activeGraph) {
+        if (!activeGraph)
+        {
             std::cerr << "No active graph available to disconnect connection." << std::endl;
             return false;
         }
 
         transitioningGraph = std::make_shared<GraphHolder>(activeGraph.get());
         // Add the connection to the transitioning graph
-        if (!transitioningGraph->disconnect(oObj, oPort, iObj, iPort)) {
+        if (!transitioningGraph->disconnect(oObj, oPort, iObj, iPort))
+        {
             std::cerr << "Failed to connect objects in the transitioning graph." << std::endl;
             transitioningGraph.reset(); // Discard transitioning graph
             return false;
@@ -1190,7 +1230,8 @@ public:
 
     void printAdjacencyList()
     {
-        if (!activeGraph) {
+        if (!activeGraph)
+        {
             std::cout << "No graph loaded" << std::endl;
             return;
         }
@@ -1200,7 +1241,8 @@ public:
 
     void printGraph()
     {
-        if (!activeGraph) {
+        if (!activeGraph)
+        {
             std::cout << "No graph loaded" << std::endl;
             return;
         }
@@ -1208,12 +1250,15 @@ public:
         activeGraph->printGraph();
     }
 
-    std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch, const bool logVerbose) {
+    std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch,
+                                                                        const bool logVerbose)
+    {
         patchLoadSuccess = false;
 
-        if (swapGraph.load(std::memory_order_acquire)) {
+        if (swapGraph.load(std::memory_order_acquire))
+        {
             std::cout << "Warning: Attempted to overwrite a transitioning graph before it was swapped." << std::endl;
-            return { };
+            return {};
         }
 
         filePath = patchPath;
@@ -1224,7 +1269,7 @@ public:
         {
             transitioningGraph.reset();
             std::cerr << "Corrupt patch, failed to load." << std::endl;
-            return { };
+            return {};
         }
 
         patchLoadSuccess = true;
@@ -1243,7 +1288,7 @@ public:
 
         swapGraph.store(true, std::memory_order_release);
 
-        return { loadedObjects, connections };
+        return {loadedObjects, connections};
     }
 
     bool wasPatchLoadSuccessful()
@@ -1285,7 +1330,7 @@ public:
 
     void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& message)
     {
-//#define DSP_TIMING
+        //#define DSP_TIMING
 #ifdef DSP_TIMING
         //=====================
         // 1) Timing the DSP
@@ -1416,7 +1461,8 @@ public:
 
     std::cout << std::endl;
 #endif
-        if (swapGraph.load(std::memory_order_acquire)) {
+        if (swapGraph.load(std::memory_order_acquire))
+        {
             // Perform the swap on the audio thread
             activeGraph.swap(transitioningGraph);
             swapGraph.store(false, std::memory_order_release);
@@ -1424,7 +1470,8 @@ public:
 
         // Process the current graph
         auto graph = activeGraph;
-        if (graph) {
+        if (graph)
+        {
             graph->process(buffer, frameCount, message);
         }
 
@@ -1474,7 +1521,6 @@ public:
     moodycamel::ConcurrentQueue<float> volumeMeterQueue = moodycamel::ConcurrentQueue<float>(100);
 
 private:
-
     // Take the average peak and send it to the GUI when the GUI requests an update
     void processPeak(const float* buffer, unsigned long frameCount)
     {
@@ -1490,9 +1536,9 @@ private:
 protected:
     std::string filePath;
 
-    std::shared_ptr<GraphHolder> activeGraph;         // Actively processed graph
-    std::shared_ptr<GraphHolder> transitioningGraph;  // New graph prepared for swapping
-    std::atomic<bool> swapGraph = false;             // Signal for readiness to swap
+    std::shared_ptr<GraphHolder> activeGraph; // Actively processed graph
+    std::shared_ptr<GraphHolder> transitioningGraph; // New graph prepared for swapping
+    std::atomic<bool> swapGraph = false; // Signal for readiness to swap
     std::unique_ptr<NodeContext> ctx;
 
     bool patchLoadSuccess = false;
