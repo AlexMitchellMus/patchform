@@ -45,7 +45,6 @@ void LeftPanel::updateCanvasObjectList()
 void LeftPanel::resized()
 {
     getResizer().setBounds(getBounds());
-    std::cout << "left panel bounds: " << getBounds().toString() << std::endl;
 }
 
 void LeftPanel::render(NVGcontext* nvg)
