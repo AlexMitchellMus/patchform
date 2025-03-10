@@ -126,7 +126,7 @@ public:
             break;
         }
     }
-#define DEBUG_RESIZER
+//#define DEBUG_RESIZER
 #ifdef DEBUG_RESIZER
     void render(NVGcontext* vg) override
     {
