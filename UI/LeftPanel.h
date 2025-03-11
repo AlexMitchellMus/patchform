@@ -21,11 +21,14 @@
 #    define NANOVG_GL_IMPLEMENTATION 1
 #endif
 
+class ObjectItems;
 class Canvas;
 class LeftPanel : public pptk::ResizableComponent
 {
 public:
     explicit LeftPanel(Canvas* canvas);
+
+    void keyPressed(pptk::CompEvent& e) override;
 
     void updateCanvasObjectList();
 
@@ -35,5 +38,5 @@ public:
 
 private:
     pptk::SafePointer<Canvas> cnv;
-    std::vector<std::tuple<std::string, bool>> objectList;
+    std::vector<std::unique_ptr<ObjectItems>> objectListItems;
 };
