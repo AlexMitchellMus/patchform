@@ -59,12 +59,31 @@ public:
 
     bool isSignal() const { return portType == PortType::Audio; };
 
+    void setCanvasMode(bool lockedMode)
+    {
+        canvasLocked = lockedMode;
+        // This will be called from canvas, which will repaint everything
+        // No need to repaint per port here
+    }
+
+    bool hitTest(float x, float y) override
+    {
+        // If the canvas is in locked mode we don't want the port to be interactive
+        // But we still want to show it semi-transparent (maybe)
+        if (canvasLocked)
+            return false;
+
+        return Component::hitTest(x, y);
+    }
+
 private:
     Direction direction;
     int portNum;
     PortType portType;
 
     pptk::SafePointer<Port> foundPort;
+
+    bool canvasLocked = false;
 
     bool isHovered = false;
     bool isHoveredFromCable = false;

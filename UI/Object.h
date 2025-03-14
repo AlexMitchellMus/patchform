@@ -79,6 +79,8 @@ public:
 
     AudioNode* audioNode = nullptr;
 
+    void updateCanvasMode(Canvas::DisplayMode newMode);
+
 private:
     bool useDefaultUI = true;
     std::string shortName;

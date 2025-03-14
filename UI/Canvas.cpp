@@ -257,6 +257,7 @@ bool Canvas::consumeEvent(pptk::CompEvent& e)
             return isDragging = true;
         }
     }
+
     return isDragging = false;
 }
 
@@ -390,6 +391,26 @@ void Canvas::clearSelection()
 
     repaint();
 }
+
+void Canvas::setMode(DisplayMode newMode)
+{
+    if (mode != newMode)
+    {
+        mode = newMode;
+
+        if (mode == DisplayMode::Edit)
+            objectsLayer.toBack();
+        else if (mode == DisplayMode::Lock)
+            connectionsLayer.toBack();
+
+        for (auto& obj : objects)
+        {
+            obj->updateCanvasMode(mode);
+        }
+
+        repaint();
+    }
+};
 
 
 void Canvas::render(NVGcontext* nvg)
@@ -589,6 +610,8 @@ void Canvas::addFromDnDMenu(Object* toAdd, pptk::Point position)
 
     objects.push_back(toAdd);
 
+    toAdd->updateCanvasMode(mode);
+
     callObjectChangedListeners();
 
     gainFocus();
@@ -612,6 +635,7 @@ void Canvas::addObject(Object* toAdd, pptk::Point position)
 
     objects.push_back(object);
 
+    object->updateCanvasMode(mode);
 
     callObjectChangedListeners();
 }
@@ -629,6 +653,7 @@ void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
 
     for (auto* obj : newObjects)
     {
+        obj->updateCanvasMode(mode);
         objects.push_back(obj);
         objectsLayer.addComponent(obj);
         obj->setPosition(pptk::Point(obj->audioNode->canvasPos.x + canvasOrigin, obj->audioNode->canvasPos.y + canvasOrigin));

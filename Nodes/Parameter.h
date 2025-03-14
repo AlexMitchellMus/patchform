@@ -9,6 +9,7 @@ public:
     std::string name;
 
     std::function<void(std::string)> onParameterChanged = [](std::string){};
+    std::function<void(std::variant<int, float, std::string>)> updateNodeUI = [](std::variant<int, float, std::string>){};
 
     Parameter(const std::string& paramName) : name(paramName)
     {
@@ -34,12 +35,15 @@ public:
 
     void setValue(float newValue)
     {
-        if (newValue <= maxValue && newValue >= minValue)
+        std::cout << "newval: " << newValue << " min: " << minValue << " max: " << maxValue << std::endl;
+
+        newValue = std::clamp(newValue, minValue, maxValue);
+        if (std::fabs(newValue - value) > std::numeric_limits<float>::epsilon())
         {
             value = newValue;
             queue.enqueue(newValue);
-
             onParameterChanged(getAsString());
+            updateNodeUI(value);
         }
     }
 
@@ -98,11 +102,13 @@ public:
 
     void setValue(int newValue)
     {
-        if (newValue <= maxValue && newValue >= minValue)
+        newValue = std::clamp(newValue, minValue, maxValue);
+        if (value != newValue)
         {
             value = newValue;
             queue.enqueue(newValue);
             onParameterChanged(std::to_string(newValue));
+            updateNodeUI(value);
         }
     }
 
@@ -182,6 +188,7 @@ public:
         queue.enqueue(newValue);
 
         onParameterChanged(value);
+        updateNodeUI(value);
     }
 
     std::string getValue()

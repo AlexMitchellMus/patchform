@@ -47,7 +47,6 @@ class ObjectItem : public pptk::Component
     void mouseButtonDown(pptk::CompEvent& e) override
     {
         onClick();
-        std::cout << "mouse button down" << std::endl;
         repaint();
     }
 

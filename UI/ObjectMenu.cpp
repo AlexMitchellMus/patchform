@@ -33,7 +33,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "get"})", "get", false },
         { R"({"obj": "listbox"})", "lb", false },
         { R"({"obj": "pack", "values": 5 })", "pack", false },
-        { R"({"obj": "tag"})", "tag", false }
+        { R"({"obj": "tag"})", "tag", false },
+        { R"({"obj": "radiobox"})", "rb", false }
     };
 
     for (int i = 0; i < 3; i++)

@@ -152,6 +152,21 @@ void Object::resized()
     repaint();
 }
 
+void Object::updateCanvasMode(Canvas::DisplayMode newMode)
+{
+    auto transparentPorts = newMode == Canvas::DisplayMode::Lock;
+
+    for (auto& iPort : inPorts)
+    {
+        iPort->setCanvasMode(transparentPorts);
+    }
+
+    for (auto& oPort : outPorts)
+    {
+        oPort->setCanvasMode(transparentPorts);
+    }
+}
+
 void Object::mouseEnter(pptk::CompEvent& e)
 {
     isHovered = true;

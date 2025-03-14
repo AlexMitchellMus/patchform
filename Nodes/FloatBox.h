@@ -52,7 +52,7 @@ public:
                 if (count > 0)
                 {
                     float floatValue = buffer[count - 1]; // Use the last value (UI can't update faster than monitor refresh rate)
-                    value = std::format("{:.4f}", floatValue);
+                    value = std::format("{:.4g}", floatValue);
                     repaint();
                 }
             }

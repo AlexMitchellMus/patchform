@@ -87,20 +87,7 @@ public:
     void setScale(float scale);
     void resetScale();
 
-    void setMode(DisplayMode newMode)
-    {
-        if (mode != newMode)
-        {
-            mode = newMode;
-
-            if (mode == DisplayMode::Edit)
-                objectsLayer.toBack();
-            else if (mode == DisplayMode::Lock)
-                connectionsLayer.toBack();
-
-            repaint();
-        }
-    };
+    void setMode(DisplayMode newMode);
 
     bool isInEditMode() const { return mode == DisplayMode::Edit; };
     bool isInLockedMode() const { return mode == DisplayMode::Lock; };

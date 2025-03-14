@@ -1000,6 +1000,9 @@ public:
         case hash("floatbox"):
             return addNode<FloatBox>(idString, node);
 
+        case hash("radiobox"):
+            return addNode<RadioBox>(idString, node);
+
         case hash("ping"):
             return addNode<Ping>(idString, node);
 
