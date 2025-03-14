@@ -89,6 +89,7 @@ void Editor::loadFile(const std::string& fileName) const
             canvas->setPatchName(filePathObj.stem().string());
             canvas->reloadAllCanvasObjects(graphObjects);
             canvas->reloadConnections(connEdges);
+            leftPanel->resetScroll();
         }
     }
     catch (const nlohmann::json::parse_error& ex)

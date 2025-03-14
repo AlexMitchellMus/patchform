@@ -21,22 +21,20 @@
 #    define NANOVG_GL_IMPLEMENTATION 1
 #endif
 
-class ObjectItems;
+class ObjectsListViewport;
 class Canvas;
 class LeftPanel : public pptk::ResizableComponent
 {
 public:
     explicit LeftPanel(Canvas* canvas);
 
-    void keyPressed(pptk::CompEvent& e) override;
-
-    void updateCanvasObjectList();
-
     void render(NVGcontext* nvg) override;
 
     void resized() override;
 
+    void resetScroll();
+
 private:
     pptk::SafePointer<Canvas> cnv;
-    std::vector<std::unique_ptr<ObjectItems>> objectListItems;
+    std::unique_ptr<ObjectsListViewport> objectsList;
 };

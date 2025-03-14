@@ -305,8 +305,13 @@ Point Component::globalToLocal(float globalX, float globalY) const
     if (parent)
     {
         Point parentLocal = parent->globalToLocal(globalX, globalY);
-        globalX = parentLocal.x;
-        globalY = parentLocal.y;
+        if (shouldApplyViewportOffset()) {
+            globalX = parentLocal.x + parent->viewportX;
+            globalY = parentLocal.y + parent->viewportY;
+        } else {
+            globalX = parentLocal.x;
+            globalY = parentLocal.y;
+        }
     }
 
     // Offset by this component's position
@@ -330,13 +335,20 @@ Point Component::localToGlobal(float localX, float localY) const
     localY *= scale;
 
     // Apply this component's viewport offset (translation)
-    localX += x + viewportX;
-    localY += y + viewportY;
+    localX += x;
+    localY += y;
 
     // Recursively transform to parent's global coordinates
     if (parent)
     {
-        return parent->localToGlobal(localX, localY);
+        Point parentGlobal = parent->localToGlobal(localX, localY);
+        if (shouldApplyViewportOffset()) {
+            localX = parentGlobal.x - parent->viewportX;
+            localY = parentGlobal.y - parent->viewportY;
+        } else {
+            localX = parentGlobal.x;
+            localY = parentGlobal.y;
+        }
     }
 
     return Point(localX, localY);

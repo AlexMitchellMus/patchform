@@ -89,9 +89,18 @@ public:
     void handleMouseWheel(SDL_Event& e)
     {
         if (auto hoveredComp = rootComponent->getHoveredComponent()) {
-            auto wrappedEvent = CompEvent(e, hoveredComp);
-            if (auto tempFocus = getFocusableComponent(hoveredComp))
+            Component* target = hoveredComp;
+            // Traverse up the hierarchy to see if we're inside a viewport.
+            while (target && !dynamic_cast<ComponentViewport*>(target)) {
+                target = target->getParent();
+            }
+            if (target) {  // We found a viewport ancestor.
+                auto wrappedEvent = CompEvent(e, target);
+                target->mouseWheel(wrappedEvent);
+            } else if (auto tempFocus = getFocusableComponent(hoveredComp)) {
+                auto wrappedEvent = CompEvent(e, tempFocus);
                 tempFocus->mouseWheel(wrappedEvent);
+            }
         }
     }
 
@@ -157,6 +166,34 @@ private:
             hovered->handleMouseMove(e);
         }
     }
+//#define TEST_1
+#ifdef TEST_1
+    Component* findDeepestHitComponent(Component* component, CompEvent& e) {
+        if (!component->isVisible())
+            return nullptr;
+
+        // Convert global coordinates to local space.
+        Point localPos = component->globalToLocal(e.sdlEvent.button.x, e.sdlEvent.button.y);
+        //if (localPos.x < 0 || localPos.x > component->getWidth() ||
+        //    localPos.y < 0 || localPos.y > component->getHeight())
+        //{
+        //    return nullptr;
+        //}
+
+        // Always check children first.
+        auto& children = component->getChildren();
+        for (size_t i = children.size(); i > 0; --i) {
+            auto child = children.at(i - 1);
+            //std::cout << "checking: " << child->getName() << std::endl;
+            if (Component* hitChild = findDeepestHitComponent(child, e))
+            {
+                return hitChild;
+            }
+        }
+        //std::cout << "hit testing: " << component->getName() << component->getBounds().toString() << " localPos: " << localPos.toString() << std::endl;
+        return component->hitTest(localPos.x, localPos.y) && component->consumeEvent(e) ? component : nullptr;
+    }
+#else
 
     Component* findDeepestHitComponent(Component* component, CompEvent& e) {
         if (!component->isVisible()) {
@@ -171,7 +208,7 @@ private:
             if (localPos.x < 0 || localPos.x > component->getWidth() || localPos.y < 0 || localPos.y > component->getHeight())
             {
                 return nullptr; // Skip this child if it's outside the viewport's visible bounds
-            }
+           }
         }
 
         // Determine if this component would normally be hit.
@@ -207,6 +244,7 @@ private:
 
         return nullptr;
     }
+#endif
 
     void propagateMouseButtonUp(Component* component, CompEvent& e) {
         // Only handle the clicked component

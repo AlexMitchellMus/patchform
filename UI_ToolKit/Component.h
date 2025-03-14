@@ -122,6 +122,17 @@ struct Rect {
         return !noOverlap; // Rectangles intersect if there is overlap
     }
 
+    Rect removeFromTop(int toRemove)
+    {
+        Rect result = Rect(x, y + toRemove, w, h - toRemove - y);
+        return result;
+    }
+
+    Rect expanded(int toExpand)
+    {
+        return Rect(x - toExpand, y - toExpand, w + 2 * toExpand, h + 2 * toExpand);
+    }
+
     std::string toString() const
     {
         std::ostringstream oss;
@@ -320,7 +331,7 @@ public:
         setMaxSize(newMaxWidth, newMaxHeight);
     }
 
-    void setBounds(const Rect& bounds)
+    virtual void setBounds(const Rect& bounds)
     {
         setBounds(bounds.x, bounds.y, bounds.w, bounds.h);
     }
@@ -340,8 +351,10 @@ public:
 
     void unregisterGlobalMouseListener();
 
-    Point globalToLocal(float globalX, float globalY) const;
-    Point localToGlobal(float localX, float localY) const;
+    [[nodiscard]] Point globalToLocal(float globalX, float globalY) const;
+    [[nodiscard]] Point localToGlobal(float localX, float localY) const;
+
+    [[nodiscard]] virtual bool shouldApplyViewportOffset() const { return true; };
 
     bool isOrHasChild(Component* target) {
         if (!target) return false;

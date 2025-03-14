@@ -5,25 +5,31 @@
 */
 
 #include "LeftPanel.h"
+
+#include <UI_Toolkit/ComponentViewport.h>
+
 #include "SDL3/SDL.h"
 #include "Object.h"
 #include "Canvas.h"
 
-class ObjectItems : public pptk::Component
+class ObjectItem : public pptk::Component
 {
     public:
 
     std::function<void()> onClick;
 
-    ObjectItems(Object* canvasObj) : obj(canvasObj)
+    ObjectItem(Object* canvasObj) : obj(canvasObj)
     {
         name = obj->getName();
         isSelected = obj->getIsSelected();
+
+        setName("object item: " + name);
     }
 
     void update()
     {
         isSelected = obj->getIsSelected();
+        resetHovered();
     }
 
     void mouseEnter(pptk::CompEvent& e) override
@@ -41,15 +47,19 @@ class ObjectItems : public pptk::Component
     void mouseButtonDown(pptk::CompEvent& e) override
     {
         onClick();
+        std::cout << "mouse button down" << std::endl;
         repaint();
     }
 
     void render(NVGcontext* nvg) override
     {
-        if (isSelected || isHovered)
-        {
-            auto selectedCol = nvgRGB(43, 43, 43);
+        if (isSelected) {
+            const auto selectedCol = nvgRGB(43, 43, 43);
             nvgDrawRoundedRect(nvg, 8, 4, width - 16, height - 8, selectedCol, selectedCol, 6.0f);
+        }
+        else if (isHovered) {
+            const auto hoveredCol = nvgRGBA(43, 43, 43, 255 * 0.4f);
+            nvgDrawRoundedRect(nvg, 8, 4, width - 16, height - 8, hoveredCol, hoveredCol, 6.0f);
         }
 
         nvgFillColor(nvg, nvgRGB(220, 220, 220));
@@ -62,11 +72,247 @@ class ObjectItems : public pptk::Component
     {
         return obj;
     }
+
+    void resetHovered()
+    {
+        isHovered = false;
+        repaint();
+    }
 private:
     Object* obj;
     std::string name;
     bool isSelected = false;
     bool isHovered = false;
+};
+
+class ObjectsList : public pptk::Component
+{
+public:
+    std::function<void(int)> onBoundsUpdate = [](int){};
+    std::function<void()> onKeyPressed = [](){};
+
+    ObjectsList(Canvas* canvas) : cnv(canvas) {}
+
+    void resetHover()
+    {
+        for (auto& obj : objectListItems)
+        {
+            obj->resetHovered();
+        }
+    }
+
+    void updateCanvasObjectList()
+    {
+        // Get current canvas objects.
+        auto canvasObjects = cnv->getObjects();
+        bool sameList = (objectListItems.size() == canvasObjects.size());
+
+        // Check if the existing list is the same.
+        if (sameList)
+        {
+            for (size_t i = 0; i < canvasObjects.size(); ++i)
+            {
+                if (objectListItems[i]->getObject() != canvasObjects[i])
+                {
+                    sameList = false;
+                    break;
+                }
+            }
+        }
+
+        if (sameList)
+        {
+            // If the list is unchanged, update each item.
+            for (auto& item : objectListItems)
+            {
+                item->update(); // refresh state, selection, etc.
+            }
+        }
+        else
+        {
+            // Rebuild the list if there are differences.
+            objectListItems.clear();
+
+            for (auto obj : canvasObjects)
+            {
+                auto newItem = std::make_unique<ObjectItem>(obj);
+                newItem->onClick = [this, obj]()
+                {
+                    cnv->setSelected(obj);
+                    gainFocus();
+                };
+                addComponent(newItem.get());
+                objectListItems.push_back(std::move(newItem));
+            }
+        }
+
+        updateBounds();
+        repaint();
+    }
+
+    void keyPressed(pptk::CompEvent& e)
+    {
+        if (!cnv || objectListItems.empty())
+            return;
+
+        // Use keysym.sym for key comparison.
+        int key = e.sdlEvent.key.key;
+
+        // Find the index of the currently selected object.
+        int currentIndex = -1;
+        for (size_t i = 0; i < objectListItems.size(); ++i)
+        {
+            if (objectListItems[i]->getObject()->getIsSelected())
+            {
+                currentIndex = static_cast<int>(i);
+                break;
+            }
+        }
+
+        // If no object is selected, choose one based on the key pressed.
+        if (currentIndex == -1)
+        {
+            if (key == SDLK_DOWN)
+            {
+                currentIndex = 0;
+                cnv->setSelected(objectListItems[currentIndex]->getObject());
+            }
+            else if (key == SDLK_UP)
+            {
+                currentIndex = static_cast<int>(objectListItems.size()) - 1;
+                cnv->setSelected(objectListItems[currentIndex]->getObject());
+            }
+            return;
+        }
+
+        // Update selection based on the key pressed.
+        if (key == SDLK_UP)
+        {
+            if (currentIndex > 0)
+            {
+                cnv->setSelected(objectListItems[currentIndex - 1]->getObject());
+            }
+        }
+        else if (key == SDLK_DOWN)
+        {
+            if (currentIndex < static_cast<int>(objectListItems.size()) - 1)
+            {
+                cnv->setSelected(objectListItems[currentIndex + 1]->getObject());
+            }
+        }
+        onKeyPressed();
+    }
+
+    int getSelectedIndex() const {
+        for (size_t i = 0; i < objectListItems.size(); ++i) {
+            if (objectListItems[i]->getObject()->getIsSelected())
+                return static_cast<int>(i);
+        }
+        return -1;
+    }
+
+    void updateBounds()
+    {
+        if (auto parent = getParent())
+        {
+            calculatedHeight = objectListItems.size() * 32;
+            setBounds(0, 0, parent->getWidth(), calculatedHeight);
+            if (calculatedHeight < previousHeight)
+            {
+                reinterpret_cast<pptk::ComponentViewport*>(getParent())->resetViewport();
+            }
+            previousHeight = calculatedHeight;
+        }
+    }
+
+    void resized() override
+    {
+        // TODO: Make offset 16 (so the top item is not directly below top of component)
+        // to do this we need to also workout how to make the viewport scroll up/down with this extra padding
+        int offsetY = 0;
+        for (const auto& item : objectListItems)
+        {
+            item->setBounds(0, offsetY, getWidth(), 32);
+            offsetY += 32;
+        }
+        onBoundsUpdate(calculatedHeight);
+    }
+
+private:
+    Canvas* cnv;
+    std::vector<std::unique_ptr<ObjectItem>> objectListItems;
+    int calculatedHeight = 0;
+    int previousHeight = 0;
+};
+
+class ObjectsListViewport : public pptk::ComponentViewport
+{
+    public:
+    ObjectsListViewport(Canvas* cnv)
+    {
+        auto viewedComp = std::make_unique<ObjectsList>(cnv);
+        viewedComp->setName("List of objects view");
+        viewedComp->onBoundsUpdate = [this](int newHeight)
+        {
+            std::cout << "updating bounds of viewed component" << std::endl;
+            setContentHeight(newHeight);
+        };
+        viewedComp->onKeyPressed = [this]()
+        {
+            scrollToSelectedItem();
+        };
+        viewedComp->updateBounds();
+        setViewport(std::move(viewedComp));
+    }
+
+    void scrollToSelectedItem()
+    {
+        // Get the list component.
+        auto list = getViewedComponent<ObjectsList>();
+        int selectedIndex = list->getSelectedIndex();
+        if (selectedIndex == -1)
+            return;
+
+        const int itemHeight = 32;
+        int itemTop = selectedIndex * itemHeight;
+        int itemBottom = itemTop + itemHeight;
+
+        // Assuming getScrollY() returns current vertical scroll offset
+        // and getHeight() returns the viewport height.
+        int currentScroll = viewportY;
+        int viewHeight = getHeight();
+
+        // If the item is above the visible area, scroll up.
+        if (itemTop < currentScroll) {
+            scrollToPosition(pptk::Point(0, itemTop));
+        }
+        // If the item is below the visible area, scroll down.
+        else if (itemBottom > currentScroll + viewHeight) {
+            scrollToPosition(pptk::Point(0, itemBottom - viewHeight));
+        }
+    }
+
+    void renderViewportBackground(NVGcontext* nvg) override
+    {
+        nvgBeginPath(nvg);
+        nvgFillColor(nvg, nvgRGB(53, 53, 53));
+        nvgFillRect(nvg, 0, 0, width, 1);
+    }
+
+    void onScroll() override
+    {
+        reinterpret_cast<ObjectsList*>(getViewedComponent())->resetHover();
+    }
+
+    void resized() override
+    {
+        if (auto viewedComp = getViewedComponent<ObjectsList>())
+        {
+            viewedComp->updateBounds();
+        }
+
+        ComponentViewport::resized();
+    }
 };
 
 LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
@@ -78,130 +324,31 @@ LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
     {
         cnv->addObjectChangedListener([this]()
         {
-            updateCanvasObjectList();
+            if (objectsList)
+                objectsList->getViewedComponent<ObjectsList>()->updateCanvasObjectList();
         });
     }
 
-    updateCanvasObjectList();
+    objectsList = std::make_unique<ObjectsListViewport>(cnv.get());
+    objectsList->setName("object list viewport");
+    addComponent(objectsList.get());
 
-    repaint();
-}
-
-void LeftPanel::keyPressed(pptk::CompEvent& e)
-{
-    if (!cnv || objectListItems.empty())
-        return;
-
-    // Use keysym.sym for key comparison.
-    int key = e.sdlEvent.key.key;
-
-    // Find the index of the currently selected object.
-    int currentIndex = -1;
-    for (size_t i = 0; i < objectListItems.size(); ++i)
-    {
-        if (objectListItems[i]->getObject()->getIsSelected())
-        {
-            currentIndex = static_cast<int>(i);
-            break;
-        }
-    }
-
-    // If no object is selected, choose one based on the key pressed.
-    if (currentIndex == -1)
-    {
-        if (key == SDLK_DOWN)
-        {
-            currentIndex = 0;
-            cnv->setSelected(objectListItems[currentIndex]->getObject());
-        }
-        else if (key == SDLK_UP)
-        {
-            currentIndex = static_cast<int>(objectListItems.size()) - 1;
-            cnv->setSelected(objectListItems[currentIndex]->getObject());
-        }
-        return;
-    }
-
-    // Update selection based on the key pressed.
-    if (key == SDLK_UP)
-    {
-        if (currentIndex > 0)
-        {
-            cnv->setSelected(objectListItems[currentIndex - 1]->getObject());
-        }
-    }
-    else if (key == SDLK_DOWN)
-    {
-        if (currentIndex < static_cast<int>(objectListItems.size()) - 1)
-        {
-            cnv->setSelected(objectListItems[currentIndex + 1]->getObject());
-        }
-    }
-}
-
-
-void LeftPanel::updateCanvasObjectList()
-{
-    if (!cnv)
-        return;
-
-    // Get current canvas objects.
-    auto canvasObjects = cnv->getObjects();
-    bool sameList = (objectListItems.size() == canvasObjects.size());
-
-    // Check if the existing list is the same.
-    if (sameList)
-    {
-        for (size_t i = 0; i < canvasObjects.size(); ++i)
-        {
-            if (objectListItems[i]->getObject() != canvasObjects[i])
-            {
-                sameList = false;
-                break;
-            }
-        }
-    }
-
-    if (sameList)
-    {
-        // If the list is unchanged, update each item.
-        for (auto& item : objectListItems)
-        {
-            item->update(); // refresh state, selection, etc.
-        }
-    }
-    else
-    {
-        // Rebuild the list if there are differences.
-        objectListItems.clear();
-
-        for (auto obj : canvasObjects)
-        {
-            auto newItem = std::make_unique<ObjectItems>(obj);
-            newItem->onClick = [this, obj]()
-            {
-                cnv->setSelected(obj);
-                gainFocus();
-            };
-            addComponent(newItem.get());
-            objectListItems.push_back(std::move(newItem));
-        }
-    }
+    objectsList->getViewedComponent<ObjectsList>()->updateCanvasObjectList();
 
     LeftPanel::resized();
-    repaint();
 }
 
 void LeftPanel::resized()
 {
     getResizer().setBounds(getBounds());
+    auto viewportBounds = getBounds().removeFromTop(30);
+    std::cout << "viewportBounds: " << viewportBounds.toString() << std::endl;
+    objectsList->setBounds(viewportBounds);
+}
 
-    int offsetY = 50;
-    for (auto& item : objectListItems)
-    {
-        item->setBounds(0, offsetY, getWidth(), 32);
-        offsetY += 32;
-    }
+void LeftPanel::resetScroll()
+{
+    objectsList->resetViewport();
 }
 
 void LeftPanel::render(NVGcontext* nvg)

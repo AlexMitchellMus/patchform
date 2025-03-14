@@ -11,6 +11,10 @@ namespace pptk
         {
             public:
 
+            std::function<void(float)> onScroll = [](float){};
+
+            Scrollbar() = default;
+
             ~Scrollbar()
             {
                 // Manually manage the lifetime of the frametimer!
@@ -19,11 +23,7 @@ namespace pptk
                 stopFrameTimer(1);
             }
 
-            std::function<void(float)> onScroll = [](float){};
-
-            Scrollbar()
-            {
-            };
+            bool shouldApplyViewportOffset() const override { return false; };
 
             void setScrollbarHeight(float barHeight)
             {
@@ -98,19 +98,18 @@ namespace pptk
             void render(NVGcontext* nvg) override
             {
                 nvgBeginPath(nvg);
-                float finalWidth = 4;
+                float finalWidth = 3;
                 if (isHovered)
                 {
                     finalWidth = finalWidth + (width - finalWidth) * animatedGrowth;
                     auto finalRad = width * 0.5f;
-                    nvgRoundedRectVarying(nvg, 0, 0, width, height, 0, finalRad, finalRad, 0);
                     auto bgFinal = bg;
                     bgFinal.a *= animatedGrowth;
-                    nvgFillColor(nvg, bgFinal);
-                    nvgFill(nvg);
+                    nvgDrawRoundedRect(nvg, 0, 0, width, height, bgFinal, bgFinal, finalRad);
                 }
                 nvgDrawRoundedRect(nvg, width - finalWidth, scrollbarPosition, finalWidth, scrollbarHeight, fg, fg, finalWidth * 0.5f);
             }
+
         private:
             NVGcolor bg = nvgRGBA(200, 200, 200, 10);
             NVGcolor fg = nvgRGBA(200, 200, 200, 180);
@@ -122,15 +121,18 @@ namespace pptk
             const float animationTime = 0.125f;
             bool growing = false;
         };
+
         ComponentViewport()
         {
-            setWantsFocus(true);
+            //setWantsFocus(true);
 
             scrollbar = std::make_unique<Scrollbar>();
+            scrollbar->setName("scrollbar");
 
             scrollbar->onScroll = [this](float newThumbPos) {
                 float viewportHeight = getHeight();
-                if (!viewportChild) return;
+                if (!viewportChild)
+                    return;
                 float contentHeight = viewportChild->getHeight();
 
                 // Calculate the thumb height based on the visible fraction of the content.
@@ -142,7 +144,7 @@ namespace pptk
 
                 // Update the scroll offset based on the thumb's position.
                 // When the thumb is at 0, scrollOffset is 0; when at (viewportHeight - thumbHeight), scrollOffset becomes maxScroll.
-                scrollOffset = (clampedThumbPos / (viewportHeight - thumbHeight)) * maxScroll;
+                viewportY = (clampedThumbPos / (viewportHeight - thumbHeight)) * maxScroll;
 
                 updateScrollbar();
 
@@ -153,9 +155,24 @@ namespace pptk
             ComponentViewport::resized();
         }
 
+        void resetViewport()
+        {
+            viewportX = 0;
+            viewportY = 0;
+            updateScrollbar();
+            repaint();
+        }
+
         void resized() override
         {
-            scrollbar->setBounds(width - 10, 0, 10, height);
+            scrollbar->setBounds(width - 8, 0, 8, height);
+            updateScrollbar();
+        }
+
+        void scrollToPosition(const Point& newPos)
+        {
+            viewportX = newPos.x;
+            viewportY = newPos.y;
             updateScrollbar();
         }
 
@@ -177,6 +194,16 @@ namespace pptk
             return dynamic_cast<T*>(viewportChild.get());
         }
 
+        Component* getViewedComponent() const
+        {
+            return viewportChild.get();
+        }
+
+        bool consumeEvent(CompEvent& e)
+        {
+            return e.sdlEvent.type == SDL_EVENT_MOUSE_WHEEL;
+        }
+
         virtual void renderViewportBackground(NVGcontext* nvg) {};
 
         void renderAll(NVGcontext* nvg) override
@@ -192,24 +219,34 @@ namespace pptk
             nvgSave(nvg);
 
             // Offset rendering for scrolling
-            nvgTranslate(nvg, 0, -scrollOffset);
+            nvgTranslate(nvg, 0, -viewportY);
 
             if (viewportChild)
                 viewportChild->renderAll(nvg);
 
             nvgRestore(nvg);
 
-            scrollbar->renderAll(nvg);
+            if (scrollbar->isVisible())
+                scrollbar->renderAll(nvg);
 
             nvgResetScissor(nvg);
             nvgRestore(nvg);
         }
 
+        virtual void onScroll() {};
+
         void mouseWheel(CompEvent& e) override
         {
-            if (!viewportChild) return;
+            if (!viewportChild)
+                return;
 
-            scrollOffset -= e.sdlEvent.wheel.y * 50.0f; // Adjust scrolling speed
+            onScroll();
+
+            // Viewed component doesn't need scrolling
+            if (viewportChild->getHeight() < getHeight())
+                return;
+
+            viewportY -= e.sdlEvent.wheel.y * 50.0f; // Adjust scrolling speed
             clampScroll();
 
             updateScrollbar();
@@ -217,10 +254,13 @@ namespace pptk
 
         void updateScrollbar()
         {
-            if (!viewportChild || maxScroll <= 0.0f)
+            if (!viewportChild)
                 return; // No scrolling needed
 
             float contentHeight = viewportChild->getHeight();
+            if (!setContentHeight(contentHeight))
+                return;
+
             float viewportHeight = getHeight();
 
             // Calculate scrollbar height based on visible portion
@@ -230,15 +270,24 @@ namespace pptk
             scrollbar->setScrollbarHeight(scrollbarHeight);
 
             // Calculate scrollbar position
-            float scrollbarPos = (scrollOffset / maxScroll) * (viewportHeight - scrollbarHeight);
+            float scrollbarPos = (viewportY / maxScroll) * (viewportHeight - scrollbarHeight);
             scrollbar->setScrollPosition(scrollbarPos);
             repaint();
         }
 
-        void setContentHeight(float contentHeight)
+        bool setContentHeight(float contentHeight)
         {
+            if (contentHeight < getHeight())
+            {
+                scrollbar->setVisible(false);
+                return false;
+            }
+
+            scrollbar->setVisible(true);
+
             maxScroll = std::max(0.0f, contentHeight - getHeight());
             clampScroll();
+            return true;
         }
 
     private:
@@ -247,10 +296,10 @@ namespace pptk
 
         void clampScroll()
         {
-            scrollOffset = std::clamp(scrollOffset, 0.0f, maxScroll);
+            viewportY = std::clamp(viewportY, 0.0f, maxScroll);
         }
 
-        float scrollOffset = 0.0f;
+        //float viw = 0.0f;
         float maxScroll = 0.0f;
 
         NVGcolor bg = nvgRGBA(200, 200, 200, 180);

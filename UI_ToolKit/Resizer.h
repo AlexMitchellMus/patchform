@@ -60,7 +60,7 @@ public:
 
         // FIXME: We should have a base hitTest that checks if the point is inside the bounds
         // Then call the user hitTest to further refine it - maybe?
-        if (y < 0 || y > height)
+        if (y < 8 || y > height - 8)
             return false;
 
         switch (resizerMode)
@@ -83,6 +83,12 @@ public:
         }
 
         return false;
+    }
+
+    void setBounds(const Rect& bounds) override
+    {
+        auto expandedBounds = bounds;
+        Component::setBounds(expandedBounds.expanded(8));
     }
 
     void mouseDrag(const Point& position, const Point& delta, Button button) override

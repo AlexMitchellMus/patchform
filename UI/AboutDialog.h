@@ -7,8 +7,6 @@
 #include "../UI_Toolkit/ComponentViewport.h"
 #include "../GitInfo.h"
 
-
-
 class LibraryList : public pptk::Component
 {
 public:
@@ -119,7 +117,7 @@ public:
     LibraryListView()
     {
         auto viewedComp = std::make_unique<LibraryList>();
-        viewedComp->setBounds(0, 0, getWidth(), 750);
+        viewedComp->setBounds(0, 0, getWidth(), 1150);
         setViewport(std::move(viewedComp));
     }
 
@@ -131,8 +129,8 @@ public:
 
     void resized() override
     {
-        if (auto viewed = getViewedComponent<LibraryList>())
-            viewed->setBounds(0, 0, getWidth(), 640);
+        if (auto viewed = getViewedComponent())
+            viewed->setBounds(0, 0, getWidth(), 1150);
 
         ComponentViewport::resized();
     }
