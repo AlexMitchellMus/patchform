@@ -18,7 +18,6 @@ class RadioBox final : public AudioNode
     int radioCount = 8;
 
     IntParameter* numOptionsParam = nullptr;
-    IntParameter* selectedIndexParam = nullptr;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -40,6 +39,7 @@ public:
         int radioCount = 0;
 
         int boxWidth = 0;
+        const int boxMargin = 6;
     public:
         std::atomic<bool> isDirty = std::atomic<bool>(false);
 
@@ -48,7 +48,7 @@ public:
             auto radio = reinterpret_cast<RadioBox*>(audioNode);
             radioCount = radio->radioCount;
 
-            boxWidth = getHeight();
+            boxWidth = getHeight() - (boxMargin * 2);
 
             setSize(calculateWidth(), getHeight());
 
@@ -94,7 +94,7 @@ public:
 
         int calculateWidth()
         {
-            return radioCount * boxWidth;
+            return radioCount * boxWidth + (radioCount + 1) * boxMargin;
         }
 
         void mouseButtonDown(pptk::CompEvent& e) override
@@ -103,16 +103,21 @@ public:
             {
                 if (cnv->isInLockedMode())
                 {
-                    auto radio = reinterpret_cast<RadioBox*>(audioNode);
-                    int clickedIndex = e.sdlEvent.button.x / boxWidth;
+                    const int boxTotalWidth = boxWidth + boxMargin;
+                    int relativeX = e.sdlEvent.button.x - boxMargin / 2; // shift hit area 2px to left
+                    int clickedIndex = relativeX / boxTotalWidth;
 
-                    if (clickedIndex >= 0 && clickedIndex < radio->radioCount)
-                    {
-                        selectedIndex = clickedIndex;
+                    // Clamp the clickedIndex to valid range
+                    clickedIndex = std::clamp(clickedIndex, 0, radioCount - 1);
+
+                    selectedIndex = clickedIndex;
+
+                    if (auto radio = dynamic_cast<RadioBox*>(audioNode))
                         radio->eventQueue.enqueue(clickedIndex);
-                        repaint();
-                    }
+
+                    repaint();
                 }
+
                 AudioNode::UI::mouseButtonDown(e);
             }
         }
@@ -121,11 +126,12 @@ public:
         {
             for (int i = 0; i < radioCount; ++i)
             {
-                // Draw box
+                int x = i * boxWidth + (i + 1) * boxMargin;
+                int y = boxMargin;
+
                 nvgBeginPath(nvg);
-                auto box = pptk::Rect(i * boxWidth, 0, boxWidth - 2, getHeight()).expanded(-4);
-                auto col = i == selectedIndex ? nvgRGB(68, 68, 68) : nvgRGB(43, 43, 43);
-                nvgDrawRoundedRect(nvg, box.x, box.y, box.w, box.h, col, col, 4);
+                auto col = (i == selectedIndex) ? nvgRGB(68, 68, 68) : nvgRGB(43, 43, 43);
+                nvgDrawRoundedRect(nvg, x, y, boxWidth, boxWidth, col, col, 4);
             }
         }
     };
@@ -141,8 +147,7 @@ public:
         radioCount = objParams.value("numOptions", 4);
         selectedIndex = objParams.value("selectedIndex", 0);
 
-        numOptionsParam = addParameter<IntParameter>("Options:", radioCount, 1, 128);
-        selectedIndexParam = addParameter<IntParameter>("Selected:", selectedIndex, 0, radioCount - 1);
+        numOptionsParam = addParameter<IntParameter>("Cells:", radioCount, 1, 128);
 
         addInputPort("input", AudioPort::PortType::Data);
     }
@@ -158,7 +163,6 @@ public:
     void processAudio(float* out, const unsigned long frameCount) override
     {
         radioCount = numOptionsParam->getValue();
-        selectedIndex = selectedIndexParam->getValue();
 
         auto inputEvents = inputPortBuffers[0]->getEvents();
 
