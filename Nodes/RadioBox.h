@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AudioNodeBase.h"
+#include "AudioPort.h"
 #include "Print.h"
 
 class RadioBox final : public AudioNode
@@ -27,8 +28,11 @@ public:
         return false;
     }
 
+    std::function<void()> repaintFromDSP = [](){};
+
     // Lock-free queue for UI -> Audio communication
     moodycamel::ConcurrentQueue<int> eventQueue;
+    moodycamel::ConcurrentQueue<int> eventQueueFromDSP;
 
     class UI final : public AudioNode::UI
     {
@@ -37,6 +41,8 @@ public:
 
         int boxWidth = 0;
     public:
+        std::atomic<bool> isDirty = std::atomic<bool>(false);
+
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
             auto radio = reinterpret_cast<RadioBox*>(audioNode);
@@ -45,6 +51,11 @@ public:
             boxWidth = getHeight();
 
             setSize(calculateWidth(), getHeight());
+
+            radio->repaintFromDSP = [this]()
+            {
+                isDirty.store(true, std::memory_order::release);
+            };
 
             // Update the Nodes UI directly from the parameter.
             // This is safe as the parameter is updated from the GUI thread
@@ -64,6 +75,22 @@ public:
                 }
             };
         };
+
+        void updateGraphValues() override
+        {
+            if (isDirty.load())
+            {
+                isDirty.store(false, std::memory_order::release);
+                auto radio = reinterpret_cast<RadioBox*>(audioNode);
+
+                int receivedEvent = 0;
+                if (radio->eventQueueFromDSP.try_dequeue(receivedEvent))
+                {
+                    selectedIndex = receivedEvent;
+                    repaint();
+                }
+            }
+        }
 
         int calculateWidth()
         {
@@ -116,6 +143,8 @@ public:
 
         numOptionsParam = addParameter<IntParameter>("Options:", radioCount, 1, 128);
         selectedIndexParam = addParameter<IntParameter>("Selected:", selectedIndex, 0, radioCount - 1);
+
+        addInputPort("input", AudioPort::PortType::Data);
     }
 
     json getSerializedNode() override
@@ -130,6 +159,21 @@ public:
     {
         radioCount = numOptionsParam->getValue();
         selectedIndex = selectedIndexParam->getValue();
+
+        auto inputEvents = inputPortBuffers[0]->getEvents();
+
+        if (!inputEvents.empty())
+        {
+            for (auto* ev : inputEvents)
+            {
+                if (ev->numAtoms)
+                    selectedIndex = ev->getAtomValue(0);
+                // Forward the same event from input to output (this should work, but just for now lets see how it goes)
+                outputPort.addEvent(ev);
+            }
+            eventQueueFromDSP.enqueue(selectedIndex);
+            repaintFromDSP();
+        }
 
         int newIndex;
         while (eventQueue.try_dequeue(newIndex))
