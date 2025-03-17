@@ -233,7 +233,7 @@ void Object::render(NVGcontext* nvg)
 void Object::drawBackground(NVGcontext* nvg)
 {
     nvgBeginPath(nvg);
-    auto bgCol = isHovered ? nvgRGB(38, 38, 38) : nvgRGB(33, 33, 33);
+    auto bgCol = isHovered ? nvgRGB(34, 34, 34) : nvgRGB(33, 33, 33);
 
     if (isGuiTransparent)
         bgCol.a *= 0.3f;

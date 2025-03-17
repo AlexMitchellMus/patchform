@@ -9,27 +9,32 @@
 #include "AudioNodeBase.h"
 #include "AudioPort.h"
 #include "Print.h"
+#include <cmath>    // for std::ceil and std::sqrt
+#include <algorithm> // for std::clamp
 
 class RadioBox final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("RadioBox", "radiobox");
 
+public:
+    enum class LayoutType { Horizontal, Vertical, Grid };
+
+private:
     int selectedIndex = 0;
     int radioCount = 8;
+    LayoutType layout = LayoutType::Horizontal;
 
-    IntParameter* numOptionsParam = nullptr;
+    IntParameter* radioCountParam = nullptr;
+    StringParameter* layoutParam = nullptr;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
 
-    bool isDefaultUI() const override
-    {
-        return false;
-    }
+    bool isDefaultUI() const override { return false; }
 
     std::function<void()> repaintFromDSP = [](){};
 
-    // Lock-free queue for UI -> Audio communication
+    // Lock-free queues for UI -> Audio and vice versa.
     moodycamel::ConcurrentQueue<int> eventQueue;
     moodycamel::ConcurrentQueue<int> eventQueueFromDSP;
 
@@ -37,9 +42,12 @@ public:
     {
         int selectedIndex = 0;
         int radioCount = 0;
+        LayoutType layout;
 
         int boxWidth = 0;
+        int boxHeight = 0;
         const int boxMargin = 6;
+
     public:
         std::atomic<bool> isDirty = std::atomic<bool>(false);
 
@@ -47,34 +55,96 @@ public:
         {
             auto radio = reinterpret_cast<RadioBox*>(audioNode);
             radioCount = radio->radioCount;
+            layout = radio->layout;
 
-            boxWidth = getHeight() - (boxMargin * 2);
+            // Compute the dimensions of each radio button (square).
+            boxWidth = getHeight() - 2 * boxMargin;
+            boxHeight = boxWidth;
 
-            setSize(calculateWidth(), getHeight());
+            setSize(calculateWidth(), calculateHeight());
 
-            radio->repaintFromDSP = [this]()
-            {
+            radio->repaintFromDSP = [this]() {
                 isDirty.store(true, std::memory_order::release);
             };
 
-            // Update the Nodes UI directly from the parameter.
-            // This is safe as the parameter is updated from the GUI thread
-            // And the value is enqueued to the audio thread.
-            radio->numOptionsParam->updateNodeUI = [this](const std::variant<int, float, std::string>& value) mutable
-            {
-                auto newRadioCount = std::get_if<int>(&value);
-                if (newRadioCount)
+            // Update UI when the number of cells changes.
+            radio->radioCountParam->updateNodeUI = [this](const std::variant<int, float, std::string>& value) mutable {
+                if (auto newCount = std::get_if<int>(&value))
                 {
-                    auto radioCountValue = *newRadioCount;
-                    if (radioCountValue != radioCount)
+                    if (*newCount != radioCount)
                     {
-                        radioCount = radioCountValue;
-                        setSize(calculateWidth(), getHeight());
+                        radioCount = *newCount;
+                        auto newHeight = calculateHeight();
+                        auto heightChanged = false;
+
+                        if (getHeight() != newHeight)
+                            heightChanged = true;
+
+                        setSize(calculateWidth(), newHeight);
+                        // If hight has changed, update the connections layout
+                        if (heightChanged)
+                        {
+                            if (const auto cnv = findParentOfClass<Canvas>())
+                            {
+                                cnv->updateConnectionsPosition();
+                            }
+                        }
                         repaint();
                     }
                 }
             };
-        };
+
+            // Update UI when the layout type changes.
+            radio->layoutParam->updateNodeUI = [this](const std::variant<int, float, std::string>& value) mutable {
+                if (auto layoutStr = std::get_if<std::string>(&value))
+                {
+                    auto newLayout = RadioBox::getLayoutType(*layoutStr);
+                    if (newLayout != layout)
+                    {
+                        layout = newLayout;
+                        setSize(calculateWidth(), calculateHeight());
+                        if (const auto cnv = findParentOfClass<Canvas>())
+                        {
+                            cnv->updateConnectionsPosition();
+                        }
+                    }
+                }
+            };
+        }
+
+        int getSelectedIndex() const
+        {
+            return selectedIndex;
+        }
+
+        int calculateWidth()
+        {
+            if (layout == LayoutType::Horizontal)
+                return radioCount * boxWidth + (radioCount + 1) * boxMargin;
+            else if (layout == LayoutType::Vertical)
+                return boxWidth + 2 * boxMargin;
+            else if (layout == LayoutType::Grid)
+            {
+                int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
+                return cols * boxWidth + (cols + 1) * boxMargin;
+            }
+            return 0;
+        }
+
+        int calculateHeight()
+        {
+            if (layout == LayoutType::Horizontal)
+                return boxHeight + 2 * boxMargin;
+            else if (layout == LayoutType::Vertical)
+                return radioCount * boxHeight + (radioCount + 1) * boxMargin;
+            else if (layout == LayoutType::Grid)
+            {
+                int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
+                int rows = static_cast<int>(std::ceil(static_cast<float>(radioCount) / cols));
+                return rows * boxHeight + (rows + 1) * boxMargin;
+            }
+            return 0;
+        }
 
         void updateGraphValues() override
         {
@@ -84,32 +154,56 @@ public:
                 auto radio = reinterpret_cast<RadioBox*>(audioNode);
 
                 int receivedEvent = 0;
-                if (radio->eventQueueFromDSP.try_dequeue(receivedEvent))
+                while (radio->eventQueueFromDSP.try_dequeue(receivedEvent))
                 {
-                    selectedIndex = receivedEvent;
+                    selectedIndex = std::min(radioCount - 1, receivedEvent);
                     repaint();
                 }
             }
         }
 
-        int calculateWidth()
-        {
-            return radioCount * boxWidth + (radioCount + 1) * boxMargin;
-        }
-
         void mouseButtonDown(pptk::CompEvent& e) override
         {
+            // Only process left mouse button clicks.
+            if (e.sdlEvent.button.button != SDL_BUTTON_LEFT)
+            {
+                AudioNode::UI::mouseButtonDown(e);
+                return;
+            }
+
             if (auto cnv = findParentOfClass<Canvas>())
             {
                 if (cnv->isInLockedMode())
                 {
-                    const int boxTotalWidth = boxWidth + boxMargin;
-                    int relativeX = e.sdlEvent.button.x - boxMargin / 2; // shift hit area 2px to left
-                    int clickedIndex = relativeX / boxTotalWidth;
+                    int clickedIndex = -1;
+                    if (layout == LayoutType::Horizontal)
+                    {
+                        int boxTotalWidth = boxWidth + boxMargin;
+                        // Adjust the hit area slightly (2-pixel offset).
+                        int relativeX = e.sdlEvent.button.x - 2;
+                        clickedIndex = relativeX / boxTotalWidth;
+                    }
+                    else if (layout == LayoutType::Vertical)
+                    {
+                        int boxTotalHeight = boxHeight + boxMargin;
+                        int relativeY = e.sdlEvent.button.y - 2;
+                        clickedIndex = relativeY / boxTotalHeight;
+                    }
+                    else if (layout == LayoutType::Grid)
+                    {
+                        int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
+                        int boxTotalWidth = boxWidth + boxMargin;
+                        int boxTotalHeight = boxHeight + boxMargin;
+                        // Use the margin as the starting offset.
+                        int relativeX = e.sdlEvent.button.x - boxMargin;
+                        int relativeY = e.sdlEvent.button.y - boxMargin;
+                        int col = relativeX / boxTotalWidth;
+                        int row = relativeY / boxTotalHeight;
+                        clickedIndex = row * cols + col;
+                    }
 
-                    // Clamp the clickedIndex to valid range
+                    // Clamp the clicked index to a valid range.
                     clickedIndex = std::clamp(clickedIndex, 0, radioCount - 1);
-
                     selectedIndex = clickedIndex;
 
                     if (auto radio = dynamic_cast<RadioBox*>(audioNode))
@@ -126,12 +220,27 @@ public:
         {
             for (int i = 0; i < radioCount; ++i)
             {
-                int x = i * boxWidth + (i + 1) * boxMargin;
-                int y = boxMargin;
+                int x = 0, y = 0;
+                if (layout == LayoutType::Horizontal)
+                {
+                    x = boxMargin + i * (boxWidth + boxMargin);
+                    y = boxMargin;
+                }
+                else if (layout == LayoutType::Vertical)
+                {
+                    x = boxMargin;
+                    y = boxMargin + i * (boxHeight + boxMargin);
+                }
+                else if (layout == LayoutType::Grid)
+                {
+                    int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
+                    x = boxMargin + (i % cols) * (boxWidth + boxMargin);
+                    y = boxMargin + (i / cols) * (boxHeight + boxMargin);
+                }
 
                 nvgBeginPath(nvg);
                 auto col = (i == selectedIndex) ? nvgRGB(68, 68, 68) : nvgRGB(43, 43, 43);
-                nvgDrawRoundedRect(nvg, x, y, boxWidth, boxWidth, col, col, 4);
+                nvgDrawRoundedRect(nvg, x, y, boxWidth, boxHeight, col, col, 4);
             }
         }
     };
@@ -139,15 +248,34 @@ public:
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
         return std::make_unique<UI>(this);
-    };
+    }
 #endif
 
-    RadioBox(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    // Helper function to parse a layout type string.
+    static LayoutType getLayoutType(const std::string& layoutStr)
     {
-        radioCount = objParams.value("numOptions", 4);
-        selectedIndex = objParams.value("selectedIndex", 0);
+        switch (hash(layoutStr))
+        {
+        case hash("Vertical"):
+        case hash("vertical"):
+            return LayoutType::Vertical;
+        case hash("grid"):
+            return LayoutType::Grid;
+        default:
+            return LayoutType::Horizontal;
+        }
+    }
 
-        numOptionsParam = addParameter<IntParameter>("Cells:", radioCount, 1, 128);
+    RadioBox(NodeContext* context, const json& objParams)
+    : AudioNode(context, AudioPort::PortType::Data, objParams)
+    {
+        radioCount = objParams.value("numOptions", 8);
+        selectedIndex = objParams.value("selectedIndex", 0);
+        std::string layoutName = objParams.value("layoutType", "horizontal");
+        layout = getLayoutType(layoutName);
+
+        radioCountParam = addParameter<IntParameter>("Cells:", radioCount, 1, 1024);
+        layoutParam = addParameter<StringParameter>("Layout:", layoutName);
 
         addInputPort("input", AudioPort::PortType::Data);
     }
@@ -155,14 +283,20 @@ public:
     json getSerializedNode() override
     {
         nodeCreationData["numOptions"] = radioCount;
-        nodeCreationData["selectedIndex"] = selectedIndex;
+
+        // Index can change from audio thread, so check the UI's selected index.
+        // Object UI runs on UI thread, as does this funciton
+        nodeCreationData["selectedIndex"] = reinterpret_cast<RadioBox::UI*>(getOrCreateUI())->getSelectedIndex();
+
+        nodeCreationData["layoutType"] = (layout == LayoutType::Vertical) ? "vertical" :
+                                         (layout == LayoutType::Grid) ? "grid" : "horizontal";
         return nodeCreationData;
     }
 
 #ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {
-        radioCount = numOptionsParam->getValue();
+        radioCount = radioCountParam->getValue();
 
         auto inputEvents = inputPortBuffers[0]->getEvents();
 
@@ -172,7 +306,7 @@ public:
             {
                 if (ev->numAtoms)
                     selectedIndex = ev->getAtomValue(0);
-                // Forward the same event from input to output (this should work, but just for now lets see how it goes)
+                // Forward the input event to the output.
                 outputPort.addEvent(ev);
             }
             eventQueueFromDSP.enqueue(selectedIndex);
