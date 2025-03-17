@@ -88,42 +88,6 @@ public:
         tag = src->tag;
     }
 
-    void deepCopyFrom(const Event& src)
-    {
-        timeStamp = src.getTimeStamp();
-        // Deep copy the data list.
-        data = cloneDataAtoms(src.data);
-        numAtoms = src.numAtoms;
-        // Recompute the tail pointer from the new data list.
-        tail = data;
-        if (tail) {
-            while (tail->next)
-                tail = tail->next;
-        }
-    }
-
-    static DataAtom* cloneDataAtoms(const DataAtom* src)
-    {
-        if (!src)
-            return nullptr;
-        // Allocate a new DataAtom for the head.
-        DataAtom* newHead = new DataAtom();
-        newHead->atom = src->atom;
-        newHead->next = nullptr;
-        DataAtom* currentNew = newHead;
-        const DataAtom* currentSrc = src->next;
-        while (currentSrc)
-        {
-            DataAtom* newAtom = new DataAtom();
-            newAtom->atom = currentSrc->atom;
-            newAtom->next = nullptr;
-            currentNew->next = newAtom;
-            currentNew = newAtom;
-            currentSrc = currentSrc->next;
-        }
-        return newHead;
-    }
-
     uint64_t getTimeStamp() const
     {
         return timeStamp;
