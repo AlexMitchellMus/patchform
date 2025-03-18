@@ -230,7 +230,7 @@ public:
             << elapsedNs << " ns" << std::endl;
 #endif
 
-//#define DEBUG_SORT
+#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : objectsListCopy)
@@ -1539,10 +1539,12 @@ private:
 protected:
     std::string filePath;
 
+    std::unique_ptr<NodeContext> ctx;
+
     std::shared_ptr<GraphHolder> activeGraph; // Actively processed graph
     std::shared_ptr<GraphHolder> transitioningGraph; // New graph prepared for swapping
     std::atomic<bool> swapGraph = false; // Signal for readiness to swap
-    std::unique_ptr<NodeContext> ctx;
+
 
     bool patchLoadSuccess = false;
 };

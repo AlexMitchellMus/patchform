@@ -10,6 +10,18 @@ class DataAtom
 public:
     float atom = 0.0f;
     DataAtom* next = nullptr;
+
+    std::string toString()
+    {
+        std::stringstream ss;
+        DataAtom* walk = this;
+        while (walk)
+        {
+            ss << walk->atom << ", ";
+            walk = walk->next;
+        }
+        return ss.str();
+    }
 };
 
 class Tag

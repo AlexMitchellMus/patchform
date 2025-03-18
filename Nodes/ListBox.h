@@ -54,30 +54,27 @@ public:
             if (isDirty.exchange(false))
             {
                 auto* floatBox = reinterpret_cast<ListBox*>(audioNode);
-                std::vector<EventDataBuffer> buffer(16); // Adjust size as needed
-                size_t count = floatBox->queueFromDSP.try_dequeue_bulk(buffer.begin(), buffer.size());
+                EventDataBuffer buffer;
+                while (floatBox->queueFromDSP.try_dequeue(buffer));
 
-                if (count > 0)
+                values.clear();
+                totalWidth = 10.0f; // Padding
+                for (size_t i = 0; i < buffer.count; ++i)
                 {
-                    values.clear();
-                    totalWidth = 10.0f; // Padding
-                    for (size_t i = 0; i < buffer[count - 1].count; ++i)
-                    {
-                        float floatValue = buffer[count - 1].atoms[i];
-                        std::string valueStr;
-                        if (std::floor(floatValue) == floatValue)
-                            valueStr = std::to_string(static_cast<int>(floatValue));
-                        else
-                            valueStr = std::format("{:.4g}", floatValue);
+                    float floatValue = buffer.atoms[i];
+                    std::string valueStr;
+                    if (std::floor(floatValue) == floatValue)
+                        valueStr = std::to_string(static_cast<int>(floatValue));
+                    else
+                        valueStr = std::format("{:.4g}", floatValue);
 
-                        values.push_back(valueStr);
-                        totalWidth += valueStr.size() * 5.0f + 20.0f; // Estimate text width + spacing
-                    }
-
-                    // Adjust the node size based on the total width of values
-                    setSize(std::max(30, static_cast<int>(totalWidth)), height);
-                    repaint();
+                    values.push_back(valueStr);
+                    totalWidth += valueStr.size() * 5.0f + 20.0f; // Estimate text width + spacing
                 }
+
+                // Adjust the node size based on the total width of values
+                setSize(std::max(30, static_cast<int>(totalWidth)), height);
+                repaint();
             }
         }
 
