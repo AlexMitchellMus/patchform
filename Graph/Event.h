@@ -8,18 +8,40 @@
 class DataAtom
 {
 public:
-    float atom = 0.0f;
-    DataAtom* next = nullptr;
+    enum class DataType { Float, List };
 
-    std::string toString()
+    DataType type = DataType::Float;  // Default to Float
+
+    union data {
+        float atom;           // Stores a float value
+        DataAtom* list;       // If type == List, this points to a sublist
+    } data;
+
+    DataAtom* next = nullptr;  // Next item in the main chain
+
+    // **Recursively convert DataAtom chain into a readable string**
+    std::string toString() const
     {
         std::stringstream ss;
-        DataAtom* walk = this;
+        const DataAtom* walk = this;
+
         while (walk)
         {
-            ss << walk->atom << ", ";
+            if (walk->type == DataType::Float)
+            {
+                ss << walk->data.atom;
+            }
+            else
+            {
+                ss << "{ ";
+                ss << walk->data.list->toString(); // **Recursively call `toString()` on sublist**
+                ss << " }";
+            }
+
+            if (walk->next) ss << ", ";  // **Separate elements with commas**
             walk = walk->next;
         }
+
         return ss.str();
     }
 };
@@ -67,7 +89,10 @@ public:
     [[nodiscard]] float getAtomValue(const int index) const
     {
         if (DataAtom* atomPtr = getAtom(index))
-            return atomPtr->atom;
+        {
+            if (atomPtr->type == DataAtom::DataType::Float)
+                return atomPtr->data.atom;
+        }
         return 0.0f;
     }
 

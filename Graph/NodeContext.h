@@ -53,7 +53,8 @@ public:
                     throw std::runtime_error("Atom pool exhausted.");
                 }
 
-                newAtom->atom = value;
+                newAtom->type = DataAtom::DataType::Float;
+                newAtom->data.atom = value;
                 newAtom->next = nullptr;
 
                 auto& evnt = events[i];
@@ -104,6 +105,26 @@ public:
         return &sharedAtomPool[index];
     }
 
+    // Fast allocation: Pull from freeList and move to allocatedList
+    DataAtom* allocateListAtom() {
+        if (freeList.empty()) {
+            std::cout << "No free atoms left!" << std::endl;
+            return nullptr; // No available datatoms
+        }
+
+        size_t index = freeList.back();
+        freeList.pop_back();
+        allocatedList.push_back(index);
+
+        // **Ensure list pointer is initialized**
+        DataAtom* listAtom = &sharedAtomPool[index];
+        listAtom->type = DataAtom::DataType::List;
+        listAtom->data.list = nullptr;  // **Ensure it starts empty**
+        listAtom->next = nullptr;  // **Reset next pointer**
+
+        return listAtom;
+    }
+
     // Recycling: Move atom back to freeList unless persistent
     void recycleDataAtom(DataAtom* atom) {
         size_t index = atom - &sharedAtomPool[0];
@@ -135,17 +156,15 @@ public:
             DataAtom* current = stack.back();
             stack.pop_back();
 
+            if (!current) continue;
+
             size_t index = current - &sharedAtomPool[0];
 
             // If it's already persistent, skip
-            auto it = std::find(persistentList.begin(), persistentList.end(), index);
-            if (it != persistentList.end())
-            {
-                std::cout << "atom is already persistent!" << std::endl;
+            if (std::find(persistentList.begin(), persistentList.end(), index) != persistentList.end())
                 continue;
-            }
 
-            persistentList.push_back(index); // Move to persistent list
+            persistentList.push_back(index); // Mark as persistent
 
             // Remove from freeList if it's there
             auto freeIt = std::find(freeList.begin(), freeList.end(), index);
@@ -159,11 +178,18 @@ public:
                 allocatedList.erase(allocIt);
             }
 
+            // **Handle linked atoms (next pointer)**
             if (current->next) {
                 stack.push_back(current->next);
             }
+
+            // **Handle sublists if it's a List atom**
+            if (current->type == DataAtom::DataType::List && current->data.list) {
+                stack.push_back(current->data.list);
+            }
         }
     }
+
 
     // Clear persistent datatoms (Deferred Freeing) (`O(N)`)
     void clearPersistentDataAtom(DataAtom* atom) {
@@ -174,20 +200,29 @@ public:
             DataAtom* current = stack.back();
             stack.pop_back();
 
+            if (!current) continue;
+
             size_t index = current - &sharedAtomPool[0];
 
             // Remove from persistentList
             auto it = std::find(persistentList.begin(), persistentList.end(), index);
             if (it != persistentList.end()) {
                 persistentList.erase(it);
-                pendingFreeList.push_back(index); // Defer recycling to next cycle
+                pendingFreeList.push_back(index); // **Defer recycling to next cycle**
             }
 
+            // **Handle linked atoms (next pointer)**
             if (current->next) {
                 stack.push_back(current->next);
             }
+
+            // **Handle sublists if it's a List atom**
+            if (current->type == DataAtom::DataType::List && current->data.list) {
+                stack.push_back(current->data.list);
+            }
         }
     }
+
 
 private:
     std::vector<Event> events;

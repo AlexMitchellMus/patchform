@@ -234,7 +234,10 @@ public:
                     freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
                 {
                     if (auto newFreq = freqEvents[nextFreqEventIndex]->getAtom(0))
-                        freq = newFreq->atom;
+                    {
+                        if (newFreq->type == DataAtom::DataType::Float)
+                            freq = newFreq->data.atom;
+                    }
                     nextFreqEventIndex++;
                 }
 

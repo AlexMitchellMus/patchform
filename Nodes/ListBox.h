@@ -1,8 +1,6 @@
-/*
 // Copyright (c) 2025 Alex Mitchell
 // For information on usage and redistribution, and for a DISCLAIMER OF ALL
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
-*/
 
 #pragma once
 
@@ -17,7 +15,7 @@ class ListBox final : public AudioNode
     DEFINE_AND_REGISTER_NODE("ListBox", "lb");
 
     float value;
-    std::function<void()> repaintFromDSP = [](){};
+    std::function<void()> repaintFromDSP = []() {};
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -25,7 +23,7 @@ public:
     static const size_t MAX_DISPLAY_ATOMS_PER_EVENT = 64;
 
     struct EventDataBuffer {
-        std::array<float, MAX_DISPLAY_ATOMS_PER_EVENT> atoms;
+        std::array<std::string, MAX_DISPLAY_ATOMS_PER_EVENT> atomStrings;
         size_t count = 0;
     };
 
@@ -39,6 +37,7 @@ public:
         std::atomic<bool> isDirty = false;
         std::vector<std::string> values;
         float totalWidth = 0.0f;
+
     public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
@@ -53,23 +52,18 @@ public:
         {
             if (isDirty.exchange(false))
             {
-                auto* floatBox = reinterpret_cast<ListBox*>(audioNode);
+                auto* listBox = reinterpret_cast<ListBox*>(audioNode);
                 EventDataBuffer buffer;
-                while (floatBox->queueFromDSP.try_dequeue(buffer));
+                while (listBox->queueFromDSP.try_dequeue(buffer));
 
                 values.clear();
                 totalWidth = 10.0f; // Padding
+
                 for (size_t i = 0; i < buffer.count; ++i)
                 {
-                    float floatValue = buffer.atoms[i];
-                    std::string valueStr;
-                    if (std::floor(floatValue) == floatValue)
-                        valueStr = std::to_string(static_cast<int>(floatValue));
-                    else
-                        valueStr = std::format("{:.4g}", floatValue);
-
+                    const std::string& valueStr = buffer.atomStrings[i];
                     values.push_back(valueStr);
-                    totalWidth += valueStr.size() * 5.0f + 20.0f; // Estimate text width + spacing
+                    totalWidth += valueStr.length() * 5.0f + 20.0f; // Estimate text width + spacing
                 }
 
                 // Adjust the node size based on the total width of values
@@ -113,6 +107,39 @@ public:
         addInputPort("Value_input", AudioPort::PortType::Data);
     }
 
+    // **Recursively convert nested DataAtoms to string representation**
+    std::string atomToString(DataAtom* atom)
+    {
+        if (!atom) return "";
+
+        std::stringstream ss;
+
+        DataAtom* current = atom;
+        while (current)
+        {
+            if (current->type == DataAtom::DataType::Float)
+            {
+                if (std::floor(current->data.atom) == current->data.atom)
+                    ss << static_cast<int>(current->data.atom);
+                else
+                    ss << std::format("{:.4g}", current->data.atom);
+            }
+            else if (current->type == DataAtom::DataType::List)
+            {
+                ss << "{ ";
+                ss << atomToString(current->data.list); // Recurse into nested list
+                ss << " }";
+            }
+
+            if (current->next)
+                ss << ", ";
+
+            current = current->next;
+        }
+
+        return ss.str();
+    }
+
     void processAudio(float* out, const unsigned long frameCount) override
     {
         const auto& aEvents = inputPortBuffers[0]->getEvents();
@@ -123,12 +150,13 @@ public:
             {
                 EventDataBuffer buffer;
                 buffer.count = std::min(event->getNumAtoms(), MAX_DISPLAY_ATOMS_PER_EVENT);
+
                 for (size_t i = 0; i < buffer.count; ++i)
                 {
-                    buffer.atoms[i] = event->getAtomValue(i);
+                    buffer.atomStrings[i] = atomToString(event->getAtom(i));
                 }
+
                 queueFromDSP.enqueue(buffer);
-                // TODO: addEvents() to add bulk events
                 outputPort.addEvent(event);
             }
             repaintFromDSP();

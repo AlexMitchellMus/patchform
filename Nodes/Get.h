@@ -36,7 +36,21 @@ public:
             {
                 if (Event* e = context->eventPool.getFreeEvent()){
                     e->setTimeStamp(event->getTimeStamp());
-                    e->addAtom(event->getAtomValue(atomNumber));
+                    e->data = event->getAtom(atomNumber);
+                    if (e->data->type == DataAtom::DataType::List)
+                    {
+                        auto walk = e->data;
+                        int numAtoms = 0;
+                        while (walk)
+                        {
+                            numAtoms++;
+                            walk = walk->next;
+                        }
+                        e->numAtoms = numAtoms;
+                    }
+                    else
+                        e->addAtom(event->getAtomValue(atomNumber));
+
                     outputPort.addEvent(e);
                 }
             }

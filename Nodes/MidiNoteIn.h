@@ -11,8 +11,6 @@ class MidiNoteIn : public MidiNode
 {
     DEFINE_AND_REGISTER_NODE("MidiNoteIn", "notein");
 
-    float midiNote = 60.0f; // Default to middle C
-
 public:
     MidiNoteIn(NodeContext* context, const json& objParams) : MidiNode(context, AudioPort::PortType::Data, objParams)
     {
@@ -30,18 +28,52 @@ public:
             if (midiMessage.message.size() >= 3)
             {
                 unsigned char status = midiMessage.message[0];
+
                 // Check if the message is a Note On (0x90-0x9F)
                 if ((status & 0xF0) == 0x90)
                 {
-                    // Optional: Only consider non-zero velocity as Note On.
                     unsigned char velocity = midiMessage.message[2];
+
+                    // Optional: Only consider non-zero velocity as Note On.
                     if (velocity != 0)
                     {
                         unsigned char noteNumber = midiMessage.message[1];
+
+                        // **Allocate a new event**
                         if (auto* e = context->eventPool.getFreeEvent())
                         {
-                            e->addAtom(noteNumber);
-                            e->addAtom(velocity);
+                            // **Create a parent atom for the list**
+                            DataAtom* listAtom = context->eventPool.allocateListAtom();
+                            if (!listAtom) return;
+
+                            listAtom->type = DataAtom::DataType::List;
+                            listAtom->data.list = nullptr; // Start empty
+
+                            // **Create atoms for note number & velocity**
+                            DataAtom* noteAtom = context->eventPool.allocateDataAtom();
+                            if (!noteAtom) return;
+                            noteAtom->type = DataAtom::DataType::Float;
+                            noteAtom->data.atom = static_cast<float>(noteNumber);
+                            noteAtom->next = nullptr;
+
+                            DataAtom* velocityAtom = context->eventPool.allocateDataAtom();
+                            if (!velocityAtom) return;
+                            velocityAtom->type = DataAtom::DataType::Float;
+                            velocityAtom->data.atom = static_cast<float>(velocity);
+                            velocityAtom->next = nullptr;
+
+                            // **Attach note and velocity inside the list**
+                            listAtom->data.list = noteAtom;
+                            noteAtom->next = velocityAtom;
+
+                            // **Assign list to event**
+                            e->data = listAtom;
+                            e->numAtoms = 2;
+
+#ifdef DEBUG_MIDI
+                            std::cout << "MidiNoteIn: Outputting Note-On List { "
+                                      << noteNumber << ", " << velocity << " }" << std::endl;
+#endif
 
                             outputPort.addEvent(e);
                         }
@@ -54,6 +86,4 @@ public:
             }
         }
     }
-
 };
-
