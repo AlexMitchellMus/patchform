@@ -43,11 +43,12 @@ public:
                         if (auto* e = context->eventPool.getFreeEvent())
                         {
                             // **Create a parent atom for the list**
-                            DataAtom* listAtom = context->eventPool.allocateListAtom();
+                            DataAtom* listAtom = context->eventPool.allocateDataAtom();
                             if (!listAtom) return;
 
                             listAtom->type = DataAtom::DataType::List;
                             listAtom->data.list = nullptr; // Start empty
+                            listAtom->next = nullptr;
 
                             // **Create atoms for note number & velocity**
                             DataAtom* noteAtom = context->eventPool.allocateDataAtom();

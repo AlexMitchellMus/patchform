@@ -7,12 +7,14 @@
 #include "AudioNodeBase.h"
 #include <vector>
 #include <iostream>
+#include <algorithm> // For std::sort and std::unique
 
 class Pack : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Pack", "pack");
 
     int packNum = 0;
+    // One persistent DataAtom pointer per input port.
     std::vector<DataAtom*> persistentAtoms;
 
 public:
@@ -21,12 +23,13 @@ public:
     {
         packNum = objParams.value("values", 0);
 
+        persistentAtoms.clear();
+        persistentAtoms.resize(packNum, nullptr);
+
         for (int i = 0; i < packNum; i++)
         {
             addInputPort("data_" + std::to_string(i), AudioPort::PortType::Data);
         }
-
-        persistentAtoms.resize(packNum, nullptr);
     }
 
     json getSerializedNode() override
@@ -34,159 +37,155 @@ public:
         return nodeCreationData;
     }
 
-    DataAtom* cloneAtomChain(DataAtom* original, NodeContext* context, int& count)
+    void processAudio(float* out, unsigned long /*frameCount*/) override
     {
-        if (!original) return nullptr;
-
-        DataAtom* headClone = nullptr;
-        DataAtom* lastClone = nullptr;
-
-        std::vector<std::pair<DataAtom*, DataAtom**>> workQueue;
-        workQueue.emplace_back(original, &headClone);
-
-        while (!workQueue.empty())
+//#define DEBUG_ATOM_POOL
+#ifdef DEBUG_ATOM_POOL
+        int listSize = context->eventPool.getFreeListSize();
+        if (freelistSize != listSize)
         {
-            auto [src, destPtr] = workQueue.back();
-            workQueue.pop_back();
-
-            if (!src)
-            {
-                *destPtr = nullptr;
-                continue;
-            }
-
-            // Allocate new atom
-            DataAtom* newAtom = context->eventPool.allocateDataAtom();
-            if (!newAtom) return nullptr;
-
-            newAtom->type = src->type;
-
-            if (src->type == DataAtom::DataType::Float)
-            {
-                newAtom->data.atom = src->data.atom;
-            }
-            else if (src->type == DataAtom::DataType::List)
-            {
-                newAtom->data.list = nullptr;
-                workQueue.emplace_back(src->data.list, &newAtom->data.list);
-            }
-
-            *destPtr = newAtom;
-            lastClone = newAtom;
-            count++;
-
-            if (src->next)
-            {
-                workQueue.emplace_back(src->next, &newAtom->next);
-            }
+            freelistSize = listSize;
+            std::cout << "atoms available: " << freelistSize << std::endl;
         }
+#endif
 
-        return headClone;
-    }
-
-    void processAudio(float* out, unsigned long frameCount) override
-    {
-        auto freesize = context->eventPool.getFreeListSize();
-        if (freelistSize != freesize)
+        // 1. Collect all unique timestamps from all input ports.
+        std::vector<unsigned long> timestamps;
+        for (int i = 0; i < packNum; i++)
         {
-            std::cout << context->eventPool.getFreeListSize() << std::endl;
-            freelistSize = freesize;
-        }
-        for (int portIndex = 0; portIndex < packNum; portIndex++)
-        {
-            const auto& events = inputPortBuffers[portIndex]->getEvents();
-
+            const auto& events = inputPortBuffers[i]->getEvents();
             for (const auto* ev : events)
             {
-                unsigned long ts = ev->getTimeStamp();
-                if (ts >= frameCount) continue;
+                timestamps.push_back(ev->getTimeStamp());
+            }
+        }
+        if (timestamps.empty())
+            return;
+        std::sort(timestamps.begin(), timestamps.end());
+        timestamps.erase(std::unique(timestamps.begin(), timestamps.end()), timestamps.end());
 
-                DataAtom* atom = ev->getAtom(0);
-                if (!atom) continue;
-
-                // **Replace old persistent atom**
-                if (persistentAtoms[portIndex])
+        // 2. For each unique timestamp, update persistent atoms and output an event.
+        for (unsigned long t : timestamps)
+        {
+            // For each port, if an event at timestamp t is found, update that port's persistent atom.
+            for (int i = 0; i < packNum; i++)
+            {
+                const auto& events = inputPortBuffers[i]->getEvents();
+                bool eventFound = false;
+                for (const auto* ev : events)
                 {
-                    context->eventPool.clearPersistentDataAtom(persistentAtoms[portIndex]);
-                }
-
-                persistentAtoms[portIndex] = atom;
-                context->eventPool.makePersistent(atom);
-
-                Event* newEvent = context->eventPool.getFreeEvent();
-                if (!newEvent) return;
-
-                // **Create a parent list atom**
-                DataAtom* listAtom = context->eventPool.allocateDataAtom();
-                if (!listAtom) return;
-
-                listAtom->type = DataAtom::DataType::List;
-                listAtom->data.list = nullptr;
-
-                DataAtom* lastListAtom = nullptr;
-                int atomCount = 0;
-
-                // **Clone all persistent atoms and attach to the list**
-                for (DataAtom* storedAtom : persistentAtoms)
-                {
-                    if (storedAtom)
+                    if (ev->getTimeStamp() == t)
                     {
-                        DataAtom* clonedChain = cloneAtomChain(storedAtom, context, atomCount);
-                        if (!clonedChain) return;
+                        DataAtom* inAtom = ev->getAtom(0);
+                        if (inAtom)
+                        {
+                            // Mark the old persistent atom as no longer persistent.
+                            if (persistentAtoms[i])
+                                persistentAtoms[i]->makePersistent(false);
 
-                        if (!listAtom->data.list)
-                        {
-                            listAtom->data.list = clonedChain;
-                            lastListAtom = clonedChain;
+                            inAtom->makePersistent(true);
+                            persistentAtoms[i] = inAtom;
                         }
-                        else
-                        {
-                            lastListAtom->next = clonedChain;
-                        }
-
-                        while (lastListAtom->next)
-                        {
-                            lastListAtom = lastListAtom->next;
-                        }
+                        break; // Use only the first event at this timestamp.
                     }
                 }
+            }
 
-                // **Ensure the event always contains a valid list atom**
-                if (!listAtom->data.list)
+            // 3. Remake fresh output atoms from each persistent atom.
+            std::vector<DataAtom*> outputAtoms;
+            for (int i = 0; i < packNum; i++)
+            {
+                if (!persistentAtoms[i])
                 {
-                    listAtom->data.list = context->eventPool.allocateDataAtom();
-                    if (listAtom->data.list) listAtom->data.list->data.atom = 0.0f;
+                    // Allocate an empty atom if missing.
+                    DataAtom* emptyAtom = context->eventPool.allocateDataAtom();
+                    if (emptyAtom)
+                    {
+                        outputAtoms.push_back(emptyAtom);
+                    }
+                    continue;
                 }
-
-                newEvent->setTimeStamp(ts);
-                newEvent->data = listAtom;
-                newEvent->numAtoms = atomCount;
-
-//#define DEBUG_PACK
-#ifdef DEBUG_PACK
-                if (newEvent->data)
+                DataAtom* outAtom = context->eventPool.allocateDataAtom();
+                if (outAtom)
                 {
-                    std::cout << "Packed data: " << newEvent->data->toString() << " (Atoms: " << atomCount << ")" <<
-                        std::endl;
+                    if (persistentAtoms[i]->type == DataAtom::DataType::List)
+                    {
+                        outAtom->type = DataAtom::DataType::List;
+                        outAtom->data.list = persistentAtoms[i]->data.list;
+                    }
+                    else
+                    {
+                        outAtom->type = DataAtom::DataType::Float;
+                        outAtom->data.atom = persistentAtoms[i]->data.atom;
+                    }
+                    outAtom->next = nullptr;
+                    outputAtoms.push_back(outAtom);
+                }
+            }
+
+            // 4. Chain the output atoms into a parent list.
+            DataAtom* parentList = context->eventPool.allocateDataAtom();
+            if (!parentList)
+                continue;
+            parentList->type = DataAtom::DataType::List;
+            parentList->data.list = nullptr;
+            DataAtom* last = nullptr;
+            for (DataAtom* atom : outputAtoms)
+            {
+                if (!parentList->data.list)
+                {
+                    parentList->data.list = atom;
+                    last = atom;
                 }
                 else
                 {
-                    std::cout << "Packed data: (empty event)" << std::endl;
+                    last->next = atom;
+                    last = atom;
                 }
-#endif
-
-                outputPort.addEvent(newEvent);
             }
+            if (!parentList->data.list)
+            {
+                DataAtom* fallback = context->eventPool.allocateDataAtom();
+                if (fallback)
+                {
+                    parentList->data.list = fallback;
+                }
+            }
+
+            // 5. Create and output a new event with the freshly remade data.
+            Event* newEvent = context->eventPool.getFreeEvent();
+            if (!newEvent)
+                continue;
+            newEvent->setTimeStamp(t);
+            newEvent->data = parentList;
+            newEvent->numAtoms = packNum;
+            outputPort.addEvent(newEvent);
+
+//#define DEBUG_PACK
+#ifdef DEBUG_PACK
+            if (newEvent->data)
+            {
+                std::cout << "Packed data: " << newEvent->data->toString()
+                          << " (Atoms: " << newEvent->numAtoms << ")" << std::endl;
+            }
+            else
+            {
+                std::cout << "Packed data: (empty event)" << std::endl;
+            }
+#endif
         }
     }
 
     ~Pack() override
     {
-        for (DataAtom* atom : persistentAtoms)
+        for (auto* atom : persistentAtoms)
         {
-            if (atom) context->eventPool.clearPersistentDataAtom(atom);
+            // return the saved atoms from the pack object to the atom pool
+            if (atom)
+                atom->makePersistent(false);
         }
     }
 
+private:
     int freelistSize = 0;
 };

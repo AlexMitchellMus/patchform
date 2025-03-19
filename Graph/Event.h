@@ -19,6 +19,8 @@ public:
 
     DataAtom* next = nullptr;  // Next item in the main chain
 
+    bool isPersistent = false;
+
     // **Recursively convert DataAtom chain into a readable string**
     std::string toString() const
     {
@@ -43,6 +45,24 @@ public:
         }
 
         return ss.str();
+    }
+
+    void makePersistent(bool toBePersistent)
+    {
+        makePersistent(this, toBePersistent);
+    }
+
+private:
+    void makePersistent(DataAtom* atom, const bool toBePersistent)
+    {
+        while (atom != nullptr)
+        {
+            atom->isPersistent = toBePersistent;
+            // If this is a list atom, mark its sublist persistent as well.
+            if (atom->type == DataAtom::DataType::List && atom->data.list)
+                makePersistent(atom->data.list, toBePersistent);
+            atom = atom->next;
+        }
     }
 };
 
