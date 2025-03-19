@@ -22,7 +22,7 @@ public:
     bool isPersistent = false;
 
     // **Recursively convert DataAtom chain into a readable string**
-    std::string toString() const
+    [[nodiscard]] std::string toString(const bool recursive = true) const
     {
         std::stringstream ss;
         const DataAtom* walk = this;
@@ -40,8 +40,11 @@ public:
                 ss << " }";
             }
 
-            if (walk->next) ss << ", ";  // **Separate elements with commas**
-            walk = walk->next;
+            if (recursive)
+            {
+                if (walk->next) ss << ", ";  // **Separate elements with commas**
+                walk = walk->next;
+            }
         }
 
         return ss.str();

@@ -22,10 +22,7 @@ public:
 
     static const size_t MAX_DISPLAY_ATOMS_PER_EVENT = 64;
 
-    struct EventDataBuffer {
-        std::array<std::string, MAX_DISPLAY_ATOMS_PER_EVENT> atomStrings;
-        size_t count = 0;
-    };
+    using EventDataBuffer = std::string;
 
     // Lock-free queue for UI -> Audio communication
     moodycamel::ConcurrentQueue<EventDataBuffer> queueFromDSP;
@@ -35,7 +32,7 @@ public:
     class UI final : public AudioNode::UI
     {
         std::atomic<bool> isDirty = false;
-        std::vector<std::string> values;
+        std::string text;
         float totalWidth = 0.0f;
 
     public:
@@ -56,15 +53,11 @@ public:
                 EventDataBuffer buffer;
                 while (listBox->queueFromDSP.try_dequeue(buffer));
 
-                values.clear();
+                text.clear();
                 totalWidth = 10.0f; // Padding
 
-                for (size_t i = 0; i < buffer.count; ++i)
-                {
-                    const std::string& valueStr = buffer.atomStrings[i];
-                    values.push_back(valueStr);
-                    totalWidth += valueStr.length() * 5.0f + 20.0f; // Estimate text width + spacing
-                }
+                text = buffer;
+                totalWidth = getTextWidthForFont("Regular", 16, text) + 20.0f;
 
                 // Adjust the node size based on the total width of values
                 setSize(std::max(30, static_cast<int>(totalWidth)), height);
@@ -87,11 +80,8 @@ public:
             nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
             float xOffset = 10.0f;
-            for (const auto& value : values)
-            {
-                nvgText(nvg, xOffset, height / 2, value.c_str(), nullptr);
-                xOffset += value.size() * 5.0f + 20.0f;
-            }
+
+            nvgText(nvg, xOffset, height / 2, text.c_str(), nullptr);
         }
     };
 
@@ -107,39 +97,6 @@ public:
         addInputPort("Value_input", AudioPort::PortType::Data);
     }
 
-    // **Recursively convert nested DataAtoms to string representation**
-    std::string atomToString(DataAtom* atom)
-    {
-        if (!atom) return "";
-
-        std::stringstream ss;
-
-        DataAtom* current = atom;
-        while (current)
-        {
-            if (current->type == DataAtom::DataType::Float)
-            {
-                if (std::floor(current->data.atom) == current->data.atom)
-                    ss << static_cast<int>(current->data.atom);
-                else
-                    ss << std::format("{:.4g}", current->data.atom);
-            }
-            else if (current->type == DataAtom::DataType::List)
-            {
-                ss << "{ ";
-                ss << atomToString(current->data.list); // Recurse into nested list
-                ss << " }";
-            }
-
-            if (current->next)
-                ss << ", ";
-
-            current = current->next;
-        }
-
-        return ss.str();
-    }
-
     void processAudio(float* out, const unsigned long frameCount) override
     {
         const auto& aEvents = inputPortBuffers[0]->getEvents();
@@ -149,12 +106,7 @@ public:
             for (const auto& event : aEvents)
             {
                 EventDataBuffer buffer;
-                buffer.count = std::min(event->getNumAtoms(), MAX_DISPLAY_ATOMS_PER_EVENT);
-
-                for (size_t i = 0; i < buffer.count; ++i)
-                {
-                    buffer.atomStrings[i] = atomToString(event->getAtom(i));
-                }
+                buffer = event->getAtom(0)->toString();
 
                 queueFromDSP.enqueue(buffer);
                 outputPort.addEvent(event);

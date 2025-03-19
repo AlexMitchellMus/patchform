@@ -42,33 +42,8 @@ public:
                         // **Allocate a new event**
                         if (auto* e = context->eventPool.getFreeEvent())
                         {
-                            // **Create a parent atom for the list**
-                            DataAtom* listAtom = context->eventPool.allocateDataAtom();
-                            if (!listAtom) return;
-
-                            listAtom->type = DataAtom::DataType::List;
-                            listAtom->data.list = nullptr; // Start empty
-                            listAtom->next = nullptr;
-
-                            // **Create atoms for note number & velocity**
-                            DataAtom* noteAtom = context->eventPool.allocateDataAtom();
-                            if (!noteAtom) return;
-                            noteAtom->type = DataAtom::DataType::Float;
-                            noteAtom->data.atom = static_cast<float>(noteNumber);
-                            noteAtom->next = nullptr;
-
-                            DataAtom* velocityAtom = context->eventPool.allocateDataAtom();
-                            if (!velocityAtom) return;
-                            velocityAtom->type = DataAtom::DataType::Float;
-                            velocityAtom->data.atom = static_cast<float>(velocity);
-                            velocityAtom->next = nullptr;
-
-                            // **Attach note and velocity inside the list**
-                            listAtom->data.list = noteAtom;
-                            noteAtom->next = velocityAtom;
-
-                            // **Assign list to event**
-                            e->data = listAtom;
+                            e->addAtom(static_cast<float>(noteNumber));
+                            e->addAtom(static_cast<float>(velocity));
                             e->numAtoms = 2;
 
 #ifdef DEBUG_MIDI

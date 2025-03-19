@@ -16,6 +16,7 @@ class Pack : public AudioNode
     int packNum = 0;
     // One persistent DataAtom pointer per input port.
     std::vector<DataAtom*> persistentAtoms;
+    std::vector<DataAtom*> outputAtoms;
 
 public:
     Pack(NodeContext* context, const json& objParams)
@@ -23,8 +24,8 @@ public:
     {
         packNum = objParams.value("values", 0);
 
-        persistentAtoms.clear();
         persistentAtoms.resize(packNum, nullptr);
+        outputAtoms.resize(packNum, nullptr);
 
         for (int i = 0; i < packNum; i++)
         {
@@ -91,8 +92,7 @@ public:
                 }
             }
 
-            // 3. Remake fresh output atoms from each persistent atom.
-            std::vector<DataAtom*> outputAtoms;
+            // Make disposable atoms to hold data / list heads
             for (int i = 0; i < packNum; i++)
             {
                 if (!persistentAtoms[i])
@@ -101,17 +101,18 @@ public:
                     DataAtom* emptyAtom = context->eventPool.allocateDataAtom();
                     if (emptyAtom)
                     {
-                        outputAtoms.push_back(emptyAtom);
+                        emptyAtom->next = nullptr;
+                        outputAtoms[i] = emptyAtom;
                     }
                     continue;
                 }
                 DataAtom* outAtom = context->eventPool.allocateDataAtom();
                 if (outAtom)
                 {
-                    if (persistentAtoms[i]->type == DataAtom::DataType::List)
+                    if (persistentAtoms[i]->next != nullptr)
                     {
                         outAtom->type = DataAtom::DataType::List;
-                        outAtom->data.list = persistentAtoms[i]->data.list;
+                        outAtom->data.list = persistentAtoms[i];
                     }
                     else
                     {
@@ -119,60 +120,39 @@ public:
                         outAtom->data.atom = persistentAtoms[i]->data.atom;
                     }
                     outAtom->next = nullptr;
-                    outputAtoms.push_back(outAtom);
+                    outputAtoms[i] = outAtom;
                 }
             }
 
-            // 4. Chain the output atoms into a parent list.
-            DataAtom* parentList = context->eventPool.allocateDataAtom();
-            if (!parentList)
-                continue;
-            parentList->type = DataAtom::DataType::List;
-            parentList->data.list = nullptr;
-            DataAtom* last = nullptr;
-            for (DataAtom* atom : outputAtoms)
+            if (!outputAtoms.empty())
             {
-                if (!parentList->data.list)
+                for (size_t i = 0; i < outputAtoms.size() - 1; i++)
                 {
-                    parentList->data.list = atom;
-                    last = atom;
+                    outputAtoms[i]->next = outputAtoms[i + 1];
                 }
-                else
+                // Create and output a new event using the first atom in the chain.
+                Event* newEvent = context->eventPool.getFreeEvent();
+                if (newEvent)
                 {
-                    last->next = atom;
-                    last = atom;
+                    newEvent->setTimeStamp(t);
+                    newEvent->data = outputAtoms.front();
+                    newEvent->numAtoms = static_cast<int>(outputAtoms.size());
+                    outputPort.addEvent(newEvent);
                 }
-            }
-            if (!parentList->data.list)
-            {
-                DataAtom* fallback = context->eventPool.allocateDataAtom();
-                if (fallback)
-                {
-                    parentList->data.list = fallback;
-                }
-            }
-
-            // 5. Create and output a new event with the freshly remade data.
-            Event* newEvent = context->eventPool.getFreeEvent();
-            if (!newEvent)
-                continue;
-            newEvent->setTimeStamp(t);
-            newEvent->data = parentList;
-            newEvent->numAtoms = packNum;
-            outputPort.addEvent(newEvent);
 
 //#define DEBUG_PACK
 #ifdef DEBUG_PACK
-            if (newEvent->data)
-            {
-                std::cout << "Packed data: " << newEvent->data->toString()
-                          << " (Atoms: " << newEvent->numAtoms << ")" << std::endl;
-            }
-            else
-            {
-                std::cout << "Packed data: (empty event)" << std::endl;
-            }
+                if (newEvent->data)
+                {
+                    std::cout << "Packed data: " << newEvent->data->toString()
+                              << " (Atoms: " << newEvent->numAtoms << ")" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Packed data: (empty event)" << std::endl;
+                }
 #endif
+            }
         }
     }
 
