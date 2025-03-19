@@ -36,8 +36,6 @@ public:
 
     DataAtom* cloneAtomChain(DataAtom* original, NodeContext* context, int& count)
     {
-        std::cout << "cloning chain" << std::endl;
-
         if (!original) return nullptr;
 
         DataAtom* headClone = nullptr;
@@ -88,6 +86,12 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
+        auto freesize = context->eventPool.getFreeListSize();
+        if (freelistSize != freesize)
+        {
+            std::cout << context->eventPool.getFreeListSize() << std::endl;
+            freelistSize = freesize;
+        }
         for (int portIndex = 0; portIndex < packNum; portIndex++)
         {
             const auto& events = inputPortBuffers[portIndex]->getEvents();
@@ -158,7 +162,7 @@ public:
                 newEvent->data = listAtom;
                 newEvent->numAtoms = atomCount;
 
-#define DEBUG_PACK
+//#define DEBUG_PACK
 #ifdef DEBUG_PACK
                 if (newEvent->data)
                 {
@@ -183,4 +187,6 @@ public:
             if (atom) context->eventPool.clearPersistentDataAtom(atom);
         }
     }
+
+    int freelistSize = 0;
 };

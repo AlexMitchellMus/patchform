@@ -85,7 +85,6 @@ public:
         freeList.reserve(count);
         allocatedList.reserve(count);
         persistentList.reserve(count);
-        pendingFreeList.reserve(count); // Deferred recycling list
 
         for (size_t i = 0; i < count; ++i) {
             freeList.push_back(i);
@@ -102,7 +101,16 @@ public:
         size_t index = freeList.back();
         freeList.pop_back();
         allocatedList.push_back(index);
-        return &sharedAtomPool[index];
+        auto atom = &sharedAtomPool[index];
+        atom->type = DataAtom::DataType::Float;
+        atom->data.list = nullptr;
+        atom->next = nullptr;
+        return atom;
+    }
+
+    int getFreeListSize()
+    {
+        return freeList.size();
     }
 
     // Fast allocation: Pull from freeList and move to allocatedList
@@ -141,10 +149,6 @@ public:
         // Move allocated atoms back to free list
         freeList.insert(freeList.end(), allocatedList.begin(), allocatedList.end());
         allocatedList.clear();
-
-        // Move pending freed persistent datatoms back to free list
-        freeList.insert(freeList.end(), pendingFreeList.begin(), pendingFreeList.end());
-        pendingFreeList.clear(); // Clear deferred free list
     }
 
     // Make an atom and its linked atoms persistent
@@ -208,7 +212,9 @@ public:
             auto it = std::find(persistentList.begin(), persistentList.end(), index);
             if (it != persistentList.end()) {
                 persistentList.erase(it);
-                pendingFreeList.push_back(index); // **Defer recycling to next cycle**
+                // Move the atom to regular allocated list
+                // This list is cleared each cycle
+                allocatedList.push_back(index);
             }
 
             // **Handle linked atoms (next pointer)**
@@ -234,7 +240,6 @@ private:
     std::vector<size_t> freeList;
     std::vector<size_t> allocatedList;
     std::vector<size_t> persistentList;
-    std::vector<size_t> pendingFreeList; // Deferred recycling list
 };
 
 class NodeContext {
