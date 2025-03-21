@@ -60,7 +60,7 @@ public:
             default:
                 {
                     // Other event types are ignored.
-                    return;
+                    continue;
                 }
             }
 
