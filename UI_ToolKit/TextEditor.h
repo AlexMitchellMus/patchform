@@ -19,6 +19,7 @@ public:
     void setText(const std::string& newText)
     {
         text = newText;
+        convertArrowsToChar();
         repaint();
     }
 
@@ -65,7 +66,8 @@ public:
         }
 
         nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
-        nvgText(vg, 10, height * 0.5f, text.c_str(), nullptr);
+        std::cout << text << " : " << displayText << std::endl;
+        nvgText(vg, 10, height * 0.5f, editorActive ? text.c_str() : displayText.c_str(), nullptr);
     }
 /*
     void focusGained() override
@@ -82,6 +84,21 @@ public:
         onTextReturned();
         repaint();
     }
+
+    bool hitTest(float px, float py) override
+    {
+        if (isInteractable)
+            return Component::hitTest(px, py);
+
+        return false;
+    }
+
+    /*
+    bool consumeEvent(CompEvent& e) override
+    {
+        return editorActive;
+    }
+    */
 
     void keyPressed(CompEvent& e) override
     {
@@ -125,37 +142,60 @@ public:
             repaint();
             break;
         default:
-            if (editorFirstActive)
-            {
-                editorFirstActive = false;
-                text.clear();
-                cursorPos = 0;
-            }
-
             onCharInput(keycode);
             onTextChanged();
         }
+
+        convertArrowsToChar();
+        repaint();
     }
 
     void onCharInput(unsigned int codepoint)
     {
         if (!editorActive) return;
 
-        SDL_Keymod modState = SDL_GetModState(); // Get active key modifiers (Shift, Ctrl, etc.)
-
+        SDL_Keymod modState = SDL_GetModState(); // Get active key modifiers
         if (codepoint >= 32 && codepoint <= 126) // Printable characters
         {
             char character = static_cast<char>(codepoint);
+            bool validChar = true;
 
-            // Convert to uppercase if Shift is pressed
-            if ((modState & SDL_KMOD_SHIFT) && character >= 'a' && character <= 'z')
+            if (isNumber)
             {
-                character = character - ('a' - 'A'); // Convert lowercase to uppercase
+                // Allow only digits and a single '.'
+                if (!((character >= '0' && character <= '9') || character == '.'))
+                {
+                    validChar = false;
+                }
+                // Prevent entering more than one '.'
+                if (character == '.' && text.find('.') != std::string::npos)
+                {
+                    validChar = false;
+                }
+            }
+            else if (modState & SDL_KMOD_SHIFT)
+            {
+                // Handle letters and symbols when shift is pressed.
+                if (character >= 'a' && character <= 'z') {
+                    character = character - ('a' - 'A');
+                } else {
+                    character = getShiftedSymbol(character);
+                }
             }
 
-            text.insert(cursorPos, 1, character);
-            cursorPos++;
-            repaint();
+            // Only insert character and clear text if the character is valid.
+            if (validChar)
+            {
+                // Clear the text only on the first valid key press.
+                if (editorFirstActive)
+                {
+                    text.clear();
+                    cursorPos = 0;
+                    editorFirstActive = false;
+                }
+                text.insert(cursorPos, 1, character);
+                cursorPos++;
+            }
         }
     }
 
@@ -179,7 +219,7 @@ public:
 
     void mouseDrag(const Point& position, const Point& delta, Button button) override
     {
-        if (editorActive)
+        if (!editorActive && !isNumber)
             return;
 
         wasDragged = true;
@@ -208,16 +248,95 @@ public:
         wasDragged = false;
     }
 
+    void setInteractable(bool shouldInteract)
+    {
+        std::cout << "setting text editor interactable: " << std::boolalpha << shouldInteract << std::endl;
+        if (isInteractable != shouldInteract)
+        {
+            isInteractable = shouldInteract;
+            if (isInteractable)
+                focusGained();
+            else
+                focusLost();
+            repaint();
+        }
+    }
+
 private:
     bool wasDragged = false;
     float draggedNumValue = 0.0f;
     std::string text;
+    std::string displayText;
     int cursorPos;
     bool isNumber;
     bool editorActive = false;
     bool editorFirstActive = false;
 
     bool isHovered = false;
+
+    bool isInteractable = true;
+
+    static char getShiftedSymbol(const char c) {
+        switch(c) {
+        case '1': return '!';
+        case '2': return '@';
+        case '3': return '#';
+        case '4': return '$';
+        case '5': return '%';
+        case '6': return '^';
+        case '7': return '&';
+        case '8': return '*';
+        case '9': return '(';
+        case '0': return ')';
+        case '-': return '_';
+        case '=': return '+';
+        case '[': return '{';
+        case ']': return '}';
+        case ';': return ':';
+        case '\'': return '"';
+        case ',': return '<';
+        case '.': return '>';
+        case '/': return '?';
+        case '\\': return '|';
+        case '`': return '~';
+        default: return c;
+        }
+    }
+
+    void convertArrowsToChar()
+    {
+        displayText.clear();
+        size_t len = text.size();
+        for (size_t i = 0; i < len; ++i) {
+            // Check for "<-" sequence.
+            if (i + 1 < len && text[i] == '<' && text[i + 1] == '-') {
+                // Determine if there is a valid preceding character:
+                // Valid if it's the first character, or the preceding character is a space.
+                bool validLeft = (i == 0) || (text[i - 1] == ' ');
+                // Determine if there is a valid following character:
+                // Valid if the sequence ends at the end of the string, or if the character after '-' is a space.
+                bool validRight = (i + 2 >= len) || (text[i + 2] == ' ');
+                if (validLeft && validRight) {
+                    displayText += "←";
+                    i++; // Skip the '-' character.
+                    continue;
+                }
+            }
+            // Check for "->" sequence.
+            if (i + 1 < len && text[i] == '-' && text[i + 1] == '>') {
+                bool validLeft = (i == 0) || (text[i - 1] == ' ');
+                bool validRight = (i + 2 >= len) || (text[i + 2] == ' ');
+                if (validLeft && validRight) {
+                    displayText += "→";
+                    i++; // Skip the '>' character.
+                    continue;
+                }
+            }
+            // Otherwise, just copy the current character.
+            displayText.push_back(text[i]);
+        }
+    }
+
 };
 
 } // namespace pptk

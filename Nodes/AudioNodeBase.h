@@ -84,6 +84,11 @@ public:
         //std::cout << "destorying audio node: " << nodeID << std::endl;
     }
 
+    virtual bool isGuiOnly() const
+    {
+        return false;
+    }
+
 #ifdef PATCHFORM_WITH_GUI
 protected:
     virtual std::unique_ptr<UI> makeUI()

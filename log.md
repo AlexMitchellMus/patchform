@@ -116,7 +116,13 @@ add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI
 
 WORK LOG:
 
+[issue]
+Comment object is currently a NOOP for the audioprocess. This is because we need to still keep the index updated correctly.
+Make it so the comment object (that has no way to communicate with the audio process anyway) doesn't get added to the audio process vector
+This will mean changing the way we sort/allocate ID's/index etc.
 
+[issue]
+Text editor is a bit janky ATM, this need a large fix, (mainly for on-object text editing)
 
 [issue]
 Use glaze for json handling (which will allow compile time etc)

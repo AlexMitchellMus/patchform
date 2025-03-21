@@ -16,7 +16,6 @@ ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
     textBox->setText(param->getAsString());
     addComponent(textBox.get());
 
-
     // Hook TextBox updates to parameter
     textBox->onTextReturned = ([this]() {
         try {

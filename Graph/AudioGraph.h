@@ -214,6 +214,8 @@ public:
 
         for (auto& obj : objectList)
         {
+            //if (obj->isGuiOnly())
+            //    continue;
             objectsListCopy.push_back(obj.get());
             // All MIDI nodes are input only, so we can simply call them all at once without an order
             if (auto* midiNode = dynamic_cast<MidiNode*>(obj.get()))
@@ -1048,6 +1050,9 @@ public:
 
         case hash("strip"):
             return addNode<Strip>(idString, node);
+
+        case hash("comment"):
+            return addNode<Comment>(idString, node);
 
         default:
             // Unknown object name, return error

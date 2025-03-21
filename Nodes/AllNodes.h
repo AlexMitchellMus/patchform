@@ -40,6 +40,7 @@
 #include "ListBox.h"
 #include "Ping.h"
 #include "Scope.h"
+#include "Comment.h"
 
 #include "MidiNodeBase.h"
 

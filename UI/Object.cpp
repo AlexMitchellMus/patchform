@@ -165,6 +165,8 @@ void Object::updateCanvasMode(Canvas::DisplayMode newMode)
     {
         oPort->setCanvasMode(transparentPorts);
     }
+
+    isInLockedMode = newMode == Canvas::DisplayMode::Lock;
 }
 
 void Object::mouseEnter(pptk::CompEvent& e)
@@ -236,7 +238,7 @@ void Object::drawBackground(NVGcontext* nvg)
     auto bgCol = isHovered ? nvgRGB(34, 34, 34) : nvgRGB(33, 33, 33);
 
     if (isGuiTransparent)
-        bgCol.a *= 0.3f;
+        bgCol.a *= isInLockedMode ? 0.0f : 0.3f;
 
     auto outLineCol = isSelected ? nvgRGB(28, 73, 119) : isGuiTransparent ? bgCol : nvgRGB(45, 45, 45);
 

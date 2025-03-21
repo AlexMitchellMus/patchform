@@ -101,5 +101,7 @@ private:
     float nameWidth = -1.0f;
 
     bool isGuiTransparent = false;
+
+    bool isInLockedMode = false;
 };
 
