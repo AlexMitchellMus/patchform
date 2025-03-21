@@ -304,10 +304,19 @@ public:
         {
             for (auto* ev : inputEvents)
             {
-                if (ev->numAtoms)
+                if (ev->data)
+                {
                     selectedIndex = ev->getAtomValue(0);
-                // Forward the input event to the output.
-                outputPort.addEvent(ev);
+                    // Forward the input event to the output.
+                    outputPort.addEvent(ev);
+                }
+                else
+                {
+                    std::cout << "got a stripped event, outputing the index only!" << std::endl;
+                    auto outEvent = context->eventPool.getFreeEvent();
+                    outEvent->addAtom(selectedIndex);
+                    outputPort.addEvent(outEvent);
+                }
             }
             eventQueueFromDSP.enqueue(selectedIndex);
             repaintFromDSP();

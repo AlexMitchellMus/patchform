@@ -1046,6 +1046,9 @@ public:
         case hash("tag"):
             return addNode<TagEvent>(idString, node);
 
+        case hash("strip"):
+            return addNode<Strip>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

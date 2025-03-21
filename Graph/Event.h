@@ -55,6 +55,32 @@ public:
         makePersistent(this, toBePersistent);
     }
 
+    [[nodiscard]] DataAtom* getAtom(const int index)
+    {
+        DataAtom* current = this;
+        int count = 0;
+        while (current != nullptr)
+        {
+            if (count == index)
+                return current;
+            current = current->next;
+            ++count;
+        }
+        return nullptr;
+    }
+
+    [[nodiscard]] size_t getAtomCount()
+    {
+        DataAtom* current = this;
+        int count = 0;
+        while (current != nullptr)
+        {
+            current = current->next;
+            ++count;
+        }
+        return count;
+    }
+
 private:
     void makePersistent(DataAtom* atom, const bool toBePersistent)
     {

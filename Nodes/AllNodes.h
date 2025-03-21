@@ -30,6 +30,7 @@
 #include "Get.h"
 #include "Pack.h"
 #include "TagEvent.h"
+#include "Strip.h"
 
 // UI Nodes
 

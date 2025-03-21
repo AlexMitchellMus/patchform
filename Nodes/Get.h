@@ -9,11 +9,14 @@
 #include "AudioNodeBase.h"
 
 // AddNode that sums two signals
-class Get : public AudioNode {
+class Get : public AudioNode
+{
     DEFINE_AND_REGISTER_NODE("GetValue", "get");
 
-    IntParameter *atomNumberParam;
-    int atomNumber;
+    IntParameter* atomNumberParam;
+    size_t atomNumber;
+
+    DataAtom* savedData = nullptr;
 
 public:
     Get(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
@@ -32,27 +35,56 @@ public:
 
         for (const auto event : aEvents)
         {
-            if (event->getNumAtoms() > atomNumber)
-            {
-                if (Event* e = context->eventPool.getFreeEvent()){
-                    e->setTimeStamp(event->getTimeStamp());
-                    e->data = event->getAtom(atomNumber);
-                    if (e->data->type == DataAtom::DataType::List)
-                    {
-                        auto walk = e->data;
-                        int numAtoms = 0;
-                        while (walk)
-                        {
-                            numAtoms++;
-                            walk = walk->next;
-                        }
-                        e->numAtoms = numAtoms;
-                    }
-                    else
-                        e->addAtom(event->getAtomValue(atomNumber));
+            //std::cout << "event tag: " << event->getTagHash() << " get hash is:  " << hash("get") << std::endl;
 
-                    outputPort.addEvent(e);
+            switch (event->getTagHash())
+            {
+                case hash("get"):
+                    {
+                        //std::cout << "got tag get!" << std::endl;
+                        atomNumber = event->getAtomValue(0);
+                    }
+                break;
+                default:
+                    if (event->data)
+                    {
+                        if (savedData)
+                            savedData->makePersistent(false);
+
+                        savedData = event->data;
+                        savedData->makePersistent(true);
+                        continue;
+                    }
+                break;
+            }
+
+            int getAtomNumber = std::min(atomNumber, savedData->getAtomCount() - 1);
+
+            if (Event* e = context->eventPool.getFreeEvent())
+            {
+                e->setTimeStamp(event->getTimeStamp());
+                auto atomData = savedData->getAtom(getAtomNumber);
+                if (atomData->type == DataAtom::DataType::List)
+                {
+                    e->data = atomData->data.list;
+                    auto walk = atomData->data.list;
+                    int numAtoms = 0;
+                    while (walk)
+                    {
+                        numAtoms++;
+                        walk = walk->next;
+                    }
+                    e->numAtoms = numAtoms;
                 }
+                else
+                {
+                    // Make a new atom to hold the list or data
+                    auto newData = context->eventPool.allocateDataAtom();
+                    newData->data.atom = atomData->data.atom;
+                    e->numAtoms = 1;
+                    e->data = newData;
+                }
+                outputPort.addEvent(e);
             }
         }
     }
