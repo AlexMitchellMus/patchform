@@ -66,7 +66,6 @@ public:
         }
 
         nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
-        std::cout << text << " : " << displayText << std::endl;
         nvgText(vg, 10, height * 0.5f, editorActive ? text.c_str() : displayText.c_str(), nullptr);
     }
 /*

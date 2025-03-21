@@ -28,31 +28,36 @@ public:
             if (midiMessage.message.size() >= 3)
             {
                 unsigned char status = midiMessage.message[0];
+                unsigned char statusType = status & 0xF0;
 
-                // Check if the message is a Note On (0x90-0x9F)
-                if ((status & 0xF0) == 0x90)
+                // Check if the message is a Note On (0x90-0x9F) or Note Off: 0x80
+                if (statusType == 0x90 || statusType == 0x80)
                 {
                     unsigned char velocity = midiMessage.message[2];
+                    unsigned char noteNumber = midiMessage.message[1];
 
-                    // Optional: Only consider non-zero velocity as Note On.
-                    if (velocity != 0)
+                    // **Allocate a new event**
+                    if (auto* e = context->eventPool.getFreeEvent())
                     {
-                        unsigned char noteNumber = midiMessage.message[1];
+                        e->addAtom(static_cast<float>(noteNumber));
+                        e->addAtom(static_cast<float>(velocity));
 
-                        // **Allocate a new event**
-                        if (auto* e = context->eventPool.getFreeEvent())
+                        // Use velocity 0 on Note On messages as Note Off
+                        if (statusType == 0x90 && velocity > 0)
                         {
-                            e->addAtom(static_cast<float>(noteNumber));
-                            e->addAtom(static_cast<float>(velocity));
-                            e->numAtoms = 2;
+                            e->setTag("note-on");
+                        }
+                        else
+                        {
+                            e->setTag("note-off");
+                        }
+
+                        e->numAtoms = 2;
+                        outputPort.addEvent(e);
 
 #ifdef DEBUG_MIDI
-                            std::cout << "MidiNoteIn: Outputting Note-On List { "
-                                      << noteNumber << ", " << velocity << " }" << std::endl;
+                        std::cout << "MidiNoteIn: Outputting Note-On List { " << noteNumber << ", " << velocity << " }" << std::endl;
 #endif
-
-                            outputPort.addEvent(e);
-                        }
                     }
                 }
             }

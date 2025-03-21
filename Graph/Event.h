@@ -130,7 +130,7 @@ public:
         tag = Tag(tagName);
     }
 
-    hash32 getTagHash()
+    hash32 getTagHash() const
     {
         return tag.tagHash;
     }

@@ -36,7 +36,10 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "tag"})", "tag", false },
         { R"({"obj": "radiobox"})", "rb", false },
         { R"({"obj": "strip"})", "strp", false },
-        { R"({"obj": "comment"})", "com", false }
+        { R"({"obj": "comment"})", "com", false },
+        { R"({"obj": "filtertag"})", "filtag", false },
+        { R"({"obj": "activemidinotes"})", "act notes", false },
+        { R"({"obj": "random"})", "rnd", false }
     };
 
     for (int i = 0; i < 3; i++)

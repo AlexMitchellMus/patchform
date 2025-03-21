@@ -1035,8 +1035,18 @@ public:
         case hash("notein"):
             return addNode<MidiNoteIn>(idString, node);
 
+        case hash("activemidinotes"):
+            return addNode<ActiveMidiNotes>(idString, node);
+
+        case hash("filtertag"):
+            return addNode<FilterTag>(idString, node);
+
         case hash("get"):
             return addNode<Get>(idString, node);
+
+        case hash("rnd"):
+        case hash("random"):
+            return addNode<Random>(idString, node);
 
         case hash("lb"):
         case hash("listbox"):

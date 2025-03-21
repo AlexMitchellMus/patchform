@@ -31,6 +31,9 @@
 #include "Pack.h"
 #include "TagEvent.h"
 #include "Strip.h"
+#include "FilterTag.h"
+#include "ActiveMidiNotes.h"
+#include "Random.h"
 
 // UI Nodes
 
