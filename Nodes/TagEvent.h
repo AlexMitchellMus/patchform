@@ -27,6 +27,7 @@ public:
 
     json getSerializedNode() override
     {
+        nodeCreationData["tag"] = tagParameter->getValue();
         return nodeCreationData;
     }
 

@@ -32,6 +32,13 @@ public:
         maxCountParam = addParameter<IntParameter>("Max", maxCount, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
     }
 
+    json getSerializedNode() override
+    {
+        nodeCreationData["min"] = minCountParam->getValue();
+        nodeCreationData["max"] = maxCountParam->getValue();
+        return nodeCreationData;
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
         minCount = minCountParam->getValue();

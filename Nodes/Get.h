@@ -35,13 +35,10 @@ public:
 
         for (const auto event : aEvents)
         {
-            //std::cout << "event tag: " << event->getTagHash() << " get hash is:  " << hash("get") << std::endl;
-
             switch (event->getTagHash())
             {
                 case hash("get"):
                     {
-                        //std::cout << "got tag get!" << std::endl;
                         atomNumber = event->getAtomValue(0);
                     }
                 break;
@@ -57,6 +54,9 @@ public:
                     }
                 break;
             }
+
+            if (!savedData)
+                return;
 
             int getAtomNumber = std::min(atomNumber, savedData->getAtomCount() - 1);
 

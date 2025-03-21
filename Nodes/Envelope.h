@@ -103,6 +103,13 @@ public:
         decayValParam = addParameter<FloatParameter>("Decay", deacyMs, 0.0f, std::numeric_limits<float>::max());
     }
 
+    json getSerializedNode() override
+    {
+        nodeCreationData["attack"] = attackValParam->getValue();
+        nodeCreationData["decay"] = decayValParam->getValue();
+        return nodeCreationData;
+    }
+
     void processAudio(float* out, const unsigned long frameCount) override
     {
         auto events = inputPortBuffers[0]->getEvents();
