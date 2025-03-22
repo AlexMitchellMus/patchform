@@ -55,6 +55,7 @@ public:
         {
             // Set a fixed size for the oscilloscope widget.
             setSize(400, 100);
+            waveform.fill(0.0f);
         }
 
         // updateGraphValues() drains the queue and updates the waveform state.

@@ -37,6 +37,15 @@ public:
         };
     }
 
+    ~EventDelay()
+    {
+        // Release all queued data atoms
+        for (auto& event : queue)
+        {
+            event.data->makePersistent(false);
+        }
+    }
+
     json getSerializedNode() override
     {
         nodeCreationData["ms"] = delayParam->getValue();
