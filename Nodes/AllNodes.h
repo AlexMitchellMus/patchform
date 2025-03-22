@@ -35,6 +35,7 @@
 #include "ActiveMidiNotes.h"
 #include "Random.h"
 #include "Intify.h"
+#include "EventDelay.h"
 
 // UI Nodes
 

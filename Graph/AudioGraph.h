@@ -693,6 +693,10 @@ public:
 
     void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
+//#define DSP_FREE_ATOMS
+#ifdef DSP_FREE_ATOMS
+        std::cout << "--- free atoms: " << context->eventPool.getFreeListSize() << std::endl;
+#endif
         graph->process(buffer, frameCount, midiMessage);
     }
 
@@ -1066,6 +1070,9 @@ public:
 
         case hash("intify"):
             return addNode<Intify>(idString, node);
+
+        case hash("evdelay"):
+            return addNode<EventDelay>(idString, node);
 
         default:
             // Unknown object name, return error

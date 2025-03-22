@@ -130,6 +130,11 @@ public:
         tag = Tag(tagName);
     }
 
+    void setTagHashcode(const hash32 hash)
+    {
+        tag = hash;
+    }
+
     hash32 getTagHash() const
     {
         return tag.tagHash;

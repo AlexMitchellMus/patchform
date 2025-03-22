@@ -111,9 +111,9 @@ public:
             getRootComponent()->addComponent(addObjectMenu.get());
             addObjectMenu->registerMouseListener(addObjectButton.get());
             addObjectMenu->setBounds(
-                (getRootComponent()->getWidth() / 2) - 308,
+                (getRootComponent()->getWidth() / 2) - 358,
                 getRootComponent()->getHeight() - 255,
-                616, 180
+                616, 220
             );
 
             addObjectButton->setActive(true);
