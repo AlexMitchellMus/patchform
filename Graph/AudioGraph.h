@@ -1064,6 +1064,9 @@ public:
         case hash("comment"):
             return addNode<Comment>(idString, node);
 
+        case hash("intify"):
+            return addNode<Intify>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;

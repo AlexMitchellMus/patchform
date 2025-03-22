@@ -51,9 +51,9 @@ public:
                 break;
             default:
 
-                // Otherwise, treat it as a note event.
-                    int noteValue = e->getAtomValue(0);
-                noteValue = std::clamp(noteValue, 0, 127);
+                // Otherwise, treat it as a note event
+                float noteValue = e->getAtomValue(0);
+                noteValue = std::clamp(noteValue, 0.0f, 127.0f);
 
                 float frequency = 0.0f;
                 if (tuningCount >= 2)
@@ -62,7 +62,7 @@ public:
                     // We assume the table covers one octave.
                     int steps = tuningCount;
                     int noteOctave = noteValue / steps;
-                    int noteDegree = noteValue % steps;
+                    int noteDegree = static_cast<int>(noteValue) % steps;
 
                     // Use A4 (MIDI 69) as a reference.
                     int refOctave = 69 / steps;

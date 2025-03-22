@@ -39,7 +39,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "comment"})", "com", false },
         { R"({"obj": "filtertag"})", "filtag", false },
         { R"({"obj": "activemidinotes"})", "act notes", false },
-        { R"({"obj": "random"})", "rnd", false }
+        { R"({"obj": "random"})", "rnd", false },
+        { R"({"obj": "intify", "mode": 0 })", "intify", false }
     };
 
     for (int i = 0; i < 3; i++)

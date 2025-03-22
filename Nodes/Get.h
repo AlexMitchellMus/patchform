@@ -14,7 +14,10 @@ class Get : public AudioNode
     DEFINE_AND_REGISTER_NODE("GetValue", "get");
 
     IntParameter* atomNumberParam;
-    size_t atomNumber;
+    std::atomic<size_t> atomNumber;
+
+    IntParameter* routeModeParam;
+    std::atomic<int> routeMode;
 
     DataAtom* savedData = nullptr;
 
@@ -23,26 +26,47 @@ public:
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
 
-        atomNumber = objParams.value("get", 0);
+        atomNumber.store(objParams.value("get", 0));
+        routeMode.store(objParams.value("routeMode", 0));
 
-        atomNumberParam = addParameter<IntParameter>("Get atom: ", atomNumber, 0, 1024);
+        atomNumberParam = addParameter<IntParameter>("get", atomNumber, 0, 1024);
+        routeModeParam = addParameter<IntParameter>("route", routeMode, 0, 1);
+
+        atomNumberParam->informNodeOfChange = [this]()
+        {
+            atomNumber.store(atomNumberParam->getValue());
+        };
+
+        routeModeParam->informNodeOfChange = [this]()
+        {
+            routeMode.store(routeModeParam->getValue());
+        };
+    }
+
+    json getSerializedNode() override
+    {
+        nodeCreationData["get"] = atomNumberParam->getValue();
+        nodeCreationData["routeMode"] = routeModeParam->getValue();
+        return nodeCreationData;
     }
 
     void processAudio(float* out, unsigned long frameCount) override
     {
         auto aEvents = inputPortBuffers[0]->getEvents();
-        atomNumber = atomNumberParam->getValue();
 
         for (const auto event : aEvents)
         {
             switch (event->getTagHash())
             {
-                case hash("get"):
-                    {
-                        atomNumber = event->getAtomValue(0);
-                    }
-                break;
-                default:
+            case hash("get"):
+                {
+                    atomNumber.store(event->getAtomValue(0));
+                    if (routeMode.load() != 0)
+                        continue;
+                    break;
+                }
+            default:
+                {
                     if (event->data)
                     {
                         if (savedData)
@@ -50,15 +74,16 @@ public:
 
                         savedData = event->data;
                         savedData->makePersistent(true);
-                        continue;
+                        if (routeMode.load() == 0)
+                            continue;
                     }
-                break;
+                }
             }
 
             if (!savedData)
                 return;
 
-            int getAtomNumber = std::min(atomNumber, savedData->getAtomCount() - 1);
+            int getAtomNumber = std::min(atomNumber.load(), savedData->getAtomCount() - 1);
 
             if (Event* e = context->eventPool.getFreeEvent())
             {

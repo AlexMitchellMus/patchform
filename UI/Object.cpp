@@ -17,9 +17,9 @@ class Object::InsetParameter : public Component
     {
         paramDisplayText = linkedParam->getName() + " : " + linkedParam->getAsString();
 
-        linkedParam->onParameterChanged = [this, linkedParam](const std::string& newValue)
+        linkedParam->onParameterChanged = [this, linkedParam]()
         {
-            auto newText = linkedParam->getName() + " : " + newValue;
+            auto newText = linkedParam->getName() + " : " + linkedParam->getAsString();
             if (paramDisplayText != newText)
             {
                 paramDisplayText = newText;

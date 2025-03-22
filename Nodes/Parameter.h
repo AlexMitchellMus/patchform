@@ -8,7 +8,8 @@ class Parameter
 public:
     std::string name;
 
-    std::function<void(std::string)> onParameterChanged = [](std::string){};
+    std::function<void()> onParameterChanged = [](){};
+    std::function<void()> informNodeOfChange = [](){};
     std::function<void(std::variant<int, float, std::string>)> updateNodeUI = [](std::variant<int, float, std::string>){};
 
     Parameter(const std::string& paramName) : name(paramName)
@@ -42,7 +43,7 @@ public:
         {
             value = newValue;
             queue.enqueue(newValue);
-            onParameterChanged(getAsString());
+            onParameterChanged();
             updateNodeUI(value);
         }
     }
@@ -107,7 +108,8 @@ public:
         {
             value = newValue;
             queue.enqueue(newValue);
-            onParameterChanged(std::to_string(newValue));
+            informNodeOfChange();
+            onParameterChanged();
             updateNodeUI(value);
         }
     }
@@ -187,7 +189,7 @@ public:
         value = newValue;
         queue.enqueue(newValue);
 
-        onParameterChanged(value);
+        onParameterChanged();
         updateNodeUI(value);
     }
 
