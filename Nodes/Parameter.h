@@ -191,6 +191,7 @@ public:
         queue.enqueue(newValue);
 
         onParameterChanged();
+        informNodeOfChange();
         updateNodeUI(value);
     }
 

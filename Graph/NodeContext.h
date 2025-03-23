@@ -8,6 +8,8 @@
 #include <vector>
 #include <numeric>
 
+#include "../Utility/LockFreeHashMap.h"
+
 class EventPool {
 public:
     EventPool(std::size_t initialSize = 1024) {
@@ -141,6 +143,8 @@ public:
     float sampleRate;
     int frameCount;
     EventPool eventPool;
+
+    LockFreeHashMap stringMap;
 
     NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount) {};
 };
