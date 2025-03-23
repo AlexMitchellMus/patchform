@@ -110,11 +110,7 @@ public:
             setPopupComponent(std::move(popup));
             getRootComponent()->addComponent(addObjectMenu.get());
             addObjectMenu->registerMouseListener(addObjectButton.get());
-            addObjectMenu->setBounds(
-                (getRootComponent()->getWidth() / 2) - 358,
-                getRootComponent()->getHeight() - 255,
-                616, 220
-            );
+            addObjectMenu->setBounds(calculateObjectMenuBounds());
 
             addObjectButton->setActive(true);
         };
@@ -160,8 +156,13 @@ public:
         zoomSlider->setBounds(offset, 5, 70, 35);
 
         if (addObjectMenu)
-            addObjectMenu->setBounds((getRootComponent()->getWidth() / 2) - 308, getRootComponent()->getHeight() - 225, 616, 150);
+            addObjectMenu->setBounds(calculateObjectMenuBounds());
 
+    }
+
+    pptk::Rect calculateObjectMenuBounds()
+    {
+        return pptk::Rect((getRootComponent()->getWidth() / 2) - 308, getRootComponent()->getHeight() - 325, 616, 240);
     }
 
     void render(NVGcontext* nvg) override
