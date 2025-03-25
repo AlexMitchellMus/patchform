@@ -261,8 +261,8 @@ public:
 
         for (auto& node : objectsSorted)
         {
-            if (auto outPort = node->getOutputPort())
-                outPort->clearEvents();
+            for (int i = 0; i < node->outputPortBuffers.size(); ++i)
+                node->getOutputPort(i)->clearEvents();
         }
 
         context->eventPool.releaseAllEvents();
@@ -497,7 +497,7 @@ public:
                         if (objectIDtoSortedIndex.find(connectedObjectID) != objectIDtoSortedIndex.end())
                         {
                             size_t connectedSortedIndex = objectIDtoSortedIndex[connectedObjectID];
-                            auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort();
+                            auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort(connectedNode.second);
                             upstreamPorts.push_back(connectedPort);
                         }
                     }
@@ -974,6 +974,13 @@ public:
         case hash("if"):
             return addNode<If>(idString, node);
 
+        case hash("ifelse"):
+            return addNode<IfElse>(idString, node);
+
+        case hash("sel"):
+        case hash("select"):
+            return addNode<Select>(idString, node);
+
         case hash("env"):
         case hash("envelope"):
             return addNode<Envelope>(idString, node);
@@ -1073,6 +1080,9 @@ public:
 
         case hash("evdelay"):
             return addNode<EventDelay>(idString, node);
+
+        case hash("drive"):
+            return addNode<Drive>(idString, node);
 
         default:
             // Unknown object name, return error

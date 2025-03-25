@@ -33,7 +33,7 @@ public:
 
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto output = outputPort.getAudioBuffer();
+        auto output = outputPortBuffers[0]->getAudioBuffer();
 
         frequency.store(freqParam->getValue());
 

@@ -42,7 +42,7 @@ public:
                 {
                     outEvent->setTimeStamp(e->getTimeStamp());
                     outEvent->addAtom(value);
-                    outputPort.addEvent(outEvent);
+                    outputPortBuffers[0]->addEvent(outEvent);
                 }
             }
         }

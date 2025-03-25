@@ -61,7 +61,7 @@ public:
 
     std::vector<std::unique_ptr<AudioPort>> inputPortBuffers;
 
-    AudioPort outputPort;
+    std::vector<std::unique_ptr<AudioPort>> outputPortBuffers;
     NodeContext* context;
 
     json nodeCreationData;
@@ -70,13 +70,17 @@ public:
 
     AudioNode(NodeContext* context, AudioPort::PortType type, const json& creationData)
         : context(context)
-        , outputPort(this, "output", type)
+        //, outputPort(this, "output", type)
         , nodeCreationData(std::move(creationData))
     {
         // Needs to be done after member initialization!
         // This happens outside the audio thread
         // TODO: We need to allow ports to define larger than the frameCount - for wavetable / large audio buffer ports
-        outputPort.setSize(context->frameCount);
+        if (type != AudioPort::None)
+        {
+            addOutputPort("main output", type);
+            //outputPort.setSize(context->frameCount);
+        }
     }
 
     virtual ~AudioNode()
@@ -138,13 +142,24 @@ public:
         inputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
     }
 
+    void addOutputPort(std::string portName, AudioPort::PortType portType)
+    {
+        outputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
+
+        if (portType == AudioPort::PortType::Signal)
+            outputPortBuffers.back()->setSize(context->frameCount);
+    }
+
     // Virtual method for processing the audio buffer
     virtual void processAudio(float* buffer, unsigned long frameCount) { };
 
     // Method to get input ports for sorting
-    AudioPort* getOutputPort()
+    AudioPort* getOutputPort(const int index = 0) const
     {
-        return &outputPort;
+        if (outputPortBuffers.size())
+            return outputPortBuffers[index].get();
+
+        return nullptr;
     }
 
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> sumInputBuffers;
@@ -168,7 +183,7 @@ private:
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
     {
         sumInputBuffers(inputPortBuffers, runningGraph, index);
-        outputPort.clear(frameCount);
+        //outputPort.clear(frameCount);
         processAudio(buffer, frameCount);
     }
 #ifdef PATCHFORM_WITH_GUI

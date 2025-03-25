@@ -8,25 +8,15 @@
 
 #include "AudioNodeBase.h"
 
-// Base Nodes
-
-#include "Value.h"
-#include "Oscillator.h"
+// Data Nodes
 #include "Add.h"
-#include "Add_Audio.h"
 #include "Metronome.h"
-#include "Envelope.h"
-#include "LFO.h"
-#include "Gain.h"
-#include "AudioOut.h"
 #include "Print.h"
 #include "Count.h"
 #include "If.h"
-#include "BandPassFilter.h"
-#include "Spec.h"
+#include "IfElse.h"
 #include "MidiToFreq.h"
 #include "Changed.h"
-#include "ReverbFDN.h"
 #include "Get.h"
 #include "Pack.h"
 #include "TagEvent.h"
@@ -36,6 +26,21 @@
 #include "Random.h"
 #include "Intify.h"
 #include "EventDelay.h"
+#include "Select.h"
+
+// Audio Nodes
+#include "Value.h"
+#include "Oscillator.h"
+#include "Add_Audio.h"
+#include "Envelope.h"
+#include "LFO.h"
+#include "Gain.h"
+#include "AudioOut.h"
+#include "BandPassFilter.h"
+#include "Spec.h"
+#include "ReverbFDN.h"
+#include "Drive.h"
+
 
 // UI Nodes
 

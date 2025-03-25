@@ -137,7 +137,7 @@ public:
                     newEvent->setTimeStamp(t);
                     newEvent->data = outputAtoms.front();
                     newEvent->numAtoms = static_cast<int>(outputAtoms.size());
-                    outputPort.addEvent(newEvent);
+                    outputPortBuffers[0]->addEvent(newEvent);
                 }
 
 //#define DEBUG_PACK

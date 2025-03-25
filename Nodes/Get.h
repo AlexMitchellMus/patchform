@@ -109,7 +109,7 @@ public:
                     e->numAtoms = 1;
                     e->data = newData;
                 }
-                outputPort.addEvent(e);
+                outputPortBuffers[0]->addEvent(e);
             }
         }
     }

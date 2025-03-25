@@ -197,7 +197,7 @@ public:
         auto freqEvents = inputPortBuffers[1]->getEvents();
         bool useSignalFreq = inputPortBuffers[1]->isAnyConnectedPortSignal;
         auto freqIn = inputPortBuffers[1]->getAudioBuffer();
-        auto output = outputPort.getAudioBuffer();
+        auto output = outputPortBuffers[0]->getAudioBuffer();
 
         // Update waveform if parameter changed.
         waveform = waveformParameter->getValue();

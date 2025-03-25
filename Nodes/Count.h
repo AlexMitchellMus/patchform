@@ -57,7 +57,7 @@ public:
                 e->addAtom(countValue++);
 
                 // Now add it to the output port’s event list
-                outputPort.addEvent(e);
+                outputPortBuffers[0]->addEvent(e);
             }
         }
     }

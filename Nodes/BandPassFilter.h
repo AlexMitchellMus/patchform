@@ -46,7 +46,8 @@ public:
         const auto* audioInput = inputPortBuffers[0]->getAudioBuffer();
         const auto freqEvents  = inputPortBuffers[1]->getEvents();
         const auto qEvents     = inputPortBuffers[2]->getEvents();
-        auto* output = outputPort.getAudioBuffer();
+
+        auto* output = outputPortBuffers[0]->getAudioBuffer();
 
         unsigned int nextFreqEventIndex = 0;
         unsigned int nextQEventIndex = 0;

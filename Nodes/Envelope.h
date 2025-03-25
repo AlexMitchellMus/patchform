@@ -116,7 +116,8 @@ public:
         auto signal = inputPortBuffers[1]->getAudioBuffer();
         auto port1Events = inputPortBuffers[1]->getEvents();
         auto useSignalFreq = inputPortBuffers[1]->isAnyConnectedPortSignal;
-        auto output = outputPort.getAudioBuffer();
+
+        auto output = outputPortBuffers[0]->getAudioBuffer();
 
         unsigned int nextFreqEventIndex = 0;
 

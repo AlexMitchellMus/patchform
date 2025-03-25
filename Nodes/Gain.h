@@ -31,7 +31,7 @@ public:
         const bool useSignalFreq1   = inputPortBuffers[0]->isAnyConnectedPortSignal;
         const bool useSignalFreq2   = inputPortBuffers[1]->isAnyConnectedPortSignal;
 
-        const auto output = outputPort.getAudioBuffer();
+        const auto output = outputPortBuffers[0]->getAudioBuffer();
 
         unsigned int nextVolEventIndex1 = 0;
         unsigned int nextVolEventIndex2 = 0;

@@ -43,7 +43,7 @@ public:
                 e->shallowCopyFrom(ev);
                 e->setTag(tag);
 
-                outputPort.addEvent(e);
+                outputPortBuffers[0]->addEvent(e);
             }
         }
     }

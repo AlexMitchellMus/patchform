@@ -20,6 +20,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "count"})", ICONS::Count, true },
         { R"({"obj": "dial", "min": 0, "max": 10, "value": 3})", ICONS::Dial, true },
         { R"({"obj": "If"})", "if", false },
+        { R"({"obj": "IfElse"})", "ifelse", false },
+        { R"({"obj": "select", "outputs": 8 })", "sel", false },
         { R"({"obj": "aout"})", ICONS::Aout, true },
         { R"({"obj": "floatbox"})", "fb", false },
         { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false },
@@ -41,7 +43,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "activemidinotes"})", "act notes", false },
         { R"({"obj": "random"})", "rnd", false },
         { R"({"obj": "intify", "mode": 0 })", "intify", false },
-        { R"({"obj": "evdelay", "ms": 100 })", "evdel", false }
+        { R"({"obj": "evdelay", "ms": 100 })", "evdel", false },
+        { R"({"obj": "drive", "mode": 0 })", "drive", false }
     };
 
     for (int i = 0; i < 4; i++)

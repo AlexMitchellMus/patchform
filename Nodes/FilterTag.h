@@ -36,7 +36,7 @@ public:
             // Only pass the event through if its tag equals the tag parameter.
             if (ev->getTagHash() == hash(tag))
             {
-                outputPort.addEvent(ev);
+                outputPortBuffers[0]->addEvent(ev);
             }
         }
     }

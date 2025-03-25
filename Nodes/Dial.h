@@ -142,7 +142,7 @@ public:
             if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->addAtom(dialValue * (maxValue - minValue) + minValue);
-                outputPort.addEvent(e);
+                outputPortBuffers[0]->addEvent(e);
             }
         };
     }

@@ -79,9 +79,11 @@ Object::Object(AudioNode* node)
         addComponent(inPorts.back().get());
     }
 
-    if (convertPortType(node->outputPort.getPortType()) != Port::PortType::None)
+    //if (convertPortType(node->outputPortBuffers[0]->getPortType()) != Port::PortType::None)
+    for (int i = 0; i < node->outputPortBuffers.size(); ++i)
     {
-        outPorts.push_back(std::make_unique<Port>(0, convertPortType(node->outputPort.getPortType()), Port::Direction::Output));
+        std::cout << "adding output port: " << i << std::endl;
+        outPorts.push_back(std::make_unique<Port>(i, convertPortType(node->outputPortBuffers[i]->getPortType()), Port::Direction::Output));
         addComponent(outPorts.back().get());
     }
 
@@ -109,8 +111,10 @@ Object::~Object()
 
 void Object::resized()
 {
-    int portDiam = 10;
-    int numInputs = static_cast<int>(inPorts.size());
+    static constexpr int portDiam = 10;
+    const int numInputs = static_cast<int>(inPorts.size());
+    const int numOutputs = static_cast<int>(outPorts.size());
+    const int maxPorts = std::max(numInputs, numOutputs);
 
     int insetParamOffset = 0;
 
@@ -127,7 +131,7 @@ void Object::resized()
         }
 
         auto currentBounds = getBounds();
-        auto finalWidth = std::max(nameWidth + 20 + insetParamOffset, inPorts.size() * 20.0f);
+        auto finalWidth = std::max(nameWidth + 20 + insetParamOffset, maxPorts * 20.0f);
         setBounds(currentBounds.x, currentBounds.y, finalWidth, getHeight());
 
         if (finalWidth != currentBounds.w)
@@ -137,16 +141,16 @@ void Object::resized()
         }
     }
 
-    float spacing = (getWidth() - 2 - (numInputs * portDiam)) / std::max(1, numInputs - 1);
-
+    const float inputSpacing = (getWidth() - 2 - (numInputs * portDiam)) / std::max(1, numInputs - 1);
     for (int i = 0; i < inPorts.size(); ++i)
     {
-        inPorts[i]->setBounds(i * (spacing + portDiam) + 1, 1, portDiam, portDiam);
+        inPorts[i]->setBounds(i * (inputSpacing + portDiam) + 1, 1, portDiam, portDiam);
     }
 
-    if (!outPorts.empty())
+    const float outputSpacing = (getWidth() - 2 - (numOutputs * portDiam)) / std::max(1, numOutputs - 1);
+    for (int i = 0; i < outPorts.size(); ++i)
     {
-        outPorts[0]->setBounds(1, getHeight() - portDiam - 1, portDiam, portDiam);
+        outPorts[i]->setBounds(i * (outputSpacing + portDiam) + 1, getHeight() - portDiam - 1, portDiam, portDiam);
     }
 
     repaint();

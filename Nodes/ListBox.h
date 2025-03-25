@@ -109,7 +109,7 @@ public:
                 buffer = event->getAtom(0)->toString();
 
                 queueFromDSP.enqueue(buffer);
-                outputPort.addEvent(event);
+                outputPortBuffers[0]->addEvent(event);
             }
             repaintFromDSP();
         }

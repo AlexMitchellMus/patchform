@@ -24,7 +24,7 @@ public:
         const auto* buffer1 = inputPortBuffers[0]->getAudioBuffer();
         const auto* buffer2 = inputPortBuffers[1]->getAudioBuffer();
 
-        auto output = outputPort.getAudioBuffer();
+        auto output = outputPortBuffers[0]->getAudioBuffer();
 
         for (unsigned long i = 0; i < frameCount; i++) {
             output[i] = buffer1[i] + buffer2[i];

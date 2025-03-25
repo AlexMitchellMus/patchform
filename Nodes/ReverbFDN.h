@@ -41,7 +41,7 @@ public:
     void processAudio(float* buffer, unsigned long frameCount) override
     {
         const auto* inputBuffer = inputPortBuffers[0]->getAudioBuffer();
-        auto* outputBuffer = outputPort.getAudioBuffer();
+        auto* outputBuffer = outputPortBuffers[0]->getAudioBuffer();
 
         for (unsigned long i = 0; i < frameCount; i++) {
             float inputSample = inputBuffer[i];

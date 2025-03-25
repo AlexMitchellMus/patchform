@@ -31,7 +31,7 @@ public:
             {
                 e->setTimeStamp(event->getTimeStamp());
 
-                outputPort.addEvent(e);
+                outputPortBuffers[0]->addEvent(e);
             }
         }
     }

@@ -22,10 +22,12 @@ public:
 private:
     int selectedIndex = 0;
     int radioCount = 8;
+    std::atomic<int> emitOnClick = 0;
     LayoutType layout = LayoutType::Horizontal;
 
     IntParameter* radioCountParam = nullptr;
     StringParameter* layoutParam = nullptr;
+    IntParameter* emitOnClickParam = nullptr;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -115,6 +117,11 @@ public:
         int getSelectedIndex() const
         {
             return selectedIndex;
+        }
+
+        LayoutType getLayoutType() const
+        {
+            return layout;
         }
 
         int calculateWidth()
@@ -274,8 +281,16 @@ public:
         std::string layoutName = objParams.value("layoutType", "horizontal");
         layout = getLayoutType(layoutName);
 
+        emitOnClick.store(objParams.value("emitOnClick", 1));
+
         radioCountParam = addParameter<IntParameter>("Cells:", radioCount, 1, 1024);
         layoutParam = addParameter<StringParameter>("Layout:", layoutName);
+        emitOnClickParam = addParameter<IntParameter>("emitOnClick:", emitOnClick, 0, 1);
+
+        emitOnClickParam->informNodeOfChange = [this]()
+        {
+            emitOnClick.store(emitOnClickParam->getValue());
+        };
 
         addInputPort("input", AudioPort::PortType::Data);
     }
@@ -288,8 +303,12 @@ public:
         // Object UI runs on UI thread, as does this funciton
         nodeCreationData["selectedIndex"] = reinterpret_cast<RadioBox::UI*>(getOrCreateUI())->getSelectedIndex();
 
-        nodeCreationData["layoutType"] = (layout == LayoutType::Vertical) ? "vertical" :
-                                         (layout == LayoutType::Grid) ? "grid" : "horizontal";
+        const auto layoutType = reinterpret_cast<RadioBox::UI*>(getOrCreateUI())->getLayoutType();
+
+        nodeCreationData["layoutType"] = (layoutType == LayoutType::Vertical) ? "vertical" :
+                                         (layoutType == LayoutType::Grid) ? "grid" : "horizontal";
+
+        nodeCreationData["emitOnClick"] = emitOnClickParam->getValue();
         return nodeCreationData;
     }
 
@@ -308,14 +327,14 @@ public:
                 {
                     selectedIndex = ev->getAtomValue(0);
                     // Forward the input event to the output.
-                    outputPort.addEvent(ev);
+                    outputPortBuffers[0]->addEvent(ev);
                 }
                 else
                 {
-                    std::cout << "got a stripped event, outputing the index only!" << std::endl;
+                    //std::cout << "got a stripped event, outputing the index only!" << std::endl;
                     auto outEvent = context->eventPool.getFreeEvent();
                     outEvent->addAtom(selectedIndex);
-                    outputPort.addEvent(outEvent);
+                    outputPortBuffers[0]->addEvent(outEvent);
                 }
             }
             eventQueueFromDSP.enqueue(selectedIndex);
@@ -329,10 +348,13 @@ public:
             {
                 selectedIndex = newIndex;
 
-                if (Event* e = context->eventPool.getFreeEvent())
+                if (emitOnClick)
                 {
-                    e->addAtom(selectedIndex);
-                    outputPort.addEvent(e);
+                    if (Event* e = context->eventPool.getFreeEvent())
+                    {
+                        e->addAtom(selectedIndex);
+                        outputPortBuffers[0]->addEvent(e);
+                    }
                 }
             }
         }

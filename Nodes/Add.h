@@ -40,7 +40,7 @@ public:
                 e->addAtom(event->getAtomValue(0) + coldValue);
 
                 // Now add it to the output port’s event list
-                outputPort.addEvent(e);
+                outputPortBuffers[0]->addEvent(e);
             }
         }
     }

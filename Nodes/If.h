@@ -51,7 +51,7 @@ public:
                     e->addAtom(coldValueReturn);
 
                     // Now add it to the output port’s event list
-                    outputPort.addEvent(e);
+                    outputPortBuffers[0]->addEvent(e);
                     //Logger::getInstance().logEvent(this, e->getTimeStamp(), e->data);
                 }
             }

@@ -37,7 +37,7 @@ public:
                 const float r = min + ((float)rand() / RAND_MAX) * (max - min);
                 e->addAtom(r);
                 e->setTimeStamp(ev->getTimeStamp());
-                outputPort.addEvent(e);
+                outputPortBuffers[0]->addEvent(e);
             }
         }
     }
