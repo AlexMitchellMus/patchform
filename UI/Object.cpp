@@ -79,10 +79,8 @@ Object::Object(AudioNode* node)
         addComponent(inPorts.back().get());
     }
 
-    //if (convertPortType(node->outputPortBuffers[0]->getPortType()) != Port::PortType::None)
     for (int i = 0; i < node->outputPortBuffers.size(); ++i)
     {
-        std::cout << "adding output port: " << i << std::endl;
         outPorts.push_back(std::make_unique<Port>(i, convertPortType(node->outputPortBuffers[i]->getPortType()), Port::Direction::Output));
         addComponent(outPorts.back().get());
     }
