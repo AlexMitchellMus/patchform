@@ -703,7 +703,44 @@ public:
     void sortNodes()
     {
         graph->sortNodes(objects);
+
+        if (graph->objectsSorted.empty())
+        {
+            std::cerr << "Cycle detected, attempting to remove invalid connections..." << std::endl;
+
+            std::vector<std::shared_ptr<Edge>> validConnections;
+
+            for (const auto& conn : connections)
+            {
+                validConnections.push_back(conn);
+
+                // Temporarily assign and test
+                graph->adjacencyMap.clear();
+                for (const auto& c : validConnections)
+                {
+                    graph->addAdjacency(graph->objectIDtoIndex[c->getoNode()], c->getoPort(),
+                                        graph->objectIDtoIndex[c->getiNode()], c->getiPort());
+                }
+
+                graph->sortNodes(objects);
+
+                if (graph->objectsSorted.empty())
+                {
+                    std::cerr << "Removed cycle-causing connection: "
+                              << conn->getoNode() << ":" << conn->getoPort()
+                              << " -> " << conn->getiNode() << ":" << conn->getiPort() << std::endl;
+
+                    validConnections.pop_back();
+                }
+            }
+
+            // Apply final valid connections
+            connections = validConnections;
+            updateConnections();
+            graph->sortNodes(objects);
+        }
     }
+
 
     void printAdjacencyList()
     {
