@@ -48,7 +48,10 @@ public:
 
         int boxWidth = 0;
         int boxHeight = 0;
+        // Outer margin remains at 6 px.
         const int boxMargin = 6;
+        // The gap between cells is double the margin.
+        const int gap = 2 * boxMargin;
 
     public:
         std::atomic<bool> isDirty = std::atomic<bool>(false);
@@ -60,6 +63,7 @@ public:
             layout = radio->layout;
 
             // Compute the dimensions of each radio button (square).
+            // The available height is the box height plus two outer margins.
             boxWidth = getHeight() - 2 * boxMargin;
             boxHeight = boxWidth;
 
@@ -76,14 +80,9 @@ public:
                     if (*newCount != radioCount)
                     {
                         radioCount = *newCount;
-                        auto newHeight = calculateHeight();
-                        auto heightChanged = false;
-
-                        if (getHeight() != newHeight)
-                            heightChanged = true;
-
+                        int newHeight = calculateHeight();
+                        bool heightChanged = (getHeight() != newHeight);
                         setSize(calculateWidth(), newHeight);
-                        // If hight has changed, update the connections layout
                         if (heightChanged)
                         {
                             if (const auto cnv = findParentOfClass<Canvas>())
@@ -127,13 +126,13 @@ public:
         int calculateWidth()
         {
             if (layout == LayoutType::Horizontal)
-                return radioCount * boxWidth + (radioCount + 1) * boxMargin;
+                return radioCount * boxWidth + (radioCount - 1) * gap + 2 * boxMargin;
             else if (layout == LayoutType::Vertical)
                 return boxWidth + 2 * boxMargin;
             else if (layout == LayoutType::Grid)
             {
                 int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
-                return cols * boxWidth + (cols + 1) * boxMargin;
+                return cols * boxWidth + (cols - 1) * gap + 2 * boxMargin;
             }
             return 0;
         }
@@ -143,12 +142,12 @@ public:
             if (layout == LayoutType::Horizontal)
                 return boxHeight + 2 * boxMargin;
             else if (layout == LayoutType::Vertical)
-                return radioCount * boxHeight + (radioCount + 1) * boxMargin;
+                return radioCount * boxHeight + (radioCount - 1) * gap + 2 * boxMargin;
             else if (layout == LayoutType::Grid)
             {
                 int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
                 int rows = static_cast<int>(std::ceil(static_cast<float>(radioCount) / cols));
-                return rows * boxHeight + (rows + 1) * boxMargin;
+                return rows * boxHeight + (rows - 1) * gap + 2 * boxMargin;
             }
             return 0;
         }
@@ -185,27 +184,26 @@ public:
                     int clickedIndex = -1;
                     if (layout == LayoutType::Horizontal)
                     {
-                        int boxTotalWidth = boxWidth + boxMargin;
-                        // Adjust the hit area slightly (2-pixel offset).
-                        int relativeX = e.sdlEvent.button.x - 2;
-                        clickedIndex = relativeX / boxTotalWidth;
+                        // Compute effective hit index by adding half the gap (6px)
+                        int cellTotalWidth = boxWidth + gap;
+                        int relativeX = e.sdlEvent.button.x - boxMargin;
+                        clickedIndex = (relativeX + gap / 2) / cellTotalWidth;
                     }
                     else if (layout == LayoutType::Vertical)
                     {
-                        int boxTotalHeight = boxHeight + boxMargin;
-                        int relativeY = e.sdlEvent.button.y - 2;
-                        clickedIndex = relativeY / boxTotalHeight;
+                        int cellTotalHeight = boxHeight + gap;
+                        int relativeY = e.sdlEvent.button.y - boxMargin;
+                        clickedIndex = (relativeY + gap / 2) / cellTotalHeight;
                     }
                     else if (layout == LayoutType::Grid)
                     {
                         int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
-                        int boxTotalWidth = boxWidth + boxMargin;
-                        int boxTotalHeight = boxHeight + boxMargin;
-                        // Use the margin as the starting offset.
+                        int cellTotalWidth = boxWidth + gap;
+                        int cellTotalHeight = boxHeight + gap;
                         int relativeX = e.sdlEvent.button.x - boxMargin;
                         int relativeY = e.sdlEvent.button.y - boxMargin;
-                        int col = relativeX / boxTotalWidth;
-                        int row = relativeY / boxTotalHeight;
+                        int col = (relativeX + gap / 2) / cellTotalWidth;
+                        int row = (relativeY + gap / 2) / cellTotalHeight;
                         clickedIndex = row * cols + col;
                     }
 
@@ -230,19 +228,19 @@ public:
                 int x = 0, y = 0;
                 if (layout == LayoutType::Horizontal)
                 {
-                    x = boxMargin + i * (boxWidth + boxMargin);
+                    x = boxMargin + i * (boxWidth + gap);
                     y = boxMargin;
                 }
                 else if (layout == LayoutType::Vertical)
                 {
                     x = boxMargin;
-                    y = boxMargin + i * (boxHeight + boxMargin);
+                    y = boxMargin + i * (boxHeight + gap);
                 }
                 else if (layout == LayoutType::Grid)
                 {
                     int cols = static_cast<int>(std::ceil(std::sqrt(radioCount)));
-                    x = boxMargin + (i % cols) * (boxWidth + boxMargin);
-                    y = boxMargin + (i / cols) * (boxHeight + boxMargin);
+                    x = boxMargin + (i % cols) * (boxWidth + gap);
+                    y = boxMargin + (i / cols) * (boxHeight + gap);
                 }
 
                 nvgBeginPath(nvg);
@@ -298,16 +296,12 @@ public:
     json getSerializedNode() override
     {
         nodeCreationData["numOptions"] = radioCount;
-
-        // Index can change from audio thread, so check the UI's selected index.
-        // Object UI runs on UI thread, as does this funciton
+        // Index can change from the audio thread, so we use the UI's selected index.
         nodeCreationData["selectedIndex"] = reinterpret_cast<RadioBox::UI*>(getOrCreateUI())->getSelectedIndex();
 
         const auto layoutType = reinterpret_cast<RadioBox::UI*>(getOrCreateUI())->getLayoutType();
-
         nodeCreationData["layoutType"] = (layoutType == LayoutType::Vertical) ? "vertical" :
                                          (layoutType == LayoutType::Grid) ? "grid" : "horizontal";
-
         nodeCreationData["emitOnClick"] = emitOnClickParam->getValue();
         return nodeCreationData;
     }
@@ -316,7 +310,6 @@ public:
     void processAudio(float* out, const unsigned long frameCount) override
     {
         radioCount = radioCountParam->getValue();
-
         auto inputEvents = inputPortBuffers[0]->getEvents();
 
         if (!inputEvents.empty())
@@ -331,7 +324,6 @@ public:
                 }
                 else
                 {
-                    //std::cout << "got a stripped event, outputing the index only!" << std::endl;
                     auto outEvent = context->eventPool.getFreeEvent();
                     outEvent->addAtom(selectedIndex);
                     outputPortBuffers[0]->addEvent(outEvent);
@@ -347,7 +339,6 @@ public:
             if (newIndex >= 0 && newIndex < radioCount)
             {
                 selectedIndex = newIndex;
-
                 if (emitOnClick)
                 {
                     if (Event* e = context->eventPool.getFreeEvent())
