@@ -116,25 +116,7 @@ public:
 
         void drawGUI(NVGcontext* nvg) override
         {
-            return;
-
-            nvgBeginPath(nvg);
-            auto bgCol = nvgRGB(33, 33, 33);
-            auto outLineCol = nvgRGB(45, 45, 45);
-            if (getIsHovered()) bgCol = outLineCol;
-            if (getIsSelected()) outLineCol = nvgRGB(28, 73, 119);
-            //nvgDrawRoundedRect(nvg, 0, 0, width, height, bgCol, outLineCol, 6.0f);
-
-            nvgFontSize(nvg, 16.0f);
-            nvgFontFace(nvg, "Regular");
-            nvgFillColor(nvg, nvgRGB(190, 190, 190));
-            nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-
-            float xOffset = 10.0f;
-
-            auto commentNode = reinterpret_cast<Comment*>(audioNode);
-
-            nvgText(nvg, xOffset, height / 2, commentNode->commentText.c_str(), nullptr);
+            // No need to draw any GUI, as comment uses a text editor
         }
     };
 

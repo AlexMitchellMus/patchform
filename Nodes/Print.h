@@ -24,7 +24,7 @@ public:
 
         for (const auto event : aEvents)
         {
-            Logger::getInstance().logEvent(this, event->getTimeStamp(), event->getAtomValue(0));
+            //Logger::getInstance().logEvent(this, event->getTimeStamp(), event->getAtomValue(0));
         }
     }
 };

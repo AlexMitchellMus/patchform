@@ -12,6 +12,7 @@
 
 // Singleton instance of Logger
 Logger& Logger::getInstance() {
+    std::cout << "============ logger created =============" << std::endl;
     static Logger instance;
     return instance;
 }

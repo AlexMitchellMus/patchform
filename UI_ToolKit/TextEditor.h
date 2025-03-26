@@ -92,6 +92,11 @@ public:
         return false;
     }
 
+    bool getIsInteractable()
+    {
+        return isInteractable;
+    }
+
     /*
     bool consumeEvent(CompEvent& e) override
     {

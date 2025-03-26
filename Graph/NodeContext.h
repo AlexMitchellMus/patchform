@@ -8,6 +8,7 @@
 #include <vector>
 #include <numeric>
 
+#include "Event.h"
 #include "../Utility/LockFreeHashMap.h"
 
 class EventPool {
@@ -144,7 +145,15 @@ public:
     int frameCount;
     EventPool eventPool;
 
+    OwnershipTokenPool ownershipTokenPool;
+
     LockFreeHashMap stringMap;
 
-    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount) {};
+    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount), ownershipTokenPool(10000) {};
+
+    void makeDataPersistent(DataAtom* atom, bool persistent, int nodeID)
+    {
+        if (atom)
+            atom->makePersistent(persistent, nodeID, ownershipTokenPool);
+    }
 };

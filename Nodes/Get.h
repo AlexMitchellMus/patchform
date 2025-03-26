@@ -67,47 +67,44 @@ public:
                 }
             default:
                 {
-                    if (event->data)
-                    {
-                        if (savedData)
-                            savedData->makePersistent(false);
+                    if (savedData)
+                        context->makeDataPersistent(savedData, false, nodeID);
 
-                        savedData = event->data;
-                        savedData->makePersistent(true);
-                        if (routeMode.load() == 0)
-                            continue;
-                    }
+                    savedData = event->data;
+                    context->makeDataPersistent(savedData, true, nodeID);
+                    if (routeMode.load() == 0)
+                        continue;
                 }
             }
 
-            if (!savedData)
-                return;
-
-            int getAtomNumber = std::min(atomNumber.load(), savedData->getAtomCount() - 1);
+            int getAtomNumber = std::min(atomNumber.load(), savedData ? savedData->getAtomCount() - 1 : 0);
 
             if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(event->getTimeStamp());
-                auto atomData = savedData->getAtom(getAtomNumber);
-                if (atomData->type == DataAtom::DataType::List)
+                if (savedData)
                 {
-                    e->data = atomData->data.list;
-                    auto walk = atomData->data.list;
-                    int numAtoms = 0;
-                    while (walk)
+                    auto atomData = savedData->getAtom(getAtomNumber);
+                    if (atomData->type == DataAtom::DataType::List)
                     {
-                        numAtoms++;
-                        walk = walk->next;
+                        e->data = atomData->data.list;
+                        auto walk = atomData->data.list;
+                        int numAtoms = 0;
+                        while (walk)
+                        {
+                            numAtoms++;
+                            walk = walk->next;
+                        }
+                        e->numAtoms = numAtoms;
                     }
-                    e->numAtoms = numAtoms;
-                }
-                else
-                {
-                    // Make a new atom to hold the list or data
-                    auto newData = context->eventPool.allocateDataAtom();
-                    newData->data.atom = atomData->data.atom;
-                    e->numAtoms = 1;
-                    e->data = newData;
+                    else
+                    {
+                        // Make a new atom to hold the list or data
+                        auto newData = context->eventPool.allocateDataAtom();
+                        newData->data.atom = atomData->data.atom;
+                        e->numAtoms = 1;
+                        e->data = newData;
+                    }
                 }
                 outputPortBuffers[0]->addEvent(e);
             }

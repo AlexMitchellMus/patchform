@@ -42,7 +42,7 @@ public:
         // Release all queued data atoms
         for (auto& event : queue)
         {
-            event.data->makePersistent(false);
+            context->makeDataPersistent(event.data, false, nodeID);
         }
     }
 
@@ -65,7 +65,7 @@ public:
             {
                 if (auto ev = context->eventPool.getFreeEvent())
                 {
-                    it->data->makePersistent(false);
+                    context->makeDataPersistent(it->data, false, nodeID);
                     ev->data = it->data;
                     ev->setTagHashcode(it->eventHash);
                     uint64_t delaySamples = delayTimeMs.load() * sampleRate * 0.001f;
@@ -86,7 +86,7 @@ public:
         auto events = inputPortBuffers[0]->getEvents();
         for (const auto event : events)
         {
-            event->data->makePersistent(true);
+            context->makeDataPersistent(event->data, true, nodeID);
             queue.push_back({ delayTimeMs.load(), event->getTimeStamp(), event->data, event->getTagHash(), event->numAtoms });
         }
     }

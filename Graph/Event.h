@@ -5,6 +5,45 @@
 #include <stdexcept>
 #include "../Utility/Hash.h"
 
+struct OwnershipToken {
+    int nodeId;             // The ID of the Get node
+    OwnershipToken* next;    // Pointer to the next owner
+};
+
+// A simple pool for OwnershipToken objects.
+class OwnershipTokenPool {
+public:
+    OwnershipTokenPool(size_t capacity) : freeList(nullptr) {
+        tokens.resize(capacity);
+        // Initialize the free list.
+        for (size_t i = 0; i < tokens.size(); i++) {
+            tokens[i].next = freeList;
+            freeList = &tokens[i];
+        }
+    }
+
+    // Acquire a token from the pool (throws if exhausted).
+    OwnershipToken* acquire() {
+        if (!freeList)
+            throw std::runtime_error("OwnershipTokenPool exhausted");
+        OwnershipToken* token = freeList;
+        freeList = freeList->next;
+        token->next = nullptr;
+        return token;
+    }
+
+    // Return a token to the pool.
+    void release(OwnershipToken* token) {
+        token->next = freeList;
+        freeList = token;
+    }
+
+private:
+    std::vector<OwnershipToken> tokens;
+    OwnershipToken* freeList;
+};
+
+
 class DataAtom
 {
 public:
@@ -20,6 +59,8 @@ public:
     DataAtom* next = nullptr;  // Next item in the main chain
 
     bool isPersistent = false;
+
+    OwnershipToken* ownerList = nullptr;
 
     // **Recursively convert DataAtom chain into a readable string**
     [[nodiscard]] std::string toString(const bool recursive = true) const
@@ -50,9 +91,9 @@ public:
         return ss.str();
     }
 
-    void makePersistent(bool toBePersistent)
+    void makePersistent(bool toBePersistent, int nodeID, OwnershipTokenPool& ownerList)
     {
-        makePersistent(this, toBePersistent);
+        makePersistent(this, toBePersistent, nodeID, ownerList);
     }
 
     [[nodiscard]] DataAtom* getAtom(const int index)
@@ -82,15 +123,53 @@ public:
     }
 
 private:
-    void makePersistent(DataAtom* atom, const bool toBePersistent)
+    void makePersistent(DataAtom* atom, const bool toBePersistent, const int nodeID, OwnershipTokenPool& ownerList)
     {
         while (atom != nullptr)
         {
-            atom->isPersistent = toBePersistent;
-            // If this is a list atom, mark its sublist persistent as well.
-            if (atom->type == DataAtom::DataType::List && atom->data.list)
-                makePersistent(atom->data.list, toBePersistent);
+            if (toBePersistent)
+                addOwnership(atom, nodeID, ownerList);
+            else
+                removeOwnership(atom, nodeID, ownerList);
+
+            // Update the persistent flag: true if any node owns this atom.
+            atom->isPersistent = (atom->ownerList != nullptr);
+
+            // If this is a list atom, recursively update its sublist.
+            if (atom->type == DataAtom::DataType::List)
+                makePersistent(atom->data.list, toBePersistent, nodeID, ownerList);
+
             atom = atom->next;
+        }
+    }
+
+    // Helper to add an ownership link for a given node.
+    void addOwnership(DataAtom* atom, int nodeID, OwnershipTokenPool& ownerList) {
+        // If the node already owns this atom, do nothing.
+        OwnershipToken* cur = atom->ownerList;
+        while (cur) {
+            if (cur->nodeId == nodeID)
+                return;
+            cur = cur->next;
+        }
+        // Otherwise, allocate a new link, set its nodeId, and prepend it.
+        OwnershipToken* newLink = ownerList.acquire();
+        newLink->nodeId = nodeID;         // Set the node ID.
+        newLink->next = atom->ownerList;    // Link the current list.
+        atom->ownerList = newLink;          // Prepend the new token.
+    }
+
+    // Helper to remove an ownership link for a given node.
+    void removeOwnership(DataAtom* atom, int nodeID, OwnershipTokenPool& ownerList) {
+        OwnershipToken** cur = &atom->ownerList;
+        while (*cur) {
+            if ((*cur)->nodeId == nodeID) {
+                OwnershipToken* toRelease = *cur;
+                *cur = toRelease->next;
+                ownerList.release(toRelease);
+                break;
+            }
+            cur = &((*cur)->next);
         }
     }
 };

@@ -82,9 +82,9 @@ public:
                         {
                             // Mark the old persistent atom as no longer persistent.
                             if (persistentAtoms[i])
-                                persistentAtoms[i]->makePersistent(false);
+                                context->makeDataPersistent(persistentAtoms[i], false, nodeID);
 
-                            inAtom->makePersistent(true);
+                            context->makeDataPersistent(inAtom, true, nodeID);
                             persistentAtoms[i] = inAtom;
                         }
                         break; // Use only the first event at this timestamp.
@@ -162,7 +162,7 @@ public:
         {
             // return the saved atoms from the pack object to the atom pool
             if (atom)
-                atom->makePersistent(false);
+                context->makeDataPersistent(atom, false, nodeID);
         }
     }
 

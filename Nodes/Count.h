@@ -51,13 +51,24 @@ public:
             if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(event->getTimeStamp());
-                if (countValue > maxCount)
-                    countValue = minCount;
+                switch (event->getTagHash())
+                {
+                case hash("reset"):
+                    {
+                        countValue = minCount;
+                        // don't output on reset
+                    }
+                    break;
+                default:
+                    {
+                        if (countValue > maxCount)
+                            countValue = minCount;
 
-                e->addAtom(countValue++);
-
-                // Now add it to the output port’s event list
-                outputPortBuffers[0]->addEvent(e);
+                        e->addAtom(countValue++);
+                        // Now add it to the output port’s event list
+                        outputPortBuffers[0]->addEvent(e);
+                    }
+                }
             }
         }
     }

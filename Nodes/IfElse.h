@@ -6,10 +6,10 @@
 class IfElse : public AudioNode {
     DEFINE_AND_REGISTER_NODE("IfElse", "ifelse");
 
-    IntParameter* ifParam;
+    FloatParameter* ifParam;
     StringParameter* modeParam;
 
-    std::atomic<int> coldValueIf;
+    std::atomic<float> coldValueIf;
     std::atomic<int> modeHash;
 
     enum Mode {
@@ -40,11 +40,11 @@ public:
         addInputPort("input", AudioPort::PortType::Data);
         addOutputPort("else", AudioPort::PortType::Data);
 
-        coldValueIf = objParams.value("if", 0);
+        coldValueIf = objParams.value("if", 0.0f);
         std::string initialMode = objParams.value("mode", "==");
 
         modeParam = addParameter<StringParameter>("mode", initialMode);
-        ifParam = addParameter<IntParameter>("if", coldValueIf, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        ifParam = addParameter<FloatParameter>("if", coldValueIf, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
         modeHash.store(hash(initialMode));
         context->stringMap.intern("==", "!=", ">", ">=", "<", "<=");
@@ -69,13 +69,28 @@ public:
             float value = event->getAtomValue(0);
             bool condition = false;
 
-            switch (mode) {
-                case EQ:  condition = value == coldValueIf; break;
-                case NEQ: condition = value != coldValueIf; break;
-                case GT:  condition = value >  coldValueIf; break;
-                case GTE: condition = value >= coldValueIf; break;
-                case LT:  condition = value <  coldValueIf; break;
-                case LTE: condition = value <= coldValueIf; break;
+            float epsilon = std::numeric_limits<float>::epsilon();
+
+            switch (mode)
+            {
+            case EQ:
+                condition = fabs(value - coldValueIf) < epsilon;
+                break;
+            case NEQ:
+                condition = fabs(value - coldValueIf) >= epsilon;
+                break;
+            case GT:
+                condition = (value - coldValueIf) > epsilon;
+                break;
+            case GTE:
+                condition = (value - coldValueIf) > -epsilon;
+                break;
+            case LT:
+                condition = (coldValueIf - value) > epsilon;
+                break;
+            case LTE:
+                condition = (coldValueIf - value) > -epsilon;
+                break;
             }
 
             if (Event* e = context->eventPool.getFreeEvent())

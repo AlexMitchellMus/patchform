@@ -26,7 +26,7 @@ using json = nlohmann::json;
 #include "../Utility/Hash.h"
 #include "../Nodes/AllNodes.h"
 
-#include "Logger.h"
+//#include "Logger.h"
 #include "../Utility/ppl_string.hpp"
 #include "AdjacencyMap.h"
 #include "Edge.h"
@@ -1143,12 +1143,12 @@ public:
     GraphManager(int sampleRate, unsigned long frameCount)
         : ctx(std::make_unique<NodeContext>(sampleRate, frameCount))
     {
-        Logger::getInstance().startProcessingThread();
+        //Logger::getInstance().startProcessingThread();
     }
 
     ~GraphManager()
     {
-        Logger::getInstance().stopProcessingThread();
+        //Logger::getInstance().stopProcessingThread();
     }
 
     AudioNode* addObject(const std::string& objName, bool addToGraph = true)
