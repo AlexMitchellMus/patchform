@@ -16,8 +16,8 @@ class Envelope final : public AudioNode
     FloatParameter* attackValParam = nullptr;
     FloatParameter* decayValParam = nullptr;
 
-    float attackVal;
-    float decayVal;
+    std::atomic<float> attackVal;
+    std::atomic<float> decayVal;
     float envValue = 0.0f;
     bool isAttack = false;  // Track whether the envelope is in attack phase
 
@@ -101,6 +101,19 @@ public:
 
         attackValParam = addParameter<FloatParameter>("Attack", attackMs, 0.0f, std::numeric_limits<float>::max());
         decayValParam = addParameter<FloatParameter>("Decay", deacyMs, 0.0f, std::numeric_limits<float>::max());
+
+        attackValParam->informNodeOfChange = [this]()
+        {
+            attackVal.store(attackValParam->getValue());
+        };
+
+        decayValParam->informNodeOfChange = [this]()
+        {
+            decayVal.store(decayValParam->getValue());
+        };
+
+        attackVal.store(attackValParam->getValue());
+        decayVal.store(decayValParam->getValue());
     }
 
     json getSerializedNode() override
@@ -121,10 +134,9 @@ public:
 
         unsigned int nextFreqEventIndex = 0;
 
-        attackVal = attackValParam->getValue() * (context->sampleRate / 1000);
-        decayVal = decayValParam->getValue() * (context->sampleRate / 1000);
+        const auto attack = attackVal.load() * (context->sampleRate / 1000);
+        const auto decay = decayVal.load() * (context->sampleRate / 1000);
 
-        std::vector<Event*> toRelease;
         unsigned long nextEventIndex = 0;
 
         for (unsigned long i = 0; i < frameCount; i++)
@@ -146,7 +158,7 @@ public:
             if (isAttack)
             {
                 // Attack phase: Ramp up from 0 to 1
-                envValue += (1.0f / attackVal);
+                envValue += (1.0f / attack);
                 if (envValue >= 1.0f) {
                     envValue = 1.0f;
                     isAttack = false;  // Switch to decay phase after reaching 1
@@ -155,7 +167,7 @@ public:
             else
             {
                 // Decay phase: Ramp down from 1 towards 0
-                envValue -= (1.0f / decayVal);
+                envValue -= (1.0f / decay);
                 if (envValue <= 0.0f) {
                     envValue = 0.0f;
                 }

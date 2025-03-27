@@ -230,6 +230,16 @@ public:
         TopBar::resized();
     }
 
+    void setDSPValue(float dspVal)
+    {
+        auto newDspString = std::format("{:.2f}", dspVal) + " %";
+        if (dspPercent != newDspString)
+        {
+            dspPercent = newDspString;
+            repaint();
+        }
+    }
+
     void setPatchName(const std::string& patchName)
     {
         loadedPatch = patchName;
@@ -290,7 +300,11 @@ public:
         nvgFontFace(nvg, "Regular");
         nvgFontSize(nvg, 14.0f);
         nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        // Patch name text
         nvgText(nvg, textOffset, height / 2, loadedPatch.c_str(), nullptr);
+
+        // DSP CPU %
+        nvgText(nvg, getWidth() - 300, height / 2, dspPercent.c_str(), nullptr);
 
         nvgRestore(nvg);
     }
@@ -326,4 +340,6 @@ private:
 
     std::string loadedPatch;
     int textOffset = 0;
+
+    std::string dspPercent = "";
 };

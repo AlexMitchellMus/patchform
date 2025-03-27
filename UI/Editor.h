@@ -170,4 +170,6 @@ private:
     bool animateToolDock = false;
 
     float toolDockPosY;
+
+    float currentDSPPercentage = 0.0f;
 };

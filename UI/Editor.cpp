@@ -125,7 +125,6 @@ void Editor::updateObjectsFromDSP() const
             topBar->setVolumeMeterValue(averagedPeak);
         }
     }
+
+    topBar->setDSPValue(graphManager->getDspTiming());
 }
-
-
-

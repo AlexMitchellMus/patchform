@@ -120,14 +120,48 @@ protected:
 
     // Phase (in table index units)
     float phase = 0.0f;
-    std::string waveform;
+    std::atomic<hash32> waveformHash;
     float freq = 0.0f;
+
+#include <cstdint>
+
+    class XorShift {
+    public:
+        // Constructor: you can optionally provide a seed.
+        explicit XorShift(uint32_t seed = 2463534242u) : state(seed) {}
+
+        void setSeed(uint32_t seed) {
+            // Mix the seed with a fixed constant to improve bit dispersion.
+            state = seed ^ 0xA3C59AC3;  // XOR with a well-chosen constant.
+            if (state == 0) {  // Avoid a zero state.
+                state = 2463534242u;
+            }
+        }
+
+        // Generate the next float in the range [-1.0f, 1.0f].
+        inline float nextFloat() {
+            // Xorshift operations.
+            state ^= state << 13;
+            state ^= state >> 17;
+            state ^= state << 5;
+            // Convert the 32-bit integer to a float in [0, 1]
+            // 4294967295.0f is the maximum value for a 32-bit unsigned integer.
+            float normalized = static_cast<float>(state) * (1.0f / 4294967295.0f);
+            // Map to [-1, 1]
+            return normalized * 2.0f - 1.0f;
+        }
+
+    private:
+        uint32_t state;
+    };
+
+    XorShift fastRNG;
 
     StringParameter* waveformParameter;
 
     // All tables now have FULL_TABLE_SIZE samples.
     // We use a pointer to float and an effective cycle length.
-    const float* waveformTable = nullptr;
+    std::atomic<const float*> waveformTable = nullptr;
     // Effective cycle length remains TABLE_SIZE (the extra sample is for interpolation only)
     size_t tableLength = TABLE_SIZE;
 
@@ -139,34 +173,34 @@ protected:
     signalsmith::EllipticBlepAllpass<float> allpass;
 
     // Choose waveform table based on the string.
-    void updateWaveform()
+    hash32 updateWaveform(hash32 waveformHash)
     {
-        useBlep = UseBlep::None;
-        switch (hash(waveform))
+        switch (waveformHash)
         {
         case hash("saw"):
-            useBlep = UseBlep::SawBlep;
-            waveformTable = sawWaveTable.data();
+            waveformTable.store(sawWaveTable.data());
             break;
         case hash("square"):
-            waveformTable = squareWaveTable.data();
+            waveformTable.store(squareWaveTable.data());
             break;
         case hash("tri"):
         case hash("triangle"):
-            waveformTable = triangleWaveTable.data();
+            waveformTable.store(triangleWaveTable.data());
             break;
         case hash("noise"):
-            waveformTable = nullptr;
+            waveformTable.store(nullptr);
             break;
         default:
-            if (hash(waveform) != hash("sine"))
+            if (waveformHash != hash("sine"))
             {
                 //std::cout << "Error! Unknown waveform: " << waveform << ", using default sine" << std::endl;
-                waveform = "sine";
+                waveformHash = hash("sine");
             }
-            waveformTable = sineWaveTable.data();
+            waveformTable.store(sineWaveTable.data());
             break;
         }
+
+        return waveformHash;
     }
 
 public:
@@ -176,17 +210,29 @@ public:
         addInputPort("phase", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Signal);
 
-        waveform = objParams.value("waveform", "sine");
+        auto waveform = objParams.value("waveform", "sine");
         freq = objParams.value("freq", 440.0f);
 
         waveformParameter = addParameter<StringParameter>("Waveform", waveform);
 
-        updateWaveform();
+        waveformParameter->informNodeOfChange = [this]()
+        {
+            waveformHash.store(updateWaveform(hash(waveformParameter->getValue())));
+        };
+
+        waveformHash.store(updateWaveform(hash(waveformParameter->getValue())));
+
+        context->stringMap.intern("sine", "saw", "square", "triangle", "tri", "noise");
+
+        fastRNG.setSeed(nodeID);
     }
 
     json getSerializedNode() override
     {
-        nodeCreationData["waveform"] = waveform;
+        if (auto* waveformString = context->stringMap.find(waveformHash))
+        {
+            nodeCreationData["waveform"] = *waveformString;
+        }
         return nodeCreationData;
     }
 
@@ -199,9 +245,11 @@ public:
         auto freqIn = inputPortBuffers[1]->getAudioBuffer();
         auto output = outputPortBuffers[0]->getAudioBuffer();
 
-        // Update waveform if parameter changed.
-        waveform = waveformParameter->getValue();
-        updateWaveform();
+        auto waveformTableToUse = waveformTable.load(std::memory_order_relaxed);
+        if (waveformHash.load(std::memory_order_relaxed) == hash("saw"))
+            useBlep = UseBlep::SawBlep;
+        else
+            useBlep = UseBlep::None;
 
         // These indices track events within the current block.
         unsigned int nextEventIndex = 0;
@@ -211,11 +259,10 @@ public:
         // Note: We assume that the member variable 'phase' is normalized to [0,1) for all waveforms.
         for (unsigned int i = 0; i < frameCount; i++)
         {
-            if (waveformTable)
+            if (waveformTableToUse)
             {
                 // --- Handle external phase-reset events ---
-                while (nextEventIndex < events.size() &&
-                    events[nextEventIndex]->getTimeStamp() == i)
+                while (nextEventIndex < events.size() && events[nextEventIndex]->getTimeStamp() == i)
                 {
                     // For a saw wave, apply a BLEP correction at reset.
                     if (useBlep == UseBlep::SawBlep)
@@ -229,9 +276,7 @@ public:
                 }
 
                 // --- Process frequency events ---
-                while (!useSignalFreq &&
-                    nextFreqEventIndex < freqEvents.size() &&
-                    freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
+                while (!useSignalFreq && nextFreqEventIndex < freqEvents.size() && freqEvents[nextFreqEventIndex]->getTimeStamp() == i)
                 {
                     if (auto newFreq = freqEvents[nextFreqEventIndex]->getAtom(0))
                     {
@@ -273,31 +318,22 @@ public:
                 // Because our tables have FULL_TABLE_SIZE samples (TABLE_SIZE+1), we use idx+1 directly.
                 int nextIdx = idx + 1;
                 double frac = tableIndex - idx;
-                double value = waveformTable[idx] + frac * (waveformTable[nextIdx] - waveformTable[idx]);
+                double value = waveformTableToUse[idx] + frac * (waveformTableToUse[nextIdx] - waveformTableToUse[idx]);
 
                 // --- Apply BLEP correction only for saw ---
                 if (useBlep == UseBlep::SawBlep)
                 {
                     value += blep.get();
+                    // WARNING! Make sure allpass has been reset (either in class or manually)
+                    value = allpass(static_cast<float>(value));
                 }
-
-                // --- Optionally pass through the allpass filter ---
-                // WARNING! Make sure allpass has been reset (either in class or manually)
-                value = allpass(static_cast<float>(value));
 
                 // --- Write the output sample with scaling ---
                 output[i] = 0.5f * static_cast<float>(value);
             }
             else
             {
-                // Generate noise on the fly.
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-                for (unsigned long i = 0; i < frameCount; i++)
-                {
-                    output[i] = dist(gen);
-                }
+                output[i] = fastRNG.nextFloat();
             }
         }
     }

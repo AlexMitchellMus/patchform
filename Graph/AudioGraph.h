@@ -31,6 +31,8 @@ using json = nlohmann::json;
 #include "AdjacencyMap.h"
 #include "Edge.h"
 
+#include "DspTimer.h"
+
 #undef max
 
 // AudioGraph to manage nodes and process them in the correct order
@@ -1408,18 +1410,7 @@ public:
 
     void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& message)
     {
-        //#define DSP_TIMING
-#ifdef DSP_TIMING
-        //=====================
-        // 1) Timing the DSP
-        //=====================
-        static auto lastPrintTime = std::chrono::high_resolution_clock::now();
-
-        static double accumulatedCallbackTimeMs = 0.0;  // Sum of times in ms
-        static int    callCount                 = 0;    // Number of callbacks since last print
-
-        auto startTime = std::chrono::high_resolution_clock::now();
-#endif
+        dspTimer.start();
 
 #ifdef DEBUG_MIDI
     if (message.message.empty()) {
@@ -1547,58 +1538,28 @@ public:
         }
 
         // Process the current graph
-        auto graph = activeGraph;
-        if (graph)
+        if (activeGraph)
         {
-            graph->process(buffer, frameCount, message);
+            activeGraph->process(buffer, frameCount, message);
         }
+
+        dspTimer.end(frameCount, ctx->sampleRate);
 
         processPeak(buffer, frameCount);
 
-#ifdef DSP_TIMING
-        auto endTime = std::chrono::high_resolution_clock::now();
+    }
 
-        // Calculate how long (in ms) the callback took
-        double callbackTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
-
-        // Accumulate for averaging
-        accumulatedCallbackTimeMs += callbackTimeMs;
-        callCount++;
-
-        //=====================
-        // 2) Check if 1 second has passed
-        //=====================
-        auto now = std::chrono::high_resolution_clock::now();
-        double elapsedSec = std::chrono::duration<double>(now - lastPrintTime).count();
-
-        if (elapsedSec >= 1.0)  // Once a second
-        {
-            // 2a) Compute average callback duration in ms
-            double averageMs = accumulatedCallbackTimeMs / callCount;
-
-            // 2b) Compute percentage of available time used
-            //     - Time available per callback (in ms)
-            //       = (frameCount / sampleRate) * 1000
-            double periodMs   = 1000.0 * (static_cast<double>(frameCount) / ctx->sampleRate);
-            double usagePct   = (averageMs / periodMs) * 100.0;
-
-            // 2c) Print results
-            Logger::getInstance().log("Average callback time over last second: "
-                + std::to_string(averageMs) + " ms, which is "
-                + std::to_string(usagePct) + "% of available time");
-
-            // 2d) Reset counters for next 1-second interval
-            lastPrintTime             = now;
-            accumulatedCallbackTimeMs = 0.0;
-            callCount                 = 0;
-        }
-#endif
+    float getDspTiming()
+    {
+        return dspTimer.getCpuUsage();
     }
 
     // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
     moodycamel::ConcurrentQueue<float> volumeMeterQueue = moodycamel::ConcurrentQueue<float>(100);
 
 private:
+    DspTimer dspTimer;
+
     // Take the average peak and send it to the GUI when the GUI requests an update
     void processPeak(const float* buffer, unsigned long frameCount)
     {
