@@ -52,7 +52,7 @@ public:
     float getValue()
     {
         float newValue;
-        if (queue.try_dequeue(newValue))
+        while (queue.try_dequeue(newValue))
         {
             value = std::clamp(newValue, minValue, maxValue);
         }
@@ -118,7 +118,7 @@ public:
     int getValue()
     {
         int newValue;
-        if (queue.try_dequeue(newValue))
+        while (queue.try_dequeue(newValue))
         {
             value = std::clamp(newValue, minValue, maxValue);
         }
@@ -157,7 +157,7 @@ public:
     bool getValue()
     {
         bool newValue;
-        if (queue.try_dequeue(newValue))
+        while (queue.try_dequeue(newValue))
         {
             value = newValue;
         }
