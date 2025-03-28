@@ -49,6 +49,8 @@ public:
 
     LockFreeHashMap() {
         value_pool.fill("");
+
+        intern("INVALID_SYMBOL");
     }
 
     template <typename... Strings>
@@ -56,9 +58,13 @@ public:
         (internString(std::forward<Strings>(strings)), ...);
     }
 
-    void internString(const std::string& value)
+    hash32 internString(const std::string& symbolString)
     {
-        intern(hash(value), value);
+        auto symbolHash = hash(symbolString);
+        if (intern(symbolHash, symbolString))
+            return symbolHash;
+
+        return hash("INVALID_SYMBOL");
     }
 
     bool intern(const hash32 key, const std::string& value) {

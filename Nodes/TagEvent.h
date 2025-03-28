@@ -19,15 +19,15 @@ class TagEvent : public AudioNode
 public:
     TagEvent(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
-        tag = objParams.value("tag", "");
-        tagParameter = addParameter<StringParameter>("Tag", tag);
+        tag = objParams.value("symbol", "");
+        tagParameter = addParameter<StringParameter>("symbol", tag);
 
         addInputPort("In", AudioPort::PortType::Data);
     }
 
     json getSerializedNode() override
     {
-        nodeCreationData["tag"] = tagParameter->getValue();
+        nodeCreationData["symbol"] = tagParameter->getValue();
         return nodeCreationData;
     }
 

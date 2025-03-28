@@ -47,13 +47,14 @@ private:
 class DataAtom
 {
 public:
-    enum class DataType { Float, List };
+    enum class DataType { Float, List, Symbol };
 
     DataType type = DataType::Float;  // Default to Float
 
     union data {
-        float atom;           // Stores a float value
-        DataAtom* list;       // If type == List, this points to a sublist
+        float atom;           // float value
+        hash32 symbol;
+        DataAtom* list;       // sublist
     } data;
 
     DataAtom* next = nullptr;  // Next item in the main chain
@@ -73,6 +74,10 @@ public:
             if (walk->type == DataType::Float)
             {
                 ss << walk->data.atom;
+            }
+            else if (walk->type == DataType::Symbol)
+            {
+                ss << "@$" << walk->data.symbol << "$@";
             }
             else
             {

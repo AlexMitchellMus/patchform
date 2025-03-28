@@ -101,7 +101,8 @@ public:
                     {
                         // Make a new atom to hold the list or data
                         auto newData = context->eventPool.allocateDataAtom();
-                        newData->data.atom = atomData->data.atom;
+                        newData->data = atomData->data;
+                        newData->type = atomData->type;
                         e->numAtoms = 1;
                         e->data = newData;
                     }

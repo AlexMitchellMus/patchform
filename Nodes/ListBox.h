@@ -9,6 +9,8 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
+#include <regex>
+
 #include "AudioNodeBase.h"
 #include "concurrentqueue.h"
 #ifdef PATCHFORM_WITH_GUI
@@ -37,6 +39,8 @@ public:
     moodycamel::ConcurrentQueue<EventDataBuffer> queueToDSP;
 
     DataAtom* savedData = nullptr;
+
+    std::string textBuffer;
 #endif
 
     // Editable list text stored as a string.
@@ -81,11 +85,90 @@ public:
                 updateWidth();
             };
 
-            textEditor->onTextReturned = [this, listBox, ed = textEditor.get()]()
+            textEditor->onTextReturned = [this, listBox]()
             {
-                ed->setInteractable(false);
-                listBox->queueToDSP.enqueue(textEditor->getText());
+                textEditor->setInteractable(false);
+                //std::cout << "list text: " << textEditor->getText() << " formated: " << formatSymbols(textEditor->getText()) <<  std::endl;
+                listBox->queueToDSP.enqueue(formatSymbols(textEditor->getText()));
             };
+        }
+
+        // Helper to check if a token is numeric.
+        // This simple regex matches integers or floats.
+        bool isNumeric(const std::string &s) {
+            static const std::regex numRegex(R"(^[-+]?[0-9]*\.?[0-9]+$)");
+            return std::regex_match(s, numRegex);
+        }
+
+        // Compute the hash of a given string token.
+        unsigned int computeHash(const std::string &s) {
+            auto listBox = reinterpret_cast<ListBox*>(audioNode);
+            return listBox->context->stringMap.internString(s);
+        }
+
+        std::string formatSymbols(const std::string& listText) {
+            // This regex matches tokens that exclude whitespace, commas, and curly braces.
+            std::regex tokenRegex(R"([^\s,{}]+)");
+
+            std::string result;
+            size_t lastPos = 0;
+
+            // Iterate over all matches using sregex_iterator.
+            auto begin = std::sregex_iterator(listText.begin(), listText.end(), tokenRegex);
+            auto end = std::sregex_iterator();
+
+            for (auto it = begin; it != end; ++it) {
+                std::smatch match = *it;
+                // Append the text between the last match and this match.
+                result.append(listText, lastPos, match.position() - lastPos);
+
+                std::string token = match.str();
+                if (isNumeric(token)) {
+                    // If the token is numeric, leave it unchanged.
+                    result += token;
+                } else {
+                    // Otherwise, compute the hash and format it.
+                    unsigned int hashValue = computeHash(token);
+                    result += "@$" + std::to_string(hashValue) + "$@";
+                }
+
+                // Update last position after the current match.
+                lastPos = match.position() + match.length();
+            }
+
+            // Append any remaining text after the last match.
+            result.append(listText, lastPos, listText.size() - lastPos);
+
+            return result;
+        }
+
+        std::string unformatSymbols(const std::string& listText) {
+            // This regex matches tokens in the form "@$<digits>$@"
+            std::regex symbolRegex(R"(@\$([0-9]+)\$@)");
+            std::string result;
+            size_t lastPos = 0;
+
+            auto begin = std::sregex_iterator(listText.begin(), listText.end(), symbolRegex);
+            auto end = std::sregex_iterator();
+
+            for (auto it = begin; it != end; ++it) {
+                std::smatch match = *it;
+                // Append text from the previous match to the current match.
+                result.append(listText, lastPos, match.position() - lastPos);
+                // Capture the numeric hash (first capture group)
+                std::string hashStr = match[1].str();
+                unsigned int hashValue = static_cast<unsigned int>(std::stoul(hashStr));
+                // Lookup the original symbol using the stringMap.
+                auto listBox = reinterpret_cast<ListBox*>(audioNode);
+                if (auto symbolString = listBox->context->stringMap.find(hashValue))
+                {
+                    result += *symbolString;
+                }
+                lastPos = match.position() + match.length();
+            }
+            // Append any remaining text.
+            result.append(listText, lastPos, listText.size() - lastPos);
+            return result;
         }
 
         void mouseButtonDown(pptk::CompEvent& e) override
@@ -133,11 +216,12 @@ public:
                 // Dequeue DSP events; the last event replaces all values.
                 while (listBox->queueFromDSP.try_dequeue(buffer))
                 {
-                    uiText = buffer; // Replace entire listText.
                     updated = true;
                 }
                 if (updated)
                 {
+                    uiText = unformatSymbols(buffer);
+                    //std::cout << "buffer: " << buffer << " unformat: " << uiText << std::endl;
                     // Update the text editor to reflect DSP changes.
                     textEditor->setText(uiText);
                     updateWidth();
@@ -170,11 +254,13 @@ public:
 #endif
 
 public:
-    ListBox(NodeContext* context, const json& objParams)
-        : AudioNode(context, AudioPort::PortType::Data, objParams)
+    ListBox(NodeContext* context, const json& objParams): AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("Value_input", AudioPort::PortType::Data);
-        // Initialize listText from JSON parameters (or a default if not provided).
+
+        textBuffer.reserve(1024);
+        listText.reserve(1024);
+
         listText = objParams.value("list", "");
     }
 
@@ -184,7 +270,6 @@ public:
         return nodeCreationData;
     }
 
-    // Helper function to parse a single atom (either a float or a list).
     DataAtom* parseAtom(const char*& s, EventPool& pool)
     {
         // Skip leading whitespace.
@@ -221,9 +306,30 @@ public:
                 if (*s == ',') s++;
             }
             if (*s == '}') s++; // Skip the closing brace.
-            // Assume the list is stored in a union field called 'list'.
             listAtom->data.list = firstChild;
             return listAtom;
+        }
+        // Check for symbol token: starts with "@$" and ends with "$@".
+        else if (*s == '@' && *(s + 1) == '$')
+        {
+            s += 2; // Skip the initial "@$"
+            // Find the closing "$@"
+            const char* endSymbol = std::strstr(s, "$@");
+            if (!endSymbol)
+            {
+                // No closing marker found. In a real implementation you might want to handle this error.
+                return nullptr;
+            }
+            // Extract the inner string (expected to be a numeric hash value)
+            std::string symbolToken(s, endSymbol);
+            // Convert the extracted string to an unsigned int.
+            unsigned int hashValue = static_cast<unsigned int>(std::stoul(symbolToken));
+            s = endSymbol + 2; // Move past the "$@" marker
+
+            auto dataAtom = pool.allocateDataAtom();
+            dataAtom->type = DataAtom::DataType::Symbol;
+            dataAtom->data.symbol = hashValue;
+            return dataAtom;
         }
         else
         {
@@ -237,7 +343,8 @@ public:
             }
             s = endPtr;
             auto dataAtom = pool.allocateDataAtom();
-            dataAtom->data.atom = value; // Sets data.atom = value.
+            dataAtom->type = DataAtom::DataType::Float;
+            dataAtom->data.atom = value;
             return dataAtom;
         }
     }
@@ -306,27 +413,24 @@ public:
                 break;
             default:
                 {
-                    EventDataBuffer buffer;
-                    buffer = event->getAtom(0)->toString();
+                    textBuffer.clear();
+                    textBuffer = event->getAtom(0)->toString();
                     if (savedData)
                         context->makeDataPersistent(savedData, false, nodeID);
 
                     savedData = event->data;
                     context->makeDataPersistent(savedData, true, nodeID);
                     // Enqueue DSP event – it will replace the entire listText.
-                    queueFromDSP.enqueue(buffer);
+                    queueFromDSP.enqueue(textBuffer);
                     updateUI();
                     outputPortBuffers[0]->addEvent(event);
                 }
             }
         }
 
-        EventDataBuffer uiBuffer;
-        while (queueToDSP.try_dequeue(uiBuffer))
+        while (queueToDSP.try_dequeue(textBuffer))
         {
-            // Update internal DSP state with the new text.
-            listText = uiBuffer;
-
+            listText = textBuffer;
             // Get a free event from the event pool.
             auto newEvent = context->eventPool.getFreeEvent();
 

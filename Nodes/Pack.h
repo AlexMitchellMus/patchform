@@ -116,8 +116,8 @@ public:
                     }
                     else
                     {
-                        outAtom->type = DataAtom::DataType::Float;
-                        outAtom->data.atom = persistentAtoms[i]->data.atom;
+                        outAtom->type = persistentAtoms[i]->type;
+                        outAtom->data = persistentAtoms[i]->data;
                     }
                     outAtom->next = nullptr;
                     outputAtoms[i] = outAtom;
