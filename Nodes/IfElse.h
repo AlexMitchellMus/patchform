@@ -102,6 +102,7 @@ public:
             {
                 e->data = event->data;
                 e->numAtoms = event->numAtoms;
+                e->setTagHashcode(event->getTagHash());
                 e->setTimeStamp(event->getTimeStamp());
 
                 if (condition)

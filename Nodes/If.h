@@ -30,6 +30,16 @@ public:
 
         ifParam = addParameter<IntParameter>("if", coldValueIf, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
         retParam = addParameter<FloatParameter>("return", coldValueReturn, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+
+        ifParam->informNodeOfChange = [this]()
+        {
+            coldValueIf = ifParam->getValue();
+        };
+
+        retParam->informNodeOfChange = [this]()
+        {
+            coldValueReturn = retParam->getValue();
+        };
     }
 
     bool shouldProcess(unsigned int frameCount) override
@@ -37,13 +47,17 @@ public:
         return hasInputEvents.load(std::memory_order_relaxed);
     }
 
+    json getSerializedNode() override
+    {
+        nodeCreationData["if"] = coldValueIf;
+        nodeCreationData["return"] = coldValueReturn;
+        return nodeCreationData;
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
-        coldValueIf = ifParam->getValue();
-        coldValueReturn = retParam->getValue();
-
         const auto& aEvents = inputPortBuffers[0]->getEvents();
-        if (auto bEvent = inputPortBuffers[1]->getEvents(); bEvent.size())
+        if (auto& bEvent = inputPortBuffers[1]->getEvents(); bEvent.size())
             coldValueIf = bEvent.back()->getAtomValue(0);
 
         for (auto event : aEvents)
@@ -57,10 +71,8 @@ public:
 
                     // Now add it to the output port’s event list
                     outputPortBuffers[0]->addEvent(e);
-                    //Logger::getInstance().logEvent(this, e->getTimeStamp(), e->data);
                 }
             }
-            //context->eventPool.releaseEvent(event);
         }
     }
 };

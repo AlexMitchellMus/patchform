@@ -4,43 +4,56 @@
 #include <iostream>
 #include <stdexcept>
 #include "../Utility/Hash.h"
+#include "bitset"
 
-struct OwnershipToken {
-    int nodeId;             // The ID of the Get node
-    OwnershipToken* next;    // Pointer to the next owner
+struct OwnershipBlock {
+    int blockIndex;           // Represents owner IDs from blockIndex * 64 to (blockIndex + 1) * 64 - 1
+    uint64_t bits;           // 64-bit bitmask
+    OwnershipBlock* next;    // Pointer to the next block
 };
 
-// A simple pool for OwnershipToken objects.
-class OwnershipTokenPool {
+// Pool for OwnershipBlock objects
+class OwnershipBlockPool {
 public:
-    OwnershipTokenPool(size_t capacity) : freeList(nullptr) {
-        tokens.resize(capacity);
-        // Initialize the free list.
-        for (size_t i = 0; i < tokens.size(); i++) {
-            tokens[i].next = freeList;
-            freeList = &tokens[i];
+    OwnershipBlockPool(size_t capacity) : freeList(nullptr) {
+        blocks.resize(capacity);
+        for (size_t i = 0; i < blocks.size(); ++i) {
+            blocks[i].next = freeList;
+            freeList = &blocks[i];
         }
     }
 
-    // Acquire a token from the pool (throws if exhausted).
-    OwnershipToken* acquire() {
+    OwnershipBlock* acquire() {
         if (!freeList)
-            throw std::runtime_error("OwnershipTokenPool exhausted");
-        OwnershipToken* token = freeList;
-        freeList = freeList->next;
-        token->next = nullptr;
-        return token;
+            throw std::runtime_error("OwnershipBlockPool exhausted");
+
+#ifdef DEBUG_BLOCKS
+        // Count freelist size before popping
+        int freeCount = 0;
+        OwnershipBlock* temp = freeList;
+        while (temp) {
+            ++freeCount;
+            temp = temp->next;
+        }
+        std::cout << "Freelist size before acquire: " << freeCount << std::endl;
+#endif
+
+        OwnershipBlock* block = freeList;
+        freeList = block->next;
+        block->next = nullptr;
+        block->bits = 0;
+        block->blockIndex = -1;
+        return block;
     }
 
-    // Return a token to the pool.
-    void release(OwnershipToken* token) {
-        token->next = freeList;
-        freeList = token;
+    void release(OwnershipBlock* block) {
+        block->next = freeList;
+        freeList = block;
     }
 
 private:
-    std::vector<OwnershipToken> tokens;
-    OwnershipToken* freeList;
+    std::vector<OwnershipBlock> blocks;
+    OwnershipBlock* freeList;
 };
 
 
@@ -61,7 +74,7 @@ public:
 
     bool isPersistent = false;
 
-    OwnershipToken* ownerList = nullptr;
+    OwnershipBlock* ownerChain = nullptr;
 
     // Write a string representation of the DataAtom chain into the provided preallocated buffer.
     // The caller must preallocate 'textBuffer' to at least MAX_BUFFER characters (e.g. textBuffer.resize(MAX_BUFFER)).
@@ -174,10 +187,9 @@ public:
         textBuffer.resize(pos);
     }
 
-
-    void makePersistent(int nodeID, const bool toBePersistent, OwnershipTokenPool& ownerList)
+    void makePersistent(const bool toBePersistent, const int nodeID, OwnershipBlockPool& pool)
     {
-        makePersistent(this, toBePersistent, nodeID, ownerList);
+        makePersistent(this, toBePersistent, nodeID, pool);
     }
 
     [[nodiscard]] DataAtom* getAtom(const int index)
@@ -207,53 +219,62 @@ public:
     }
 
 private:
-    static void makePersistent(DataAtom* atom, const bool toBePersistent, const int nodeID, OwnershipTokenPool& ownerList)
-    {
-        while (atom != nullptr)
-        {
+    static void makePersistent(DataAtom* atom, const bool toBePersistent, const int nodeID, OwnershipBlockPool& pool) {
+        while (atom != nullptr) {
             if (toBePersistent)
-                addOwnership(atom, nodeID, ownerList);
+                addOwnership(atom, nodeID, pool);
             else
-                removeOwnership(atom, nodeID, ownerList);
+                removeOwnership(atom, nodeID, pool);
 
-            // Update the persistent flag: true if any node owns this atom.
-            const OwnershipToken* curOwners = atom->ownerList;
-            atom->isPersistent = (curOwners != nullptr);
-
-            // If this is a list atom, recursively update its sublist.
             if (atom->type == DataAtom::DataType::List)
-                makePersistent(atom->data.list, toBePersistent, nodeID, ownerList);
+                makePersistent(atom->data.list, toBePersistent, nodeID, pool);
 
             atom = atom->next;
         }
     }
 
-    static inline void addOwnership(DataAtom* atom, const int nodeID, OwnershipTokenPool& ownerList)
-    {
-        const OwnershipToken* cur = atom->ownerList;
-        while (cur) {
-            if (cur->nodeId == nodeID)
-                return; // already owned
-            cur = cur->next;
+    static void addOwnership(DataAtom* atom, const int nodeID, OwnershipBlockPool& pool) {
+        int blockIndex = nodeID / 64;
+        uint64_t bit = 1ULL << (nodeID % 64);
+        OwnershipBlock** ppBlock = &atom->ownerChain;
+
+        while (*ppBlock && (*ppBlock)->blockIndex < blockIndex) {
+            ppBlock = &((*ppBlock)->next);
         }
-        OwnershipToken* newLink = ownerList.acquire();
-        newLink->nodeId = nodeID;
-        newLink->next = atom->ownerList;
-        atom->ownerList = newLink;
+
+        if (*ppBlock && (*ppBlock)->blockIndex == blockIndex) {
+            (*ppBlock)->bits |= bit;
+        } else {
+            OwnershipBlock* newBlock = pool.acquire();
+            newBlock->blockIndex = blockIndex;
+            newBlock->bits = bit;
+            newBlock->next = *ppBlock;
+            *ppBlock = newBlock;
+        }
+
+        atom->isPersistent = (atom->ownerChain != nullptr);
     }
 
-    static inline void removeOwnership(DataAtom* atom, const int nodeID, OwnershipTokenPool& ownerList)
-    {
-        OwnershipToken** cur = &atom->ownerList;
-        while (*cur) {
-            if ((*cur)->nodeId == nodeID) {
-                OwnershipToken* toRelease = *cur;
-                *cur = toRelease->next;
-                ownerList.release(toRelease);
-                break;
-            }
-            cur = &((*cur)->next);
+    static void removeOwnership(DataAtom* atom, const int nodeID, OwnershipBlockPool& pool) {
+        int blockIndex = nodeID / 64;
+        uint64_t bit = 1ULL << (nodeID % 64);
+        OwnershipBlock** ppBlock = &atom->ownerChain;
+
+        while (*ppBlock && (*ppBlock)->blockIndex < blockIndex) {
+            ppBlock = &((*ppBlock)->next);
         }
+
+        if (*ppBlock && (*ppBlock)->blockIndex == blockIndex) {
+            (*ppBlock)->bits &= ~bit;
+            //std::cout << "block bits: " << std::bitset<64>((*ppBlock)->bits) << std::endl;
+            if ((*ppBlock)->bits == 0) {
+                OwnershipBlock* toRelease = *ppBlock;
+                *ppBlock = toRelease->next;
+                pool.release(toRelease);
+            }
+        }
+
+        atom->isPersistent = (atom->ownerChain != nullptr);
     }
 };
 

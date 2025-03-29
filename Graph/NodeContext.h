@@ -145,15 +145,15 @@ public:
     int frameCount;
     EventPool eventPool;
 
-    OwnershipTokenPool ownershipTokenPool;
+    OwnershipBlockPool ownershipBlockPool;
 
     LockFreeHashMap stringMap;
 
-    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount), ownershipTokenPool(10000) {};
+    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount), ownershipBlockPool(10000) {};
 
     void makeDataPersistent(DataAtom* atom, const bool toBePersistent, int nodeID)
     {
         if (atom)
-            atom->makePersistent(nodeID, toBePersistent, ownershipTokenPool);
+            atom->makePersistent(toBePersistent, nodeID, ownershipBlockPool);
     }
 };
