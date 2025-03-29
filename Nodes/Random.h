@@ -23,6 +23,11 @@ public:
         addInputPort("In", AudioPort::PortType::Data);
     }
 
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
         const auto& events = inputPortBuffers[0]->getEvents();

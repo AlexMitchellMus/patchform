@@ -50,9 +50,14 @@ public:
         return nodeCreationData;
     }
 
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
-        auto aEvents = inputPortBuffers[0]->getEvents();
+        const auto& aEvents = inputPortBuffers[0]->getEvents();
 
         for (const auto event : aEvents)
         {

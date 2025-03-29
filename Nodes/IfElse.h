@@ -58,11 +58,16 @@ public:
         };
     }
 
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
         Mode mode = static_cast<Mode>(modeHash.load());
 
-        auto aEvents = inputPortBuffers[0]->getEvents();
+        const auto& aEvents = inputPortBuffers[0]->getEvents();
 
         for (auto event : aEvents)
         {

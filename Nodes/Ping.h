@@ -61,8 +61,11 @@ public:
             {
                 if (cnv->isInLockedMode())
                 {
-                    reinterpret_cast<Ping*>(audioNode)->eventQueue.enqueue(true);
+                    auto pingNode = reinterpret_cast<Ping*>(audioNode);
+                    pingNode->eventQueue.enqueue(true);
+                    pingNode->hasInputEvents.store(true);
                     triggerLight();
+
                 }
                 else
                     AudioNode::UI::mouseButtonDown(e);
@@ -115,6 +118,12 @@ public:
 
         addInputPort("Events", AudioPort::PortType::Data);
     }
+
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
+    }
+
 #ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {

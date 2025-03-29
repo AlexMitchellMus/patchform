@@ -233,6 +233,10 @@ void Canvas::keyPressed(pptk::CompEvent& e)
         {
             copySelectionToClipboard();
         }
+        else if (e.sdlEvent.key.scancode == SDL_SCANCODE_V)
+        {
+            pasteFromClipboard();
+        }
     } else if(e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {
         deleteSelectedObjects();
@@ -663,7 +667,7 @@ void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
     repaint();
 }
 
-void Canvas::reloadConnections(std::vector<Edge*> edges)
+void Canvas::reloadConnections(std::vector<Edge*>& edges)
 {
     std::cout << "reloading ALL connections" << std::endl;
     connections.clear();
@@ -764,7 +768,68 @@ void Canvas::setPatchName(const std::string& name)
     onPatchChanged();
 }
 
-void Canvas::copySelectionToClipboard()
+void Canvas::pasteFromClipboard()
+{
+    char* clipboardText = SDL_GetClipboardText();
+    if (!clipboardText || clipboardText[0] == '\0')
+    {
+        SDL_free(clipboardText);
+        return;
+    }
+
+    std::cout << "Pasting from clipboard: " << clipboardText << std::endl;
+
+    try {
+        // Parse the JSON string from the clipboard.
+        auto clipboardGraph = json::parse(clipboardText);
+
+        // Assume graphManager->pasteGraph creates new objects from the JSON
+        // and returns a vector of Object* pointers.
+        auto [ pastedObjects, allObjects, allConnections ] = graphManager->pasteGraph(clipboardGraph);
+
+        if (!pastedObjects.empty())
+        {
+            // Offset for pasted objects to prevent overlap with originals.
+            const int offsetX = 20;
+            const int offsetY = 20;
+
+            // Add pasted objects to the canvas.
+            for (auto* obj : pastedObjects)
+            {
+                obj->updateCanvasMode(mode);
+                objects.push_back(obj);
+                objectsLayer.addComponent(obj);
+
+                // Adjust position: Use the stored canvas position plus the canvas origin and offset.
+                pptk::Point newPos(
+                    obj->audioNode->canvasPos.x + canvasOrigin + offsetX,
+                    obj->audioNode->canvasPos.y + canvasOrigin + offsetY
+                );
+                obj->setPosition(newPos);
+            }
+
+            // Update selection: clear current selection and select the newly pasted objects.
+            clearSelection();
+            for (auto* obj : pastedObjects)
+            {
+                addToSelection(obj);
+            }
+
+            reloadConnections(allConnections);
+
+            callObjectChangedListeners();
+            repaint();
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error while pasting from clipboard: " << e.what() << std::endl;
+    }
+
+    SDL_free(clipboardText);
+}
+
+void Canvas::copySelectionToClipboard() const
 {
     std::vector<uint32_t> selectedNodes;
     for (auto* node : selected)

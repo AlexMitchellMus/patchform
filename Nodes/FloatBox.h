@@ -88,9 +88,15 @@ public:
         addInputPort("Value_input", AudioPort::PortType::Data);
     }
 #ifdef PATCHFORM_WITH_GUI
+
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
+    }
+
     void processAudio(float* out, const unsigned long frameCount) override
     {
-        const auto aEvents = inputPortBuffers[0]->getEvents();
+        const auto& aEvents = inputPortBuffers[0]->getEvents();
 
         if (aEvents.size())
         {

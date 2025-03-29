@@ -212,7 +212,10 @@ public:
                     selectedIndex = clickedIndex;
 
                     if (auto radio = dynamic_cast<RadioBox*>(audioNode))
+                    {
                         radio->eventQueue.enqueue(clickedIndex);
+                        radio->hasInputEvents.store(true);
+                    }
 
                     repaint();
                 }
@@ -304,6 +307,11 @@ public:
                                          (layoutType == LayoutType::Grid) ? "grid" : "horizontal";
         nodeCreationData["emitOnClick"] = emitOnClickParam->getValue();
         return nodeCreationData;
+    }
+
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
 #ifdef PATCHFORM_WITH_GUI

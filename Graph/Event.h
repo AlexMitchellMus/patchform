@@ -63,40 +63,119 @@ public:
 
     OwnershipToken* ownerList = nullptr;
 
-    // **Recursively convert DataAtom chain into a readable string**
-    [[nodiscard]] std::string toString(const bool recursive = true) const
+    // Write a string representation of the DataAtom chain into the provided preallocated buffer.
+    // The caller must preallocate 'textBuffer' to at least MAX_BUFFER characters (e.g. textBuffer.resize(MAX_BUFFER)).
+    // No dynamic allocation is performed within this function.
+    void toString(std::string& textBuffer, bool recursive = true) const
     {
-        std::stringstream ss;
-        const DataAtom* walk = this;
-
-        while (walk)
+        constexpr int MAX_BUFFER = 1024;
+        constexpr int MAX_DEPTH = 8;
+        // Ensure the buffer is large enough.
+        if (textBuffer.size() < MAX_BUFFER)
         {
-            if (walk->type == DataType::Float)
+            textBuffer.resize(MAX_BUFFER);
+        }
+        int pos = 0; // current write position
+
+        // A simple stack frame to track our traversal state.
+        struct StackFrame
+        {
+            const DataAtom* atom; // current element in the chain at this level
+            int depth; // current nesting depth (0 for root)
+            bool firstElement; // true if no element has been output yet at this level
+        };
+
+        // Fixed-size stack to avoid recursion.
+        StackFrame stack[MAX_DEPTH];
+        int stackTop = 0;
+        stack[stackTop++] = {this, 0, true};
+
+        char* buffer = &textBuffer[0];
+
+        while (stackTop > 0 && pos < MAX_BUFFER - 1)
+        {
+            // leave room for null terminator
+            StackFrame& frame = stack[stackTop - 1];
+            const DataAtom* current = frame.atom;
+
+            // End of this chain: pop the frame.
+            if (current == nullptr)
             {
-                ss << walk->data.atom;
+                stackTop--;
+                if (frame.depth > 0)
+                {
+                    // Append closing brace if not at root.
+                    int n = snprintf(buffer + pos, MAX_BUFFER - pos, " }");
+                    if (n > 0) pos += n;
+                }
+                if (stackTop > 0)
+                    stack[stackTop - 1].firstElement = false;
+                continue;
             }
-            else if (walk->type == DataType::Symbol)
+
+            // Add a comma separator if not the first element.
+            if (!frame.firstElement)
             {
-                ss << "@$" << walk->data.symbol << "$@";
+                int n = snprintf(buffer + pos, MAX_BUFFER - pos, ", ");
+                if (n > 0) pos += n;
+            }
+            frame.firstElement = false;
+
+            // Process the current DataAtom based on its type.
+            if (current->type == DataType::Float)
+            {
+                float value = current->data.atom;
+                // If the value is very close to its rounded version, print as an integer.
+                if (fabsf(value - roundf(value)) < 1e-6)
+                {
+                    int n = snprintf(buffer + pos, MAX_BUFFER - pos, "%.0f", value);
+                    if (n > 0) pos += n;
+                }
+                else
+                {
+                    // Otherwise, print with a fixed number of decimal places.
+                    int n = snprintf(buffer + pos, MAX_BUFFER - pos, "%.6f", value);
+                    if (n > 0) pos += n;
+                }
+            }
+            else if (current->type == DataType::Symbol)
+            {
+                int n = snprintf(buffer + pos, MAX_BUFFER - pos, "@$%u$@", current->data.symbol);
+                if (n > 0) pos += n;
             }
             else
             {
-                ss << "{ ";
-                ss << walk->data.list->toString(); // **Recursively call `toString()` on sublist**
-                ss << " }";
+                // List type.
+                int n = snprintf(buffer + pos, MAX_BUFFER - pos, "{ ");
+                if (n > 0) pos += n;
+                if (recursive && frame.depth + 1 < MAX_DEPTH)
+                {
+                    // Push a new frame for the nested list.
+                    stack[stackTop++] = {current->data.list, frame.depth + 1, true};
+                }
+                else
+                {
+                    // If max depth reached or recursion disabled, write ellipsis and close.
+                    int n2 = snprintf(buffer + pos, MAX_BUFFER - pos, "...");
+                    if (n2 > 0) pos += n2;
+                    int n3 = snprintf(buffer + pos, MAX_BUFFER - pos, " }");
+                    if (n3 > 0) pos += n3;
+                }
             }
 
-            if (recursive)
-            {
-                if (walk->next) ss << ", ";  // **Separate elements with commas**
-                walk = walk->next;
-            }
+            // Move to the next element in the current chain.
+            frame.atom = current->next;
         }
 
-        return ss.str();
+        // Ensure null termination and adjust the std::string size.
+        if (pos >= MAX_BUFFER)
+            pos = MAX_BUFFER - 1;
+        buffer[pos] = '\0';
+        textBuffer.resize(pos);
     }
 
-    void makePersistent(bool toBePersistent, int nodeID, OwnershipTokenPool& ownerList)
+
+    void makePersistent(int nodeID, const bool toBePersistent, OwnershipTokenPool& ownerList)
     {
         makePersistent(this, toBePersistent, nodeID, ownerList);
     }
@@ -128,7 +207,7 @@ public:
     }
 
 private:
-    void makePersistent(DataAtom* atom, const bool toBePersistent, const int nodeID, OwnershipTokenPool& ownerList)
+    static void makePersistent(DataAtom* atom, const bool toBePersistent, const int nodeID, OwnershipTokenPool& ownerList)
     {
         while (atom != nullptr)
         {
@@ -138,7 +217,8 @@ private:
                 removeOwnership(atom, nodeID, ownerList);
 
             // Update the persistent flag: true if any node owns this atom.
-            atom->isPersistent = (atom->ownerList != nullptr);
+            const OwnershipToken* curOwners = atom->ownerList;
+            atom->isPersistent = (curOwners != nullptr);
 
             // If this is a list atom, recursively update its sublist.
             if (atom->type == DataAtom::DataType::List)
@@ -148,24 +228,22 @@ private:
         }
     }
 
-    // Helper to add an ownership link for a given node.
-    void addOwnership(DataAtom* atom, int nodeID, OwnershipTokenPool& ownerList) {
-        // If the node already owns this atom, do nothing.
-        OwnershipToken* cur = atom->ownerList;
+    static inline void addOwnership(DataAtom* atom, const int nodeID, OwnershipTokenPool& ownerList)
+    {
+        const OwnershipToken* cur = atom->ownerList;
         while (cur) {
             if (cur->nodeId == nodeID)
-                return;
+                return; // already owned
             cur = cur->next;
         }
-        // Otherwise, allocate a new link, set its nodeId, and prepend it.
         OwnershipToken* newLink = ownerList.acquire();
-        newLink->nodeId = nodeID;         // Set the node ID.
-        newLink->next = atom->ownerList;    // Link the current list.
-        atom->ownerList = newLink;          // Prepend the new token.
+        newLink->nodeId = nodeID;
+        newLink->next = atom->ownerList;
+        atom->ownerList = newLink;
     }
 
-    // Helper to remove an ownership link for a given node.
-    void removeOwnership(DataAtom* atom, int nodeID, OwnershipTokenPool& ownerList) {
+    static inline void removeOwnership(DataAtom* atom, const int nodeID, OwnershipTokenPool& ownerList)
+    {
         OwnershipToken** cur = &atom->ownerList;
         while (*cur) {
             if ((*cur)->nodeId == nodeID) {

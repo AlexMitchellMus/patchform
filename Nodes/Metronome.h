@@ -21,7 +21,7 @@ class Metronome : public AudioNode
     float tickInterval;
     std::atomic<float> hzValue;
 
-//#define TEST_TIMING
+    //#define TEST_TIMING
 #ifdef TEST_TIMING
     unsigned long accumulatedFrames = 0;
 #endif
@@ -35,6 +35,11 @@ public:
 
         tickInterval = hzValue.load() == 0.0f ? 0.0f : context->sampleRate / hzValue.load();
 
+        tickParam->informNodeOfChange = [this]()
+        {
+            hzValue.store(tickParam->getValue());
+        };
+
         addInputPort("ControlInput", AudioPort::PortType::Data);
     }
 
@@ -44,46 +49,68 @@ public:
         return nodeCreationData;
     }
 
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        if (sampleCounter == 0.0f)
+            return true;
+
+        // Get the current frequency and recalc tickInterval.
+        float currentHz = hzValue.load();
+        if (currentHz == 0.0f)
+            return false;
+        tickInterval = context->sampleRate / currentHz;
+
+        // Calculate how many samples remain until the next tick.
+        float samplesUntilNextTick = tickInterval - sampleCounter;
+
+        // If the current block isn't long enough to reach the next tick,
+        // simply update sampleCounter and skip processing.
+        if (frameCount < samplesUntilNextTick) {
+            sampleCounter += frameCount;
+            // Optionally wrap sampleCounter if desired:
+            if (sampleCounter >= tickInterval)
+                sampleCounter = fmod(sampleCounter, tickInterval);
+            return false;
+        }
+        // Otherwise, we know a tick event will occur within this block.
+        return true;
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
         float samplesProcessed = 0.0f;
 
-        hzValue.store(tickParam->getValue());
-
-        if (hzValue.load() == 0.0f || tickInterval == 0.0f)
-            return;
-
-        tickInterval = context->sampleRate / hzValue.load();
-
-        auto events = inputPortBuffers[0]->getEvents();
-
-        // Handle first event in metronome
-        if (sampleCounter == 0.0)
+        // Handle the first tick event if starting at 0.
+        if (sampleCounter == 0.0f)
         {
-            if (Event* e = context->eventPool.getFreeEvent()) {
-                e->setTimeStamp(0); // Set event at time 0
+            if (Event* e = context->eventPool.getFreeEvent())
+            {
+                e->setTimeStamp(0);
                 outputPortBuffers[0]->addEvent(e);
-
 #ifdef TEST_TIMING
                 std::cout << accumulatedFrames << std::endl;
 #endif
             }
         }
 
+        // Process the frames, generating tick events as needed.
         while (samplesProcessed < frameCount)
         {
-            double samplesUntilNextTick = tickInterval - sampleCounter;
+            // Calculate how many samples remain until the next tick.
+            float samplesUntilNextTick = tickInterval - sampleCounter;
+            float remainingFrames = frameCount - samplesProcessed;
 
-            if (samplesUntilNextTick >= (frameCount - samplesProcessed))
+            if (samplesUntilNextTick >= remainingFrames)
             {
-                sampleCounter += frameCount - samplesProcessed;
+                // Not enough frames to reach the next tick.
+                sampleCounter += remainingFrames;
                 break;
             }
 
+            // Calculate the sample position at which the tick should occur.
             float tickPosition = samplesProcessed + samplesUntilNextTick;
 
-            Event* e = context->eventPool.getFreeEvent();
-            if (e)
+            if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(tickPosition);
                 outputPortBuffers[0]->addEvent(e);
@@ -92,7 +119,8 @@ public:
 #endif
             }
 
-            sampleCounter = (sampleCounter + samplesUntilNextTick) - tickInterval;
+            // Update sampleCounter and processed frames.
+            sampleCounter = sampleCounter + samplesUntilNextTick - tickInterval;
             samplesProcessed = tickPosition;
         }
 #ifdef TEST_TIMING

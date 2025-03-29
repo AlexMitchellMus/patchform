@@ -124,4 +124,10 @@ public:
     {
         return std::make_unique<UI>(this);
     };
+
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        // Currently this object is the only one that is UI only, no processing
+        return false;
+    }
 };

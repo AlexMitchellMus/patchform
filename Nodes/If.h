@@ -32,12 +32,17 @@ public:
         retParam = addParameter<FloatParameter>("return", coldValueReturn, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
     }
 
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
+    }
+
     void processAudio(float* out, unsigned long frameCount) override
     {
         coldValueIf = ifParam->getValue();
         coldValueReturn = retParam->getValue();
 
-        auto aEvents = inputPortBuffers[0]->getEvents();
+        const auto& aEvents = inputPortBuffers[0]->getEvents();
         if (auto bEvent = inputPortBuffers[1]->getEvents(); bEvent.size())
             coldValueIf = bEvent.back()->getAtomValue(0);
 

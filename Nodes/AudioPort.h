@@ -13,6 +13,7 @@
 #include "../Graph/Event.h"
 
 class AudioPort;
+class AudioNode;
 
 struct PortGroup
 {
@@ -20,7 +21,14 @@ struct PortGroup
     std::vector<AudioPort*> connectedPorts;
 };
 
+struct DownstreamPortGroup {
+    uint8_t outputPortNumber;  // The source output port number on the current node.
+    // Each pair holds a pointer to the downstream node and its corresponding input port.
+    std::vector<std::pair<AudioNode*, int>> downstreamConnections;
+};
+
 using OutputPortMap = std::vector<std::vector<PortGroup>>;
+using DownStreamPortMap = std::vector<std::vector<DownstreamPortGroup>>;
 
 class AudioNode;
 

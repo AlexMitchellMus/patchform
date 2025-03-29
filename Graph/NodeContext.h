@@ -15,7 +15,7 @@ class EventPool {
 public:
     EventPool(std::size_t initialSize = 1024) {
         growAtomPool(initialSize * 100);
-        growPool(initialSize);
+        growPool(initialSize * 10);
     }
 
     int eventPoolSize() {
@@ -151,9 +151,9 @@ public:
 
     NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount), ownershipTokenPool(10000) {};
 
-    void makeDataPersistent(DataAtom* atom, bool persistent, int nodeID)
+    void makeDataPersistent(DataAtom* atom, const bool toBePersistent, int nodeID)
     {
         if (atom)
-            atom->makePersistent(persistent, nodeID, ownershipTokenPool);
+            atom->makePersistent(nodeID, toBePersistent, ownershipTokenPool);
     }
 };

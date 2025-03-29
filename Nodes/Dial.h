@@ -19,8 +19,8 @@ class Dial final : public AudioNode
     FloatParameter* minValueParam = nullptr;
     FloatParameter* maxValueParam = nullptr;
 
-    float minValue = 0.0f;
-    float maxValue = 1.0f;
+    std::atomic<float> minValue = 0.0f;
+    std::atomic<float> maxValue = 1.0f;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -70,7 +70,10 @@ public:
                     value -= delta.y * 0.005f * cnv->scale;
                     value = fmax(0.0f, fmin(value, 1.0f));
 
-                    reinterpret_cast<Dial*>(audioNode)->eventQueue.enqueue(value);
+                    auto dial = reinterpret_cast<Dial*>(audioNode);
+
+                    dial->eventQueue.enqueue(value);
+                    dial->hasInputEvents.store(true);
 
                     repaint();
                 }
@@ -121,28 +124,43 @@ public:
         defaultValueParam = addParameter<FloatParameter>("Default:", dialValue, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
         minValueParam     = addParameter<FloatParameter>("Min:", minValue, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
         maxValueParam     = addParameter<FloatParameter>("Max:", maxValue, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+
+        minValueParam->informNodeOfChange = [this]()
+        {
+            minValue.store(minValueParam->getValue());
+        };
+
+        maxValueParam->informNodeOfChange = [this]()
+        {
+            maxValue.store(maxValueParam->getValue());
+        };
     }
 
     json getSerializedNode() override
     {
-        nodeCreationData["min"] = minValue;
-        nodeCreationData["max"] = maxValue;
-        nodeCreationData["value"] = dialValue * (maxValue - minValue) + minValue;
+        nodeCreationData["min"] = minValue.load();
+        nodeCreationData["max"] = maxValue.load();
+        nodeCreationData["value"] = dialValue * (maxValue.load() - minValue.load()) + minValue.load();
         return nodeCreationData;
+    }
+
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
 #ifdef PATCHFORM_WITH_GUI
     void processAudio(float* out, const unsigned long frameCount) override
     {
-        minValue = minValueParam->getValue();
-        maxValue = maxValueParam->getValue();
+        const auto minV = minValue.load();
+        const auto maxV = maxValue.load();
 
         while (eventQueue.try_dequeue(dialValue))
         {
             if (Event* e = context->eventPool.getFreeEvent())
             {
-                e->addAtom(dialValue * (maxValue - minValue) + minValue);
-                outputPortBuffers[0]->addEvent(e);
+                e->addAtom(dialValue * (maxV - minV) + minV);
+                addEvent(0, e);
             }
         };
     }

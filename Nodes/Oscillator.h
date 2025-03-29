@@ -239,8 +239,8 @@ public:
     void processAudio(float* out, unsigned long frameCount) override
     {
         // Get input event buffers and audio buffers.
-        auto events = inputPortBuffers[0]->getEvents();
-        auto freqEvents = inputPortBuffers[1]->getEvents();
+        const auto& events = inputPortBuffers[0]->getEvents();
+        const auto& freqEvents = inputPortBuffers[1]->getEvents();
         bool useSignalFreq = inputPortBuffers[1]->isAnyConnectedPortSignal;
         auto freqIn = inputPortBuffers[1]->getAudioBuffer();
         auto output = outputPortBuffers[0]->getAudioBuffer();

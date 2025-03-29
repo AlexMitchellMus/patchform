@@ -88,8 +88,8 @@ public:
             textEditor->onTextReturned = [this, listBox]()
             {
                 textEditor->setInteractable(false);
-                //std::cout << "list text: " << textEditor->getText() << " formated: " << formatSymbols(textEditor->getText()) <<  std::endl;
                 listBox->queueToDSP.enqueue(formatSymbols(textEditor->getText()));
+                listBox->hasInputEvents.store(true);
             };
         }
 
@@ -383,6 +383,10 @@ public:
         return first;
     }
 
+    bool shouldProcess(unsigned int frameCount) override
+    {
+        return hasInputEvents.load(std::memory_order_relaxed);
+    }
 
     // processAudio receives DSP events that replace the list values.
     void processAudio(float* out, const unsigned long frameCount) override
@@ -413,16 +417,24 @@ public:
                 break;
             default:
                 {
-                    textBuffer.clear();
-                    textBuffer = event->getAtom(0)->toString();
-                    if (savedData)
-                        context->makeDataPersistent(savedData, false, nodeID);
+                    // Only update if the data has actually changed.
+                    if (savedData != event->data)
+                    {
+                        // Persist the old data as no longer active.
+                        if (savedData)
+                            context->makeDataPersistent(savedData, false, nodeID);
 
-                    savedData = event->data;
-                    context->makeDataPersistent(savedData, true, nodeID);
-                    // Enqueue DSP event – it will replace the entire listText.
-                    queueFromDSP.enqueue(textBuffer);
-                    updateUI();
+                        // Save and persist the new data.
+                        savedData = event->data;
+                        context->makeDataPersistent(savedData, true, nodeID);
+
+                        // Convert the new data to a text representation.
+                        event->getAtom(0)->toString(textBuffer);
+
+                        // Enqueue the new text and update the UI.
+                        queueFromDSP.enqueue(textBuffer);
+                        updateUI();
+                    }
                     outputPortBuffers[0]->addEvent(event);
                 }
             }

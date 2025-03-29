@@ -129,8 +129,13 @@ public:
     //}
 
     // Defined by the macro for each derived class
-    virtual const std::string& getName() const = 0;
-    virtual const std::string& getShortName() const = 0;
+    [[nodiscard]] virtual const std::string& getName() const = 0;
+    [[nodiscard]] virtual const std::string& getShortName() const = 0;
+
+    virtual bool shouldProcess(unsigned int frameCount)
+    {
+        return true;
+    }
 
     int getNumOutputs() { return 1; };
 
@@ -162,6 +167,30 @@ public:
         return nullptr;
     }
 
+    AudioPort* getInputPort(const int index = 0) const
+    {
+        if (inputPortBuffers.size())
+            return inputPortBuffers[index].get();
+
+        return nullptr;
+    }
+
+    // Push an event to input buffer
+    void pushEvent(int inPort, Event* event)
+    {
+        hasInputEvents = true;
+        inputPortBuffers[inPort]->addEvent(event);
+    }
+
+    // Push an event to the output buffer
+    void addEvent(int port, Event* event)
+    {
+        hasOutputEvents = true;
+        outputPortBuffers[port]->addEvent(event);
+    }
+
+    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> pushOutputEvents;
+
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> sumInputBuffers;
 
     uint32_t nodeID;
@@ -178,13 +207,32 @@ public:
 
     std::vector<std::unique_ptr<Parameter>>& getParameters() { return parameters; };
 
+    std::atomic<bool> hasInputEvents = false;
+    bool hasOutputEvents = false;
+
 private:
 
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
     {
+        //if (!shouldProcess())
+        //{
+        //    return;
+        //}
+
         sumInputBuffers(inputPortBuffers, runningGraph, index);
-        //outputPort.clear(frameCount);
+
         processAudio(buffer, frameCount);
+
+        pushOutputEvents(outputPortBuffers, runningGraph, index);
+
+        for (int i = 0; i < outputPortBuffers.size(); ++i)
+            getOutputPort(i)->clearEvents();
+
+        for (int i = 0; i < inputPortBuffers.size(); ++i)
+            getInputPort(i)->clearEvents();
+
+        hasInputEvents.store(false);
+        hasOutputEvents = false;
     }
 #ifdef PATCHFORM_WITH_GUI
     std::unique_ptr<UI> ui = nullptr;
