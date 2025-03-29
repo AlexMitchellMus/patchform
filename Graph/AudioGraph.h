@@ -444,8 +444,8 @@ public:
         //auto start = std::chrono::high_resolution_clock::now();
 
     // Reserve and clear the upstream map.
-    graph->outputInputPortMap.reserve(objects.size());
     graph->outputInputPortMap.clear();
+    graph->outputInputPortMap.reserve(objects.size());
 
     // Also clear and resize the downstream map.
     graph->downstreamPortMap.clear();
@@ -780,7 +780,7 @@ public:
         graph->printAdjacencyList();
     }
 
-    void setSummingFunctionForNode(AudioNode* node)
+    static void setSummingFunctionForNode(AudioNode* node)
     {
         auto nodeID = node->nodeID;
 
@@ -788,6 +788,7 @@ public:
         {
 #define USE_POINTER_MAP_PUSH
 #define USE_POINTER_MAP
+
 #ifdef USE_POINTER_MAP_PUSH
             // Retrieve the precomputed downstream port groups for this node.
             const auto& groups = runningGraph.downstreamPortMap[index];
@@ -795,7 +796,7 @@ public:
             // Loop over each downstream group.
             for (const auto& group : groups)
             {
-                int outPort = group.outputPortNumber;
+                const int outPort = group.outputPortNumber;
                 auto& events = outputPorts[outPort]->getEvents();
                 if (events.empty())
                     continue; // No events to push for this output port.
@@ -804,7 +805,7 @@ public:
                 for (const auto& connection : group.downstreamConnections)
                 {
                     AudioNode* target = connection.first;
-                    int targetPort = connection.second;
+                    const int targetPort = connection.second;
                     for (Event* event : events)
                     {
                         target->pushEvent(targetPort, event);
@@ -864,10 +865,6 @@ public:
                     // Clear the audio buffer for signal ports
                     port->clear(frameCount);
                 }
-
-                // Remove event clearing and merging logic:
-                // port->clearEvents();
-                // auto& summingEventBuffer = port->getEvents();
 
                 auto summingAudioBuffer = port->getAudioBuffer();
 

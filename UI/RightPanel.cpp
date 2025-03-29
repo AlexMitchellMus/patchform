@@ -30,17 +30,14 @@ void ParamItem::resized()
 {
     //auto textwidth = getTextWidthForFont("Regular", 14.0f, textBox->getText());
     //std::cout << "text width from cache: " << textwidth << std::endl;
-    textBox->setBounds(100, 5, getWidth() - 100, 25); // Place TextBox next to label
+    textBox->setBounds(100, 3, getWidth() - 100, 25); // Place TextBox next to label
 }
 
 RightPanel::RightPanel(Canvas* cnv)
 {
     cnv->addObjectChangedListener([this, cnv]()
     {
-        if (cnv->getSelectedObjects().empty())
-            setSelectedNode(nullptr);
-        else
-            setSelectedNode(cnv->getSelectedObjects().front()->audioNode);
+        setSelectedObjects(cnv->getSelectedObjects());
     });
 
     setMinMaxSize(150, 350, 0, 0);
@@ -49,23 +46,27 @@ RightPanel::RightPanel(Canvas* cnv)
     updateUI();
 }
 
-void RightPanel::setSelectedNode(AudioNode* node)
+void RightPanel::setSelectedObjects(std::vector<Object*> objs)
 {
-    if (node == nullptr)
+    if (objs.empty())
     {
         selectedNode = nullptr;
         paramItems.clear();
-        repaint();
+        numSelected = 0;
+    } else
+    {
+        selectedNode = objs.front()->audioNode;
+        numSelected = objs.size();
     }
-    selectedNode = node;
 
     updateUI();
+    repaint();
 }
 
 void RightPanel::resized() {
     int yOffset = 50;
     for (auto& item : paramItems) {
-        item->setBounds(24, yOffset, width - 24 - 24, 30);
+        item->setBounds(8, yOffset, width - 8 - 8, 30);
         yOffset += 30;
     }
 
@@ -76,8 +77,9 @@ void RightPanel::updateUI() {
     parameterName = "Parameters: (empty)";
 
     if (selectedNode)
-        parameterName = "Parameters: " + selectedNode->getName();
-
+    {
+        parameterName = "Parameters: " + (numSelected > 1 ? "(" + std::to_string(numSelected) + ") " : "") +  selectedNode->getName();
+    }
     paramItems.clear();
 
     if (!selectedNode) return;

@@ -7,6 +7,7 @@
 class AudioNode;
 class Parameter;
 class Canvas;
+class Object;
 
 // ParamItem: Displays a parameter name and an editable TextBox
 class ParamItem : public pptk::Component {
@@ -20,13 +21,16 @@ public:
 
     void resized() override;
 
-    void render(NVGcontext* vg) override {
+    void render(NVGcontext* vg) override
+    {
+        nvgDrawRoundedRect(vg, 0, 3, width, height - 3 - 3, nvgRGB(43, 43, 43), nvgRGB(43, 43, 43), 6.0f);
+
         // Draw parameter name on the left
         nvgFillColor(vg, nvgRGB(220, 220, 220));
         nvgFontFace(vg, "Regular");
         nvgFontSize(vg, 14.0f);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgText(vg, 0, height / 2, paramName.c_str(), nullptr);
+        nvgText(vg, 16, height / 2, paramName.c_str(), nullptr);
     }
 };
 
@@ -35,7 +39,7 @@ class RightPanel : public pptk::ResizableComponent {
 public:
     RightPanel(Canvas* cnv);
 
-    void setSelectedNode(AudioNode* node);
+    void setSelectedObjects(std::vector<Object*> objs);
 
     void updateUI();
 
@@ -65,6 +69,7 @@ public:
 
 private:
     AudioNode* selectedNode = nullptr;
+    int numSelected = 0;
     std::string parameterName;
     std::vector<std::unique_ptr<ParamItem>> paramItems; // Holds param UI elements
 };
