@@ -271,7 +271,10 @@ public:
                         // For a saw defined as 2×phase–1 the jump is 2.
                         blep.add(-2.0f, 1, 0.0f);
                     }
-                    phase = 0.0f;
+                    if (DataAtom* data = events[nextEventIndex]->data; data && data->type == DataAtom::DataType::Float)
+                        phase = std::clamp(data->data.atom, 0.0f, 1.0f);
+                    else
+                        phase = 0.0f;
                     nextEventIndex++;
                 }
 

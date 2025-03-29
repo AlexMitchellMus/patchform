@@ -28,6 +28,10 @@
 #include "EventDelay.h"
 #include "Select.h"
 
+// Maths Nodes
+#include "Multiply.h"
+#include "Divide.h"
+
 // Audio Nodes
 #include "Value.h"
 #include "Oscillator.h"

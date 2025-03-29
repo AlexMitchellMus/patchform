@@ -14,6 +14,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "Metro"})", ICONS::Metro, true },
         { R"({"obj": "Osc", "waveform": "sine", "freq": 440})", ICONS::Osc, true },
         { R"({"obj": "Add"})", "add", false },
+        { R"({"obj": "mul"})", "mul", false },
+        { R"({"obj": "div"})", "div", false },
         { R"({"obj": "lfo"})", ICONS::Lfo, true },
         { R"({"obj": "env", "attack": 50, "decay": 50})", ICONS::Adsr, true },
         { R"({"obj": "gain"})", "gain", false },

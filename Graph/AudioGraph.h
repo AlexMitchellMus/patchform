@@ -1074,6 +1074,12 @@ public:
         case hash("add"):
             return addNode<Add>(idString, node);
 
+        case hash("mul"):
+            return addNode<Multiply>(idString, node);
+
+        case hash("div"):
+            return addNode<Divide>(idString, node);
+
         case hash("count"):
             return addNode<Count>(idString, node);
 
