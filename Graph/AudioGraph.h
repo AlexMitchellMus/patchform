@@ -218,9 +218,6 @@ public:
         for (auto& obj : objectList)
         {
             objectsListCopy.push_back(obj.get());
-            // All MIDI nodes are input only, so we can simply call them all at once without an order
-            if (auto* midiNode = dynamic_cast<MidiNode*>(obj.get()))
-                midiInputNodes.push_back(midiNode);
         }
 
         topologicalSort(objectsSorted);
@@ -276,13 +273,8 @@ public:
 
     void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
-        for (auto midiNodes : midiInputNodes)
-        {
-            midiNodes->processMidi(midiMessage);
-        }
 #define SKIP_PROCESSING
 #ifdef SKIP_PROCESSING
-
         std::function<void(AudioGraph&)> msg;
         while (context->messageQueue.try_dequeue(msg))
             msg(*this);
@@ -304,7 +296,7 @@ public:
                 i += offset;
 
                 // Process node at i
-                objectsSorted[i]->process(buffer, frameCount, *this, i);
+                objectsSorted[i]->process(buffer, midiMessage, frameCount, *this, i);
 
                 // Clear only event bit — activeAudioNodes is set for this graph configuration (they always run ATM)
                 activeEventNodes[i / 64] &= ~(1ULL << (i % 64));
@@ -339,7 +331,6 @@ public:
     DownStreamPortMap downstreamPortMap;
 
     std::vector<AudioNode*> objectsSorted;
-    std::vector<MidiNode*> midiInputNodes;
 
     // bit field vector to hold which nodes are active for optimized processing
     // We have a static list (that doesn't change per cycle) of all nodes that are audio

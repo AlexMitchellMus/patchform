@@ -4,15 +4,15 @@
 
 #pragma once
 
-#include "MidiNodeBase.h"
+#include "AudioNodeBase.h"
 #include <cmath>
 
-class MidiNoteIn : public MidiNode
+class MidiNoteIn : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("MidiNoteIn", "notein", false);
+    DEFINE_AND_REGISTER_NODE("MidiNoteIn", "notein", true);
 
 public:
-    MidiNoteIn(NodeContext* context, const json& objParams) : MidiNode(context, AudioPort::PortType::Data, objParams)
+    MidiNoteIn(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
     }
 
@@ -21,20 +21,20 @@ public:
         return nodeCreationData;
     }
 
-    void processMidi(std::vector<MidiMessage>& messages) override
+    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessages) override
     {
-        for (auto& midiMessage : messages)
+        for (const auto& [message, timestamp] : midiMessages)
         {
-            if (midiMessage.message.size() >= 3)
+            if (message.size() >= 3)
             {
-                unsigned char status = midiMessage.message[0];
+                unsigned char status = message[0];
                 unsigned char statusType = status & 0xF0;
 
                 // Check if the message is a Note On (0x90-0x9F) or Note Off: 0x80
                 if (statusType == 0x90 || statusType == 0x80)
                 {
-                    unsigned char velocity = midiMessage.message[2];
-                    unsigned char noteNumber = midiMessage.message[1];
+                    unsigned char velocity = message[2];
+                    unsigned char noteNumber = message[1];
 
                     // **Allocate a new event**
                     if (auto* e = context->eventPool.getFreeEvent())

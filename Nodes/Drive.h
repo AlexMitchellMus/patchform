@@ -30,7 +30,7 @@ public:
         };
     }
 
-    void processAudio(float* buffer, unsigned long frameCount) override
+    void processAudio(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto* input = inputPortBuffers[0]->getAudioBuffer();
         auto* output = outputPortBuffers[0]->getAudioBuffer();

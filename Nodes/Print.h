@@ -18,7 +18,7 @@ public:
         addInputPort("A", AudioPort::PortType::Data); // hot port
     }
 
-    void processAudio(float* out, unsigned long frameCount) override
+    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto& aEvents = inputPortBuffers[0]->getEvents();
 

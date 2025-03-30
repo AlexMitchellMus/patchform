@@ -90,7 +90,7 @@ public:
 #ifdef PATCHFORM_WITH_GUI
 
 
-    void processAudio(float* out, const unsigned long frameCount) override
+    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto& aEvents = inputPortBuffers[0]->getEvents();
 

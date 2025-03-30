@@ -76,7 +76,7 @@ public:
         return true;
     }
 
-    void processAudio(float* out, unsigned long frameCount) override
+    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         float samplesProcessed = 0.0f;
 

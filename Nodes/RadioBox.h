@@ -214,7 +214,6 @@ public:
                     if (auto radio = dynamic_cast<RadioBox*>(audioNode))
                     {
                         radio->eventQueue.enqueue(clickedIndex);
-                        radio->hasInputEvents.store(true);
                         radio->setNodeDirty();
                     }
 
@@ -311,7 +310,7 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    void processAudio(float* out, const unsigned long frameCount) override
+    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         radioCount = radioCountParam->getValue();
         auto inputEvents = inputPortBuffers[0]->getEvents();

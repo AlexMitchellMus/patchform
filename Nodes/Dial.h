@@ -73,7 +73,6 @@ public:
                     auto dial = reinterpret_cast<Dial*>(audioNode);
 
                     dial->eventQueue.enqueue(value);
-                    dial->hasInputEvents.store(true);
                     dial->setNodeDirty();
 
                     repaint();
@@ -146,7 +145,7 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    void processAudio(float* out, const unsigned long frameCount) override
+    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto minV = minValue.load();
         const auto maxV = maxValue.load();

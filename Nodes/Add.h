@@ -23,7 +23,7 @@ public:
         coldValue = objParams.value("value", 0.0f);
     }
 
-    void processAudio(float* out, unsigned long frameCount) override
+    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto& aEvents = inputPortBuffers[0]->getEvents();
 

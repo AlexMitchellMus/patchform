@@ -21,7 +21,7 @@ public:
         value = objParams.value("value", 0.0f);
     }
 
-    void processAudio(float* out, unsigned long frameCount) override
+    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto output = outputPortBuffers[0]->getAudioBuffer();
         std::fill_n(output, frameCount, value);

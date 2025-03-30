@@ -48,6 +48,11 @@ public:                                                                         
 
 class AudioGraph;
 
+struct MidiMessage {
+    std::vector<unsigned char> message;
+    double timestamp;
+};
+
 // Abstract AudioNode class
 class AudioNode {
 public:
@@ -161,7 +166,7 @@ public:
     }
 
     // Virtual method for processing the audio buffer
-    virtual void processAudio(float* buffer, unsigned long frameCount) { };
+    virtual void processAudio(float* buffer, unsigned long frameCount, std::vector<MidiMessage>&) { };
 
     // Method to get input ports for sorting
     AudioPort* getOutputPort(const int index = 0) const
@@ -183,14 +188,12 @@ public:
     // Push an event to input buffer
     void pushEvent(int inPort, Event* event)
     {
-        hasInputEvents = true;
         inputPortBuffers[inPort]->addEvent(event);
     }
 
     // Push an event to the output buffer
     void addEvent(int port, Event* event)
     {
-        hasOutputEvents = true;
         outputPortBuffers[port]->addEvent(event);
     }
 
@@ -216,12 +219,9 @@ public:
 
     std::vector<std::unique_ptr<Parameter>>& getParameters() { return parameters; };
 
-    std::atomic<bool> hasInputEvents = false;
-    bool hasOutputEvents = false;
-
 private:
 
-    void process(float* buffer, unsigned long frameCount, AudioGraph& runningGraph, const int index)
+    void process(float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, AudioGraph& runningGraph, const int index)
     {
         if (!shouldProcess(frameCount))
         {
@@ -230,7 +230,7 @@ private:
 
         sumInputBuffers(inputPortBuffers, runningGraph, index);
 
-        processAudio(buffer, frameCount);
+        processAudio(buffer, frameCount, midiMessage);
 
         pushOutputEvents(outputPortBuffers, runningGraph, index);
 
@@ -239,9 +239,6 @@ private:
 
         for (int i = 0; i < inputPortBuffers.size(); ++i)
             getInputPort(i)->clearEvents();
-
-        hasInputEvents.store(false);
-        hasOutputEvents = false;
     }
 #ifdef PATCHFORM_WITH_GUI
     std::unique_ptr<UI> ui = nullptr;

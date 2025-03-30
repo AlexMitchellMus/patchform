@@ -63,7 +63,6 @@ public:
                 {
                     auto pingNode = reinterpret_cast<Ping*>(audioNode);
                     pingNode->eventQueue.enqueue(true);
-                    pingNode->hasInputEvents.store(true);
                     pingNode->setNodeDirty();
                     triggerLight();
 
@@ -121,7 +120,7 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    void processAudio(float* out, const unsigned long frameCount) override
+    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         auto inputEvents = inputPortBuffers[0]->getEvents();
 

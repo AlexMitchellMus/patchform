@@ -89,7 +89,6 @@ public:
             {
                 textEditor->setInteractable(false);
                 listBox->queueToDSP.enqueue(formatSymbols(textEditor->getText()));
-                listBox->hasInputEvents.store(true);
                 listBox->setNodeDirty();
             };
         }
@@ -385,7 +384,7 @@ public:
     }
 
     // processAudio receives DSP events that replace the list values.
-    void processAudio(float* out, const unsigned long frameCount) override
+    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         if (!savedData && !listText.empty())
         {

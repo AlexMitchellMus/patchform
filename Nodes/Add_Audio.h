@@ -19,7 +19,7 @@ public:
         addInputPort("B", AudioPort::PortType::Signal);
     }
 
-    void processAudio(float* out, unsigned long frameCount) override
+    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto* buffer1 = inputPortBuffers[0]->getAudioBuffer();
         const auto* buffer2 = inputPortBuffers[1]->getAudioBuffer();

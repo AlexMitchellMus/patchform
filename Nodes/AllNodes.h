@@ -45,9 +45,7 @@
 #include "ReverbFDN.h"
 #include "Drive.h"
 
-
 // UI Nodes
-
 #include "Dial.h"
 #include "RadioBox.h"
 #include "FloatBox.h"
@@ -56,8 +54,5 @@
 #include "Scope.h"
 #include "Comment.h"
 
-#include "MidiNodeBase.h"
-
 // MIDI Nodes
-
 #include "MidiNoteIn.h"

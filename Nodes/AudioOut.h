@@ -17,7 +17,7 @@ public:
         addInputPort("Signal", AudioPort::PortType::Signal);
     }
 
-    void processAudio(float* buffer, unsigned long frameCount) override
+    void processAudio(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         // The input port audio is directly sent to the PortAudio stream
         const auto* inputPort = inputPortBuffers[0]->getAudioBuffer();

@@ -38,7 +38,7 @@ public:
         return nodeCreationData;
     }
 
-    void processAudio(float* out, unsigned long /*frameCount*/) override
+    void processAudio(float* out, unsigned long /*frameCount*/, std::vector<MidiMessage>& midiMessage) override
     {
 //#define DEBUG_ATOM_POOL
 #ifdef DEBUG_ATOM_POOL

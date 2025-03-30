@@ -39,7 +39,7 @@ public:
         return nodeCreationData;
     }
 
-    void processAudio(float* out, unsigned long frameCount) override
+    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         minCount = minCountParam->getValue();
         maxCount = maxCountParam->getValue();
