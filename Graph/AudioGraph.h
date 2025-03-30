@@ -235,8 +235,21 @@ public:
 
         for (int i = 0; i < objectsSorted.size(); ++i)
         {
-            if (objectsSorted[i]->alwaysProcess())
+            auto obj = objectsSorted[i];
+
+            if (obj->alwaysProcess())
+            {
                 activeAudioNodes[i / 64] |= (1ULL << (i % 64));
+            }
+
+            // Check if the object needs to process once on load (used for LoadEvent currently)
+            // The flag is set when constructing the node (on UI thread) and
+            // this runs after all nodes are constructed on the same UI thread.
+            if (obj->eventOnLoad)
+            {
+                activeEventNodes[i / 64] |= (1ULL << (i % 64));
+                obj->eventOnLoad = false;
+            }
         }
 
 #ifdef DEBUG_AUDIO_NODES_BITFIELDS
@@ -1269,6 +1282,9 @@ public:
         case hash("change"):
         case hash("changed"):
             return addNode<Changed>(idString, node);
+
+        case hash("loadevent"):
+            return addNode<LoadEvent>(idString, node);
 
         case hash("reverb_fdn"):
         case hash("fdn"):

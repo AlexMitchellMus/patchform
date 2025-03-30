@@ -46,7 +46,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "random"})", "rnd", false },
         { R"({"obj": "intify", "mode": 0 })", "intify", false },
         { R"({"obj": "evdelay", "ms": 100 })", "evdel", false },
-        { R"({"obj": "drive", "mode": 0 })", "drive", false }
+        { R"({"obj": "drive", "mode": 0 })", "drive", false },
+        { R"({"obj": "loadevent" })", "ldev", false }
     };
 
     for (int i = 0; i < 4; i++)

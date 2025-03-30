@@ -205,6 +205,9 @@ public:
     // then process this in the next skip
     std::function<void()> setNodeDirty = [](){};
 
+    // Process once on load
+    bool eventOnLoad = false;
+
     uint32_t nodeID;
     std::string nodeIDString;
 

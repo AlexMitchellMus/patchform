@@ -27,6 +27,7 @@
 #include "Intify.h"
 #include "EventDelay.h"
 #include "Select.h"
+#include "LoadEvent.h"
 
 // Maths Nodes
 #include "Multiply.h"
