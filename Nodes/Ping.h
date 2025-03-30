@@ -38,6 +38,11 @@ public:
             {
                 isDirty.store(true, std::memory_order::release);
             };
+        }
+
+        ~UI() override
+        {
+            stopFrameTimer();
         };
 
         void updateGraphValues() override

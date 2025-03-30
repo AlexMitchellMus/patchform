@@ -233,15 +233,15 @@ public:
         activeEventNodes.clear();
         activeEventNodes.assign((objectsSorted.size() + 63) / 64, 0);
 
-        for (int i = 0; i < objectsSorted.size(); ++i)
+        for (unsigned i = 0; i < objectsSorted.size(); ++i)
         {
-            auto obj = objectsSorted[i];
+            const auto obj = objectsSorted[i];
 
             // Add all persistent processing objects to the active bitfields
             // These objects will always process regardless if they have events or not
             if (obj->alwaysProcess())
             {
-                activeAudioNodes[i / 64] |= (1ULL << (i % 64));
+                activeAudioNodes[i >> 6] |= (1ULL << (i & 63)); // i / 64, i % 64
             }
 
             // Check if the object needs to process once on load (used for LoadEvent currently)
@@ -249,7 +249,7 @@ public:
             // this runs after all nodes are constructed on the same UI thread.
             if (obj->eventOnLoad)
             {
-                activeEventNodes[i / 64] |= (1ULL << (i % 64));
+                activeEventNodes[i >> 6] |= (1ULL << (i & 63)); // i / 64, i % 64
                 obj->eventOnLoad = false;
             }
         }
@@ -294,12 +294,12 @@ public:
         while (context->messageQueue.try_dequeue(msg))
             msg(*this);
 
-        size_t i = 0;
+        unsigned i = 0;
 
         while (i < objectsSorted.size())
         {
-            size_t word = i / 64;
-            size_t bit = i % 64;
+            size_t word = i >> 6; // i / 64
+            const size_t bit = i & 63; // i & 64
 
             if (const uint64_t combined = (activeEventNodes[word] | activeAudioNodes[word]) >> bit)
             {
@@ -311,7 +311,7 @@ public:
 
                 objectsSorted[i]->process(buffer, midiMessage, frameCount, *this, i);
 
-                activeEventNodes[i / 64] &= ~(1ULL << (i % 64));
+                activeEventNodes[i >> 6] &= ~(1ULL << (i & 63)); // i / 64, i % 64
                 ++i;
             }
             else
@@ -323,7 +323,7 @@ public:
                     ++word;
                 }
 
-                i = word * 64;
+                i = word << 6; // word * 64
             }
         }
 #else
@@ -902,11 +902,10 @@ public:
                         // set the corresponding bit of this node as needing processing
                         // in the process loop the node will then be processed
                         auto& vec = runningGraph.objectsSorted;
-                        auto it = std::find(vec.begin(), vec.end(), target);
-                        if (it != vec.end())
+                        if (auto it = std::ranges::find(vec, target); it != vec.end())
                         {
-                            int targetIndex = static_cast<int>(std::distance(vec.begin(), it));
-                            runningGraph.activeEventNodes[targetIndex / 64] |= (1ULL << (targetIndex % 64));
+                            const unsigned targetIndex = it - vec.begin();
+                            runningGraph.activeEventNodes[targetIndex >> 6] |= (1ULL << (targetIndex & 63)); // targetIndex / 64, targetIndex % 64
                         }
                     }
                 }
