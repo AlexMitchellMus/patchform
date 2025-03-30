@@ -401,13 +401,13 @@ public:
 
     const json graphToJSON() const
     {
-        std::vector<uint32_t> nodeIDs;
+        std::vector<uint32_t> activeNodes;
         for (auto& node : objects)
         {
-            nodeIDs.push_back(node->nodeID);
+            activeNodes.push_back(node->nodeID);
         }
 
-        return serializeSelectedNodes(nodeIDs);
+        return serializeSelectedNodes(activeNodes);
     }
 
     // Get the json string for only the selected nodes and the selected objects interconnected connections
