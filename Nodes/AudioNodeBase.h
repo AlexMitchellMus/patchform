@@ -214,10 +214,10 @@ private:
 
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
     {
-        //if (!shouldProcess(frameCount))
-        //{
-        //    return;
-        //}
+        if (!shouldProcess(frameCount))
+        {
+            return;
+        }
 
         sumInputBuffers(inputPortBuffers, runningGraph, index);
 

@@ -258,10 +258,7 @@ public:
 
         for (size_t i = 0; i < objectsSorted.size(); i++)
         {
-            if (objectsSorted[i]->shouldProcess(frameCount))
-            {
-                objectsSorted[i]->process(buffer, frameCount, *this, i);
-            }
+            objectsSorted[i]->process(buffer, frameCount, *this, i);
         }
 
         context->eventPool.releaseAllEvents();
