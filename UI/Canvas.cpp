@@ -777,49 +777,50 @@ void Canvas::pasteFromClipboard()
         return;
     }
 
-    std::cout << "Pasting from clipboard: " << clipboardText << std::endl;
-
     try {
-        // Parse the JSON string from the clipboard.
         auto clipboardGraph = json::parse(clipboardText);
 
-        // Assume graphManager->pasteGraph creates new objects from the JSON
-        // and returns a vector of Object* pointers.
         auto [ pastedObjects, allObjects, allConnections ] = graphManager->pasteGraph(clipboardGraph);
 
-        if (!pastedObjects.empty())
+        pptk::Point mousePos = getMousePositionOnCanvas();
+
+        float minX = std::numeric_limits<float>::max();
+        float minY = std::numeric_limits<float>::max();
+        for (auto* obj : pastedObjects)
         {
-            // Offset for pasted objects to prevent overlap with originals.
-            const int offsetX = 20;
-            const int offsetY = 20;
-
-            // Add pasted objects to the canvas.
-            for (auto* obj : pastedObjects)
-            {
-                obj->updateCanvasMode(mode);
-                objects.push_back(obj);
-                objectsLayer.addComponent(obj);
-
-                // Adjust position: Use the stored canvas position plus the canvas origin and offset.
-                pptk::Point newPos(
-                    obj->audioNode->canvasPos.x + canvasOrigin + offsetX,
-                    obj->audioNode->canvasPos.y + canvasOrigin + offsetY
-                );
-                obj->setPosition(newPos);
-            }
-
-            // Update selection: clear current selection and select the newly pasted objects.
-            clearSelection();
-            for (auto* obj : pastedObjects)
-            {
-                addToSelection(obj);
-            }
-
-            reloadConnections(allConnections);
-
-            callObjectChangedListeners();
-            repaint();
+            minX = std::min(minX, obj->audioNode->canvasPos.x);
+            minY = std::min(minY, obj->audioNode->canvasPos.y);
         }
+
+        float alignOffsetX = mousePos.x - minX;
+        float alignOffsetY = mousePos.y - minY;
+
+        for (auto* obj : pastedObjects)
+        {
+            obj->updateCanvasMode(mode);
+            objects.push_back(obj);
+            objectsLayer.addComponent(obj);
+
+            pptk::Point newPos(
+                obj->audioNode->canvasPos.x + canvasOrigin + alignOffsetX,
+                obj->audioNode->canvasPos.y + canvasOrigin + alignOffsetY
+            );
+            obj->setPosition(newPos);
+            // We need to also set objects new canvas position here (canvasOrigin is zero)
+            obj->audioNode->canvasPos.x = newPos.x - canvasOrigin;
+            obj->audioNode->canvasPos.y = newPos.y - canvasOrigin;
+        }
+
+        // Update selection: clear current selection and select the newly pasted objects.
+        clearSelection();
+        for (auto* obj : pastedObjects)
+        {
+            addToSelection(obj);
+        }
+
+        reloadConnections(allConnections);
+        callObjectChangedListeners();
+        repaint();
     }
     catch (const std::exception& e)
     {
@@ -857,6 +858,20 @@ void Canvas::removeObjectChangedListener(std::function<void()> callback)
     if (it != objectChangedListeners.end()) {
         objectChangedListeners.erase(it);
     }
+}
+
+pptk::Point Canvas::getMousePositionOnCanvas()
+{
+    float mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+
+    float scale = getAccumulatedScale();
+
+    pptk::Point canvasPos;
+    canvasPos.x = (mouseX - canvasOffset.x) / scale;
+    canvasPos.y = (mouseY - canvasOffset.y) / scale;
+
+    return canvasPos;
 }
 
 void Canvas::callObjectChangedListeners()

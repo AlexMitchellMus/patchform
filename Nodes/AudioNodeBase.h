@@ -214,7 +214,7 @@ private:
 
     void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
     {
-        //if (!shouldProcess())
+        //if (!shouldProcess(frameCount))
         //{
         //    return;
         //}

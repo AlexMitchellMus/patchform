@@ -109,6 +109,7 @@ public:
 
 private:
     void dragCanvas(const pptk::Point&);
+    pptk::Point getMousePositionOnCanvas();
 
     // TODO: Move graph manager outside of canvas!
     GraphManager* graphManager;
