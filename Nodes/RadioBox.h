@@ -14,7 +14,7 @@
 
 class RadioBox final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("RadioBox", "radiobox");
+    DEFINE_AND_REGISTER_NODE("RadioBox", "radiobox", false);
 
 public:
     enum class LayoutType { Horizontal, Vertical, Grid };
@@ -215,6 +215,7 @@ public:
                     {
                         radio->eventQueue.enqueue(clickedIndex);
                         radio->hasInputEvents.store(true);
+                        radio->setNodeDirty();
                     }
 
                     repaint();
@@ -307,11 +308,6 @@ public:
                                          (layoutType == LayoutType::Grid) ? "grid" : "horizontal";
         nodeCreationData["emitOnClick"] = emitOnClickParam->getValue();
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
 #ifdef PATCHFORM_WITH_GUI

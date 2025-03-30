@@ -15,6 +15,7 @@
 #include <xutility>
 #include <queue>
 #include <set>
+#include <UI_ToolKit/PlatformHelpers.h>
 
 #include "json.hpp"
 using json = nlohmann::json;
@@ -216,8 +217,6 @@ public:
 
         for (auto& obj : objectList)
         {
-            //if (obj->isGuiOnly())
-            //    continue;
             objectsListCopy.push_back(obj.get());
             // All MIDI nodes are input only, so we can simply call them all at once without an order
             if (auto* midiNode = dynamic_cast<MidiNode*>(obj.get()))
@@ -225,6 +224,32 @@ public:
         }
 
         topologicalSort(objectsSorted);
+
+        // Build a word list of 64 bit words that hold a representation
+        // of all the nodes that need to be processed without skipping
+        // We use this so we can completely skip nodes that don't need to be processed,
+        // instead of testing each one in the process loop.
+        activeAudioNodes.clear();
+        activeAudioNodes.assign((objectsSorted.size() + 63) / 64, 0);
+
+        // clear and assign an empty event node bitfield word vector
+        activeEventNodes.clear();
+        activeEventNodes.assign((objectsSorted.size() + 63) / 64, 0);
+
+        for (int i = 0; i < objectsSorted.size(); ++i)
+        {
+            if (objectsSorted[i]->alwaysProcess())
+                activeAudioNodes[i / 64] |= (1ULL << (i % 64));
+        }
+
+#ifdef DEBUG_AUDIO_NODES_BITFIELDS
+        std::cout << "=== Bit fields for active audio processes ===" << std::endl;
+        for (size_t i = 0; i < activeAudioNodes.size(); ++i)
+        {
+            std::bitset<64> bits(activeAudioNodes[i]);
+            std::cout << "Word " << i << ": \t" << bits << "\n";
+        }
+#endif
 
 #ifdef SORT_TIME
         auto end = std::chrono::high_resolution_clock::now();
@@ -255,12 +280,52 @@ public:
         {
             midiNodes->processMidi(midiMessage);
         }
+#define SKIP_PROCESSING
+#ifdef SKIP_PROCESSING
 
+        std::function<void(AudioGraph&)> msg;
+        while (context->messageQueue.try_dequeue(msg))
+            msg(*this);
+
+        for (size_t i = 0; i < objectsSorted.size(); )
+            {
+            size_t word = i / 64;
+            size_t bit = i % 64;
+
+            uint64_t eventWord = activeEventNodes[word];
+            uint64_t audioWord = activeAudioNodes[word];
+            uint64_t combined = eventWord | audioWord;
+
+            // Mask out lower bits in this word
+            combined >>= bit;
+
+            if (combined) {
+                const auto offset = PlatformHelpers::countTrailingZeros64(combined);
+                i += offset;
+
+                // Process node at i
+                objectsSorted[i]->process(buffer, frameCount, *this, i);
+
+                // Clear only event bit — activeAudioNodes is set for this graph configuration (they always run ATM)
+                activeEventNodes[i / 64] &= ~(1ULL << (i % 64));
+
+                ++i;
+            } else {
+                // Skip empty words efficiently
+                do {
+                    ++word;
+                } while (word < activeAudioNodes.size() && (activeEventNodes[word] | activeAudioNodes[word]) == 0);
+
+                i = word * 64;
+            }
+        }
+#else
+        // simple loop (everything gets processed)
         for (size_t i = 0; i < objectsSorted.size(); i++)
         {
             objectsSorted[i]->process(buffer, frameCount, *this, i);
         }
-
+#endif
         context->eventPool.releaseAllEvents();
     }
 
@@ -275,6 +340,12 @@ public:
 
     std::vector<AudioNode*> objectsSorted;
     std::vector<MidiNode*> midiInputNodes;
+
+    // bit field vector to hold which nodes are active for optimized processing
+    // We have a static list (that doesn't change per cycle) of all nodes that are audio
+    // And an event list that is updated during processing
+    std::vector<uint64_t> activeAudioNodes;
+    std::vector<uint64_t> activeEventNodes;
 
     // Only for sorting
     std::vector<unsigned int> zeroInDegreeNodes;
@@ -777,11 +848,26 @@ public:
         graph->printAdjacencyList();
     }
 
-    static void setSummingFunctionForNode(AudioNode* node)
+    void setSummingFunctionForNode(AudioNode* node)
     {
         auto nodeID = node->nodeID;
 
-        node->pushOutputEvents = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, const AudioGraph& runningGraph, const int index)
+        node->setNodeDirty = [node]()
+        {
+            node->context->messageQueue.enqueue([node](AudioGraph& runningGraph)
+            {
+                auto& vec = runningGraph.objectsSorted;
+                const auto it = std::ranges::find(vec, node);
+                if (it == vec.end())
+                    return; // not found
+
+                int index = static_cast<int>(std::distance(vec.begin(), it));
+
+                runningGraph.activeEventNodes[index / 64] |= (1ULL << (index % 64));
+            });
+        };
+
+        node->pushOutputEvents = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, AudioGraph& runningGraph, const int index)
         {
 #define USE_POINTER_MAP_PUSH
 #define USE_POINTER_MAP
@@ -806,6 +892,16 @@ public:
                     for (Event* event : events)
                     {
                         target->pushEvent(targetPort, event);
+
+                        // set the corresponding bit of this node as needing processing
+                        // in the process loop the node will then be processed
+                        auto& vec = runningGraph.objectsSorted;
+                        auto it = std::find(vec.begin(), vec.end(), target);
+                        if (it != vec.end())
+                        {
+                            int targetIndex = static_cast<int>(std::distance(vec.begin(), it));
+                            runningGraph.activeEventNodes[targetIndex / 64] |= (1ULL << (targetIndex % 64));
+                        }
                     }
                 }
             }

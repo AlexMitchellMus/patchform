@@ -11,7 +11,7 @@
 
 class TagEvent : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("TagEvent", "tag");
+    DEFINE_AND_REGISTER_NODE("TagEvent", "tag", false);
 
     std::string tag;
     StringParameter* tagParameter;
@@ -29,11 +29,6 @@ public:
     {
         nodeCreationData["symbol"] = tagParameter->getValue();
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

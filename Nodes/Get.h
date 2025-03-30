@@ -11,7 +11,7 @@
 // AddNode that sums two signals
 class Get : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("GetValue", "get");
+    DEFINE_AND_REGISTER_NODE("GetValue", "get", false);
 
     IntParameter* atomNumberParam;
     std::atomic<size_t> atomNumber;
@@ -48,11 +48,6 @@ public:
         nodeCreationData["get"] = atomNumberParam->getValue();
         nodeCreationData["routeMode"] = routeModeParam->getValue();
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

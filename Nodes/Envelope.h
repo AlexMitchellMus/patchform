@@ -11,7 +11,7 @@
 
 class Envelope final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Envelope", "env");
+    DEFINE_AND_REGISTER_NODE("Envelope", "env", true);
 
     FloatParameter* attackValParam = nullptr;
     FloatParameter* decayValParam = nullptr;

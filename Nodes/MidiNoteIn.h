@@ -9,7 +9,7 @@
 
 class MidiNoteIn : public MidiNode
 {
-    DEFINE_AND_REGISTER_NODE("MidiNoteIn", "notein");
+    DEFINE_AND_REGISTER_NODE("MidiNoteIn", "notein", false);
 
 public:
     MidiNoteIn(NodeContext* context, const json& objParams) : MidiNode(context, AudioPort::PortType::Data, objParams)

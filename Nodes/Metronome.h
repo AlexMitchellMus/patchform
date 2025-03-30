@@ -13,7 +13,7 @@
 
 class Metronome : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Metronome", "metro");
+    DEFINE_AND_REGISTER_NODE("Metronome", "metro", true);
 
     FloatParameter* tickParam;
 

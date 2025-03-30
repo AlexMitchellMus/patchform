@@ -11,7 +11,7 @@
 
 class Intify : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Intify", "intify");
+    DEFINE_AND_REGISTER_NODE("Intify", "intify", false);
 
     enum Mode
     {
@@ -61,11 +61,6 @@ public:
         if (const auto* s = context->stringMap.find(mode.load()))
             nodeCreationData["mode"] = *s;
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

@@ -10,7 +10,7 @@
 
 // Strip removes data atoms from events, return's anly an event
 class Strip : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Strip", "strip");
+    DEFINE_AND_REGISTER_NODE("Strip", "strip", false);
 
     IntParameter *atomNumberParam;
     int atomNumber;
@@ -19,11 +19,6 @@ public:
     Strip(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data);
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

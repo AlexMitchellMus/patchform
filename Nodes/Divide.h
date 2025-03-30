@@ -5,7 +5,7 @@
 
 // DivideNode that divides A by B
 class Divide : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Divide", "div");
+    DEFINE_AND_REGISTER_NODE("Divide", "div", false);
 
     float coldValue;
 
@@ -16,10 +16,6 @@ public:
         addInputPort("A", AudioPort::PortType::Data); // hot
         addInputPort("B", AudioPort::PortType::Data); // cold
         coldValue = objParams.value("value", 1.0f);
-    }
-
-    bool shouldProcess(unsigned int) override {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float*, unsigned long) override {

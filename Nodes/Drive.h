@@ -11,7 +11,7 @@
 
 // Drive node with soft clipping
 class Drive : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Drive", "drive");
+    DEFINE_AND_REGISTER_NODE("Drive", "drive", true);
 
     std::atomic<float> driveAmount;
     FloatParameter* driveAmountParameter;

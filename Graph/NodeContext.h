@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "concurrentqueue.h"
+
 #include <iostream>
 #include <vector>
 #include <numeric>
@@ -139,6 +141,8 @@ private:
     std::vector<size_t> allocatedList;
 };
 
+class AudioGraph;
+
 class NodeContext {
 public:
     float sampleRate;
@@ -146,6 +150,8 @@ public:
     EventPool eventPool;
 
     OwnershipBlockPool ownershipBlockPool;
+
+    moodycamel::ConcurrentQueue<std::function<void(AudioGraph& runningGraph)>> messageQueue;
 
     LockFreeHashMap stringMap;
 

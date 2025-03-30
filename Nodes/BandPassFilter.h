@@ -19,7 +19,7 @@
 
 // Band-Pass Filter node (Pure Data-style)
 class BandPassFilter : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("BandPass", "bpf");
+    DEFINE_AND_REGISTER_NODE("BandPass", "bpf", true);
 
     // Internal filter state
     float x1 = 0.0f, x2 = 0.0f; // Previous inputs

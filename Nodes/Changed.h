@@ -10,7 +10,7 @@
 
 class Changed : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Changed", "chg");
+    DEFINE_AND_REGISTER_NODE("Changed", "chg", false);
 
     float lastValue = std::numeric_limits<float>::quiet_NaN();
 
@@ -23,11 +23,6 @@ public:
     json getSerializedNode() override
     {
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

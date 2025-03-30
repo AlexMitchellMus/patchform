@@ -27,7 +27,8 @@
 using json = nlohmann::json;
 
 // Helper macro to name and register node (used in derived node class)
-#define DEFINE_AND_REGISTER_NODE(nodeName, shortNodeName)                       \
+// <Fullname> <ShortName> <should constantly process>
+#define DEFINE_AND_REGISTER_NODE(nodeName, shortNodeName, processAudio)         \
 public:                                                                         \
     static inline const std::string name = nodeName;                            \
     static inline const std::string shortName = shortNodeName;                  \
@@ -37,6 +38,8 @@ public:                                                                         
     }();                                                                        \
     const std::string& getName() const override { return name; }                \
     const std::string& getShortName() const override { return shortName; }      \
+    static inline const bool isAudioProcessor = processAudio;                   \
+    const bool& alwaysProcess() const override { return isAudioProcessor; } \
     private:                                                                    \
 
 #ifndef M_PI
@@ -132,6 +135,8 @@ public:
     [[nodiscard]] virtual const std::string& getName() const = 0;
     [[nodiscard]] virtual const std::string& getShortName() const = 0;
 
+    [[nodiscard]] virtual const bool& alwaysProcess() const = 0;
+
     virtual bool shouldProcess(unsigned int frameCount)
     {
         return true;
@@ -189,9 +194,13 @@ public:
         outputPortBuffers[port]->addEvent(event);
     }
 
-    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> pushOutputEvents;
+    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, AudioGraph&, const int)> pushOutputEvents;
 
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> sumInputBuffers;
+
+    // Sets the bit field mask for this node in the context, where the current running graph will
+    // then process this in the next skip
+    std::function<void()> setNodeDirty = [](){};
 
     uint32_t nodeID;
     std::string nodeIDString;
@@ -212,7 +221,7 @@ public:
 
 private:
 
-    void process(float* buffer, unsigned long frameCount, const AudioGraph& runningGraph, const int index)
+    void process(float* buffer, unsigned long frameCount, AudioGraph& runningGraph, const int index)
     {
         if (!shouldProcess(frameCount))
         {

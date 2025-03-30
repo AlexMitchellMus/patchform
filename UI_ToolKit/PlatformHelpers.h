@@ -28,10 +28,18 @@
     #include "tinyfiledialogs.h"
 #endif
 
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
+
 namespace PlatformHelpers
 {
 #ifdef _WIN32
-    static std::string OpenFileChooserDialog(WindowPeer* peer)
+    static std::string OpenFileChooserDialog(const WindowPeer* peer)
     {
         HWND hwnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(peer->getSDLWindow()), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
 
@@ -57,4 +65,15 @@ namespace PlatformHelpers
         return std::string();                   // Return an empty string if canceled or error.
     }
 #endif
+
+    static unsigned int countTrailingZeros64(uint64_t mask) {
+#if defined(_MSC_VER)
+        unsigned long index;
+        _BitScanForward64(&index, mask);
+        return index;
+#else
+        return __builtin_ctzll(mask);
+#endif
+
+    }
 } // end namespace PlatformHelpers

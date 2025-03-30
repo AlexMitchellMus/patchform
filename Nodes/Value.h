@@ -11,7 +11,7 @@
 // ValueNode that provides a constant value (e.g., for frequency modulation)
 class Value : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Value", "val");
+    DEFINE_AND_REGISTER_NODE("Value", "val", true);
 
     float value = 0.0f;
 

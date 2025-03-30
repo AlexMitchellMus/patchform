@@ -10,9 +10,9 @@
 #include "../UI_ToolKit/TextEditor.h"
 
 // Display comment text only (no i/o, no processing)
-class Comment : public AudioNode
+class Comment final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Comment", "com");
+    DEFINE_AND_REGISTER_NODE("Comment", "com", false);
 
     std::string commentText;
 

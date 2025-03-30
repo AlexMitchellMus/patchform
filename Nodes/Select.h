@@ -3,7 +3,7 @@
 #include "AudioNodeBase.h"
 
 class Select : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Select", "sel");
+    DEFINE_AND_REGISTER_NODE("Select", "sel", false);
 
 public:
     Select(NodeContext* context, const json& objParams)
@@ -15,11 +15,6 @@ public:
         for (int i = 0; i < outputs; ++i) {
             addOutputPort(std::to_string(i), AudioPort::PortType::Data);
         }
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

@@ -10,7 +10,7 @@
 
 // AddNode that sums two signals
 class Count : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("Count", "count");
+    DEFINE_AND_REGISTER_NODE("Count", "count", false);
 
     IntParameter* minCountParam;
     IntParameter* maxCountParam;
@@ -37,11 +37,6 @@ public:
         nodeCreationData["min"] = minCountParam->getValue();
         nodeCreationData["max"] = maxCountParam->getValue();
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

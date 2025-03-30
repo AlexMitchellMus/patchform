@@ -4,7 +4,7 @@
 #include <functional>
 
 class IfElse : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("IfElse", "ifelse");
+    DEFINE_AND_REGISTER_NODE("IfElse", "ifelse", false);
 
     FloatParameter* ifParam;
     StringParameter* modeParam;
@@ -56,11 +56,6 @@ public:
         ifParam->informNodeOfChange = [this]() {
             coldValueIf.store(ifParam->getValue());
         };
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

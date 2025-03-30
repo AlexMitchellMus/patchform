@@ -17,7 +17,7 @@
 
 class Spec final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("SpectralPlot", "spec");
+    DEFINE_AND_REGISTER_NODE("SpectralPlot", "spec", true);
 
 public:
 #ifdef PATCHFORM_WITH_GUI

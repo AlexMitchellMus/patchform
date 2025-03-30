@@ -6,7 +6,7 @@
 
 class EventDelay : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("EventDelay", "eventdelay");
+    DEFINE_AND_REGISTER_NODE("EventDelay", "eventdelay", true);
 
     FloatParameter* delayParam;
     std::atomic<float> delayTimeMs;

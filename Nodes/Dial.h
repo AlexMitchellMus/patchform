@@ -11,7 +11,7 @@
 
 class Dial final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Dial", "dial");
+    DEFINE_AND_REGISTER_NODE("Dial", "dial", false);
 
     float dialValue;
 
@@ -74,6 +74,7 @@ public:
 
                     dial->eventQueue.enqueue(value);
                     dial->hasInputEvents.store(true);
+                    dial->setNodeDirty();
 
                     repaint();
                 }
@@ -142,11 +143,6 @@ public:
         nodeCreationData["max"] = maxValue.load();
         nodeCreationData["value"] = dialValue * (maxValue.load() - minValue.load()) + minValue.load();
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
 #ifdef PATCHFORM_WITH_GUI

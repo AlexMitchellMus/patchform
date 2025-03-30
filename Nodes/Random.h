@@ -5,7 +5,7 @@
 
 class Random : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Random", "rnd");
+    DEFINE_AND_REGISTER_NODE("Random", "rnd", false);
 
     FloatParameter* minParam;
     FloatParameter* maxParam;
@@ -21,11 +21,6 @@ public:
         maxParam = addParameter<FloatParameter>("Max", maxVal, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
         addInputPort("In", AudioPort::PortType::Data);
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

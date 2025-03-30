@@ -16,7 +16,7 @@
 
 class Scope final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Scope", "scope");
+    DEFINE_AND_REGISTER_NODE("Scope", "scope", true);
 
 public:
 #ifdef PATCHFORM_WITH_GUI

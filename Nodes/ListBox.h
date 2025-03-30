@@ -19,7 +19,7 @@
 
 class ListBox final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("ListBox", "lb");
+    DEFINE_AND_REGISTER_NODE("ListBox", "lb", false);
 
     float value;
 
@@ -90,6 +90,7 @@ public:
                 textEditor->setInteractable(false);
                 listBox->queueToDSP.enqueue(formatSymbols(textEditor->getText()));
                 listBox->hasInputEvents.store(true);
+                listBox->setNodeDirty();
             };
         }
 
@@ -381,11 +382,6 @@ public:
                 break;
         }
         return first;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     // processAudio receives DSP events that replace the list values.

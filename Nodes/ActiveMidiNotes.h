@@ -7,7 +7,7 @@
 
 class ActiveMidiNotes : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("ActiveMidiNotes", "activeMidiNotes");
+    DEFINE_AND_REGISTER_NODE("ActiveMidiNotes", "activeMidiNotes", false);
 
     // Holds the list of currently active notes.
     // We store note numbers as float, consistent with event atom usage.

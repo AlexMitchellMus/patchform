@@ -5,7 +5,7 @@
 
 class FilterTag : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("FilterTag", "filtag");
+    DEFINE_AND_REGISTER_NODE("FilterTag", "filtag", false);
 
     std::string tag;
     StringParameter* tagParameter;
@@ -24,11 +24,6 @@ public:
     {
         nodeCreationData["tag"] = tagParameter->getValue();
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long frameCount) override

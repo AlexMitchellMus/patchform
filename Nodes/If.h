@@ -10,7 +10,7 @@
 
 // AddNode that sums two signals
 class If : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("If", "if");
+    DEFINE_AND_REGISTER_NODE("If", "if", false);
 
     IntParameter* ifParam;
     FloatParameter* retParam;
@@ -40,11 +40,6 @@ public:
         {
             coldValueReturn = retParam->getValue();
         };
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     json getSerializedNode() override

@@ -11,7 +11,7 @@
 
 class Ping final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Ping", "png");
+    DEFINE_AND_REGISTER_NODE("Ping", "png", false);
 
     std::function<void()> repaintFromDSP = [](){};
 
@@ -64,6 +64,7 @@ public:
                     auto pingNode = reinterpret_cast<Ping*>(audioNode);
                     pingNode->eventQueue.enqueue(true);
                     pingNode->hasInputEvents.store(true);
+                    pingNode->setNodeDirty();
                     triggerLight();
 
                 }
@@ -117,11 +118,6 @@ public:
         height = objParams.value("height", 40);
 
         addInputPort("Events", AudioPort::PortType::Data);
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
 #ifdef PATCHFORM_WITH_GUI

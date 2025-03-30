@@ -11,7 +11,7 @@
 
 class Pack : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Pack", "pack");
+    DEFINE_AND_REGISTER_NODE("Pack", "pack", false);
 
     int packNum = 0;
     // One persistent DataAtom pointer per input port.
@@ -36,11 +36,6 @@ public:
     json getSerializedNode() override
     {
         return nodeCreationData;
-    }
-
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
     }
 
     void processAudio(float* out, unsigned long /*frameCount*/) override

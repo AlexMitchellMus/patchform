@@ -12,7 +12,7 @@
 
 class FloatBox final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Floatbox", "fb");
+    DEFINE_AND_REGISTER_NODE("Floatbox", "fb", false);
 
     float value;
 
@@ -89,10 +89,6 @@ public:
     }
 #ifdef PATCHFORM_WITH_GUI
 
-    bool shouldProcess(unsigned int frameCount) override
-    {
-        return hasInputEvents.load(std::memory_order_relaxed);
-    }
 
     void processAudio(float* out, const unsigned long frameCount) override
     {
