@@ -279,34 +279,34 @@ public:
         while (context->messageQueue.try_dequeue(msg))
             msg(*this);
 
-        for (size_t i = 0; i < objectsSorted.size(); )
-            {
+        size_t i = 0;
+
+        while (i < objectsSorted.size())
+        {
             size_t word = i / 64;
             size_t bit = i % 64;
 
-            uint64_t eventWord = activeEventNodes[word];
-            uint64_t audioWord = activeAudioNodes[word];
-            uint64_t combined = eventWord | audioWord;
-
-            // Mask out lower bits in this word
-            combined >>= bit;
-
-            if (combined) {
+            if (const uint64_t combined = (activeEventNodes[word] | activeAudioNodes[word]) >> bit)
+            {
                 const auto offset = PlatformHelpers::countTrailingZeros64(combined);
                 i += offset;
 
-                // Process node at i
+                if (i >= objectsSorted.size())
+                    break;
+
                 objectsSorted[i]->process(buffer, midiMessage, frameCount, *this, i);
 
-                // Clear only event bit — activeAudioNodes is set for this graph configuration (they always run ATM)
                 activeEventNodes[i / 64] &= ~(1ULL << (i % 64));
-
                 ++i;
-            } else {
-                // Skip empty words efficiently
-                do {
+            }
+            else
+            {
+                // Skip to next word with set bits
+                ++word;
+                while (word < activeAudioNodes.size() && (activeEventNodes[word] | activeAudioNodes[word]) == 0)
+                {
                     ++word;
-                } while (word < activeAudioNodes.size() && (activeEventNodes[word] | activeAudioNodes[word]) == 0);
+                }
 
                 i = word * 64;
             }
