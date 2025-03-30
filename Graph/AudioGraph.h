@@ -237,6 +237,8 @@ public:
         {
             auto obj = objectsSorted[i];
 
+            // Add all persistent processing objects to the active bitfields
+            // These objects will always process regardless if they have events or not
             if (obj->alwaysProcess())
             {
                 activeAudioNodes[i / 64] |= (1ULL << (i % 64));
