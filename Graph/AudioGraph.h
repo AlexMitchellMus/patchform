@@ -1149,8 +1149,38 @@ public:
         // Ensure the ID is unique
         if (objectIDMap.contains(idString))
         {
-            std::cerr << "Duplicate node ID detected: " << idString << ". Renaming..." << std::endl;
-            idString = std::to_string(generateID());
+            std::string base;
+            int number = 0;
+
+            // Try to extract base and number (e.g., "osc_1" → base: "osc", number: 1)
+            std::regex pattern(R"((.*?)(?:_(\d+))?$)");
+            std::smatch match;
+
+            if (std::regex_match(idString, match, pattern))
+            {
+                base = match[1];
+                if (match[2].matched)
+                {
+                    number = std::stoi(match[2]);
+                }
+            }
+            else
+            {
+                base = idString;
+            }
+
+            // Increment until we find an unused ID
+            std::string newId;
+            do
+            {
+                ++number;
+                newId = base + "_" + std::to_string(number);
+            }
+            while (objectIDMap.contains(newId));
+
+            std::cerr << "Duplicate node ID detected: " << idString << ". Renaming to: " << newId << std::endl;
+
+            idString = newId;
         }
 
         switch (hash(object))
