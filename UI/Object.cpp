@@ -187,6 +187,13 @@ void Object::mouseButtonDown(pptk::CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {
+        const SDL_Keymod mods = SDL_GetModState();
+        if (mods & SDL_KMOD_SHIFT)
+        {
+            cnv->addToSelection(this);
+            return;
+        }
+
         if (!isSelected)
         {
             cnv->setSelected(this);

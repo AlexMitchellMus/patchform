@@ -229,13 +229,25 @@ void Canvas::keyPressed(pptk::CompEvent& e)
     bool onlyCtrl = (modKey & ~SDL_KMOD_CTRL) == 0;
     if (ctrlPressed && onlyCtrl)
     {
-        if (e.sdlEvent.key.scancode == SDL_SCANCODE_C)
+        switch (e.sdlEvent.key.scancode)
         {
-            copySelectionToClipboard();
-        }
-        else if (e.sdlEvent.key.scancode == SDL_SCANCODE_V)
-        {
-            pasteFromClipboard();
+        case SDL_SCANCODE_C:
+            {
+                copySelectionToClipboard();
+            }
+            break;
+        case SDL_SCANCODE_V:
+            {
+                pasteFromClipboard();
+            }
+            break;
+        case SDL_SCANCODE_A:
+            {
+                selectAll();
+            }
+            break;
+        default:
+            break;
         }
     } else if(e.sdlEvent.key.key == SDLK_DELETE || e.sdlEvent.key.key == SDLK_BACKSPACE)
     {
@@ -243,6 +255,13 @@ void Canvas::keyPressed(pptk::CompEvent& e)
     }
 }
 
+void Canvas::selectAll()
+{
+    for (auto& obj : objects)
+    {
+        addToSelection(obj);
+    }
+}
 
 bool Canvas::consumeEvent(pptk::CompEvent& e)
 {

@@ -70,6 +70,7 @@ public:
 
     void copySelectionToClipboard() const;
     void pasteFromClipboard();
+    void selectAll();
 
     void setPatchName(const std::string& name);
     const std::string& getPatchName() { return patchName; };

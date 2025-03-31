@@ -89,6 +89,9 @@ void Editor::loadFile(const std::string& fileName) const
             canvas->setPatchName(filePathObj.stem().string());
             canvas->reloadAllCanvasObjects(graphObjects);
             canvas->reloadConnections(connEdges);
+
+            // Loading a patch makes the canvas gain focus
+            canvas->gainFocus();
             leftPanel->resetScroll();
         }
     }
