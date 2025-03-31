@@ -216,7 +216,9 @@ public:
         {
             calculatedHeight = objectListItems.size() * 32;
             setBounds(0, 0, parent->getWidth(), calculatedHeight);
-            if (calculatedHeight < previousHeight)
+            // This will reset the viewport to the top when the size changes
+            // TODO: make the viewport respect the position of the current scroll
+            if (calculatedHeight != previousHeight)
             {
                 reinterpret_cast<pptk::ComponentViewport*>(getParent())->resetViewport();
             }
