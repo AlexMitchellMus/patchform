@@ -253,7 +253,6 @@ class ObjectsListViewport : public pptk::ComponentViewport
         viewedComp->setName("List of objects view");
         viewedComp->onBoundsUpdate = [this](int newHeight)
         {
-            std::cout << "updating bounds of viewed component" << std::endl;
             setContentHeight(newHeight);
         };
         viewedComp->onKeyPressed = [this]()
@@ -341,7 +340,6 @@ void LeftPanel::resized()
 {
     getResizer().setBounds(getBounds());
     auto viewportBounds = getBounds().removeFromTop(30);
-    std::cout << "viewportBounds: " << viewportBounds.toString() << std::endl;
     objectsList->setBounds(viewportBounds);
 }
 

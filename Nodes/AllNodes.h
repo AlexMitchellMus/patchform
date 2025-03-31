@@ -9,7 +9,6 @@
 #include "AudioNodeBase.h"
 
 // Data Nodes
-#include "Add.h"
 #include "Metronome.h"
 #include "Print.h"
 #include "Count.h"
@@ -24,7 +23,6 @@
 #include "FilterTag.h"
 #include "ActiveMidiNotes.h"
 #include "Random.h"
-#include "Intify.h"
 #include "EventDelay.h"
 #include "Select.h"
 #include "LoadEvent.h"
@@ -32,6 +30,8 @@
 // Maths Nodes
 #include "Multiply.h"
 #include "Divide.h"
+#include "Add.h"
+#include "Intify.h"
 
 // Audio Nodes
 #include "Value.h"

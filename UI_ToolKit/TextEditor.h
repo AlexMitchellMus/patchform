@@ -78,7 +78,6 @@ public:
 */
     void focusLost() override
     {
-        std::cout << "editor focus lost" << std::endl;
         editorActive = false;
         onTextReturned();
         repaint();
@@ -254,7 +253,6 @@ public:
 
     void setInteractable(bool shouldInteract)
     {
-        std::cout << "setting text editor interactable: " << std::boolalpha << shouldInteract << std::endl;
         if (isInteractable != shouldInteract)
         {
             isInteractable = shouldInteract;

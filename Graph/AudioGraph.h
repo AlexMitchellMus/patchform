@@ -207,8 +207,8 @@ public:
 
     void sortNodes(const std::vector<std::shared_ptr<AudioNode>>& objectList)
     {
-#define SORT_TIME
-#ifdef SORT_TIME
+//#define LOG_GRAPH_INFO
+#ifdef LOG_GRAPH_INFO
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
@@ -263,7 +263,7 @@ public:
         }
 #endif
 
-#ifdef SORT_TIME
+#ifdef LOG_GRAPH_INFO
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
@@ -303,7 +303,7 @@ public:
 
             if (const uint64_t combined = (activeEventNodes[word] | activeAudioNodes[word]) >> bit)
             {
-                const auto offset = PlatformHelpers::countTrailingZeros64(combined);
+                const auto offset = std::countr_zero(combined);
                 i += offset;
 
                 if (i >= objectsSorted.size())
@@ -1192,7 +1192,9 @@ public:
             }
             while (objectIDMap.contains(newId));
 
+#ifdef LOG_GRAPH_INFO
             std::cerr << "Duplicate node ID detected: " << idString << ". Renaming to: " << newId << std::endl;
+#endif
 
             idString = newId;
         }

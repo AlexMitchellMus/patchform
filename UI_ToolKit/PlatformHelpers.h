@@ -65,15 +65,4 @@ namespace PlatformHelpers
         return std::string();                   // Return an empty string if canceled or error.
     }
 #endif
-
-    static unsigned int countTrailingZeros64(uint64_t mask) {
-#if defined(_MSC_VER)
-        unsigned long index;
-        _BitScanForward64(&index, mask);
-        return index;
-#else
-        return __builtin_ctzll(mask);
-#endif
-
-    }
 } // end namespace PlatformHelpers
