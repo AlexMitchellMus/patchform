@@ -146,6 +146,7 @@ public:
         }
 
         updateBounds();
+        resized();
         repaint();
     }
 
@@ -215,6 +216,7 @@ public:
         if (auto parent = getParent())
         {
             calculatedHeight = objectListItems.size() * 32;
+
             setBounds(0, 0, parent->getWidth(), calculatedHeight);
             // This will reset the viewport to the top when the size changes
             // TODO: make the viewport respect the position of the current scroll
