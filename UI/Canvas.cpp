@@ -246,6 +246,11 @@ void Canvas::keyPressed(pptk::CompEvent& e)
                 selectAll();
             }
             break;
+        case SDL_SCANCODE_D:
+            {
+                duplicateSelection();
+            }
+            break;
         default:
             break;
         }
@@ -826,8 +831,7 @@ void Canvas::pasteFromClipboard()
             );
             obj->setPosition(newPos);
             // We need to also set objects new canvas position here (canvasOrigin is zero)
-            obj->audioNode->canvasPos.x = newPos.x - canvasOrigin;
-            obj->audioNode->canvasPos.y = newPos.y - canvasOrigin;
+            obj->audioNode->canvasPos = newPos - canvasOrigin;
         }
 
         // Update selection: clear current selection and select the newly pasted objects.
@@ -857,9 +861,51 @@ void Canvas::copySelectionToClipboard() const
         if (auto* obj = dynamic_cast<Object*>(node))
             selectedNodes.push_back(obj->nodeID);
     }
-    auto selectedGraph = graphManager->copySelectedToClipboard(selectedNodes);
+    auto selectedGraph = graphManager->copySelected(selectedNodes);
 
     SDL_SetClipboardText(selectedNodes.size() ? to_string(selectedGraph).c_str() : "");
+}
+
+void Canvas::duplicateSelection()
+{
+    std::vector<uint32_t> selectedNodes;
+    for (auto* node : selected)
+    {
+        if (auto* obj = dynamic_cast<Object*>(node))
+            selectedNodes.push_back(obj->nodeID);
+    }
+
+    if (selectedNodes.empty())
+        return;
+
+    auto clipboardGraph = graphManager->copySelected(selectedNodes);
+    auto [ duplicatedObjects, allObjects, allConnections ] = graphManager->pasteGraph(clipboardGraph);
+
+    const float offset = 20.0f;
+
+    for (auto* obj : duplicatedObjects)
+    {
+        obj->updateCanvasMode(mode);
+        objects.push_back(obj);
+        objectsLayer.addComponent(obj);
+
+        pptk::Point newPos(
+            obj->audioNode->canvasPos.x + canvasOrigin + offset,
+            obj->audioNode->canvasPos.y + canvasOrigin + offset
+        );
+        obj->setPosition(newPos);
+        obj->audioNode->canvasPos = newPos - canvasOrigin;
+    }
+
+    clearSelection();
+    for (auto* obj : duplicatedObjects)
+    {
+        addToSelection(obj);
+    }
+
+    reloadConnections(allConnections);
+    callObjectChangedListeners();
+    repaint();
 }
 
 void Canvas::addObjectChangedListener(std::function<void()> callback)

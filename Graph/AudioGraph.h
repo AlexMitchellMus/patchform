@@ -1611,7 +1611,7 @@ public:
         return activeGraph->graphToJSON();
     }
 
-    const json copySelectedToClipboard(const std::vector<uint32_t>& selectedNodeIDs)
+    const json copySelected(const std::vector<uint32_t>& selectedNodeIDs)
     {
         if (activeGraph)
         {

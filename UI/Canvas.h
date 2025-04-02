@@ -70,6 +70,8 @@ public:
 
     void copySelectionToClipboard() const;
     void pasteFromClipboard();
+    void duplicateSelection();
+
     void selectAll();
 
     void setPatchName(const std::string& name);

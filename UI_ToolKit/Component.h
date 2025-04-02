@@ -56,6 +56,10 @@ struct Point {
         return Point(x - other.x, y - other.y);
     }
 
+    Point operator-(const int other) const {
+        return Point(x - other, y - other);
+    }
+
     Point operator+=(const Point& other) {
         return Point(x += other.x, y += other.y);
     }
