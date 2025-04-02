@@ -222,7 +222,19 @@ public:
 
     std::vector<std::unique_ptr<Parameter>>& getParameters() { return parameters; };
 
+    virtual void cleanupAudio(){};
+
 private:
+
+    bool isClean = false;
+
+    void runCleanup()
+    {
+        if (isClean)
+            return;
+
+        cleanupAudio();
+    }
 
     void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, AudioGraph& runningGraph, const int index)
     {

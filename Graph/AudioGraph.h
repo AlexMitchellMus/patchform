@@ -805,6 +805,11 @@ public:
         std::cout << "--- free atoms: " << context->eventPool.getFreeListSize() << std::endl;
 #endif
         graph->process(inBuffer, buffer, frameCount, midiMessage);
+
+        for (auto obj : removedObjects)
+        {
+            obj->cleanupAudio();
+        }
     }
 
     void sortNodes()

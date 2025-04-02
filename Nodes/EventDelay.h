@@ -37,7 +37,7 @@ public:
         };
     }
 
-    ~EventDelay()
+    void cleanupAudio() override
     {
         // Release all queued data atoms
         for (auto& event : queue)

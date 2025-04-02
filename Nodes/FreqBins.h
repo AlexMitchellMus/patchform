@@ -20,10 +20,19 @@ public:
     {
         addInputPort("audioIn", AudioPort::Signal);
         fftSetup = pffft_new_setup(FFT_SIZE, PFFFT_REAL);
+
+        // Precompute window function
+        for (size_t i = 0; i < FFT_SIZE; ++i) {
+            hannWindow[i] = 0.5f * (1.0f - cosf(2.0f * M_PI * i / (FFT_SIZE - 1)));
+        }
     }
 
-    ~FreqBins() override {
-        pffft_destroy_setup(fftSetup);
+    void cleanupAudio() override
+    {
+        if (fftSetup) {
+            pffft_destroy_setup(fftSetup);
+            fftSetup = nullptr;
+        }
     }
 
     void processAudio(const float*, float*, const unsigned long frameCount, std::vector<MidiMessage>&) override {
@@ -31,31 +40,46 @@ public:
         if (!in) return;
 
         for (unsigned long i = 0; i < frameCount; ++i) {
-            dspBuffer[dspBufferIndex++] = in[i];
+            if (dspBufferIndex < FFT_SIZE) {  // Add bounds check
+                dspBuffer[dspBufferIndex++] = in[i];
+            }
             sampleCounter++;
 
+            // If we've filled the buffer, process FFT
             if (dspBufferIndex >= FFT_SIZE) {
                 processFFT(sampleCounter - FFT_SIZE);
                 dspBufferIndex = 0;
+
+                // To implement proper hop size (overlapping FFTs):
+                /*
+                // Shift buffer by HOP_SIZE
+                for (size_t j = 0; j < FFT_SIZE - HOP_SIZE; ++j) {
+                    dspBuffer[j] = dspBuffer[j + HOP_SIZE];
+                }
+                dspBufferIndex = FFT_SIZE - HOP_SIZE;
+                */
             }
         }
     }
 
     void processFFT(size_t timestamp)
     {
+        if (!fftSetup) return;  // Safety check
+
         std::array<float, FFT_SIZE> time{};
         std::array<float, FFT_SIZE> freq{};
 
-        std::fill(freq.begin(), freq.end(), 0.0f);
-
-        for (size_t i = 0; i < FFT_SIZE; ++i)
-            time[i] = dspBuffer[i] * 0.5f * (1.0f - cosf(2.0f * M_PI * i / (FFT_SIZE - 1)));
+        // Apply window function to input
+        for (size_t i = 0; i < FFT_SIZE; ++i) {
+            time[i] = dspBuffer[i] * hannWindow[i];
+        }
 
         pffft_transform_ordered(fftSetup, time.data(), freq.data(), nullptr, PFFFT_FORWARD);
 
         auto* ev = context->eventPool.getFreeEvent();
-        ev->setTimeStamp(timestamp);
+        if (!ev) return;  // Handle allocation failure
 
+        ev->setTimeStamp(timestamp);
         DataAtom* head = nullptr;
         DataAtom* tail = nullptr;
 
@@ -64,10 +88,21 @@ public:
             float im = freq[i * 2 + 1];
 
             DataAtom* outer = context->eventPool.allocateDataAtom();
+            if (!outer) {
+                return;
+            }
+
             outer->type = DataAtom::DataType::List;
 
             DataAtom* realAtom = context->eventPool.allocateDataAtom();
+            if (!realAtom) {
+                return;
+            }
+
             DataAtom* imagAtom = context->eventPool.allocateDataAtom();
+            if (!imagAtom) {
+                return;
+            }
 
             realAtom->type = DataAtom::DataType::Float;
             realAtom->data.atom = re;
@@ -97,6 +132,7 @@ public:
 private:
     PFFFT_Setup* fftSetup = nullptr;
     std::array<float, FFT_SIZE> dspBuffer{};
+    std::array<float, FFT_SIZE> hannWindow{};  // Pre-calculated window
     size_t dspBufferIndex = 0;
     size_t sampleCounter = 0;
 };

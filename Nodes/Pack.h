@@ -156,7 +156,7 @@ public:
         }
     }
 
-    ~Pack() override
+    void cleanupAudio() override
     {
         for (auto* atom : persistentAtoms)
         {

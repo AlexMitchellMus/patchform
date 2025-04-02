@@ -13,6 +13,7 @@ class FreqResynth final : public AudioNode {
 public:
     static constexpr size_t FFT_SIZE = 1024;
     static constexpr size_t FREQ_BINS = FFT_SIZE / 2;
+    static constexpr size_t HOP_SIZE = FFT_SIZE / 64;
 
     FreqResynth(NodeContext* context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
@@ -25,37 +26,38 @@ public:
         pffft_destroy_setup(fftSetup);
     }
 
-    void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>&) override
-    {
+    void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>&) override {
         const auto& events = inputPortBuffers[0]->getEvents();
         auto* output = outputPortBuffers[0]->getAudioBuffer();
 
         bool hasNewBins = false;
 
         for (const auto* ev : events) {
-            if (ev->getTagHash() == hash("complexbins") && ev->numAtoms >= FREQ_BINS) {
-                for (size_t i = 0; i < FREQ_BINS; ++i) {
-                    const DataAtom* outer = ev->getAtom(i);
-                    if (!outer || outer->type != DataAtom::DataType::List || !outer->data.list)
-                        continue;
+            if (ev->getTagHash() != hash("complexbins") || ev->numAtoms < FREQ_BINS)
+                continue;
 
-                    const DataAtom* realAtom = outer->data.list;
-                    const DataAtom* imagAtom = realAtom ? realAtom->next : nullptr;
-                    if (!imagAtom) continue;
+            for (size_t i = 0; i < FREQ_BINS; ++i) {
+                const DataAtom* outer = ev->getAtom(i);
+                if (!outer || outer->type != DataAtom::DataType::List || !outer->data.list)
+                    continue;
 
-                    binReal[i] = realAtom->data.atom;
-                    binImag[i] = imagAtom->data.atom;
-                }
-                hasNewBins = true;
-                break; // take first valid bin set
+                const DataAtom* realAtom = outer->data.list;
+                const DataAtom* imagAtom = realAtom ? realAtom->next : nullptr;
+                if (!imagAtom) continue;
+
+                binReal[i] = realAtom->data.atom;
+                binImag[i] = imagAtom->data.atom;
             }
+
+            hasNewBins = true;
+            break; // Use first valid event only
         }
 
-        if (hasNewBins) {
+        if (++hopCounter >= HOP_SIZE || hasNewBins) {
+            hopCounter = 0;
             doIFFT();
         }
 
-        // Always synthesize output from current overlap buffer
         for (size_t i = 0; i < frameCount; ++i) {
             output[i] = overlapBuffer[outputReadPos];
             overlapBuffer[outputReadPos] = 0.0f;
@@ -65,8 +67,7 @@ public:
     }
 
 private:
-    void doIFFT()
-        {
+    void doIFFT() {
         std::array<float, FFT_SIZE> freq{};
         std::array<float, FFT_SIZE> time{};
 
@@ -92,6 +93,7 @@ private:
     std::array<float, FFT_SIZE * 4> overlapBuffer{};
     size_t outputReadPos = 0;
     size_t outputWritePos = 0;
-    std::array<float, FREQ_BINS> binReal{};
-    std::array<float, FREQ_BINS> binImag{};
+    size_t hopCounter = 0;
+    std::array<float, FREQ_BINS> binReal { 0.0f };
+    std::array<float, FREQ_BINS> binImag { 0.0f };
 };
