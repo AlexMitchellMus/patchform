@@ -806,9 +806,10 @@ public:
 #endif
         graph->process(inBuffer, buffer, frameCount, midiMessage);
 
-        for (auto obj : removedObjects)
+        for (auto& obj : removedObjects)
         {
-            obj->cleanupAudio();
+            if (obj.get())
+                obj->cleanupAudio();
         }
     }
 
@@ -1351,6 +1352,9 @@ public:
 
         case hash("bincombine"):
             return addNode<BinCombine>(idString, node);
+
+        case hash("multitapdelay"):
+            return addNode<MultiTapDelay>(idString, node);
 
         default:
             // Unknown object name, return error

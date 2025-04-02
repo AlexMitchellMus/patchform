@@ -36,7 +36,7 @@ public:
             if (std::isnan(lastValue) || value != lastValue)
             {
                 lastValue = value;
-                
+
                 if (Event* outEvent = context->eventPool.getFreeEvent())
                 {
                     outEvent->setTimeStamp(e->getTimeStamp());

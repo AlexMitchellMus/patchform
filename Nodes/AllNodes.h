@@ -46,6 +46,7 @@
 #include "Spec.h"
 #include "ReverbFDN.h"
 #include "Drive.h"
+#include "MultiTapDelay.h"
 
 //FFT Nodes
 #include "FreqBins.h"
