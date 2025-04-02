@@ -36,12 +36,11 @@ public:
             if (std::isnan(lastValue) || value != lastValue)
             {
                 lastValue = value;
-
-                Event* outEvent = context->eventPool.getFreeEvent();
-                if (outEvent)
+                
+                if (Event* outEvent = context->eventPool.getFreeEvent())
                 {
                     outEvent->setTimeStamp(e->getTimeStamp());
-                    context->eventPool.addDataAtomTo(e, value);
+                    context->eventPool.addDataAtomTo(outEvent, value);
                     outputPortBuffers[0]->addEvent(outEvent);
                 }
             }
