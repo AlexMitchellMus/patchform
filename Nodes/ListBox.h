@@ -396,7 +396,7 @@ public:
     }
 
     // processAudio receives DSP events that replace the list values.
-    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         if (!savedData && !listText.empty())
         {

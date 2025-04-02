@@ -286,7 +286,7 @@ public:
     }
 
 
-    void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
+    void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
 #define SKIP_PROCESSING
 #ifdef SKIP_PROCESSING
@@ -309,7 +309,7 @@ public:
                 if (i >= objectsSorted.size())
                     break;
 
-                objectsSorted[i]->process(buffer, midiMessage, frameCount, *this, i);
+                objectsSorted[i]->process(inBuffer, buffer, midiMessage, frameCount, *this, i);
 
                 activeEventNodes[i >> 6] &= ~(1ULL << (i & 63)); // i / 64, i % 64
                 ++i;
@@ -798,13 +798,13 @@ public:
     }
 
 
-    void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
+    void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
 //#define DSP_FREE_ATOMS
 #ifdef DSP_FREE_ATOMS
         std::cout << "--- free atoms: " << context->eventPool.getFreeListSize() << std::endl;
 #endif
-        graph->process(buffer, frameCount, midiMessage);
+        graph->process(inBuffer, buffer, frameCount, midiMessage);
     }
 
     void sortNodes()
@@ -1253,6 +1253,10 @@ public:
         case hash("oscillator"):
             return addNode<Oscillator>(idString, node);
 
+        case hash("ain"):
+        case hash("audioin"):
+            return addNode<AudioIn>(idString, node);
+
         case hash("aout"):
         case hash("audioout"):
             return addNode<AudioOut>(idString, node);
@@ -1333,6 +1337,15 @@ public:
 
         case hash("drive"):
             return addNode<Drive>(idString, node);
+
+        case hash("freqbins"):
+            return addNode<FreqBins>(idString, node);
+
+        case hash("freqresynth"):
+            return addNode<FreqResynth>(idString, node);
+
+        case hash("bincombine"):
+            return addNode<BinCombine>(idString, node);
 
         default:
             // Unknown object name, return error
@@ -1730,7 +1743,7 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 }
 
 
-    void process(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& message)
+    void process(const float* inBuffer, float* outBuffer, unsigned long frameCount, std::vector<MidiMessage>& message)
     {
         dspTimer.start();
 
@@ -1862,12 +1875,12 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
         // Process the current graph
         if (activeGraph)
         {
-            activeGraph->process(buffer, frameCount, message);
+            activeGraph->process(inBuffer, outBuffer, frameCount, message);
         }
 
         dspTimer.end(frameCount, ctx->sampleRate);
 
-        processPeak(buffer, frameCount);
+        processPeak(outBuffer, frameCount);
 
     }
 

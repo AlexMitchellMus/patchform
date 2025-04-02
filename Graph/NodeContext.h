@@ -188,7 +188,7 @@ public:
     NodeContext(float sampleRate, int frameCount)
         : sampleRate(sampleRate)
         , frameCount(frameCount)
-        , ownershipBlockPool(10000)
+        , ownershipBlockPool(100000)
         , persistentFlags(eventPool.getPersistentFlags())
     {};
 
@@ -196,7 +196,6 @@ public:
     {
         if (atom)
         {
-            size_t atomIndex = static_cast<size_t>(atom - eventPool.sharedAtomPool.data());
             atom->makePersistent(toBePersistent, nodeID, ownershipBlockPool, persistentFlags, eventPool.sharedAtomPool);
         }
     }

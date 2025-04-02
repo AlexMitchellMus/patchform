@@ -23,7 +23,7 @@ public:
         activeNotes.reserve(127);
     }
 
-    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         // Retrieve incoming events.
         const auto& events = inputPortBuffers[0]->getEvents();

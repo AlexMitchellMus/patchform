@@ -34,17 +34,23 @@
 #include "Intify.h"
 
 // Audio Nodes
+#include "AudioIn.h"
+#include "AudioOut.h"
 #include "Value.h"
 #include "Oscillator.h"
 #include "Add_Audio.h"
 #include "Envelope.h"
 #include "LFO.h"
 #include "Gain.h"
-#include "AudioOut.h"
 #include "BandPassFilter.h"
 #include "Spec.h"
 #include "ReverbFDN.h"
 #include "Drive.h"
+
+//FFT Nodes
+#include "FreqBins.h"
+#include "FreqResynth.h"
+#include "BinCombine.h"
 
 // UI Nodes
 #include "Dial.h"

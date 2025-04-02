@@ -183,6 +183,7 @@ int PatchformApp::audioCallback(const void* input, void* output,
     auto* app = static_cast<PatchformApp*>(userData);
 
     float* out = static_cast<float*>(output);
+    auto* in = static_cast<const float*>(input);
 
     std::fill(out, out + frameCount, 0.0f);
 
@@ -194,7 +195,7 @@ int PatchformApp::audioCallback(const void* input, void* output,
         midiMessages.push_back(midiMsg);
     }
 
-    app->graphManager.process(out, frameCount, midiMessages);  // Process the audio graph
+    app->graphManager.process(in, out, frameCount, midiMessages);  // Process the audio graph
 
     if (statusFlags & (paOutputUnderflow | paInputOverflow)) {
         std::cerr << "Audio underflow or overflow detected" << std::endl;
@@ -207,22 +208,31 @@ int PatchformApp::audioCallback(const void* input, void* output,
 bool PatchformApp::initAudio() {
     if (Pa_Initialize() != paNoError) return false;
 
-    int deviceIndex = Pa_GetHostApiInfo(2)->defaultOutputDevice;
-    if (deviceIndex == paNoDevice) return false;
+    int inputDeviceIndex = Pa_GetHostApiInfo(2)->defaultInputDevice;
+    int outputDeviceIndex = Pa_GetHostApiInfo(2)->defaultOutputDevice;
+    if (inputDeviceIndex == paNoDevice || outputDeviceIndex == paNoDevice) return false;
 
-    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
+    const PaDeviceInfo* inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);
+    const PaDeviceInfo* outputInfo = Pa_GetDeviceInfo(outputDeviceIndex);
+
+    PaStreamParameters inputParams{};
+    inputParams.device = inputDeviceIndex;
+    inputParams.channelCount = 1;
+    inputParams.sampleFormat = paFloat32;
+    inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
 
     PaStreamParameters outputParams{};
-    outputParams.device = deviceIndex;
+    outputParams.device = outputDeviceIndex;
     outputParams.channelCount = 1;
     outputParams.sampleFormat = paFloat32;
-    outputParams.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+    outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
 
-    if (Pa_OpenStream(&stream, nullptr, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, this) != paNoError)
+    if (Pa_OpenStream(&stream, &inputParams, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, this) != paNoError)
         return false;
 
     return (Pa_StartStream(stream) == paNoError);
 }
+
 
 void PatchformApp::shutdownAudio() {
     if (stream) {

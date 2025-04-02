@@ -58,7 +58,7 @@ public:
         };
     }
 
-    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         Mode mode = static_cast<Mode>(modeHash.load());
 

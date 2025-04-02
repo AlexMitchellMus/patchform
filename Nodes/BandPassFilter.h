@@ -41,7 +41,7 @@ public:
         addInputPort("Q", AudioPort::PortType::Data);
     }
 
-    void processAudio(float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto* audioInput = inputPortBuffers[0]->getAudioBuffer();
         const auto freqEvents  = inputPortBuffers[1]->getEvents();

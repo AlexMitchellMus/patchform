@@ -125,7 +125,7 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         auto inputEvents = inputPortBuffers[0]->getEvents();
 

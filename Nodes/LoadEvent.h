@@ -21,7 +21,7 @@ public:
         eventOnLoad = true;
     }
 
-    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float*, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         if (Event* e = context->eventPool.getFreeEvent())
         {

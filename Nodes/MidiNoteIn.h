@@ -21,7 +21,7 @@ public:
         return nodeCreationData;
     }
 
-    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessages) override
+    void processAudio(const float* in, float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessages) override
     {
         for (const auto& [message, timestamp] : midiMessages)
         {

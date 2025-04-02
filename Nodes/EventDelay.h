@@ -52,7 +52,7 @@ public:
         return nodeCreationData;
     }
 
-    void processAudio(float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         float sampleRate = context->sampleRate;
         float dt = 1000.0f * frameCount / sampleRate;

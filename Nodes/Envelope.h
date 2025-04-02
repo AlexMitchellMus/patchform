@@ -123,7 +123,7 @@ public:
         return nodeCreationData;
     }
 
-    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         auto events = inputPortBuffers[0]->getEvents();
         auto signal = inputPortBuffers[1]->getAudioBuffer();

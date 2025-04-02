@@ -145,7 +145,7 @@ public:
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    void processAudio(float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto minV = minValue.load();
         const auto maxV = maxValue.load();

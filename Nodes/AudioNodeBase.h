@@ -166,7 +166,7 @@ public:
     }
 
     // Virtual method for processing the audio buffer
-    virtual void processAudio(float* buffer, unsigned long frameCount, std::vector<MidiMessage>&) { };
+    virtual void processAudio(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>&) { };
 
     // Method to get input ports for sorting
     AudioPort* getOutputPort(const int index = 0) const
@@ -224,7 +224,7 @@ public:
 
 private:
 
-    void process(float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, AudioGraph& runningGraph, const int index)
+    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, AudioGraph& runningGraph, const int index)
     {
         if (!shouldProcess(frameCount))
         {
@@ -233,7 +233,7 @@ private:
 
         sumInputBuffers(inputPortBuffers, runningGraph, index);
 
-        processAudio(buffer, frameCount, midiMessage);
+        processAudio(inBuffer, buffer, frameCount, midiMessage);
 
         pushOutputEvents(outputPortBuffers, runningGraph, index);
 
