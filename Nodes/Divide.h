@@ -30,7 +30,7 @@ public:
         for (auto event : aEvents) {
             if (Event* e = context->eventPool.getFreeEvent()) {
                 e->setTimeStamp(event->getTimeStamp());
-                e->addAtom(event->getAtomValue(0) / safeDivisor);
+                context->eventPool.addDataAtomTo(e, event->getAtomValue(0) / safeDivisor);
                 outputPortBuffers[0]->addEvent(e);
             }
         }

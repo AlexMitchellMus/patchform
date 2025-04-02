@@ -41,7 +41,7 @@ public:
                 if (outEvent)
                 {
                     outEvent->setTimeStamp(e->getTimeStamp());
-                    outEvent->addAtom(value);
+                    context->eventPool.addDataAtomTo(e, value);
                     outputPortBuffers[0]->addEvent(outEvent);
                 }
             }

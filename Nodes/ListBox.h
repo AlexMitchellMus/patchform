@@ -41,10 +41,14 @@ public:
     DataAtom* savedData = nullptr;
 
     std::string textBuffer;
-#endif
-
+    std::string newTextBuffer;
     // Editable list text stored as a string.
     std::string listText;
+
+    std::atomic<bool> listChanged = false;
+    std::atomic<bool> triggerSendFromAudio = false;
+
+#endif
 
 #ifdef PATCHFORM_WITH_GUI
 
@@ -57,9 +61,9 @@ public:
 
         std::string uiText;
 
+    public:
         std::atomic<bool> shouldRepaint = false;
 
-    public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
             auto listBox = reinterpret_cast<ListBox*>(audioNode);
@@ -196,6 +200,14 @@ public:
         // In updateGraphValues, we check for DSP events that update the list.
         void updateGraphValues() override
         {
+            auto listBox = reinterpret_cast<ListBox*>(audioNode);
+            if (listBox->listChanged.load())
+            {
+                listBox->listChanged.store(false);
+                listBox->triggerSendFromAudio.store(true);
+                listBox->setNodeDirty();
+            }
+
             if (!shouldRepaint.load() && isInit)
                 return;
 
@@ -207,7 +219,6 @@ public:
 
             shouldRepaint.store(false);
 
-            auto listBox = reinterpret_cast<ListBox*>(audioNode);
             // Only update if the user is not actively editing.
             if (!textEditor->getIsInteractable())
             {
@@ -259,6 +270,7 @@ public:
         addInputPort("Value_input", AudioPort::PortType::Data);
 
         textBuffer.reserve(1024);
+        newTextBuffer.reserve(1024);
         listText.reserve(1024);
 
         listText = objParams.value("list", "");
@@ -395,6 +407,8 @@ public:
 
         const auto& aEvents = inputPortBuffers[0]->getEvents();
 
+        bool dataUpdated = false;
+
         for (const auto& event : aEvents)
         {
             switch (event->getTagHash())
@@ -415,6 +429,7 @@ public:
                     // Only update if the data has actually changed.
                     if (savedData != event->data)
                     {
+                        dataUpdated = true;
                         // Persist the old data as no longer active.
                         if (savedData)
                             context->makeDataPersistent(savedData, false, nodeID);
@@ -422,15 +437,33 @@ public:
                         // Save and persist the new data.
                         savedData = event->data;
                         context->makeDataPersistent(savedData, true, nodeID);
-
-                        // Convert the new data to a text representation.
-                        event->getAtom(0)->toString(textBuffer);
-
-                        // Enqueue the new text and update the UI.
-                        queueFromDSP.enqueue(textBuffer);
-                        updateUI();
                     }
                     outputPortBuffers[0]->addEvent(event);
+                }
+            }
+        }
+
+        if (dataUpdated)
+        {
+            listChanged.store(true);
+        }
+
+        if (triggerSendFromAudio.load())
+        {
+            triggerSendFromAudio.store(false);
+
+            savedData->getAtom(0)->toString(newTextBuffer);
+
+            if (newTextBuffer != textBuffer) // Only update if content changed
+            {
+                textBuffer = newTextBuffer;
+
+                if (queueFromDSP.try_enqueue(textBuffer))
+                {
+                    auto listBoxUI = reinterpret_cast<ListBox::UI*>(getOrCreateUI());
+                    if (listBoxUI && !listBoxUI->shouldRepaint.exchange(true)) {
+                        updateUI(); // Only trigger if not already dirty
+                    }
                 }
             }
         }

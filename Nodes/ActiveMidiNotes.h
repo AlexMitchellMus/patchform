@@ -69,7 +69,7 @@ public:
             {
                 for (const auto note : activeNotes)
                 {
-                    e->addAtom(note);
+                    context->eventPool.addDataAtomTo(e, note);
                 }
                 e->numAtoms = static_cast<int>(activeNotes.size());
                 e->setTimeStamp(ev->getTimeStamp());

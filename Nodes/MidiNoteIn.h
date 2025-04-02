@@ -39,8 +39,8 @@ public:
                     // **Allocate a new event**
                     if (auto* e = context->eventPool.getFreeEvent())
                     {
-                        e->addAtom(static_cast<float>(noteNumber));
-                        e->addAtom(static_cast<float>(velocity));
+                        context->eventPool.addDataAtomTo(e, noteNumber);
+                        context->eventPool.addDataAtomTo(e, velocity);
 
                         // Use velocity 0 on Note On messages as Note Off
                         if (statusType == 0x90 && velocity > 0)

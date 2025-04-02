@@ -62,7 +62,7 @@ public:
                 if (Event* e = context->eventPool.getFreeEvent())
                 {
                     e->setTimeStamp(event->getTimeStamp());
-                    e->addAtom(coldValueReturn);
+                    context->eventPool.addDataAtomTo(e, coldValueReturn);
 
                     // Now add it to the output port’s event list
                     outputPortBuffers[0]->addEvent(e);

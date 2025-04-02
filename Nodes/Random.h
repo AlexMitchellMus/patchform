@@ -35,7 +35,7 @@ public:
             if (auto* e = context->eventPool.getFreeEvent())
             {
                 const float r = min + ((float)rand() / RAND_MAX) * (max - min);
-                e->addAtom(r);
+                context->eventPool.addDataAtomTo(e, r);
                 e->setTimeStamp(ev->getTimeStamp());
                 outputPortBuffers[0]->addEvent(e);
             }

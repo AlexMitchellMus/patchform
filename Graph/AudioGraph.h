@@ -867,8 +867,7 @@ public:
                 if (it == vec.end())
                     return; // not found
 
-                int index = static_cast<int>(std::distance(vec.begin(), it));
-
+                const int index = static_cast<int>(std::distance(vec.begin(), it));
                 runningGraph.activeEventNodes[index / 64] |= (1ULL << (index % 64));
             });
         };
@@ -956,18 +955,18 @@ public:
                 const auto portID = portGroup.inputPortNumber;
                 auto& port = inputPorts[portID];
 
-                const bool isPortSignal = port->isSignal();
-
-                if (isPortSignal)
-                {
-                    // Clear the audio buffer for signal ports
-                    port->clear(frameCount);
-                }
-
-                auto summingAudioBuffer = port->getAudioBuffer();
-
                 // Reset port status in case it has been disconnected
                 port->isAnyConnectedPortSignal = false;
+
+                if (!port->isSignal())
+                {
+                    continue;
+                }
+
+                // Clear the audio buffer
+                port->clear(frameCount);
+
+                auto summingAudioBuffer = port->getAudioBuffer();
 
                 // Use direct copy for the first connected signal to save CPU cycles
                 bool firstConnection = true;
@@ -977,7 +976,7 @@ public:
                     auto* connection = portGroup.connectedPorts[connIndex];
                     const auto outputBuffer = connection->getAudioBuffer();
 
-                    if (isPortSignal && connection->isSignal())
+                    if (connection->isSignal())
                     {
                         // Update port status: any connected signal overrides events
                         port->isAnyConnectedPortSignal = true;

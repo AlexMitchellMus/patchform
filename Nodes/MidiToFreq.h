@@ -90,7 +90,7 @@ public:
                 if (Event* outEvent = context->eventPool.getFreeEvent())
                 {
                     outEvent->setTimeStamp(e->getTimeStamp());
-                    outEvent->addAtom(frequency);
+                    context->eventPool.addDataAtomTo(outEvent, frequency);
                     outputPortBuffers[0]->addEvent(outEvent);
                 }
             }

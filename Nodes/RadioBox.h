@@ -328,7 +328,7 @@ public:
                 else
                 {
                     auto outEvent = context->eventPool.getFreeEvent();
-                    outEvent->addAtom(selectedIndex);
+                    context->eventPool.addDataAtomTo(outEvent, selectedIndex);
                     outputPortBuffers[0]->addEvent(outEvent);
                 }
             }
@@ -346,7 +346,7 @@ public:
                 {
                     if (Event* e = context->eventPool.getFreeEvent())
                     {
-                        e->addAtom(selectedIndex);
+                        context->eventPool.addDataAtomTo(e, selectedIndex);
                         outputPortBuffers[0]->addEvent(e);
                     }
                 }

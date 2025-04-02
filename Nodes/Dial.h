@@ -154,7 +154,7 @@ public:
         {
             if (Event* e = context->eventPool.getFreeEvent())
             {
-                e->addAtom(dialValue * (maxV - minV) + minV);
+                context->eventPool.addDataAtomTo(e, dialValue * (maxV - minV) + minV);
                 addEvent(0, e);
             }
         };

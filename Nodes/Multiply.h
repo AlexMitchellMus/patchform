@@ -25,7 +25,7 @@ public:
         for (auto event : aEvents) {
             if (Event* e = context->eventPool.getFreeEvent()) {
                 e->setTimeStamp(event->getTimeStamp());
-                e->addAtom(event->getAtomValue(0) * coldValue);
+                context->eventPool.addDataAtomTo(e, event->getAtomValue(0) * coldValue);
                 outputPortBuffers[0]->addEvent(e);
             }
         }

@@ -12,6 +12,8 @@
 
 #include "Event.h"
 #include "../Utility/LockFreeHashMap.h"
+#include "PersistentAtomFlags.h"
+#include "DataAtom.h"
 
 class EventPool {
 public:
@@ -44,37 +46,34 @@ public:
         resetFreeList();
     }
 
+    void addDataAtomTo(Event* evnt, const float value)
+    {
+        DataAtom* newAtom = allocateDataAtom();
+        if (!newAtom) {
+            throw std::runtime_error("Atom pool exhausted.");
+        }
+
+        newAtom->type = DataAtom::DataType::Float;
+        newAtom->data.atom = value;
+        newAtom->next = nullptr;
+
+        if (evnt->data == nullptr) {
+            evnt->data = newAtom;
+            evnt->tail = newAtom;
+            evnt->numAtoms = 1;
+        } else {
+            evnt->tail->next = newAtom;
+            evnt->tail = newAtom;
+            ++(evnt->numAtoms);
+        }
+    }
+
     // Grow the event pool
     void growPool(std::size_t count) {
         auto oldSize = events.size();
         auto newSize = oldSize + count;
 
         events.resize(newSize);
-
-        for (size_t i = oldSize; i < newSize; ++i) {
-            events[i].addAtom = [this, i](float value) {
-                DataAtom* newAtom = allocateDataAtom();
-                if (!newAtom) {
-                    throw std::runtime_error("Atom pool exhausted.");
-                }
-
-                newAtom->type = DataAtom::DataType::Float;
-                newAtom->data.atom = value;
-                newAtom->next = nullptr;
-
-                auto& evnt = events[i];
-
-                if (evnt.data == nullptr) {
-                    evnt.data = newAtom;
-                    evnt.tail = newAtom;
-                    evnt.numAtoms = 1;
-                } else {
-                    evnt.tail->next = newAtom;
-                    evnt.tail = newAtom;
-                    ++(evnt.numAtoms);
-                }
-            };
-        }
 
         freeStack.resize(newSize);
         std::iota(freeStack.begin(), freeStack.end(), 0);
@@ -90,9 +89,19 @@ public:
         freeList.reserve(count);
         allocatedList.reserve(count);
 
+        initializePersistentAtomFlags();
+
         for (size_t i = 0; i < count; ++i) {
             freeList.push_back(i);
         }
+    }
+
+    void initializePersistentAtomFlags()
+    {
+        persistentAtoms.assign((sharedAtomPool.size() + 63) / 64, 0);
+
+        // Bind bitfield to persistentFlags wrapper
+        persistentAtomsFlags.bind(persistentAtoms);
     }
 
     // Fast allocation: Pull from freeList and move to allocatedList
@@ -105,7 +114,7 @@ public:
         size_t index = freeList.back();
         freeList.pop_back();
         allocatedList.push_back(index);
-        auto atom = &sharedAtomPool[index];
+        const auto atom = &sharedAtomPool[index];
         atom->type = DataAtom::DataType::Float;
         atom->data.atom = 0.0f;
         atom->next = nullptr;
@@ -119,23 +128,42 @@ public:
 
     void resetFreeList()
     {
-        std::erase_if(allocatedList,
-                      [&](size_t index) {
-                          if (const DataAtom* atom = &sharedAtomPool[index]; !atom->isPersistent) {
-                              freeList.push_back(index);
-                              return true;  // Remove this index.
-                          }
-                          return false;
-                      }
-        );
+        size_t writePos = 0;
+
+        for (unsigned long long index : allocatedList)
+        {
+            if (!persistentAtomsFlags.isSet(index))
+            {
+                // Atom is no longer persistent — reclaim it
+                freeList.push_back(index);
+            }
+            else
+            {
+                // Keep in allocatedList
+                allocatedList[writePos++] = index;
+            }
+        }
+
+        // Shrink the logical size — no actual memory freed
+        allocatedList.resize(writePos);
     }
+
+    PersistentAtomFlags& getPersistentFlags()
+    {
+        persistentAtomsFlags.bind(persistentAtoms);
+        return persistentAtomsFlags;
+    }
+
+    std::vector<DataAtom> sharedAtomPool;
 
 private:
     std::vector<Event> events;
     std::vector<std::size_t> freeStack;
     std::vector<std::size_t> templateStack;
 
-    std::vector<DataAtom> sharedAtomPool;
+
+    std::vector<uint64_t> persistentAtoms;
+    PersistentAtomFlags persistentAtomsFlags;
 
     std::vector<size_t> freeList;
     std::vector<size_t> allocatedList;
@@ -155,11 +183,21 @@ public:
 
     LockFreeHashMap stringMap;
 
-    NodeContext(float sampleRate, int frameCount) : sampleRate(sampleRate), frameCount(frameCount), ownershipBlockPool(10000) {};
+    PersistentAtomFlags& persistentFlags;
+
+    NodeContext(float sampleRate, int frameCount)
+        : sampleRate(sampleRate)
+        , frameCount(frameCount)
+        , ownershipBlockPool(10000)
+        , persistentFlags(eventPool.getPersistentFlags())
+    {};
 
     void makeDataPersistent(DataAtom* atom, const bool toBePersistent, int nodeID)
     {
         if (atom)
-            atom->makePersistent(toBePersistent, nodeID, ownershipBlockPool);
+        {
+            size_t atomIndex = static_cast<size_t>(atom - eventPool.sharedAtomPool.data());
+            atom->makePersistent(toBePersistent, nodeID, ownershipBlockPool, persistentFlags, eventPool.sharedAtomPool);
+        }
     }
 };
