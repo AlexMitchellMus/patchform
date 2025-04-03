@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 
+#include "AudioNodeBase.h"
 #include "../Graph/Event.h"
 
 class AudioPort;
@@ -37,9 +38,10 @@ class AudioPort
 public:
     enum PortType : uint8_t
     {
-        None =   0,
-        Signal = 1 << 0,
-        Data   = 1 << 1
+        None     =   0,
+        Signal   = 1 << 0,
+        Spectral = 1 << 1, // Ports cant be signal & spectral, but this works for now
+        Data     = 1 << 2
     };
 
     AudioPort(AudioNode* parent, const std::string& portName, PortType type)
@@ -48,6 +50,12 @@ public:
         , portType(type)
     {
         events.reserve(1024);
+
+        if (type == PortType::Signal)
+            setSize(bufferSize = 64);
+
+        if (type == PortType::Spectral)
+            setSize(bufferSize = 1024);
     }
 
     float* getAudioBuffer() {
@@ -56,7 +64,7 @@ public:
 
     size_t getAudioBufferSize()
     {
-        return audioBuffer.size();
+        return bufferSize;
     }
 
     // Only used if this port used for input summing
@@ -83,6 +91,11 @@ public:
         audioBuffer.assign(size, 0.0f);
     }
 
+    void zero()
+    {
+        audioBuffer.assign(bufferSize, 0.0);
+    }
+
     void setSize(size_t size)
     {
         //audioBuffer.resize(size);
@@ -91,7 +104,7 @@ public:
 
     inline bool isSignal() const
     {
-        return  (portType & PortType::Signal) != 0;
+        return (portType & (PortType::Signal | PortType::Spectral)) != 0;
     }
 
     AudioNode* getParentNode() const { return node; }
@@ -107,6 +120,8 @@ public:
 protected:
     std::vector<float> audioBuffer;
     AudioNode* node;
+
+    unsigned bufferSize = 0;
 
     std::vector<Event*> events;
 

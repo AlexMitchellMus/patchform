@@ -951,8 +951,6 @@ public:
                                          const AudioGraph& runningGraph, const int index)
         {
 #ifdef USE_POINTER_MAP
-            const auto frameCount = runningGraph.context->frameCount;
-
             // Retrieve the input port map for the current node
             const auto& portGroups = runningGraph.outputInputPortMap[index];
 
@@ -970,12 +968,14 @@ public:
                 }
 
                 // Clear the audio buffer
-                port->clear(frameCount);
+                port->zero();
 
                 auto summingAudioBuffer = port->getAudioBuffer();
 
                 // Use direct copy for the first connected signal to save CPU cycles
                 bool firstConnection = true;
+
+                unsigned portFrameSize = port->getAudioBufferSize();
 
                 for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
                 {
@@ -989,13 +989,13 @@ public:
 
                         if (firstConnection)
                         {
-                            std::copy(outputBuffer, outputBuffer + frameCount, summingAudioBuffer);
+                            std::copy(outputBuffer, outputBuffer + portFrameSize, summingAudioBuffer);
                             firstConnection = false;
                         }
                         else
                         {
                             // Sum the buffer for subsequent connections
-                            for (size_t i = 0; i < frameCount; ++i)
+                            for (size_t i = 0; i < portFrameSize; ++i)
                             {
                                 summingAudioBuffer[i] += outputBuffer[i];
                             }
