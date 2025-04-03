@@ -49,10 +49,12 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "evdelay", "ms": 100 })", "evdel", false },
         { R"({"obj": "drive", "mode": 0 })", "drive", false },
         { R"({"obj": "loadevent" })", "ldev", false },
-        { R"({"obj": "freqbins" })", "fbins", false },
-        { R"({"obj": "freqresynth" })", "fresyn", false },
-        { R"({"obj": "bincombine" })", "fbcom", false },
-        { R"({"obj": "multitapdelay" })", "mtdel", false }
+        { R"({"obj": "specfft" })", "fft", false },
+        { R"({"obj": "specifft" })", "ifft", false },
+        { R"({"obj": "specmerge" })", "smerge", false },
+        { R"({"obj": "multitapdelay" })", "mtdel", false },
+        { R"({"obj": "zerox" })", "zerox", false },
+        { R"({"obj": "limiter" })", "limit", false },
     };
 
     for (int i = 0; i < 5; i++)

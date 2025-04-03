@@ -47,11 +47,15 @@
 #include "ReverbFDN.h"
 #include "Drive.h"
 #include "MultiTapDelay.h"
+#include "Limiter.h"
+
+// Mixed Nodes
+#include "Zerox.h"
 
 //FFT Nodes
-#include "FreqBins.h"
-#include "FreqResynth.h"
-#include "BinCombine.h"
+#include "SpecFFT.h"
+#include "SpecIFFT.h"
+#include "SpecMerge.h"
 
 // UI Nodes
 #include "Dial.h"

@@ -1344,17 +1344,23 @@ public:
         case hash("drive"):
             return addNode<Drive>(idString, node);
 
-        case hash("freqbins"):
-            return addNode<FreqBins>(idString, node);
+        case hash("specfft"):
+            return addNode<SpecFFT>(idString, node);
 
-        case hash("freqresynth"):
-            return addNode<FreqResynth>(idString, node);
+        case hash("specifft"):
+            return addNode<SpecIFFT>(idString, node);
 
-        case hash("bincombine"):
-            return addNode<BinCombine>(idString, node);
+        case hash("specmerge"):
+            return addNode<SpecMerge>(idString, node);
 
         case hash("multitapdelay"):
             return addNode<MultiTapDelay>(idString, node);
+
+        case hash("zerox"):
+            return addNode<Zerox>(idString, node);
+
+        case hash("limiter"):
+            return addNode<Limiter>(idString, node);
 
         default:
             // Unknown object name, return error

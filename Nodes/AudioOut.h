@@ -24,6 +24,6 @@ public:
 
         // We can't copy here, because we may have multiple audio outs in the patch
         for (uint32_t i = 0; i < frameCount; i++)
-            buffer[i] += inputPort[i];
+            buffer[i] = std::clamp(buffer[i] + inputPort[i], -1.0f, 1.0f);
     }
 };

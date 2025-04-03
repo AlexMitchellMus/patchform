@@ -182,8 +182,8 @@ int PatchformApp::audioCallback(const void* input, void* output,
 
     auto* app = static_cast<PatchformApp*>(userData);
 
-    float* out = static_cast<float*>(output);
     auto* in = static_cast<const float*>(input);
+    auto* out = static_cast<float*>(output);
 
     std::fill(out, out + frameCount, 0.0f);
 
@@ -208,8 +208,17 @@ int PatchformApp::audioCallback(const void* input, void* output,
 bool PatchformApp::initAudio() {
     if (Pa_Initialize() != paNoError) return false;
 
-    int inputDeviceIndex = Pa_GetHostApiInfo(2)->defaultInputDevice;
-    int outputDeviceIndex = Pa_GetHostApiInfo(2)->defaultOutputDevice;
+    int numApis = Pa_GetHostApiCount();
+    if (numApis < 0) return numApis; // error
+
+    for (int i = 0; i < numApis; ++i) {
+        const PaHostApiInfo* info = Pa_GetHostApiInfo(i);
+        if (info)
+            printf("Host API %d: %s\n", i, info->name);
+    }
+
+    int inputDeviceIndex = Pa_GetHostApiInfo(3)->defaultInputDevice;
+    int outputDeviceIndex = Pa_GetHostApiInfo(3)->defaultOutputDevice;
     if (inputDeviceIndex == paNoDevice || outputDeviceIndex == paNoDevice) return false;
 
     const PaDeviceInfo* inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);

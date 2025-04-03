@@ -55,7 +55,7 @@ public:
             setSize(bufferSize = 64);
 
         if (type == PortType::Spectral)
-            setSize(bufferSize = 1024);
+            setSize(bufferSize = 256);
     }
 
     float* getAudioBuffer() {
