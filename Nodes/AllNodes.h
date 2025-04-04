@@ -51,6 +51,7 @@
 
 // Mixed Nodes
 #include "Zerox.h"
+#include "PitchDetector.h"
 
 //FFT Nodes
 #include "SpecFFT.h"

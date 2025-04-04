@@ -55,6 +55,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "multitapdelay" })", "mtdel", false },
         { R"({"obj": "zerox" })", "zerox", false },
         { R"({"obj": "limiter" })", "limit", false },
+        { R"({"obj": "pitchdetect" })", "pdetect", false },
     };
 
     for (int i = 0; i < 5; i++)

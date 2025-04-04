@@ -1362,6 +1362,9 @@ public:
         case hash("limiter"):
             return addNode<Limiter>(idString, node);
 
+        case hash("pitchdetect"):
+            return addNode<PitchDetector>(idString, node);
+
         default:
             // Unknown object name, return error
             std::cout << "Unknown object: " << object << std::endl;
