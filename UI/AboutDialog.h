@@ -201,7 +201,7 @@ class AboutDialog : public pptk::Component
 
     void resized() override
     {
-        std::cout << "resizing the viewport" << std::endl;
+        //std::cout << "resizing the viewport" << std::endl;
         librariesPanel->setBounds(20, getHeight() * 0.4f, getWidth() - 40, getHeight() * 0.6f - 20);
     }
 

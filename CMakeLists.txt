@@ -5,6 +5,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 option(RUN_TESTS "Build and run tests" ON)
 
@@ -139,6 +140,7 @@ if (MSVC)
             $<$<CONFIG:Debug>:/Od /Zi /RTC1>
             $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
             $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
+
     )
 endif ()
 

@@ -67,7 +67,7 @@ std::vector<Object*> Canvas::getObjects() const
 
 void Canvas::resized()
 {
-    std::cout << "resizing canvas" << std::endl;
+    //std::cout << "resizing canvas" << std::endl;
 }
 
 std::vector<Object*> Canvas::getSelectedObjects() const

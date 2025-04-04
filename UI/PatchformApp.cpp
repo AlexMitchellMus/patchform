@@ -206,20 +206,28 @@ int PatchformApp::audioCallback(const void* input, void* output,
 }
 
 bool PatchformApp::initAudio() {
-    if (Pa_Initialize() != paNoError) return false;
+    if (Pa_Initialize() != paNoError)
+        return false;
 
     int numApis = Pa_GetHostApiCount();
-    if (numApis < 0) return numApis; // error
+    if (numApis < 0)
+        return numApis; // error
+
+    int audioDriver = std::min(numApis - 1, 3);
+
+    std::cout << "\n==== Audio Driver Info ====" << std::endl;
 
     for (int i = 0; i < numApis; ++i) {
         const PaHostApiInfo* info = Pa_GetHostApiInfo(i);
         if (info)
-            printf("Host API %d: %s\n", i, info->name);
+            std::cout << (audioDriver == i ? "Active" : "Inactive") << " API " << i << " " << info->name << std::endl;
     }
 
-    int inputDeviceIndex = Pa_GetHostApiInfo(3)->defaultInputDevice;
-    int outputDeviceIndex = Pa_GetHostApiInfo(3)->defaultOutputDevice;
-    if (inputDeviceIndex == paNoDevice || outputDeviceIndex == paNoDevice) return false;
+    int inputDeviceIndex = Pa_GetHostApiInfo(audioDriver)->defaultInputDevice;
+    int outputDeviceIndex = Pa_GetHostApiInfo(audioDriver)->defaultOutputDevice;
+
+    if (inputDeviceIndex == paNoDevice || outputDeviceIndex == paNoDevice)
+        return false;
 
     const PaDeviceInfo* inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);
     const PaDeviceInfo* outputInfo = Pa_GetDeviceInfo(outputDeviceIndex);
@@ -258,7 +266,7 @@ bool PatchformApp::initMidi()
         // Create the RtMidiIn instance
         midiIn = std::make_unique<RtMidiIn>();
 
-        unsigned int nPorts = midiIn->getPortCount();
+        int nPorts = midiIn->getPortCount();
         if (nPorts == 0) {
             std::cerr << "No MIDI input ports available." << std::endl;
             // Depending on your design, you might return false or continue
@@ -278,13 +286,25 @@ bool PatchformApp::initMidi()
             }
         }, this);
 
-        // Open the first available MIDI input port
-        midiIn->openPort(1);
+        // Open first port
+        int portIndex = std::min(nPorts - 1, 100);
+        midiIn->openPort(portIndex);
 
         // Optionally, set the types of MIDI messages to ignore:
         midiIn->ignoreTypes(true, true, true);
 
-        std::cout << "MIDI initialized: " << nPorts << " port(s) found." << std::endl;
+        // Get API name
+        RtMidi::Api api = midiIn->getCurrentApi();
+        std::string apiName = RtMidi::getApiDisplayName(api);
+
+        // Get port name
+        std::string portName = midiIn->getPortName(portIndex);
+
+        std::cout << "\n==== Midi Driver Info ====" << std::endl;
+
+        std::cout << "MIDI initialized (" << nPorts << " port(s) found)\n"
+                  << "Using API: " << apiName << "\n"
+                  << "Opened port: " << portName << std::endl;
     }
     catch (RtMidiError &error) {
         error.printMessage();
