@@ -19,20 +19,20 @@ class MainVolumeMeter : public pptk::Component
 
     void setValue(float value)
     {
-        // Ensure the value is within range and avoid log(0)
+        // Clamp to avoid log(0) and keep within valid range
         value = std::clamp(value, 1e-6f, 1.0f);
 
-        // Convert linear value to dB scale
-        //float dbValue = 20.0f * std::log10(value);
+        // Convert linear to dB
+        float dbValue = 20.0f * std::log10(value);
 
-        //constexpr float dbRange = 60.0f;
+        // Define dB range (e.g. from -40 dB to 0 dB)
+        // We use 40dB as the small meter can't really fit a larger dB range into it
+        constexpr float dbRange = 40.0f;
 
-        // Normalize dB range (-dbRange dB to 0 dB) to [0, 1] range
-        //meterPeakValue = (dbValue + dbRange) / dbRange; // Maps -dbRange (0) to 0dB (1)
-        meterPeakValue = std::clamp(value, 0.0f, 1.0f);
+        // Normalize to 0.0 - 1.0
+        meterPeakValue = std::clamp((dbValue + dbRange) / dbRange, 0.0f, 1.0f);
 
-        // Scale the value to represent how large it would be in the UI
-        // If there hasn't been a half-pixel change don't repaint.
+        // UI scale
         float meterWidth = width - (height * 2) * getAccumulatedScale();
         int scaledPos = meterPeakValue * meterWidth * 2;
         if (peakMeterPos != scaledPos)
