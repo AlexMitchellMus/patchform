@@ -21,7 +21,7 @@ class PitchDetector final : public AudioNode {
     std::array<float, WINDOW_SIZE> buffer{};
     size_t writeHead = 0;
     int processCounter = 0;
-    static constexpr int PROCESS_INTERVAL = 4;
+    static constexpr int PROCESS_INTERVAL = 8;
 
 public:
     PitchDetector(NodeContext* context, const json& objParams)
