@@ -204,8 +204,8 @@ int PatchformApp::audioCallback(const void* input, void* output,
     // Process any pending MIDI messages from the queue
     MidiMessage midiMsg;
     std::vector<MidiMessage> midiMessages;
-    while (app->midiQueue.try_dequeue(midiMsg)) {
-        // Pass the MIDI data and timestamp to your graph manager
+    while (app->midiQueue.try_dequeue(midiMsg))
+    {
         midiMessages.push_back(midiMsg);
     }
 
