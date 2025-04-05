@@ -27,14 +27,22 @@
 #include "../UI_ToolKit/WindowPeer.h"
 
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
-    : graphManager(sampleRate, frameCount), sampleRate(sampleRate), frameCount(frameCount),
-      windowWidth(1920), windowHeight(1080){}
+    : graphManager(sampleRate, frameCount)
+    , sampleRate(sampleRate)
+    , frameCount(frameCount)
+    ,windowWidth(1920)
+    , windowHeight(1080)
+{
 
-PatchformApp::~PatchformApp() {
+}
+
+PatchformApp::~PatchformApp()
+{
     shutdown();
 }
 
-bool PatchformApp::initialize() {
+bool PatchformApp::initialize()
+{
     if (!initMidi())
     {
         std::cerr << "Failed to initialize MIDI" << std::endl;
@@ -54,7 +62,8 @@ bool PatchformApp::initialize() {
     return true;
 }
 
-void PatchformApp::shutdown() {
+void PatchformApp::shutdown()
+{
     shutdownAudio();
 
     if (invalidFB) {
@@ -76,7 +85,8 @@ void PatchformApp::shutdown() {
     SDL_Quit();
 }
 
-void PatchformApp::run() {
+void PatchformApp::run()
+{
     bool running = true;
     SDL_Event event;
 
@@ -166,7 +176,8 @@ void PatchformApp::run() {
     }
 }
 
-void PatchformApp::reinitializeAudio() {
+void PatchformApp::reinitializeAudio()
+{
     shutdownAudio();
     initAudio();
 }
@@ -175,7 +186,10 @@ int PatchformApp::audioCallback(const void* input, void* output,
                          unsigned long frameCount,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags,
-                         void* userData) {
+                         void* userData)
+{
+    PlatformHelpers::disableDenormalsOncePerThread();
+
     if (!output) {
         return paAbort; // Prevent crashing if output buffer is invalid
     }

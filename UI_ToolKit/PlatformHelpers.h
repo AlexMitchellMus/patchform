@@ -65,4 +65,30 @@ namespace PlatformHelpers
         return std::string();                   // Return an empty string if canceled or error.
     }
 #endif
+
+    inline void disableDenormalsOncePerThread()
+    {
+#if defined(__SSE__) || defined(_M_IX86) || defined(_M_X64)
+#include <xmmintrin.h>
+        thread_local bool denormalsDisabled = []
+        {
+            _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+            _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+            return true;
+        }();
+        (void)denormalsDisabled;
+#elif defined(__aarch64__) || defined(__arm__)
+        // On ARM, we may need to flush manually, or use architecture-specific intrinsics
+        // Most modern ARM chips should avoid denormals entirely in NEON.
+        // No-op fallback for now:
+        thread_local bool denormalsDisabled = true;
+        (void)denormalsDisabled;
+#else
+        // Fallback: no action
+        thread_local bool denormalsDisabled = true;
+        (void)denormalsDisabled;
+#endif
+    }
+
+
 } // end namespace PlatformHelpers
