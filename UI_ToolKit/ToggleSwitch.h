@@ -29,7 +29,7 @@ public:
         const NVGcolor bgColor = state ? nvgRGB(36, 130, 210) : nvgRGB(100, 100, 100);
         nvgDrawRoundedRect(vg, 0, 0, width, height, bgColor, bgColor, radius);
 
-        // Knob (drawn as rounded rectangle instead of circle)
+        // Knob
         nvgBeginPath(vg);
         const NVGcolor knobColor = state ? nvgRGB(255, 255, 255) : nvgRGB(180, 180, 180);
         nvgDrawRoundedRect(vg, knobX - knobRadius, radius - knobRadius, knobSize, knobSize, knobColor, knobColor, knobRadius);
