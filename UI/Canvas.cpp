@@ -152,12 +152,10 @@ void Canvas::dragCanvas(const pptk::Point& delta)
 
 void Canvas::focusGained()
 {
-    std::cout << "focusGained" << std::endl;
 }
 
 void Canvas::focusLost()
 {
-    std::cout << "focusLost" << std::endl;
 }
 
 void Canvas::mouseWheel(pptk::CompEvent& e)

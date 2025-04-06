@@ -11,10 +11,15 @@ public:
         setSize(40, 24);
     }
 
-    void mouseButtonDown(pptk::CompEvent&) override {
-        state = !state;
-        onToggle(state);
-        repaint();
+    void mouseButtonUp(pptk::CompEvent& e) override
+    {
+        const auto pos = globalToLocal(e.sdlEvent.button.x, e.sdlEvent.button.y);
+        if (hitTest(pos.x, pos.y))
+        {
+            state = !state;
+            onToggle(state);
+            repaint();
+        }
     }
 
     void render(NVGcontext* vg) override {

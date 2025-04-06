@@ -68,7 +68,6 @@ namespace pptk
         {
             if (!c && lastFocusedComponent && focusedComponent)
             {
-                std::cout << "FocusedComponent swapping." << std::endl;
                 focusedComponent->focusLost();
                 std::swap(lastFocusedComponent, focusedComponent);
                 focusedComponent->focusGained();

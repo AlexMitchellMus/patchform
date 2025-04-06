@@ -183,7 +183,7 @@ public:
 
     void resizeEditorComponent(pptk::Component* c, int parentWidth, int parentHeight) override
     {
-        if (c) c->setBounds(parentWidth - 90, 6, 30, 18);
+        if (c) c->setBounds(parentWidth - 90, 6, 33, 18);
     }
 #endif
 
