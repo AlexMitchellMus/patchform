@@ -8,7 +8,7 @@
 
 #include "AudioNodeBase.h"
 
-// Data Nodes
+// Data
 #include "Metronome.h"
 #include "Print.h"
 #include "Count.h"
@@ -27,17 +27,18 @@
 #include "Select.h"
 #include "LoadEvent.h"
 
-// Maths Nodes
+// Maths
 #include "Multiply.h"
 #include "Divide.h"
 #include "Add.h"
 #include "Intify.h"
 
-// Audio Nodes
+// Audio
 #include "AudioIn.h"
 #include "AudioOut.h"
 #include "Value.h"
 #include "Oscillator.h"
+#include "TableOsc.h"
 #include "Add_Audio.h"
 #include "Envelope.h"
 #include "LFO.h"
@@ -49,16 +50,16 @@
 #include "MultiTapDelay.h"
 #include "Limiter.h"
 
-// Mixed Nodes
+// Mixed
 #include "Zerox.h"
 #include "PitchDetector.h"
 
-//FFT Nodes
+// FFT
 #include "SpecFFT.h"
 #include "SpecIFFT.h"
 #include "SpecMerge.h"
 
-// UI Nodes
+// UI
 #include "Dial.h"
 #include "RadioBox.h"
 #include "FloatBox.h"
@@ -66,6 +67,10 @@
 #include "Ping.h"
 #include "Scope.h"
 #include "Comment.h"
+#include "Table.h"
 
-// MIDI Nodes
+// Wavetable
+#include "TableXFade.h"
+
+// MIDI
 #include "MidiNoteIn.h"

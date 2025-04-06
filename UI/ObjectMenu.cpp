@@ -13,6 +13,7 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
     constexpr ObjectDef objectDef[50] = {
         { R"({"obj": "Metro"})", ICONS::Metro, true },
         { R"({"obj": "Osc", "waveform": "sine", "freq": 440})", ICONS::Osc, true },
+        { R"({"obj": "tableosc"})", "tosc", false },
         { R"({"obj": "Add"})", "add", false },
         { R"({"obj": "mul"})", "mul", false },
         { R"({"obj": "div"})", "div", false },
@@ -56,6 +57,9 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "zerox" })", "zerox", false },
         { R"({"obj": "limiter" })", "limit", false },
         { R"({"obj": "pitchdetect" })", "pdetect", false },
+        { R"({"obj": "table", "size": 256 })", "table", false },
+        { R"({"obj": "tablexfade" })", "txf", false },
+        { R"({"obj": "value" })", "val", false },
     };
 
     for (int i = 0; i < 5; i++)

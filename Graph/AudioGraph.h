@@ -1259,6 +1259,12 @@ public:
         case hash("oscillator"):
             return addNode<Oscillator>(idString, node);
 
+        case hash("tableosc"):
+            return addNode<TableOsc>(idString, node);
+
+        case hash("tablexfade"):
+            return addNode<TableXFade>(idString, node);
+
         case hash("ain"):
         case hash("audioin"):
             return addNode<AudioIn>(idString, node);
@@ -1364,6 +1370,9 @@ public:
 
         case hash("pitchdetect"):
             return addNode<PitchDetector>(idString, node);
+
+        case hash("table"):
+            return addNode<Table>(idString, node);
 
         default:
             // Unknown object name, return error
