@@ -1,3 +1,7 @@
+#pragma once
+
+#include "AudioNodeBase.h"
+
 class TableOsc : public AudioNode {
     DEFINE_AND_REGISTER_NODE("TableOsc", "tblosc", true);
 
@@ -8,13 +12,17 @@ public:
     TableOsc(NodeContext* context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
-        addInputPort("waveform", AudioPort::PortType::Wavetable);  // expects 256-point table
+        addInputPort("waveform", AudioPort::PortType::Samples);
         addInputPort("frequency", AudioPort::PortType::Data);
     }
 
     void processAudio(const float* in, float* out, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
-        const auto waveform = inputPortBuffers[0]->getAudioBuffer();  // 256 samples hardcoded for now
+        if (inputPortBuffers[0]->sampleBuffer.size != 2048)
+            return;
+
+        const auto waveform = inputPortBuffers[0]->sampleBuffer.samples;
+
         const auto& fEvents = inputPortBuffers[1]->getEvents();
         const auto output = outputPortBuffers[0]->getAudioBuffer();
 

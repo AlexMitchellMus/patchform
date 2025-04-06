@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AudioNodeBase.h"
-#include "Print.h"
 
 class Table final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Table", "table", false);
@@ -9,7 +8,10 @@ class Table final : public AudioNode {
     int numValues = defaultTableSize;  // hardcoded for now
     std::vector<float> bufferA;
     std::vector<float> bufferB;
+
     std::atomic<bool> bufferReady{false};
+
+    std::vector<float> outputSampleBuffer;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -160,10 +162,12 @@ public:
     }
 #endif
 
-    Table(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Wavetable, objParams)
+    Table(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Samples, objParams)
     {
         bufferA.resize(numValues, 0.0f);
         bufferB.resize(numValues, 0.0f);
+
+        outputSampleBuffer.resize(numValues, 0.0f);
 
         auto bufferFromFile = objParams.value("data", bufferA);
 
@@ -199,10 +203,11 @@ public:
         bufferReady.store(true, std::memory_order_release);
 #endif
 
-        float* out = outputPortBuffers[0]->getAudioBuffer();
         for (unsigned long i = 0; i < bufferA.size(); ++i) {
-            out[i] = bufferA[i] * 2.0f - 1.0f;
+            outputSampleBuffer[i] = bufferA[i] * 2.0f - 1.0f;
         }
+
+        outputPortBuffers[0]->sampleBuffer.set(outputSampleBuffer);
     }
 
     json getSerializedNode() override {

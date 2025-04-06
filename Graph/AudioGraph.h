@@ -862,8 +862,6 @@ public:
 
     void setSummingFunctionForNode(AudioNode* node)
     {
-        auto nodeID = node->nodeID;
-
         node->setNodeDirty = [node]()
         {
             node->context->messageQueue.enqueue([node](AudioGraph& runningGraph)
@@ -878,7 +876,7 @@ public:
             });
         };
 
-        node->pushOutputEvents = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, AudioGraph& runningGraph, const int index)
+        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, AudioGraph& runningGraph, const int index)
         {
             // Retrieve the precomputed downstream port groups for this node.
             const auto& groups = runningGraph.downstreamPortMap[index];
@@ -913,78 +911,87 @@ public:
             }
         };
 
-    node->sumInputBuffers = [node](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
-                                     const AudioGraph& runningGraph, const int index)
-    {
-    // Retrieve the input port map for the current node
-    const auto& portGroups = runningGraph.outputInputPortMap[index];
-
-    for (const auto& portGroup : portGroups)
-    {
-        const auto portID = portGroup.inputPortNumber;
-        auto& port = inputPorts[portID];
-
-        // Reset port status in case it has been disconnected
-        port->isAnyConnectedPortSignal = false;
-
-        if (!port->isSignal())
+        node->sumInputBuffers = [](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
+                                       const AudioGraph& runningGraph, const int index)
         {
-            continue;
-        }
+            // Retrieve the input port map for the current node
+            const auto& portGroups = runningGraph.outputInputPortMap[index];
 
-        if (port->isSampleBuffer())
-        {
-            // Just take the first connected sample buffer
-            for (auto* connection : portGroup.connectedPorts)
+            for (const auto& portGroup : portGroups)
             {
-                if (connection->isSampleBuffer())
+                const auto portID = portGroup.inputPortNumber;
+                auto& port = inputPorts[portID];
+
+                // Reset port status in case it has been disconnected
+                port->isAnyConnectedPortSignal = false;
+
+                if (port->isSampleBuffer())
                 {
-                    port->sampleBuffer.samples = connection->sampleBuffer.samples;
-                    port->sampleBuffer.size = connection->sampleBuffer.size;
-                    break;
-                }
-            }
-            continue; // Skip rest of loop for this port
-        }
-
-        // Clear the audio buffer
-        port->zero();
-
-        auto summingAudioBuffer = port->getAudioBuffer();
-
-        // Use direct copy for the first connected signal to save CPU cycles
-        bool firstConnection = true;
-
-        unsigned portFrameSize = port->getAudioBufferSize();
-
-        for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
-        {
-            auto* connection = portGroup.connectedPorts[connIndex];
-            const auto outputBuffer = connection->getAudioBuffer();
-
-            if (connection->isSignal())
-            {
-                // Update port status: any connected signal overrides events
-                port->isAnyConnectedPortSignal = true;
-
-                if (firstConnection)
-                {
-                    std::copy(outputBuffer, outputBuffer + portFrameSize, summingAudioBuffer);
-                    firstConnection = false;
-                }
-                else
-                {
-                    // Sum the buffer for subsequent connections
-                    for (size_t i = 0; i < portFrameSize; ++i)
+                    if (portGroup.connectedPorts.empty())
                     {
-                        summingAudioBuffer[i] += outputBuffer[i];
+                        port->sampleBuffer.samples = nullptr;
+                        port->sampleBuffer.size = 0;
+
+                        port->zero();
+                    }
+                    else
+                    {
+                        for (auto* connection : portGroup.connectedPorts)
+                        {
+                            if (connection->isSampleBuffer())
+                            {
+                                port->sampleBuffer.samples = connection->sampleBuffer.samples;
+                                port->sampleBuffer.size = connection->sampleBuffer.size;
+                                break;
+                            }
+                        }
+                    }
+                    continue; // Skip rest of loop for this port
+                }
+
+                if (!port->isSignal())
+                {
+                    continue;
+                }
+
+                // Clear the audio buffer
+                port->zero();
+
+                auto summingAudioBuffer = port->getAudioBuffer();
+
+                // Use direct copy for the first connected signal to save CPU cycles
+                bool firstConnection = true;
+
+                unsigned portFrameSize = port->getAudioBufferSize();
+
+                for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
+                {
+                    auto* connection = portGroup.connectedPorts[connIndex];
+                    const auto outputBuffer = connection->getAudioBuffer();
+
+                    if (connection->isSignal())
+                    {
+                        // Update port status: any connected signal overrides events
+                        port->isAnyConnectedPortSignal = true;
+
+                        if (firstConnection)
+                        {
+                            std::copy(outputBuffer, outputBuffer + portFrameSize, summingAudioBuffer);
+                            firstConnection = false;
+                        }
+                        else
+                        {
+                            // Sum the buffer for subsequent connections
+                            for (size_t i = 0; i < portFrameSize; ++i)
+                            {
+                                summingAudioBuffer[i] += outputBuffer[i];
+                            }
+                        }
                     }
                 }
             }
-        }
+        };
     }
-};
-}
 
     template <typename NodeType>
     AudioNode* addNode(const std::string& finalID, json& nodeCreationData)

@@ -28,6 +28,24 @@ struct SampleHandle
 {
     float* samples;
     size_t size;
+
+    void reset()
+    {
+        samples = nullptr;
+        size = 0;
+    }
+
+    void set(std::vector<float>& newSamples)
+    {
+        samples = newSamples.data();
+        size = newSamples.size();
+    }
+
+    void set(float* newSamples, const size_t newSize)
+    {
+        samples = newSamples;
+        size = newSize;
+    }
 };
 
 struct DownstreamPortGroup {
@@ -104,7 +122,7 @@ public:
 
     void zero()
     {
-        audioBuffer.assign(bufferSize, 0.0);
+        audioBuffer.assign(bufferSize, 0.0f);
     }
 
     void setSize(size_t size)

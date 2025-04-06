@@ -252,6 +252,9 @@ private:
             return;
         }
 
+        for (int i = 0; i < outputPortBuffers.size(); ++i)
+            getOutputPort(i)->zero();
+
         sumInputBuffers(inputPortBuffers, runningGraph, index);
 
         processAudio(inBuffer, buffer, frameCount, midiMessage);

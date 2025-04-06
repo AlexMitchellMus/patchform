@@ -1,18 +1,21 @@
+#pragma once
+
 #include "pffft.h"
 #include <cmath>
 #include <algorithm>
 #include <vector>
 #include <tuple>
+#include "AudioNodeBase.h"
 
 class TableXSpectral : public AudioNode {
     DEFINE_AND_REGISTER_NODE("TableXSpectral", "tableXspectral", true);
 
 public:
     TableXSpectral(NodeContext* context, const json& objParams)
-        : AudioNode(context, AudioPort::PortType::Wavetable, objParams)
+        : AudioNode(context, AudioPort::PortType::Samples, objParams)
     {
-        addInputPort("a", AudioPort::Wavetable);
-        addInputPort("b", AudioPort::Wavetable);
+        addInputPort("a", AudioPort::Samples);
+        addInputPort("b", AudioPort::Samples);
         addInputPort("x", AudioPort::Signal); // blend 0–1
 
         setup = pffft_new_setup(2048, PFFFT_REAL);
@@ -20,6 +23,8 @@ public:
         fftB = (float*)pffft_aligned_malloc(2048 * sizeof(float));
         fftOut = (float*)pffft_aligned_malloc(2048 * sizeof(float));
         tempTime = (float*)pffft_aligned_malloc(2048 * sizeof(float));
+
+        outputSamples.assign(2048, 0.0f);
     }
 
     ~TableXSpectral() override {
@@ -52,11 +57,21 @@ public:
         });
     }
 
-    void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override {
-        const float* a = inputPortBuffers[0]->getAudioBuffer();
-        const float* b = inputPortBuffers[1]->getAudioBuffer();
+    void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
+    {
+        const auto inputA = inputPortBuffers[0]->sampleBuffer;
+        const auto inputB = inputPortBuffers[1]->sampleBuffer;
+        if (inputA.size != 2048 || inputB.size != 2048)
+        {
+            std::fill(outputSamples.begin(), outputSamples.end(), 0.0f);
+            outputPortBuffers[0]->sampleBuffer.reset();
+            return;
+        }
+
+        const float* a = inputPortBuffers[0]->sampleBuffer.samples;
+        const float* b = inputPortBuffers[1]->sampleBuffer.samples;
+
         const float* x = inputPortBuffers[2]->getAudioBuffer();
-        float* out = outputPortBuffers[0]->getAudioBuffer();
 
         float blend = std::clamp(x[0], 0.0f, 1.0f);
 
@@ -97,7 +112,9 @@ public:
         pffft_transform_ordered(setup, fftOut, tempTime, nullptr, PFFFT_BACKWARD);
 
         for (int i = 0; i < 2048; ++i)
-            out[i] = tempTime[i] * (1.0f / 2048.0f);
+            outputSamples[i] = tempTime[i] * (1.0f / 2048.0f);
+
+        outputPortBuffers[0]->sampleBuffer.set(outputSamples);
     }
 
 private:
@@ -106,4 +123,6 @@ private:
     float* fftB = nullptr;
     float* fftOut = nullptr;
     float* tempTime = nullptr;
+
+    std::vector<float> outputSamples;
 };
