@@ -40,20 +40,20 @@ public:
         float attackMs = objParams.value("attack", 0.0f);
         float holdMs = objParams.value("hold", 0.0f);
         float decayMs = objParams.value("decay", 0.0f);
-        float attackSlopeMs = objParams.value("attackSlope", 0.0f);
-        float decaySlopeMs = objParams.value("decaySlope", 0.0f);
+        float attackSlopeVal = objParams.value("attackSlope", 0.0f);
+        float decaySlopeVal = objParams.value("decaySlope", 0.0f);
 
         attackValParam = addParameter<FloatParameter>("Attack", attackMs, 0.0f, 10000.0f);
         holdValParam = addParameter<FloatParameter>("Hold", holdMs, 0.0f, 10000.0f);
         decayValParam = addParameter<FloatParameter>("Decay", decayMs, 0.0f, 10000.0f);
-        attackSlopeParam = addParameter<FloatParameter>("Attack Slope", 0.0f, -1.0f, 1.0f);
-        decaySlopeParam = addParameter<FloatParameter>("Decay Slope", 0.0f, -1.0f, 1.0f);
+        attackSlopeParam = addParameter<FloatParameter>("Attack Slope", attackSlopeVal, -1.0f, 1.0f);
+        decaySlopeParam = addParameter<FloatParameter>("Decay Slope", decaySlopeVal, -1.0f, 1.0f);
 
         attackVal.store(attackMs);
         holdVal.store(holdMs);
         decayVal.store(decayMs);
-        attackSlope.store(attackSlopeMs);
-        decaySlope.store(decaySlopeMs);
+        attackSlope.store(attackSlopeVal);
+        decaySlope.store(decaySlopeVal);
 
         attackValParam->informNodeOfChange = [this]() {
             attackVal.store(attackValParam->getValue());
