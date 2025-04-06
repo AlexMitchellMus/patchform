@@ -6,31 +6,43 @@
 #include "../UI_ToolKit/TextEditor.h"
 #include "../Nodes/AudioNodeBase.h"
 #include "../UI_ToolKit/Resizer.h"
+#include "../UI_ToolKit/ToggleSwitch.h"
 
 ParamItem::ParamItem(const std::string& name, Parameter* itemParam)
     : paramName(name)
     , param(itemParam)
 {
-    bool isParamString = dynamic_cast<StringParameter*>(itemParam);
-    textBox = std::make_unique<pptk::TextEditor>(!isParamString);
-    textBox->setText(param->getAsString());
-    addComponent(textBox.get());
+    if (auto* boolParam = dynamic_cast<BoolParameter*>(itemParam)) {
+        auto toggle = std::make_unique<ToggleSwitch>();
+        toggle->setState(boolParam->getValue());
+        toggle->onToggle = [boolParam](bool state) {
+            boolParam->setValue(state);
+        };
+        addComponent(toggle.get());
+        textBox = nullptr; // not used
+        toggleSwitch = std::move(toggle); // store it
+    } else {
+        bool isParamString = dynamic_cast<StringParameter*>(itemParam);
+        textBox = std::make_unique<pptk::TextEditor>(!isParamString);
+        textBox->setText(param->getAsString());
+        addComponent(textBox.get());
 
-    // Hook TextBox updates to parameter
-    textBox->onTextReturned = ([this]() {
-        try {
-            param->setFromString(textBox->getText());
-        } catch (...) {
-            // Invalid input, ignore it
-        }
-    });
+        textBox->onTextReturned = ([this]() {
+            try {
+                param->setFromString(textBox->getText());
+            } catch (...) {}
+        });
+    }
 }
 
 void ParamItem::resized()
 {
     //auto textwidth = getTextWidthForFont("Regular", 14.0f, textBox->getText());
     //std::cout << "text width from cache: " << textwidth << std::endl;
-    textBox->setBounds(100, 3, getWidth() - 100, 25); // Place TextBox next to label
+    if (textBox)
+        textBox->setBounds(100, 3, getWidth() - 100, 25); // Place TextBox next to label
+    else if (toggleSwitch)
+        toggleSwitch->setBounds(100 + 10, 6, 30, 18);
 }
 
 RightPanel::RightPanel(Canvas* cnv)

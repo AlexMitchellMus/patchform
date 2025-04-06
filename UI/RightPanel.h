@@ -8,6 +8,7 @@ class AudioNode;
 class Parameter;
 class Canvas;
 class Object;
+class ToggleSwitch;
 
 // ParamItem: Displays a parameter name and an editable TextBox
 class ParamItem : public pptk::Component {
@@ -15,6 +16,7 @@ private:
     std::string paramName;
     Parameter* param = nullptr;
     std::unique_ptr<pptk::TextEditor> textBox;
+    std::unique_ptr<ToggleSwitch> toggleSwitch;
 
 public:
     ParamItem(const std::string& name, Parameter* itemParam);

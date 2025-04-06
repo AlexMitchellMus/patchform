@@ -111,6 +111,15 @@ public:
 
     virtual bool isDefaultUI() const { return true; };
 
+    // Returns the current UI, otherwise nullptr
+    UI* getUI()
+    {
+        if (ui)
+            return ui.get();
+
+        return nullptr;
+    }
+
     UI* getOrCreateUI()
     {
         // The default factory method creates a DefaultUI instance.

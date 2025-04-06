@@ -152,6 +152,7 @@ public:
     void setValue(bool newValue)
     {
         queue.enqueue(newValue);
+        informNodeOfChange();
     }
 
     bool getValue()
