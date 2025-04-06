@@ -60,6 +60,8 @@ ObjectMenu::ObjectMenu(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(too
         { R"({"obj": "table", "size": 256 })", "table", false },
         { R"({"obj": "tablexfade" })", "txf", false },
         { R"({"obj": "value" })", "val", false },
+        { R"({"obj": "tablexphase" })", "txp", false },
+        { R"({"obj": "tablexspectral" })", "txs", false },
     };
 
     for (int i = 0; i < 5; i++)

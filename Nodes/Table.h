@@ -6,7 +6,7 @@
 class Table final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Table", "table", false);
 
-    int numValues = 0;
+    int numValues = defaultTableSize;  // hardcoded for now
     std::vector<float> bufferA;
     std::vector<float> bufferB;
     std::atomic<bool> bufferReady{false};
@@ -160,12 +160,27 @@ public:
     }
 #endif
 
-    Table(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Spectral, objParams)
+    Table(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Wavetable, objParams)
     {
-        numValues = objParams.value("size", 8);
         bufferA.resize(numValues, 0.0f);
         bufferB.resize(numValues, 0.0f);
-        bufferA = objParams.value("data", bufferA);
+
+        auto bufferFromFile = objParams.value("data", bufferA);
+
+        if (bufferA.size() != bufferFromFile.size()) {
+            std::vector<float> resampled(defaultTableSize);
+            for (size_t i = 0; i < defaultTableSize; ++i) {
+                float phase = (float)i / defaultTableSize;
+                float srcIndex = phase * bufferA.size();
+                int idx0 = (int)std::floor(srcIndex) % bufferA.size();
+                int idx1 = (idx0 + 1) % bufferA.size();
+                float frac = srcIndex - idx0;
+                resampled[i] = bufferA[idx0] * (1.0f - frac) + bufferA[idx1] * frac;
+            }
+            bufferA = std::move(resampled);
+        } else
+            bufferA = bufferFromFile;
+
         addInputPort("control", AudioPort::Data);
 
         eventOnLoad = true;

@@ -8,7 +8,7 @@ public:
     TableOsc(NodeContext* context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
-        addInputPort("waveform", AudioPort::PortType::Spectral);  // expects 256-point table
+        addInputPort("waveform", AudioPort::PortType::Wavetable);  // expects 256-point table
         addInputPort("frequency", AudioPort::PortType::Data);
     }
 
@@ -62,9 +62,9 @@ public:
                     if (phase >= 1.0f)
                         phase -= 1.0f;
 
-                    float idx = phase * 255.0f;
+                    float idx = phase * defaultTableSize - 1;
                     int i0 = static_cast<int>(idx);
-                    int i1 = (i0 + 1) % 256;
+                    int i1 = (i0 + 1) % defaultTableSize;
                     float frac = idx - i0;
                     output[i] = waveform[i0] + frac * (waveform[i1] - waveform[i0]);
                 }

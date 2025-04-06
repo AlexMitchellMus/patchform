@@ -71,6 +71,8 @@
 
 // Wavetable
 #include "TableXFade.h"
+#include "TableXPhase.h"
+#include "TableXSpectral.h"
 
 // MIDI
 #include "MidiNoteIn.h"

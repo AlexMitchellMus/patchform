@@ -517,104 +517,104 @@ public:
     {
         //auto start = std::chrono::high_resolution_clock::now();
 
-    // Reserve and clear the upstream map.
-    graph->outputInputPortMap.clear();
-    graph->outputInputPortMap.reserve(objects.size());
+        // Reserve and clear the upstream map.
+        graph->outputInputPortMap.clear();
+        graph->outputInputPortMap.reserve(objects.size());
 
-    // Also clear and resize the downstream map.
-    graph->downstreamPortMap.clear();
-    graph->downstreamPortMap.resize(graph->objectsSorted.size());
+        // Also clear and resize the downstream map.
+        graph->downstreamPortMap.clear();
+        graph->downstreamPortMap.resize(graph->objectsSorted.size());
 
-    // Create a mapping from original object IDs to their indices in `objects`
-    ankerl::unordered_dense::map<int, size_t> objectIDtoOriginalIndex;
-    for (size_t i = 0; i < objects.size(); ++i)
-    {
-        objectIDtoOriginalIndex[objects[i]->nodeID] = i;
-    }
-
-    // Create a mapping from original object IDs to their indices in `objectsSorted`
-    ankerl::unordered_dense::map<int, size_t> objectIDtoSortedIndex;
-    for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
-    {
-        objectIDtoSortedIndex[graph->objectsSorted[sortedIndex]->nodeID] = sortedIndex;
-    }
-
-    // Populate the upstream port map (for summing audio)
-    for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
-    {
-        int objectID = graph->objectsSorted[sortedIndex]->nodeID;
-        if (objectIDtoOriginalIndex.find(objectID) == objectIDtoOriginalIndex.end())
+        // Create a mapping from original object IDs to their indices in `objects`
+        ankerl::unordered_dense::map<int, size_t> objectIDtoOriginalIndex;
+        for (size_t i = 0; i < objects.size(); ++i)
         {
-            continue;
+            objectIDtoOriginalIndex[objects[i]->nodeID] = i;
         }
-        size_t originalIndex = objectIDtoOriginalIndex[objectID];
 
-        // Add a new vector for this object's inputs.
-        graph->outputInputPortMap.emplace_back();
-
-        for (size_t j = 0; j < objects[originalIndex]->getNumInputs(); ++j)
+        // Create a mapping from original object IDs to their indices in `objectsSorted`
+        ankerl::unordered_dense::map<int, size_t> objectIDtoSortedIndex;
+        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
         {
-            std::vector<AudioPort*> upstreamPorts;
+            objectIDtoSortedIndex[graph->objectsSorted[sortedIndex]->nodeID] = sortedIndex;
+        }
 
-            auto key = AdjacencyMap::packKey(originalIndex, j);
-            const auto& backwardConnections = graph->adjacencyMap.getBackward();
-
-            if (backwardConnections.find(key) != backwardConnections.end())
+        // Populate the upstream port map (for summing audio)
+        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
+        {
+            int objectID = graph->objectsSorted[sortedIndex]->nodeID;
+            if (objectIDtoOriginalIndex.find(objectID) == objectIDtoOriginalIndex.end())
             {
-                for (const auto& outputPortUpstreamNode : backwardConnections.at(key))
+                continue;
+            }
+            size_t originalIndex = objectIDtoOriginalIndex[objectID];
+
+            // Add a new vector for this object's inputs.
+            graph->outputInputPortMap.emplace_back();
+
+            for (size_t j = 0; j < objects[originalIndex]->getNumInputs(); ++j)
+            {
+                std::vector<AudioPort*> upstreamPorts;
+
+                auto key = AdjacencyMap::packKey(originalIndex, j);
+                const auto& backwardConnections = graph->adjacencyMap.getBackward();
+
+                if (backwardConnections.find(key) != backwardConnections.end())
                 {
-                    auto connectedNode = AdjacencyMap::unpackKey(outputPortUpstreamNode);
-                    int connectedObjectID = objects[connectedNode.first]->nodeID;
-                    if (objectIDtoSortedIndex.find(connectedObjectID) != objectIDtoSortedIndex.end())
+                    for (const auto& outputPortUpstreamNode : backwardConnections.at(key))
                     {
-                        size_t connectedSortedIndex = objectIDtoSortedIndex[connectedObjectID];
-                        auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort(connectedNode.second);
-                        upstreamPorts.push_back(connectedPort);
+                        auto connectedNode = AdjacencyMap::unpackKey(outputPortUpstreamNode);
+                        int connectedObjectID = objects[connectedNode.first]->nodeID;
+                        if (objectIDtoSortedIndex.find(connectedObjectID) != objectIDtoSortedIndex.end())
+                        {
+                            size_t connectedSortedIndex = objectIDtoSortedIndex[connectedObjectID];
+                            auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort(connectedNode.second);
+                            upstreamPorts.push_back(connectedPort);
+                        }
                     }
                 }
+                graph->outputInputPortMap.back().emplace_back(PortGroup{
+                    static_cast<uint8_t>(j), std::move(upstreamPorts)
+                });
             }
-            graph->outputInputPortMap.back().emplace_back(PortGroup{
-                static_cast<uint8_t>(j), std::move(upstreamPorts)
-            });
         }
-    }
 
-    // --- Populate the downstream port map ---
-    // For each node in sorted order...
-    for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
-    {
-        AudioNode* node = graph->objectsSorted[sortedIndex];
-        int nodeID = node->nodeID;
-        // For each output port on the node...
-        for (size_t outPort = 0; outPort < node->outputPortBuffers.size(); ++outPort)
+        // --- Populate the downstream port map ---
+        // For each node in sorted order...
+        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
         {
-            DownstreamPortGroup group;
-            group.outputPortNumber = static_cast<uint8_t>(outPort);
-
-            // Iterate over all connections in the graph.
-            for (const auto& conn : connections)
+            AudioNode* node = graph->objectsSorted[sortedIndex];
+            int nodeID = node->nodeID;
+            // For each output port on the node...
+            for (size_t outPort = 0; outPort < node->outputPortBuffers.size(); ++outPort)
             {
-                // Check if this connection originates from this node and the current output port.
-                if (conn->getoNode() == nodeID && conn->getoPort() == static_cast<int>(outPort))
+                DownstreamPortGroup group;
+                group.outputPortNumber = static_cast<uint8_t>(outPort);
+
+                // Iterate over all connections in the graph.
+                for (const auto& conn : connections)
                 {
-                    int targetID = conn->getiNode();
-                    // Use objectIDtoSortedIndex to find the target node's sorted index.
-                    if (objectIDtoSortedIndex.find(targetID) != objectIDtoSortedIndex.end())
+                    // Check if this connection originates from this node and the current output port.
+                    if (conn->getoNode() == nodeID && conn->getoPort() == static_cast<int>(outPort))
                     {
-                        size_t targetSortedIndex = objectIDtoSortedIndex[targetID];
-                        AudioNode* targetNode = graph->objectsSorted[targetSortedIndex];
-                        int targetPort = conn->getiPort();
-                        group.downstreamConnections.emplace_back(targetNode, targetPort);
+                        int targetID = conn->getiNode();
+                        // Use objectIDtoSortedIndex to find the target node's sorted index.
+                        if (objectIDtoSortedIndex.find(targetID) != objectIDtoSortedIndex.end())
+                        {
+                            size_t targetSortedIndex = objectIDtoSortedIndex[targetID];
+                            AudioNode* targetNode = graph->objectsSorted[targetSortedIndex];
+                            int targetPort = conn->getiPort();
+                            group.downstreamConnections.emplace_back(targetNode, targetPort);
+                        }
                     }
                 }
-            }
-            // Only add the group if it contains at least one connection.
-            if (!group.downstreamConnections.empty())
-            {
-                graph->downstreamPortMap[sortedIndex].push_back(std::move(group));
+                // Only add the group if it contains at least one connection.
+                if (!group.downstreamConnections.empty())
+                {
+                    graph->downstreamPortMap[sortedIndex].push_back(std::move(group));
+                }
             }
         }
-    }
 
         //auto end = std::chrono::high_resolution_clock::now();
         //auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
@@ -800,7 +800,7 @@ public:
 
     void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
-//#define DSP_FREE_ATOMS
+        //#define DSP_FREE_ATOMS
 #ifdef DSP_FREE_ATOMS
         std::cout << "--- free atoms: " << context->eventPool.getFreeListSize() << std::endl;
 #endif
@@ -880,10 +880,6 @@ public:
 
         node->pushOutputEvents = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, AudioGraph& runningGraph, const int index)
         {
-#define USE_POINTER_MAP_PUSH
-#define USE_POINTER_MAP
-
-#ifdef USE_POINTER_MAP_PUSH
             // Retrieve the precomputed downstream port groups for this node.
             const auto& groups = runningGraph.downstreamPortMap[index];
 
@@ -916,177 +912,79 @@ public:
                 }
             }
         };
-#else
-            // Loop over each output port.
-            for (size_t outPort = 0; outPort < outputPorts.size(); ++outPort) {
-                // Get the events from this output port.
-                auto& events = outputPorts[outPort]->getEvents();
-                if (events.empty())
-                    continue; // Nothing to push
 
-                // Look up all downstream connections from this output port.
-                // TODO: We want to use the same sort of map we made for summing audio, however this needs to be a downstream map (not upstream)
-                auto key = AdjacencyMap::packKey(runningGraph.objectIDtoIndex.find(nodeID)->first, outPort);
-                const auto& forward = runningGraph.adjacencyMap.getForward();
-                auto it = forward.find(key);
-                if (it == forward.end())
-                    continue;
+    node->sumInputBuffers = [node](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
+                                     const AudioGraph& runningGraph, const int index)
+    {
+    // Retrieve the input port map for the current node
+    const auto& portGroups = runningGraph.outputInputPortMap[index];
 
-                // Push each event to every connected downstream node.
-                for (auto downstreamKey : it->second) {
-                    auto [targetIndex, targetPort] = AdjacencyMap::unpackKey(downstreamKey);
-                    if (targetIndex < runningGraph.objectsListCopy.size()) {
-                        AudioNode* target = runningGraph.objectsListCopy[targetIndex];
-                        // Push event to the target node.
-                        for (auto* event : events) {
-                            target->pushEvent(targetPort, event);
-                        }
-                    }
-                }
-            }
-        };
-#endif
+    for (const auto& portGroup : portGroups)
+    {
+        const auto portID = portGroup.inputPortNumber;
+        auto& port = inputPorts[portID];
 
-        node->sumInputBuffers = [nodeID](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
-                                         const AudioGraph& runningGraph, const int index)
+        // Reset port status in case it has been disconnected
+        port->isAnyConnectedPortSignal = false;
+
+        if (!port->isSignal())
         {
-#ifdef USE_POINTER_MAP
-            // Retrieve the input port map for the current node
-            const auto& portGroups = runningGraph.outputInputPortMap[index];
+            continue;
+        }
 
-            for (const auto& portGroup : portGroups)
+        if (port->isSampleBuffer())
+        {
+            // Just take the first connected sample buffer
+            for (auto* connection : portGroup.connectedPorts)
             {
-                const auto portID = portGroup.inputPortNumber;
-                auto& port = inputPorts[portID];
-
-                // Reset port status in case it has been disconnected
-                port->isAnyConnectedPortSignal = false;
-
-                if (!port->isSignal())
+                if (connection->isSampleBuffer())
                 {
-                    continue;
+                    port->sampleBuffer.samples = connection->sampleBuffer.samples;
+                    port->sampleBuffer.size = connection->sampleBuffer.size;
+                    break;
                 }
+            }
+            continue; // Skip rest of loop for this port
+        }
 
-                // Clear the audio buffer
-                port->zero();
+        // Clear the audio buffer
+        port->zero();
 
-                auto summingAudioBuffer = port->getAudioBuffer();
+        auto summingAudioBuffer = port->getAudioBuffer();
 
-                // Use direct copy for the first connected signal to save CPU cycles
-                bool firstConnection = true;
+        // Use direct copy for the first connected signal to save CPU cycles
+        bool firstConnection = true;
 
-                unsigned portFrameSize = port->getAudioBufferSize();
+        unsigned portFrameSize = port->getAudioBufferSize();
 
-                for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
+        for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
+        {
+            auto* connection = portGroup.connectedPorts[connIndex];
+            const auto outputBuffer = connection->getAudioBuffer();
+
+            if (connection->isSignal())
+            {
+                // Update port status: any connected signal overrides events
+                port->isAnyConnectedPortSignal = true;
+
+                if (firstConnection)
                 {
-                    auto* connection = portGroup.connectedPorts[connIndex];
-                    const auto outputBuffer = connection->getAudioBuffer();
-
-                    if (connection->isSignal())
+                    std::copy(outputBuffer, outputBuffer + portFrameSize, summingAudioBuffer);
+                    firstConnection = false;
+                }
+                else
+                {
+                    // Sum the buffer for subsequent connections
+                    for (size_t i = 0; i < portFrameSize; ++i)
                     {
-                        // Update port status: any connected signal overrides events
-                        port->isAnyConnectedPortSignal = true;
-
-                        if (firstConnection)
-                        {
-                            std::copy(outputBuffer, outputBuffer + portFrameSize, summingAudioBuffer);
-                            firstConnection = false;
-                        }
-                        else
-                        {
-                            // Sum the buffer for subsequent connections
-                            for (size_t i = 0; i < portFrameSize; ++i)
-                            {
-                                summingAudioBuffer[i] += outputBuffer[i];
-                            }
-                        }
+                        summingAudioBuffer[i] += outputBuffer[i];
                     }
                 }
             }
-#else
-            // This method uses the adjacency map to look up the connected AudioPort to sum from
-            // It uses an unordered map to find the correct AudioPort in realtime
-            // However, we can do this when we construct the graph, and allow the running graph
-            // to use the cached/baked vector
-            // Any change to the graph will happen at the 'next' cycle
-            // Which allows us time to construct the graph on another thread anyway
-
-            const auto frameCount = runningGraph.context->frameCount;
-            auto indexIt = runningGraph.objectIDtoIndex.find(nodeID);
-            if (indexIt == runningGraph.objectIDtoIndex.end()) {
-                // If nodeID wasn't found in the map, skip
-                return;
-            }
-
-            // If found, the key is indexIt->second
-            auto nodeIndex = indexIt->second;
-
-            for (size_t portID = 0; portID < inputPorts.size(); ++portID)
-            {
-                auto& port = inputPorts[portID];
-                const bool isPortSignal = port->isSignal();
-
-                if (isPortSignal)
-                {
-                    // Clear and resize audio buffer only for signal ports
-                    port->setSize(frameCount);
-                }
-
-                port->clearEvents();
-                auto& summingEventBuffer = port->getEvents();
-                auto summingAudioBuffer = port->getAudioBuffer();
-
-                auto key = AdjacencyMap::packKey(nodeIndex, portID);
-
-                // Retrieve connections for the current port
-                auto it = runningGraph.adjacencyMap.getBackward().find(key);
-                if (it == runningGraph.adjacencyMap.getBackward().end())
-                {
-                    continue;
-                }
-
-                bool isFirstConnection = true; // Track if this is the first connection
-                for (uint32_t connKey : it->second)
-                {
-                    auto connectedNode = runningGraph.objectsListCopy[AdjacencyMap::getNodeID(connKey)];
-                    auto connection = connectedNode->getOutputPort();
-                    const auto outputBuffer = connection->getAudioBuffer();
-
-                    if (isPortSignal && connection->isSignal()) {
-                        // Update port status, any connected signal overrides events
-                        port->isAnyConnectedPortSignal = true;
-
-                        if (isFirstConnection) {
-                            // For the first connection, perform direct assignment
-                            std::copy(outputBuffer, outputBuffer + frameCount, summingAudioBuffer);
-                            isFirstConnection = false;
-                        }
-                        else {
-                            // For subsequent connections, sum the buffer
-                            for (size_t i = 0; i < frameCount; ++i) {
-                                summingAudioBuffer[i] += outputBuffer[i];
-                            }
-                        }
-                    }
-
-                    // Collect and merge events
-                    auto& events = connection->getEvents();
-                    if (!events.empty())
-                        summingEventBuffer.insert(summingEventBuffer.end(), events.begin(), events.end());
-                }
-
-                // Sort combined events only if there are new events
-                if (!summingEventBuffer.empty())
-                {
-                    std::sort(summingEventBuffer.begin(), summingEventBuffer.end(), [](const Event* a, const Event* b)
-                    {
-                        return a->getTimeStamp() < b->getTimeStamp();
-                    });
-                }
-            }
-#endif
-        };
+        }
     }
+};
+}
 
     template <typename NodeType>
     AudioNode* addNode(const std::string& finalID, json& nodeCreationData)
@@ -1373,6 +1271,12 @@ public:
 
         case hash("table"):
             return addNode<Table>(idString, node);
+
+        case hash("tablexphase"):
+            return addNode<TableXPhase>(idString, node);
+
+        case hash("tablexspectral"):
+            return addNode<TableXSpectral>(idString, node);
 
         default:
             // Unknown object name, return error

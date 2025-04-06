@@ -16,10 +16,18 @@
 class AudioPort;
 class AudioNode;
 
+constexpr int defaultTableSize = 2048;
+
 struct PortGroup
 {
     uint8_t inputPortNumber;
     std::vector<AudioPort*> connectedPorts;
+};
+
+struct SampleHandle
+{
+    float* samples;
+    size_t size;
 };
 
 struct DownstreamPortGroup {
@@ -38,10 +46,12 @@ class AudioPort
 public:
     enum PortType : uint8_t
     {
-        None     =   0,
-        Signal   = 1 << 0,
-        Spectral = 1 << 1, // Ports cant be signal & spectral, but this works for now
-        Data     = 1 << 2
+        None      = 0,
+        Signal    = 1 << 0,
+        Spectral  = 1 << 1, // Ports cant be signal & spectral, but this works for now
+        Wavetable = 1 << 2,
+        Samples   = 1 << 3,
+        Data      = 1 << 4
     };
 
     AudioPort(AudioNode* parent, const std::string& portName, PortType type)
@@ -53,9 +63,10 @@ public:
 
         if (type == PortType::Signal)
             setSize(bufferSize = 64);
-
-        if (type == PortType::Spectral)
+        else if (type == PortType::Spectral)
             setSize(bufferSize = 256);
+        else if (type == PortType::Wavetable)
+            setSize(bufferSize = defaultTableSize);
     }
 
     float* getAudioBuffer() {
@@ -104,7 +115,17 @@ public:
 
     inline bool isSignal() const
     {
-        return (portType & (PortType::Signal | PortType::Spectral)) != 0;
+        return (portType & (PortType::Signal | PortType::Spectral | PortType::Wavetable)) != 0;
+    }
+
+    inline bool isWavetable() const
+    {
+        return (portType & (PortType::Wavetable)) != 0;
+    }
+
+    inline bool isSampleBuffer() const
+    {
+        return (portType & (PortType::Samples)) != 0;
     }
 
     AudioNode* getParentNode() const { return node; }
@@ -116,6 +137,8 @@ public:
     }
 
     PortType getPortType() const { return portType; }
+
+    SampleHandle sampleBuffer;
 
 protected:
     std::vector<float> audioBuffer;
