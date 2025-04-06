@@ -5,6 +5,7 @@
 #include "pffft.h"
 #include <cmath>
 #include <algorithm>
+#include "SpectralHelpers.h"
 
 class SpecIFFT final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("SpecIFFT", "specIFFT", true);
@@ -19,11 +20,6 @@ public:
         addInputPort("imaginary", AudioPort::Spectral);
 
         fftSetup = pffft_new_setup(FFT_SIZE, PFFFT_REAL);
-
-        // Precompute window function
-        for (size_t i = 0; i < FFT_SIZE; ++i) {
-            hannWindow[i] = 0.5f * (1.0f - cosf(2.0f * M_PI * i / (FFT_SIZE - 1)));
-        }
     }
 
     ~SpecIFFT() override {
@@ -68,7 +64,7 @@ public:
 private:
     PFFFT_Setup* fftSetup = nullptr;
 
-    std::array<float, FFT_SIZE> hannWindow{};  // Pre-calculated window
+    static constexpr auto hannWindow = SpectralHelpers::makeHannWindow<FFT_SIZE>();
 
     std::array<float, FFT_SIZE * 4> overlapBuffer{};
     size_t outputReadPos = 0;

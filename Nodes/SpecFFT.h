@@ -6,6 +6,7 @@
 #include "pffft.h"          // PFFFT for fast FFT
 #include <algorithm>
 #include <cmath>            // log2f()
+#include "SpectralHelpers.h"
 
 class SpecFFT final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("SpecFFT", "specFFT", true);
@@ -20,11 +21,6 @@ public:
         addOutputPort("imaginary", AudioPort::Spectral);
 
         fftSetup = pffft_new_setup(FFT_SIZE, PFFFT_REAL);
-
-        // Precompute window function
-        for (size_t i = 0; i < FFT_SIZE; ++i) {
-            hannWindow[i] = 0.5f * (1.0f - cosf(2.0f * M_PI * i / (FFT_SIZE - 1)));
-        }
     }
 
     void cleanupAudio() override
@@ -68,6 +64,8 @@ public:
 private:
     PFFFT_Setup* fftSetup = nullptr;
     std::array<float, FFT_SIZE> dspBuffer{};
-    std::array<float, FFT_SIZE> hannWindow{};  // Pre-calculated window
+
+    static constexpr auto hannWindow = SpectralHelpers::makeHannWindow<FFT_SIZE>();
+
     size_t dspBufferIndex = 0;
 };

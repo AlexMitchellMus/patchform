@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SpectralHelpers.h"
+
 class SpecMerge final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("SpecMerge", "specMerge", true);
 
@@ -80,10 +82,10 @@ public:
             switch (m) {
             case hash("vocoder"): {
                     float lenA, lenB, angB;
-                    carToPol(realA, imgA, &lenA, nullptr);
-                    carToPol(realB, imgB, &lenB, &angB);
+                    SpectralHelpers::carToPol(realA, imgA, &lenA, nullptr);
+                    SpectralHelpers::carToPol(realB, imgB, &lenB, &angB);
                     float mult = lenA * lenB;
-                    polToCar(mult, angB, &re, &im);
+                    SpectralHelpers::polToCar(mult, angB, &re, &im);
                     break;
             }
             case hash("multiply"): {
@@ -93,16 +95,16 @@ public:
             }
             case hash("phasereplace"): {
                     float lenA, angB;
-                    carToPol(realA, imgA, &lenA, nullptr);
-                    carToPol(realB, imgB, nullptr, &angB);
-                    polToCar(lenA, angB, &re, &im);
+                    SpectralHelpers::carToPol(realA, imgA, &lenA, nullptr);
+                    SpectralHelpers::carToPol(realB, imgB, nullptr, &angB);
+                    SpectralHelpers::polToCar(lenA, angB, &re, &im);
                     break;
             }
             case hash("magreplace"): {
                     float lenB, angA;
-                    carToPol(realB, imgB, &lenB, nullptr);
-                    carToPol(realA, imgA, nullptr, &angA);
-                    polToCar(lenB, angA, &re, &im);
+                    SpectralHelpers::carToPol(realB, imgB, &lenB, nullptr);
+                    SpectralHelpers::carToPol(realA, imgA, nullptr, &angA);
+                    SpectralHelpers::polToCar(lenB, angA, &re, &im);
                     break;
             }
             case hash("add"): {
@@ -135,16 +137,16 @@ public:
             }
             case hash("magdiff"): {
                     float lenA, angA, lenB;
-                    carToPol(realA, imgA, &lenA, &angA);
-                    carToPol(realB, imgB, &lenB, nullptr);
+                    SpectralHelpers::carToPol(realA, imgA, &lenA, &angA);
+                    SpectralHelpers::carToPol(realB, imgB, &lenB, nullptr);
                     float diff = std::max(0.0f, lenA - lenB);
-                    polToCar(diff, angA, &re, &im);
+                    SpectralHelpers::polToCar(diff, angA, &re, &im);
                     break;
             }
             case hash("warp"): {
                     float lenA, angA, angB;
-                    carToPol(realA, imgA, &lenA, &angA);
-                    carToPol(realB, imgB, nullptr, &angB);
+                    SpectralHelpers::carToPol(realA, imgA, &lenA, &angA);
+                    SpectralHelpers::carToPol(realB, imgB, nullptr, &angB);
 
                     float phaseDelta = angB - angA;
 
@@ -152,7 +154,7 @@ public:
                     float warp = std::tanh(phaseDelta * 2.0f);  // squashed warp
                     float warpedAngle = angA + warp;
 
-                    polToCar(lenA, warpedAngle, &re, &im);
+                    SpectralHelpers::polToCar(lenA, warpedAngle, &re, &im);
                     break;
             }
             default: {
@@ -169,23 +171,6 @@ public:
     }
 
 private:
-    inline void carToPol(float real, float imag, float* length, float* angle)
-    {
-        if (length)
-            *length = std::sqrt(real * real + imag * imag);
-
-        if (angle)
-            *angle = std::atan2(imag, real);
-    }
-
-    inline void polToCar(float length, float angle, float* real, float* imag)
-    {
-        if (real)
-            *real = length * std::cos(angle);
-        if (imag)
-            *imag = length * std::sin(angle);
-    }
-
     StringParameter* modeParam = nullptr;
     std::atomic<uint32_t> modeHash;
 };
