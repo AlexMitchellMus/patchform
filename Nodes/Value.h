@@ -43,7 +43,7 @@ public:
         const auto& dataIn = inputPortBuffers[0]->getEvents();
         float* output = outputPortBuffers[0]->getAudioBuffer();
 
-        float current = value.load();
+        float current = value.load(std::memory_order_relaxed);
 
         float smoothingTimeSec = smoothing.load() * 0.001f;
         float alpha = (smoothingTimeSec > 0.0f)
@@ -66,7 +66,7 @@ public:
             output[i] = current;
         }
 
-        value.store(current);
+        value.store(current, std::memory_order_relaxed);
     }
 
     json getSerializedNode() override {

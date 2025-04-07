@@ -30,8 +30,7 @@ public:
             if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(event->getTimeStamp());
-
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
             }
         }
     }

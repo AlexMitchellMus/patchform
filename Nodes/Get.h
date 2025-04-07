@@ -107,7 +107,7 @@ public:
                         e->data = newData;
                     }
                 }
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
             }
         }
     }

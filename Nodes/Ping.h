@@ -142,7 +142,7 @@ public:
                 //}
 
                 // Forward the same event from input to output (this should work, but just for now lets see how it goes)
-                outputPortBuffers[0]->addEvent(ev);
+                addEvent(0, ev);
             }
             eventQueueFromDSP.enqueue(true);
             repaintFromDSP();
@@ -151,12 +151,10 @@ public:
         bool newValue;
         while (eventQueue.try_dequeue(newValue))
         {
-            Event* e = context->eventPool.getFreeEvent();
-
-            if (e)
+            if (Event* e = context->eventPool.getFreeEvent())
             {
                 // We don't need to set the timestamp, as events from UI will not be sample accurate anyway
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
             }
         };
     }

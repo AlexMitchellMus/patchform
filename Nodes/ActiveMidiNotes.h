@@ -73,7 +73,7 @@ public:
                 }
                 e->numAtoms = static_cast<int>(activeNotes.size());
                 e->setTimeStamp(ev->getTimeStamp());
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
             }
         }
     }

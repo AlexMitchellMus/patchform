@@ -86,7 +86,7 @@ public:
             if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(0);
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
 #ifdef TEST_TIMING
                 std::cout << accumulatedFrames << std::endl;
 #endif
@@ -113,7 +113,7 @@ public:
             if (Event* e = context->eventPool.getFreeEvent())
             {
                 e->setTimeStamp(tickPosition);
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
 #ifdef TEST_TIMING
                 std::cout << (accumulatedFrames + static_cast<unsigned long>(tickPosition)) << std::endl;
 #endif

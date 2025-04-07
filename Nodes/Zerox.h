@@ -36,7 +36,7 @@ public:
             if (Event* outEvent = context->eventPool.getFreeEvent()) {
                 outEvent->setTimeStamp(lastIndex);
                 context->eventPool.addDataAtomTo(outEvent, count);
-                outputPortBuffers[0]->addEvent(outEvent);
+                addEvent(0, outEvent);
             }
         }
     }

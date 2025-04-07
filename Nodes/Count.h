@@ -66,7 +66,7 @@ public:
 
                         context->eventPool.addDataAtomTo(e, countValue++);
                         // Now add it to the output port’s event list
-                        outputPortBuffers[0]->addEvent(e);
+                        addEvent(0, e);
                     }
                 }
             }

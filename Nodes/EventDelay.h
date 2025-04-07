@@ -75,7 +75,7 @@ public:
 
                     ev->setTimeStamp(delayedTime);
                     ev->numAtoms = it->numAtoms;
-                    outputPortBuffers[0]->addEvent(ev);
+                    addEvent(0, ev);
                 }
                 it = queue.erase(it);
             }

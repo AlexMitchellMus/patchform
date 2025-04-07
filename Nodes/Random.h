@@ -37,7 +37,7 @@ public:
                 const float r = min + ((float)rand() / RAND_MAX) * (max - min);
                 context->eventPool.addDataAtomTo(e, r);
                 e->setTimeStamp(ev->getTimeStamp());
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
             }
         }
     }

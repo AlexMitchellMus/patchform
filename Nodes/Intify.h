@@ -94,7 +94,7 @@ public:
                 e->data = outData;
                 e->numAtoms = 1;
                 e->setTimeStamp(event->getTimeStamp());
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
             }
         }
     }

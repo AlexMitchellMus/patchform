@@ -99,7 +99,7 @@ public:
             for (auto event : aEvents)
             {
                 queueFromDSP.enqueue(event->getAtomValue(0));
-                outputPortBuffers[0]->addEvent(event);
+                addEvent(0, event);
             }
             repaintFromDSP();
         }

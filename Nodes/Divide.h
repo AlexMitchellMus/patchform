@@ -32,7 +32,7 @@ public:
             if (Event* e = context->eventPool.getFreeEvent()) {
                 e->setTimeStamp(event->getTimeStamp());
                 context->eventPool.addDataAtomTo(e, event->getAtomValue(0) / safeDivisor);
-                outputPortBuffers[0]->addEvent(e);
+                addEvent(0, e);
             }
         }
     }

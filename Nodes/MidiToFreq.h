@@ -91,7 +91,7 @@ public:
                 {
                     outEvent->setTimeStamp(e->getTimeStamp());
                     context->eventPool.addDataAtomTo(outEvent, frequency);
-                    outputPortBuffers[0]->addEvent(outEvent);
+                    addEvent(0, outEvent);
                 }
             }
         }

@@ -98,7 +98,7 @@ public:
 
         if (Event* ev = context->eventPool.getFreeEvent()) {
             context->eventPool.addDataAtomTo(ev, smoothedPitch);
-            outputPortBuffers[0]->addEvent(ev);
+            addEvent(0, ev);
         }
     }
 };

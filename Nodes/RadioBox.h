@@ -323,13 +323,13 @@ public:
                 {
                     selectedIndex = ev->getAtomValue(0);
                     // Forward the input event to the output.
-                    outputPortBuffers[0]->addEvent(ev);
+                    addEvent(0, ev);
                 }
                 else
                 {
                     auto outEvent = context->eventPool.getFreeEvent();
                     context->eventPool.addDataAtomTo(outEvent, selectedIndex);
-                    outputPortBuffers[0]->addEvent(outEvent);
+                    addEvent(0, outEvent);
                 }
             }
             eventQueueFromDSP.enqueue(selectedIndex);
@@ -347,7 +347,7 @@ public:
                     if (Event* e = context->eventPool.getFreeEvent())
                     {
                         context->eventPool.addDataAtomTo(e, selectedIndex);
-                        outputPortBuffers[0]->addEvent(e);
+                        addEvent(0, e);
                     }
                 }
             }

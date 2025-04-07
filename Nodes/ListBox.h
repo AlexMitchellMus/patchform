@@ -420,7 +420,7 @@ public:
                     {
                         newEvent->data = savedData;
                         newEvent->setTimeStamp(event->getTimeStamp());
-                        outputPortBuffers[0]->addEvent(newEvent);
+                        addEvent(0, newEvent);
                     }
                 }
                 break;
@@ -438,7 +438,7 @@ public:
                         savedData = event->data;
                         context->makeDataPersistent(savedData, true, nodeID);
                     }
-                    outputPortBuffers[0]->addEvent(event);
+                    addEvent(0, event);
                 }
             }
         }
@@ -488,7 +488,7 @@ public:
             newEvent->data = savedData;
 
             // Send the event downstream.
-            outputPortBuffers[0]->addEvent(newEvent);
+            addEvent(0, newEvent);
         }
     }
 };

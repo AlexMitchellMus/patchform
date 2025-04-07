@@ -368,6 +368,15 @@ public:
 
     AdjacencyMap adjacencyMap;
     NodeContext* context;
+
+    struct CachedInputSum {
+        AudioPort* inputPort = nullptr;
+        std::vector<float*> signalInputs;
+        AudioPort* sampleSource = nullptr;
+        size_t bufferSize = 0;
+    };
+
+    std::vector<std::vector<CachedInputSum>> cachedInputSumsPerNode;
 };
 
 class GraphHolder
@@ -605,6 +614,7 @@ public:
                             AudioNode* targetNode = graph->objectsSorted[targetSortedIndex];
                             int targetPort = conn->getiPort();
                             group.downstreamConnections.emplace_back(targetNode, targetPort);
+                            group.targetIndices.push_back(static_cast<uint32_t>(targetSortedIndex));
                         }
                     }
                 }
@@ -615,6 +625,33 @@ public:
                 }
             }
         }
+
+        graph->cachedInputSumsPerNode.resize(graph->outputInputPortMap.size());
+
+        for (size_t i = 0; i < graph->outputInputPortMap.size(); ++i)
+        {
+            auto& inputCache = graph->cachedInputSumsPerNode[i];
+            auto& portGroups = graph->outputInputPortMap[i];
+            auto* node = graph->objectsSorted[i];
+
+            inputCache.resize(portGroups.size());
+
+            for (size_t j = 0; j < portGroups.size(); ++j)
+            {
+                auto& cache = inputCache[j];
+                cache.inputPort = node->getInputPort(portGroups[j].inputPortNumber);
+                cache.bufferSize = cache.inputPort->getAudioBufferSize();
+
+                for (auto* conn : portGroups[j].connectedPorts)
+                {
+                    if (conn->isSignal())
+                        cache.signalInputs.push_back(conn->getAudioBuffer());
+                    else if (conn->isSampleBuffer() && !cache.sampleSource)
+                        cache.sampleSource = conn;
+                }
+            }
+        }
+
 
         //auto end = std::chrono::high_resolution_clock::now();
         //auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
@@ -876,118 +913,68 @@ public:
             });
         };
 
-        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, AudioGraph& runningGraph, const int index)
+        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts,
+                                    AudioGraph& runningGraph, const int index)
         {
-            // Retrieve the precomputed downstream port groups for this node.
             const auto& groups = runningGraph.downstreamPortMap[index];
 
-            // Loop over each downstream group.
-            for (const auto& group : groups)
+            for (const auto& [outputPortNumber, downstreamConnections, targetIndices] : groups)
             {
-                const int outPort = group.outputPortNumber;
-                auto& events = outputPorts[outPort]->getEvents();
-                if (events.empty())
-                    continue; // No events to push for this output port.
+                const auto& events = outputPorts[outputPortNumber]->getEvents();
+                if (events.empty()) continue;
 
-                // For every connection in this group, push each event.
-                for (const auto& connection : group.downstreamConnections)
+                for (size_t i = 0; i < downstreamConnections.size(); ++i)
                 {
-                    AudioNode* target = connection.first;
-                    const int targetPort = connection.second;
-                    for (Event* event : events)
-                    {
-                        target->pushEvent(targetPort, event);
+                    auto* target = downstreamConnections[i].first;
+                    int targetPort = downstreamConnections[i].second;
 
-                        // set the corresponding bit of this node as needing processing
-                        // in the process loop the node will then be processed
-                        auto& vec = runningGraph.objectsSorted;
-                        if (auto it = std::ranges::find(vec, target); it != vec.end())
-                        {
-                            const unsigned targetIndex = it - vec.begin();
-                            runningGraph.activeEventNodes[targetIndex >> 6] |= (1ULL << (targetIndex & 63)); // targetIndex / 64, targetIndex % 64
-                        }
-                    }
+                    for (Event* event : events)
+                        target->pushEvent(targetPort, event);
+                }
+
+                // Bitfield update after all pushes
+                for (uint32_t targetIndex : targetIndices)
+                {
+                    if (targetIndex != UINT32_MAX)
+                        runningGraph.activeEventNodes[targetIndex >> 6] |= (1ULL << (targetIndex & 63));
                 }
             }
         };
 
-        node->sumInputBuffers = [](const std::vector<std::unique_ptr<AudioPort>>& inputPorts,
-                                       const AudioGraph& runningGraph, const int index)
+        node->sumInputBuffers = [](const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph& runningGraph, const int index)
         {
-            // Retrieve the input port map for the current node
-            const auto& portGroups = runningGraph.outputInputPortMap[index];
+            const auto& caches = runningGraph.cachedInputSumsPerNode[index];
 
-            for (const auto& portGroup : portGroups)
+            for (const auto& cache : caches)
             {
-                const auto portID = portGroup.inputPortNumber;
-                auto& port = inputPorts[portID];
-
-                // Reset port status in case it has been disconnected
-                port->isAnyConnectedPortSignal = false;
+                auto* port = cache.inputPort;
+                port->isAnyConnectedPortSignal = !cache.signalInputs.empty();
 
                 if (port->isSampleBuffer())
                 {
-                    if (portGroup.connectedPorts.empty())
-                    {
+                    if (cache.sampleSource)
+                        port->sampleBuffer = cache.sampleSource->sampleBuffer;
+                    else {
                         port->sampleBuffer.samples = nullptr;
                         port->sampleBuffer.size = 0;
-
                         port->zero();
                     }
-                    else
-                    {
-                        for (auto* connection : portGroup.connectedPorts)
-                        {
-                            if (connection->isSampleBuffer())
-                            {
-                                port->sampleBuffer.samples = connection->sampleBuffer.samples;
-                                port->sampleBuffer.size = connection->sampleBuffer.size;
-                                break;
-                            }
-                        }
-                    }
-                    continue; // Skip rest of loop for this port
-                }
-
-                if (!port->isSignal())
-                {
                     continue;
                 }
 
-                // Clear the audio buffer
-                port->zero();
+                if (!port->isSignal()) continue;
 
-                auto summingAudioBuffer = port->getAudioBuffer();
+                float* dst = port->getAudioBuffer();
+                std::fill_n(dst, cache.bufferSize, 0.0f);
 
-                // Use direct copy for the first connected signal to save CPU cycles
-                bool firstConnection = true;
-
-                unsigned portFrameSize = port->getAudioBufferSize();
-
-                for (size_t connIndex = 0; connIndex < portGroup.connectedPorts.size(); ++connIndex)
+                for (size_t i = 0; i < cache.signalInputs.size(); ++i)
                 {
-                    auto* connection = portGroup.connectedPorts[connIndex];
-                    const auto outputBuffer = connection->getAudioBuffer();
-
-                    if (connection->isSignal())
-                    {
-                        // Update port status: any connected signal overrides events
-                        port->isAnyConnectedPortSignal = true;
-
-                        if (firstConnection)
-                        {
-                            std::copy(outputBuffer, outputBuffer + portFrameSize, summingAudioBuffer);
-                            firstConnection = false;
-                        }
-                        else
-                        {
-                            // Sum the buffer for subsequent connections
-                            for (size_t i = 0; i < portFrameSize; ++i)
-                            {
-                                summingAudioBuffer[i] += outputBuffer[i];
-                            }
-                        }
-                    }
+                    const float* src = cache.signalInputs[i];
+                    if (i == 0)
+                        std::copy_n(src, cache.bufferSize, dst);
+                    else
+                        for (size_t j = 0; j < cache.bufferSize; ++j)
+                            dst[j] += src[j];
                 }
             }
         };
@@ -1557,17 +1544,18 @@ public:
         return filePath;
     }
 
-    const json graphToJSON()
+    json graphToJSON()
     {
         return activeGraph->graphToJSON();
     }
 
-    const json copySelected(const std::vector<uint32_t>& selectedNodeIDs)
+    json copySelected(const std::vector<uint32_t>& selectedNodeIDs)
     {
         if (activeGraph)
         {
             return activeGraph->serializeSelectedNodes(selectedNodeIDs);
         }
+        return { };
     }
 
 std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> pasteGraph(const json& patch)

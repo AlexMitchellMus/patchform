@@ -52,6 +52,7 @@ struct DownstreamPortGroup {
     uint8_t outputPortNumber;  // The source output port number on the current node.
     // Each pair holds a pointer to the downstream node and its corresponding input port.
     std::vector<std::pair<AudioNode*, int>> downstreamConnections;
+    std::vector<uint32_t> targetIndices; // parallel to downstreamConnections
 };
 
 using OutputPortMap = std::vector<std::vector<PortGroup>>;

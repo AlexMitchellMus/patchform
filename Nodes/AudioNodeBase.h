@@ -204,6 +204,7 @@ public:
     void addEvent(int port, Event* event)
     {
         outputPortBuffers[port]->addEvent(event);
+        hasEvents = true;
     }
 
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, AudioGraph&, const int)> pushOutputEvents;
@@ -245,6 +246,8 @@ private:
         cleanupAudio();
     }
 
+    bool hasEvents = false;
+
     void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, AudioGraph& runningGraph, const int index)
     {
         if (!shouldProcess(frameCount))
@@ -259,13 +262,18 @@ private:
 
         processAudio(inBuffer, buffer, frameCount, midiMessage);
 
-        pushOutputEvents(outputPortBuffers, runningGraph, index);
+        if (hasEvents)
+        {
+            pushOutputEvents(outputPortBuffers, runningGraph, index);
+            hasEvents = false;
+        }
 
         for (int i = 0; i < outputPortBuffers.size(); ++i)
             getOutputPort(i)->clearEvents();
 
         for (int i = 0; i < inputPortBuffers.size(); ++i)
             getInputPort(i)->clearEvents();
+
     }
 #ifdef PATCHFORM_WITH_GUI
     std::unique_ptr<UI> ui = nullptr;

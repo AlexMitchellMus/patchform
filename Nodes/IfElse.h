@@ -101,9 +101,9 @@ public:
                 e->setTimeStamp(event->getTimeStamp());
 
                 if (condition)
-                    outputPortBuffers[1]->addEvent(e);
+                    addEvent(1, e);
                 else
-                    outputPortBuffers[0]->addEvent(e);
+                    addEvent(0, e);
             }
         }
     }

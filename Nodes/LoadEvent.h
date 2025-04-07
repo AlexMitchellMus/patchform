@@ -25,7 +25,7 @@ public:
     {
         if (Event* e = context->eventPool.getFreeEvent())
         {
-            outputPortBuffers[0]->addEvent(e);
+            addEvent(0, e);
         }
     }
 };

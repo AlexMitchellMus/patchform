@@ -53,7 +53,7 @@ public:
                         }
 
                         e->numAtoms = 2;
-                        outputPortBuffers[0]->addEvent(e);
+                        addEvent(0, e);
 
 #ifdef DEBUG_MIDI
                         std::cout << "MidiNoteIn: Outputting Note-On List { " << noteNumber << ", " << velocity << " }" << std::endl;
