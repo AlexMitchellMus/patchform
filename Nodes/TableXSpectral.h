@@ -4,7 +4,6 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
-#include <tuple>
 #include "AudioNodeBase.h"
 
 class TableXSpectral : public AudioNode {
@@ -25,6 +24,7 @@ public:
         tempTime = (float*)pffft_aligned_malloc(2048 * sizeof(float));
 
         outputSamples.assign(2048, 0.0f);
+        smoothedOutput.assign(2048, 0.0f);
     }
 
     ~TableXSpectral() override {
@@ -61,19 +61,20 @@ public:
     {
         const auto inputA = inputPortBuffers[0]->sampleBuffer;
         const auto inputB = inputPortBuffers[1]->sampleBuffer;
-        if (inputA.size != 2048 || inputB.size != 2048)
-        {
+        if (inputA.size != 2048 || inputB.size != 2048) {
             std::fill(outputSamples.begin(), outputSamples.end(), 0.0f);
             outputPortBuffers[0]->sampleBuffer.reset();
             return;
         }
 
-        const float* a = inputPortBuffers[0]->sampleBuffer.samples;
-        const float* b = inputPortBuffers[1]->sampleBuffer.samples;
-
+        const float* a = inputA.samples;
+        const float* b = inputB.samples;
         const float* x = inputPortBuffers[2]->getAudioBuffer();
 
-        float blend = std::clamp(x[0], 0.0f, 1.0f);
+        float blend = std::clamp(x[context->frameCount - 1], 0.0f, 1.0f);
+        float blendCurve = blend * blend;                 // subtle nonlinearity for mag
+        float phaseBlend = std::sqrt(blend);              // different curve for phase
+        float binBlend = 0.5f * (1.0f - SpectralHelpers::constexprCos(blend * M_PI)); // smoother bin blend
 
         pffft_transform_ordered(setup, a, fftA, nullptr, PFFFT_FORWARD);
         pffft_transform_ordered(setup, b, fftB, nullptr, PFFFT_FORWARD);
@@ -88,9 +89,10 @@ public:
         std::fill(fftOut, fftOut + 2048, 0.0f);
 
         for (size_t i = 0; i < count; ++i) {
-            float bin = (1.0f - blend) * peaksA[i].bin + blend * peaksB[i].bin;
-            float mag = (1.0f - blend) * peaksA[i].mag + blend * peaksB[i].mag;
-            float phase = (1.0f - blend) * peaksA[i].phase + blend * peaksB[i].phase;
+            float bin = (1.0f - binBlend) * peaksA[i].bin + binBlend * peaksB[i].bin;
+            float mag = std::sqrt((1.0f - blendCurve) * peaksA[i].mag * peaksA[i].mag +
+                                  blendCurve * peaksB[i].mag * peaksB[i].mag);
+            float phase = (1.0f - phaseBlend) * peaksA[i].phase + phaseBlend * peaksB[i].phase;
 
             int binLo = (int)std::floor(bin);
             float frac = bin - binLo;
@@ -105,14 +107,17 @@ public:
             }
         }
 
-        // Interpolate DC and Nyquist
         fftOut[0] = (1.0f - blend) * fftA[0] + blend * fftB[0];
         fftOut[1] = (1.0f - blend) * fftA[1] + blend * fftB[1];
 
         pffft_transform_ordered(setup, fftOut, tempTime, nullptr, PFFFT_BACKWARD);
 
-        for (int i = 0; i < 2048; ++i)
-            outputSamples[i] = tempTime[i] * (1.0f / 2048.0f);
+        constexpr float alpha = 0.05f;
+        for (int i = 0; i < 2048; ++i) {
+            float sample = tempTime[i] * (1.0f / 2048.0f);
+            smoothedOutput[i] = (1.0f - alpha) * smoothedOutput[i] + alpha * sample;
+            outputSamples[i] = smoothedOutput[i];
+        }
 
         outputPortBuffers[0]->sampleBuffer.set(outputSamples);
     }
@@ -125,4 +130,5 @@ private:
     float* tempTime = nullptr;
 
     std::vector<float> outputSamples;
+    std::vector<float> smoothedOutput;
 };
