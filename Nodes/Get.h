@@ -16,8 +16,8 @@ class Get : public AudioNode
     IntParameter* atomNumberParam;
     std::atomic<size_t> atomNumber;
 
-    IntParameter* routeModeParam;
-    std::atomic<int> routeMode;
+    BoolParameter* routeModeParam;
+    std::atomic<bool> routeMode;
 
     DataAtom* savedData = nullptr;
 
@@ -27,10 +27,10 @@ public:
         addInputPort("A", AudioPort::PortType::Data); // hot port
 
         atomNumber.store(objParams.value("get", 0));
-        routeMode.store(objParams.value("routeMode", 0));
+        routeMode.store(objParams.value("routeMode", false));
 
         atomNumberParam = addParameter<IntParameter>("get", atomNumber, 0, 1024);
-        routeModeParam = addParameter<IntParameter>("route", routeMode, 0, 1);
+        routeModeParam = addParameter<BoolParameter>("route", routeMode);
 
         atomNumberParam->informNodeOfChange = [this]()
         {

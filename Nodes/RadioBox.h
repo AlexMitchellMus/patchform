@@ -22,12 +22,12 @@ public:
 private:
     int selectedIndex = 0;
     int radioCount = 8;
-    std::atomic<int> emitOnClick = 0;
+    std::atomic<bool> emitOnClick = false;
     LayoutType layout = LayoutType::Horizontal;
 
     IntParameter* radioCountParam = nullptr;
     StringParameter* layoutParam = nullptr;
-    IntParameter* emitOnClickParam = nullptr;
+    BoolParameter* emitOnClickParam = nullptr;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -282,11 +282,11 @@ public:
         std::string layoutName = objParams.value("layoutType", "horizontal");
         layout = getLayoutType(layoutName);
 
-        emitOnClick.store(objParams.value("emitOnClick", 1));
+        emitOnClick.store(objParams.value("emitOnClick", true));
 
         radioCountParam = addParameter<IntParameter>("Cells:", radioCount, 1, 1024);
         layoutParam = addParameter<StringParameter>("Layout:", layoutName);
-        emitOnClickParam = addParameter<IntParameter>("emitOnClick:", emitOnClick, 0, 1);
+        emitOnClickParam = addParameter<BoolParameter>("emitOnClick:", emitOnClick);
 
         emitOnClickParam->informNodeOfChange = [this]()
         {

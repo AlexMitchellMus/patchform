@@ -152,27 +152,25 @@ public:
         : Parameter(name), value(defaultValue) {}
 
     void setValue(bool newValue) {
-        queue.enqueue(newValue);
+        value.store(newValue, std::memory_order_release);
+        onParameterChanged();
         informNodeOfChange();
     }
 
-    bool getValue() {
-        bool newValue;
-        while (queue.try_dequeue(newValue)) {
-            value = newValue;
-        }
-        return value;
+    bool getValue() const {
+        return value.load(std::memory_order_acquire);
     }
 
-    std::string getAsString() const override { return value ? "true" : "false"; }
+    std::string getAsString() const override {
+        return value.load() ? "true" : "false";
+    }
 
     void setFromString(const std::string& input) override {
         setValue(input == "true" || input == "1");
     }
 
 #ifdef PATCHFORM_WITH_GUI
-    std::unique_ptr<pptk::Component> createEditorComponent() override
-    {
+    std::unique_ptr<pptk::Component> createEditorComponent() override {
         auto toggle = std::make_unique<ToggleSwitch>();
         toggle->setState(getValue());
         toggle->onToggle = [this](bool state) {
@@ -181,15 +179,13 @@ public:
         return toggle;
     }
 
-    void resizeEditorComponent(pptk::Component* c, int parentWidth, int parentHeight) override
-    {
+    void resizeEditorComponent(pptk::Component* c, int parentWidth, int parentHeight) override {
         if (c) c->setBounds(parentWidth - 90, 6, 33, 18);
     }
 #endif
 
 private:
-    bool value;
-    moodycamel::ConcurrentQueue<bool> queue;
+    std::atomic<bool> value;
 };
 
 class StringParameter : public Parameter {
