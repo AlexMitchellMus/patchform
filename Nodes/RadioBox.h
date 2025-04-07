@@ -282,7 +282,7 @@ public:
         std::string layoutName = objParams.value("layoutType", "horizontal");
         layout = getLayoutType(layoutName);
 
-        emitOnClick.store(objParams.value("emitOnClick", true));
+        emitOnClick.store(JsonHelpers::getBoolOrIntFallback(objParams, "emitOnClick", true));
 
         radioCountParam = addParameter<IntParameter>("Cells:", radioCount, 1, 1024);
         layoutParam = addParameter<StringParameter>("Layout:", layoutName);

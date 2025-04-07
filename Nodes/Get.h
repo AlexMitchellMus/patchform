@@ -27,7 +27,7 @@ public:
         addInputPort("A", AudioPort::PortType::Data); // hot port
 
         atomNumber.store(objParams.value("get", 0));
-        routeMode.store(objParams.value("routeMode", false));
+        routeMode.store(JsonHelpers::getBoolOrIntFallback(objParams, "routeMode", false));
 
         atomNumberParam = addParameter<IntParameter>("get", atomNumber, 0, 1024);
         routeModeParam = addParameter<BoolParameter>("route", routeMode);

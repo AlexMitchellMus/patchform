@@ -31,3 +31,6 @@
 [submodule "external/rtmidi"]
 	path = external/rtmidi
 	url = https://github.com/thestk/rtmidi.git
+[submodule "external/simde"]
+	path = external/simde
+	url = https://github.com/simd-everywhere/simde.git

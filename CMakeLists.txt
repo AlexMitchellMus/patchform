@@ -71,7 +71,7 @@ add_library(glad STATIC Glad/glad.cpp)
 target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/Glad")
 
 # Collect common source files
-file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp")
+file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp" "${CMAKE_SOURCE_DIR}/Utility/*.cpp")
 
 # PlugPatchCLI target
 add_executable(PlugPatchCLI PlugPatchCLI.cpp ${GRAPH_SOURCES})
@@ -116,6 +116,7 @@ target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/SDL2/include"
         "${CMAKE_SOURCE_DIR}/external/pffft"
         "${CMAKE_SOURCE_DIR}/external/rtmidi"
+        "${CMAKE_SOURCE_DIR}/external/simde"
 )
 target_link_libraries(PatchformStandalone PRIVATE
         SDL3::SDL3-static

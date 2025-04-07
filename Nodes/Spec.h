@@ -113,7 +113,7 @@ public:
 
     ~Spec() override
     {
-        pffft_destroy_setup(fftSetup);
+        if (fftSetup) pffft_destroy_setup(fftSetup);
     }
 
 #ifdef PATCHFORM_WITH_GUI
@@ -138,7 +138,7 @@ public:
         }
     }
 
-    void computeFFT(BufferType& spectrum)
+    void computeFFT(BufferType& spectrum) const
     {
         std::array<float, FFT_SIZE> timeDomainBuffer{};
         std::array<float, FFT_SIZE> freqDomainBuffer{};

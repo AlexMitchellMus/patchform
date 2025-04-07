@@ -23,12 +23,9 @@ public:
         fftSetup = pffft_new_setup(FFT_SIZE, PFFFT_REAL);
     }
 
-    void cleanupAudio() override
+    ~SpecFFT()
     {
-        if (fftSetup) {
-            pffft_destroy_setup(fftSetup);
-            fftSetup = nullptr;
-        }
+        if (fftSetup) pffft_destroy_setup(fftSetup);
     }
 
     void processAudio(const float*, float*, const unsigned long frameCount, std::vector<MidiMessage>&) override

@@ -227,7 +227,9 @@ bool PatchformApp::initAudio() {
     if (numApis < 0)
         return numApis; // error
 
-    int audioDriver = std::min(numApis - 1, 3);
+    int apiToUse = 3;
+
+    int audioDriver = std::min(numApis - 1, apiToUse);
 
     std::cout << "\n==== Audio Driver Info ====" << std::endl;
 

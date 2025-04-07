@@ -19,6 +19,8 @@
 
 #include "Parameter.h"
 
+#include "JsonHelpers.h"
+
 #ifdef PATCHFORM_WITH_GUI
 #include "../UI/Object.h"
 #endif
