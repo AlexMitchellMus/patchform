@@ -31,7 +31,7 @@ public:
                     e->data = event->data;
                     e->numAtoms = event->numAtoms;
                     e->setTimeStamp(event->getTimeStamp());
-                    addEvent(0, e);
+                    addEvent(value, e);
                 }
             }
         }

@@ -57,7 +57,7 @@ private:
         }
     }
 
-    static constexpr std::array<std::string_view, 10> libraries = {{
+    static constexpr std::array<std::string_view, 11> libraries = {{
 R"(linenoise-ng (CLI REPL)
 Martijn van Steenbergen
 BSD-3-Clause License
@@ -107,6 +107,11 @@ R"(RTMidi (Realtime MIDI I/O library for cross‐platform MIDI support)
 Gary P. Scavone
 MIT License
 https://www.music.mcgill.ca/~gary/rtmidi/)",
+
+R"(SIMDe (SIMD Everywhere – portable SIMD support for C/C++)
+Evan Nemerson and contributors
+MIT License
+https://github.com/simd-everywhere/simde)",
     }};
 };
 
@@ -117,7 +122,7 @@ public:
     LibraryListView()
     {
         auto viewedComp = std::make_unique<LibraryList>();
-        viewedComp->setBounds(0, 0, getWidth(), 1150);
+        viewedComp->setBounds(0, 0, getWidth(), 1350);
         setViewport(std::move(viewedComp));
     }
 
@@ -130,7 +135,7 @@ public:
     void resized() override
     {
         if (auto viewed = getViewedComponent())
-            viewed->setBounds(0, 0, getWidth(), 1150);
+            viewed->setBounds(0, 0, getWidth(), 1350);
 
         ComponentViewport::resized();
     }
