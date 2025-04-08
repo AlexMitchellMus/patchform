@@ -224,14 +224,22 @@ bool PatchformApp::initAudio() {
         return false;
 
     int numApis = Pa_GetHostApiCount();
-    if (numApis < 0)
-        return numApis; // error
+    if (numApis <= 0)
+        return false;
 
     int apiToUse = 3;
-
     int audioDriver = std::min(numApis - 1, apiToUse);
+    const PaHostApiInfo* apiInfo = Pa_GetHostApiInfo(audioDriver);
 
-    std::cout << "\n==== Audio Driver Info ====" << std::endl;
+    std::cout << "\n==== Audio Driver Info ====\n";
+
+    // Validate output device
+    if (!apiInfo || apiInfo->defaultOutputDevice == paNoDevice ||
+        Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultOutputDevice) == paInvalidDevice) {
+        std::cerr << "Invalid or no output device on selected API. Falling back to default.\n";
+        audioDriver = Pa_GetDefaultHostApi();
+        apiInfo = Pa_GetHostApiInfo(audioDriver);
+    }
 
     for (int i = 0; i < numApis; ++i) {
         const PaHostApiInfo* info = Pa_GetHostApiInfo(i);
@@ -239,60 +247,78 @@ bool PatchformApp::initAudio() {
             std::cout << (audioDriver == i ? "Active" : "Inactive") << " API " << i << " " << info->name << std::endl;
     }
 
-    int inputDeviceIndex = Pa_GetHostApiInfo(audioDriver)->defaultInputDevice;
-    int outputDeviceIndex = Pa_GetHostApiInfo(audioDriver)->defaultOutputDevice;
+    // Final fallback check
+    if (!apiInfo || apiInfo->defaultOutputDevice == paNoDevice ||
+        Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultOutputDevice) == paInvalidDevice) {
+        std::cerr << "No usable output device. Listing all devices:\n";
 
+        int numDevices = Pa_GetDeviceCount();
+        for (int i = 0; i < numDevices; ++i) {
+            const PaDeviceInfo* dev = Pa_GetDeviceInfo(i);
+            const PaHostApiInfo* host = Pa_GetHostApiInfo(dev->hostApi);
+            std::cout << "[" << i << "] " << dev->name << " (" << host->name << ")\n";
+        }
+
+        return false;
+    }
+
+    // Convert to global indices
+    int inputDeviceIndex = paNoDevice;
+    int outputDeviceIndex = Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultOutputDevice);
+
+    if (apiInfo->defaultInputDevice != paNoDevice) {
+        int globalInput = Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultInputDevice);
+        if (globalInput != paInvalidDevice)
+            inputDeviceIndex = globalInput;
+    }
+
+    // Set up stream params
     const PaDeviceInfo* inputInfo = nullptr;
     const PaDeviceInfo* outputInfo = nullptr;
 
+    PaStreamParameters inputParams{}, outputParams{};
     PaStreamParameters* inputParamsPtr = nullptr;
-    PaStreamParameters inputParams{};
-    if (inputDeviceIndex != paNoDevice)
-    {
-        inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);
-
-        inputParams.device = inputDeviceIndex;
-        inputParams.channelCount = 1;
-        inputParams.sampleFormat = paFloat32;
-        inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
-        inputParamsPtr = &inputParams;
-    }
-
     PaStreamParameters* outputParamsPtr = nullptr;
-    PaStreamParameters outputParams{};
-    if (outputDeviceIndex != paNoDevice)
-    {
-        outputInfo = Pa_GetDeviceInfo(outputDeviceIndex);
 
-        outputParams.device = outputDeviceIndex;
-        outputParams.channelCount = 1;
-        outputParams.sampleFormat = paFloat32;
-        outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
-        outputParamsPtr = &outputParams;
+    if (inputDeviceIndex != paInvalidDevice && inputDeviceIndex != paNoDevice) {
+        inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);
+        if (inputInfo) {
+            std::cout << "Using input: " << inputInfo->name << "\n";
+            inputParams.device = inputDeviceIndex;
+            inputParams.channelCount = 1;
+            inputParams.sampleFormat = paFloat32;
+            inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
+            inputParamsPtr = &inputParams;
+        }
     }
 
-    if (!inputParamsPtr)
-        std::cout << "No input device found.\n";
-    if (!outputParamsPtr)
-        std::cout << "No output device found.\n";
-
-    // Open the steam
-    auto err = Pa_OpenStream(&stream, inputParamsPtr, outputParamsPtr, sampleRate, frameCount, paClipOff, audioCallback, this);
-    if (err != paNoError)
-    {
-        std::cerr << Pa_GetErrorText(err) << std::endl;
+    outputInfo = Pa_GetDeviceInfo(outputDeviceIndex);
+    if (!outputInfo) {
+        std::cerr << "Output device info is null\n";
         return false;
     }
 
-    // Start the stream
+    std::cout << "Using output: " << outputInfo->name << "\n";
+    outputParams.device = outputDeviceIndex;
+    outputParams.channelCount = 1;
+    outputParams.sampleFormat = paFloat32;
+    outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
+    outputParamsPtr = &outputParams;
+
+    auto err = Pa_OpenStream(&stream, inputParamsPtr, outputParamsPtr, sampleRate, frameCount, paClipOff, audioCallback, this);
+    if (err != paNoError) {
+        std::cerr << "Pa_OpenStream failed: " << Pa_GetErrorText(err) << "\n";
+        return false;
+    }
+
     err = Pa_StartStream(stream);
     if (err != paNoError) {
-        std::cerr << "Failed to start stream: " << Pa_GetErrorText(err) << std::endl;
+        std::cerr << "Pa_StartStream failed: " << Pa_GetErrorText(err) << "\n";
         return false;
     }
+
     return true;
 }
-
 
 void PatchformApp::shutdownAudio() {
     if (stream) {

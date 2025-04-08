@@ -13,11 +13,13 @@ execute_process(
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process(
-        COMMAND git describe --tags --abbrev=0
+        COMMAND git describe --tags --long --always
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-        OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_VARIABLE GIT_DESC
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
+string(REGEX REPLACE "-g[0-9a-f]+$" "" GIT_VERSION "${GIT_DESC}")
 
 # Write the generated file.
 file(WRITE "${OUTPUT_FILE}" "#include \"GitInfo.h\"\n")
