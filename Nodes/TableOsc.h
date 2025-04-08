@@ -7,77 +7,66 @@ class TableOsc : public AudioNode {
 
     float phase = 0.0f;
     float freq = 440.0f;
+    SampleHandle currentWaveform;
 
 public:
     TableOsc(NodeContext* context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
-        addInputPort("waveform", AudioPort::PortType::Samples);
+        addInputPort("waveform", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Data);
     }
 
-    void processAudio(const float* in, float* out, unsigned long frameCount, std::vector<MidiMessage>&) override
+    void processAudio(const float*, float*, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
-        if (inputPortBuffers[0]->sampleBuffer.size != 2048)
+        // Pull waveform from event port
+        const auto& waveformEvents = inputPortBuffers[0]->getEvents();
+        if (!waveformEvents.empty() && waveformEvents[0]->data->type == DataAtom::DataType::Sample)
+            currentWaveform = waveformEvents[0]->data->data.sample;
+
+        if (!currentWaveform.isValid())
             return;
 
-        const auto waveform = inputPortBuffers[0]->sampleBuffer.samples;
+        auto* output = outputPortBuffers[0]->getAudioBuffer();
 
-        const auto& fEvents = inputPortBuffers[1]->getEvents();
-        const auto output = outputPortBuffers[0]->getAudioBuffer();
+        const auto* waveform = currentWaveform.get()->samples.data();
+        const size_t tableSize = currentWaveform.get()->samples.size();
 
-        for (auto e : fEvents)
-        {
+        // Pull frequency from event port
+        const auto& freqEvents = inputPortBuffers[1]->getEvents();
+        for (auto e : freqEvents) {
             if (e->data && e->data->type == DataAtom::DataType::Float)
                 freq = e->data->data.atom;
         }
 
-        // Check if the wavetable buffer is a power of two
-        // TODO: we need to make audio buffer's dynamic size (they are already vector<float> so shouldn't be hard)
-        const bool isPowerOfTwo = false;
+        if (tableSize < 2)
+            return;
 
-        switch (isPowerOfTwo)
-        {
-            // Faster processing (as we can use bit-shift instead of modulo for po2)
-        case true:
-            {
-                for (unsigned long i = 0; i < frameCount; ++i)
-                {
-                    const float invSampleRate = 1.0f / context->sampleRate;
-                    const float tableSize = 256.0f;
+        const float invSampleRate = 1.0f / context->sampleRate;
 
-                    phase += freq * invSampleRate;
-                    if (phase >= 1.0f) phase -= 1.0f;
+        // Check if tableSize is power of two
+        const bool isPowerOfTwo = (tableSize & (tableSize - 1)) == 0;
+        const size_t mask = tableSize - 1;
 
-                    float idx = phase * tableSize;
-                    int i0 = static_cast<int>(idx);
-                    float frac = idx - i0;
-                    int i1 = (i0 + 1) & 255;
+        for (unsigned long i = 0; i < frameCount; ++i) {
+            phase += freq * invSampleRate;
+            if (phase >= 1.0f) phase -= 1.0f;
+            if (phase < 0.0f) phase += 1.0f;
 
-                    float s0 = waveform[i0];
-                    float s1 = waveform[i1];
-                    output[i] = s0 + frac * (s1 - s0);
-                }
-            }
-            break;
-        default:
-        case false:
-            {
-                for (unsigned long i = 0; i < frameCount; ++i)
-                {
-                    float phaseInc = freq / context->sampleRate;
-                    phase += phaseInc;
-                    if (phase >= 1.0f)
-                        phase -= 1.0f;
+            float idx = phase * static_cast<float>(tableSize);
+            int i0 = static_cast<int>(idx);
+            float frac = idx - i0;
 
-                    float idx = phase * defaultTableSize - 1;
-                    int i0 = static_cast<int>(idx);
-                    int i1 = (i0 + 1) % defaultTableSize;
-                    float frac = idx - i0;
-                    output[i] = waveform[i0] + frac * (waveform[i1] - waveform[i0]);
-                }
-            }
-            break;
+            int i1 = isPowerOfTwo ? ((i0 + 1) & mask) : ((i0 + 1) % tableSize);
+
+            // Safe bounds
+            i0 = std::clamp(i0, 0, static_cast<int>(tableSize - 1));
+            i1 = std::clamp(i1, 0, static_cast<int>(tableSize - 1));
+
+            float s0 = waveform[i0];
+            float s1 = waveform[i1];
+
+            output[i] = s0 + frac * (s1 - s0);
         }
     }
 };

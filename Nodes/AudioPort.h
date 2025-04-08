@@ -24,6 +24,7 @@ struct PortGroup
     std::vector<AudioPort*> connectedPorts;
 };
 
+/*
 struct SampleHandle
 {
     float* samples;
@@ -47,6 +48,7 @@ struct SampleHandle
         size = newSize;
     }
 };
+*/
 
 struct DownstreamPortGroup {
     uint8_t outputPortNumber;  // The source output port number on the current node.
@@ -157,7 +159,7 @@ public:
 
     PortType getPortType() const { return portType; }
 
-    SampleHandle sampleBuffer;
+    Sample sampleBuffer;
 
 protected:
     std::vector<float> audioBuffer;

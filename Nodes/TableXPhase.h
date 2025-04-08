@@ -3,46 +3,54 @@
 #include "AudioNodeBase.h"
 
 class TableXPhase : public AudioNode {
-    DEFINE_AND_REGISTER_NODE("TableXPhase", "tableXphase", true);
+    DEFINE_AND_REGISTER_NODE("TableXPhase", "tableXPhase", false);
 
-    std::vector<float> outputSamples;
+    SampleHandle sampleA;
+    SampleHandle sampleB;
+    SampleHandle waveformData;
 
 public:
     TableXPhase(NodeContext* context, const json& objParams)
-        : AudioNode(context, AudioPort::PortType::Samples, objParams)
+        : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
-        addInputPort("a", AudioPort::Samples);   // source wavetable
-        addInputPort("b", AudioPort::Samples);   // phase table
-
-        outputSamples.assign(defaultTableSize, 0.0f);
+        addInputPort("a", AudioPort::Data);
+        addInputPort("b", AudioPort::Data);
+        addInputPort("x", AudioPort::Signal); // Phase array: 0.0–1.0
+        waveformData = SampleHandle::makeSampleHandle(defaultTableSize);
     }
 
     void processAudio(const float*, float*, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
-        const auto sourceBuffer = inputPortBuffers[0]->sampleBuffer;
-        const auto phaseBuffer = inputPortBuffers[1]->sampleBuffer;
-        if (sourceBuffer.size != 2048 || phaseBuffer.size != 2048)
-        {
-            std::fill(outputSamples.begin(), outputSamples.end(), 0.0f);
-            outputPortBuffers[0]->sampleBuffer.reset();
+        const auto bufferA = inputPortBuffers[0]->getEvents();
+        const auto bufferB = inputPortBuffers[1]->getEvents();
+
+        if (!bufferA.empty() && bufferA[0]->data->type == DataAtom::DataType::Sample)
+            sampleA = bufferA[0]->data->data.sample;
+
+        if (!bufferB.empty() && bufferB[0]->data->type == DataAtom::DataType::Sample)
+            sampleB = bufferB[0]->data->data.sample;
+
+        if (!sampleA.isValid() || !sampleB.isValid())
             return;
+
+        const float* a = sampleA.get()->samples.data();
+        const float* b = sampleB.get()->samples.data();
+        const float* x = inputPortBuffers[2]->getAudioBuffer();
+
+        auto& output = waveformData.get()->samples;
+
+        for (size_t i = 0; i < defaultTableSize; ++i) {
+            float mix = std::clamp(x[i], 0.0f, 1.0f); // use per-sample phase
+            output[i] = (1.0f - mix) * a[i] + mix * b[i];
         }
 
-        const auto source = sourceBuffer.samples;
-        const auto phase = phaseBuffer.samples;
-
-        for (size_t i = 0; i < defaultTableSize; ++i)
-        {
-            float p = std::clamp(phase[i], 0.0f, 1.0f);  // phase offset
-            float pos = p * defaultTableSize - 1;
-            int index = static_cast<int>(pos);
-            float frac = pos - index;
-
-            float a0 = source[index % defaultTableSize];
-            float a1 = source[(index + 1) % defaultTableSize];
-            outputSamples[i] = a0 + frac * (a1 - a0); // linear interpolation
+        if (auto e = context->eventPool.getFreeEvent()) {
+            auto dataAtom = context->eventPool.allocateDataAtom();
+            dataAtom->type = DataAtom::DataType::Sample;
+            new (&dataAtom->data.sample) SampleHandle(waveformData);
+            e->data = dataAtom;
+            e->numAtoms = 1;
+            addEvent(0, e);
         }
-
-        outputPortBuffers[0]->sampleBuffer.set(outputSamples);
     }
 };

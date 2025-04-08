@@ -6,28 +6,48 @@
 #include <vector>
 #include "AudioNodeBase.h"
 
-class TableXSpectral : public AudioNode {
+class TableXSpectral : public AudioNode
+{
     DEFINE_AND_REGISTER_NODE("TableXSpectral", "tableXspectral", true);
+
+    PFFFT_Setup* setup = nullptr;
+    float* fftA = nullptr;
+    float* fftB = nullptr;
+    float* fftOut = nullptr;
+    float* tempTime = nullptr;
+
+    SampleHandle sampleA;
+    SampleHandle sampleB;
+    SampleHandle waveformData;
+    std::vector<float> smoothedOutput;
+
+    float blend = 0.0f;
+    const float convergenceEpsilon = 1e-4f;
+    const float smoothingAlpha = 0.05f;
+
+    int remainingFrames = 0;
+    float targetBlend = 0.0f;
 
 public:
     TableXSpectral(NodeContext* context, const json& objParams)
-        : AudioNode(context, AudioPort::PortType::Samples, objParams)
+        : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
-        addInputPort("a", AudioPort::Samples);
-        addInputPort("b", AudioPort::Samples);
-        addInputPort("x", AudioPort::Signal); // blend 0–1
+        addInputPort("a", AudioPort::Data);
+        addInputPort("b", AudioPort::Data);
+        addInputPort("x", AudioPort::Data); // Blend 0–1
 
-        setup = pffft_new_setup(2048, PFFFT_REAL);
-        fftA = (float*)pffft_aligned_malloc(2048 * sizeof(float));
-        fftB = (float*)pffft_aligned_malloc(2048 * sizeof(float));
-        fftOut = (float*)pffft_aligned_malloc(2048 * sizeof(float));
-        tempTime = (float*)pffft_aligned_malloc(2048 * sizeof(float));
+        setup = pffft_new_setup(defaultTableSize, PFFFT_REAL);
+        fftA = (float*)pffft_aligned_malloc(defaultTableSize * sizeof(float));
+        fftB = (float*)pffft_aligned_malloc(defaultTableSize * sizeof(float));
+        fftOut = (float*)pffft_aligned_malloc(defaultTableSize * sizeof(float));
+        tempTime = (float*)pffft_aligned_malloc(defaultTableSize * sizeof(float));
 
-        outputSamples.assign(2048, 0.0f);
-        smoothedOutput.assign(2048, 0.0f);
+        waveformData = SampleHandle::makeSampleHandle(defaultTableSize);
+        smoothedOutput.assign(defaultTableSize, 0.0f);
     }
 
-    ~TableXSpectral() override {
+    ~TableXSpectral() override
+    {
         pffft_aligned_free(fftA);
         pffft_aligned_free(fftB);
         pffft_aligned_free(fftOut);
@@ -35,63 +55,86 @@ public:
         pffft_destroy_setup(setup);
     }
 
-    struct Peak {
+    struct Peak
+    {
         float bin;
         float mag;
         float phase;
     };
 
-    static void extractPeaks(const float* fft, Peak* peaks, int& count, int maxPeaks) {
+    static void extractPeaks(const float* fft, Peak* peaks, int& count, int maxPeaks)
+    {
         count = 0;
-        for (int i = 1; i < 1023; ++i) {
+        for (int i = 1; i < (defaultTableSize / 2) - 1; ++i)
+        {
             float re = fft[2 * i];
             float im = fft[2 * i + 1];
             float mag = std::sqrt(re * re + im * im);
-            if (mag > 1e-6f && count < maxPeaks) {
+            if (mag > 1e-6f && count < maxPeaks)
+            {
                 float phase = std::atan2(im, re);
-                peaks[count++] = { (float)i, mag, phase };
+                peaks[count++] = {(float)i, mag, phase};
             }
         }
-        std::sort(peaks, peaks + count, [](const Peak& a, const Peak& b) {
+        std::sort(peaks, peaks + count, [](const Peak& a, const Peak& b)
+        {
             return a.mag > b.mag;
         });
     }
 
     void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
     {
-        const auto inputA = inputPortBuffers[0]->sampleBuffer;
-        const auto inputB = inputPortBuffers[1]->sampleBuffer;
-        if (inputA.size != 2048 || inputB.size != 2048) {
-            std::fill(outputSamples.begin(), outputSamples.end(), 0.0f);
-            outputPortBuffers[0]->sampleBuffer.reset();
+        const auto bufferA = inputPortBuffers[0]->getEvents();
+        const auto bufferB = inputPortBuffers[1]->getEvents();
+        const auto bufferX = inputPortBuffers[2]->getEvents();
+
+        if (!bufferA.empty() && bufferA[0]->data->type == DataAtom::DataType::Sample)
+            sampleA = bufferA[0]->data->data.sample;
+
+        if (!bufferB.empty() && bufferB[0]->data->type == DataAtom::DataType::Sample)
+            sampleB = bufferB[0]->data->data.sample;
+
+        if (!sampleA.isValid() || !sampleB.isValid())
             return;
+
+        for (auto it = bufferX.rbegin(); it != bufferX.rend(); ++it)
+        {
+            if ((*it)->data && (*it)->data->type == DataAtom::DataType::Float)
+            {
+                float newBlend = std::clamp((*it)->data->data.atom, 0.0f, 1.0f);
+                onBlendChanged(newBlend);
+                break;
+            }
         }
 
-        const float* a = inputA.samples;
-        const float* b = inputB.samples;
-        const float* x = inputPortBuffers[2]->getAudioBuffer();
+        if (remainingFrames <= 0)
+            return;
 
-        float blend = std::clamp(x[context->frameCount - 1], 0.0f, 1.0f);
-        float blendCurve = blend * blend;                 // subtle nonlinearity for mag
-        float phaseBlend = std::sqrt(blend);              // different curve for phase
-        float binBlend = 0.5f * (1.0f - SpectralHelpers::constexprCos(blend * M_PI)); // smoother bin blend
+        --remainingFrames;
+
+        const float* a = sampleA.get()->samples.data();
+        const float* b = sampleB.get()->samples.data();
+
+        float blendCurve = targetBlend * targetBlend;
+        float phaseBlend = std::sqrt(targetBlend);
+        float binBlend = 0.5f * (1.0f - SpectralHelpers::constexprCos(targetBlend * M_PI));
 
         pffft_transform_ordered(setup, a, fftA, nullptr, PFFFT_FORWARD);
         pffft_transform_ordered(setup, b, fftB, nullptr, PFFFT_FORWARD);
 
-        Peak peaksA[128];
-        Peak peaksB[128];
+        Peak peaksA[128], peaksB[128];
         int countA = 0, countB = 0;
         extractPeaks(fftA, peaksA, countA, 128);
         extractPeaks(fftB, peaksB, countB, 128);
         size_t count = std::min(countA, countB);
 
-        std::fill(fftOut, fftOut + 2048, 0.0f);
+        std::fill(fftOut, fftOut + defaultTableSize, 0.0f);
 
-        for (size_t i = 0; i < count; ++i) {
+        for (size_t i = 0; i < count; ++i)
+        {
             float bin = (1.0f - binBlend) * peaksA[i].bin + binBlend * peaksB[i].bin;
             float mag = std::sqrt((1.0f - blendCurve) * peaksA[i].mag * peaksA[i].mag +
-                                  blendCurve * peaksB[i].mag * peaksB[i].mag);
+                blendCurve * peaksB[i].mag * peaksB[i].mag);
             float phase = (1.0f - phaseBlend) * peaksA[i].phase + phaseBlend * peaksB[i].phase;
 
             int binLo = (int)std::floor(bin);
@@ -99,36 +142,48 @@ public:
             float re = mag * std::cos(phase);
             float im = mag * std::sin(phase);
 
-            if (binLo >= 1 && binLo < 2047) {
-                fftOut[2 * binLo    ] += (1.0f - frac) * re;
+            if (binLo >= 1 && binLo < (defaultTableSize / 2) - 1)
+            {
+                fftOut[2 * binLo] += (1.0f - frac) * re;
                 fftOut[2 * binLo + 1] += (1.0f - frac) * im;
-                fftOut[2 * (binLo + 1)    ] += frac * re;
+                fftOut[2 * (binLo + 1)] += frac * re;
                 fftOut[2 * (binLo + 1) + 1] += frac * im;
             }
         }
 
-        fftOut[0] = (1.0f - blend) * fftA[0] + blend * fftB[0];
-        fftOut[1] = (1.0f - blend) * fftA[1] + blend * fftB[1];
+        fftOut[0] = (1.0f - targetBlend) * fftA[0] + targetBlend * fftB[0];
+        fftOut[1] = (1.0f - targetBlend) * fftA[1] + targetBlend * fftB[1];
 
         pffft_transform_ordered(setup, fftOut, tempTime, nullptr, PFFFT_BACKWARD);
 
-        constexpr float alpha = 0.05f;
-        for (int i = 0; i < 2048; ++i) {
-            float sample = tempTime[i] * (1.0f / 2048.0f);
-            smoothedOutput[i] = (1.0f - alpha) * smoothedOutput[i] + alpha * sample;
-            outputSamples[i] = smoothedOutput[i];
+        auto& output = waveformData.get()->samples;
+        for (int i = 0; i < defaultTableSize; ++i)
+        {
+            float sample = tempTime[i] * (1.0f / defaultTableSize);
+            smoothedOutput[i] = (1.0f - smoothingAlpha) * smoothedOutput[i] + smoothingAlpha * sample;
+            output[i] = smoothedOutput[i];
         }
 
-        outputPortBuffers[0]->sampleBuffer.set(outputSamples);
+        // Emit event with blended sample
+        if (auto e = context->eventPool.getFreeEvent())
+        {
+            auto dataAtom = context->eventPool.allocateDataAtom();
+            dataAtom->type = DataAtom::DataType::Sample;
+            new(&dataAtom->data.sample) SampleHandle(waveformData);
+            e->data = dataAtom;
+            e->numAtoms = 1;
+            addEvent(0, e);
+        }
     }
 
-private:
-    PFFFT_Setup* setup = nullptr;
-    float* fftA = nullptr;
-    float* fftB = nullptr;
-    float* fftOut = nullptr;
-    float* tempTime = nullptr;
-
-    std::vector<float> outputSamples;
-    std::vector<float> smoothedOutput;
+    void onBlendChanged(float newBlend)
+    {
+        if (std::abs(newBlend - targetBlend) > 1e-4f)
+        {
+            targetBlend = newBlend;
+            remainingFrames = static_cast<int>(
+                std::ceil(std::log(convergenceEpsilon) / std::log(1.0f - smoothingAlpha))
+            );
+        }
+    }
 };

@@ -116,8 +116,7 @@ public:
                     }
                     else
                     {
-                        outAtom->type = persistentAtoms[i]->type;
-                        outAtom->data = persistentAtoms[i]->data;
+                        outAtom->copyFrom(persistentAtoms[i]);
                     }
                     outAtom->next = nullptr;
                     outputAtoms[i] = outAtom;

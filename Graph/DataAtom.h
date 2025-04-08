@@ -8,17 +8,121 @@
 #include "PersistentAtomFlags.h"
 #include "OwnershipBlockPool.h"
 
+#include "SampleHandle.h"
+
 class alignas(32) DataAtom
 {
 public:
-    enum class DataType : uint8_t { Float, List, Symbol };
+    enum class DataType : uint8_t { Float, List, Symbol, Sample };
 
-    union data
+    union Data
     {
         float atom;
         hash32 symbol;
         DataAtom* list;
-    } data {};
+        SampleHandle sample;
+
+        Data()
+        {
+        }
+
+        ~Data()
+        {
+        }
+
+        Data(const Data& other, DataType type)
+        {
+            switch (type)
+            {
+            case DataType::Float:
+                atom = other.atom;
+                break;
+            case DataType::Symbol:
+                symbol = other.symbol;
+                break;
+            case DataType::List:
+                list = other.list;
+                break;
+            case DataType::Sample:
+                new(&sample) SampleHandle(other.sample);
+                break;
+            }
+        }
+
+        Data(Data&& other, DataType type) noexcept
+        {
+            switch (type)
+            {
+            case DataType::Float:
+                atom = other.atom;
+                break;
+            case DataType::Symbol:
+                symbol = other.symbol;
+                break;
+            case DataType::List:
+                list = other.list;
+                break;
+            case DataType::Sample:
+                new(&sample) SampleHandle(std::move(other.sample));
+                break;
+            }
+        }
+
+        void destroy(DataType type)
+        {
+            if (type == DataType::Sample)
+                sample.~SampleHandle();
+        }
+    } data;
+
+    // ✅ Default constructor
+    DataAtom()
+    {
+        data.atom = 0.0f;
+    }
+
+    // ✅ Copy constructor
+    DataAtom(const DataAtom& other)
+        : type(other.type), next(nullptr), ownerChain(nullptr)
+    {
+        new(&data) Data(other.data, other.type);
+    }
+
+    // ✅ Copy assignment
+    DataAtom& operator=(const DataAtom& other)
+    {
+        if (this != &other)
+        {
+            data.destroy(type);
+            type = other.type;
+            new(&data) Data(other.data, type);
+        }
+        return *this;
+    }
+
+    // ✅ Move constructor
+    DataAtom(DataAtom&& other) noexcept
+        : type(other.type), next(nullptr), ownerChain(nullptr)
+    {
+        new(&data) Data(std::move(other.data), other.type);
+    }
+
+    // ✅ Move assignment
+    DataAtom& operator=(DataAtom&& other) noexcept
+    {
+        if (this != &other)
+        {
+            data.destroy(type);
+            type = other.type;
+            new(&data) Data(std::move(other.data), type);
+        }
+        return *this;
+    }
+
+    ~DataAtom()
+    {
+        data.destroy(type);
+    }
 
     DataAtom* next = nullptr;
     OwnershipBlock* ownerChain = nullptr;
@@ -50,6 +154,37 @@ public:
             ++count;
         }
         return nullptr;
+    }
+
+    void copyFrom(const DataAtom* other)
+    {
+        if (!other)
+        {
+            type = DataType::Float;
+            data.atom = 0.f;
+            return;
+        }
+
+        type = other->type;
+
+        switch (type)
+        {
+        case DataType::Float:
+            data.atom = other->data.atom;
+            break;
+
+        case DataType::Symbol:
+            data.symbol = other->data.symbol;
+            break;
+
+        case DataType::List:
+            data.list = other->data.list;
+            break;
+
+        case DataType::Sample:
+            new(&data.sample) SampleHandle(other->data.sample);
+            break;
+        }
     }
 
     void toString(std::string& textBuffer, bool recursive = true) const
@@ -163,13 +298,15 @@ public:
         textBuffer.assign(buffer, pos);
     }
 
-    void makePersistent(bool toBePersistent, int nodeID, OwnershipBlockPool& pool, PersistentAtomFlags& flags, const std::vector<DataAtom>& atomPool)
+    void makePersistent(bool toBePersistent, int nodeID, OwnershipBlockPool& pool, PersistentAtomFlags& flags,
+                        const std::vector<DataAtom>& atomPool)
     {
         makePersistent(this, toBePersistent, nodeID, pool, flags, atomPool);
     }
 
 private:
-    static void makePersistent(DataAtom* atom, bool toBePersistent, int nodeID, OwnershipBlockPool& pool, PersistentAtomFlags& flags, const std::vector<DataAtom>& atomPool)
+    static void makePersistent(DataAtom* atom, bool toBePersistent, int nodeID, OwnershipBlockPool& pool,
+                               PersistentAtomFlags& flags, const std::vector<DataAtom>& atomPool)
     {
         while (atom != nullptr)
         {
@@ -197,7 +334,8 @@ private:
         }
     }
 
-    static void addOwnership(DataAtom* atom, const int nodeID, OwnershipBlockPool& pool, const PersistentAtomFlags& flags, const std::vector<DataAtom>& atomPool)
+    static void addOwnership(DataAtom* atom, const int nodeID, OwnershipBlockPool& pool,
+                             const PersistentAtomFlags& flags, const std::vector<DataAtom>& atomPool)
     {
         const auto index = static_cast<size_t>(atom - atomPool.data());
 
@@ -225,7 +363,8 @@ private:
         flags.set(index);
     }
 
-    static void removeOwnership(DataAtom* atom, const int nodeID, OwnershipBlockPool& pool, const PersistentAtomFlags& flags, const std::vector<DataAtom>& atomPool)
+    static void removeOwnership(DataAtom* atom, const int nodeID, OwnershipBlockPool& pool,
+                                const PersistentAtomFlags& flags, const std::vector<DataAtom>& atomPool)
     {
         const auto index = static_cast<size_t>(atom - atomPool.data());
 

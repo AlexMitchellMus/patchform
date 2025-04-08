@@ -950,17 +950,17 @@ public:
                 auto* port = cache.inputPort;
                 port->isAnyConnectedPortSignal = !cache.signalInputs.empty();
 
-                if (port->isSampleBuffer())
-                {
-                    if (cache.sampleSource)
-                        port->sampleBuffer = cache.sampleSource->sampleBuffer;
-                    else {
-                        port->sampleBuffer.samples = nullptr;
-                        port->sampleBuffer.size = 0;
-                        port->zero();
-                    }
-                    continue;
-                }
+                //if (port->isSampleBuffer())
+                //{
+                //    if (cache.sampleSource)
+                //        port->sampleBuffer = cache.sampleSource->sampleBuffer;
+                //    else {
+                //        port->sampleBuffer.samples = nullptr;
+                //        port->sampleBuffer.size = 0;
+                //        port->zero();
+                //    }
+                //    continue;
+                //}
 
                 if (!port->isSignal()) continue;
 

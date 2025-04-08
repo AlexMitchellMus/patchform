@@ -11,7 +11,7 @@ class Table final : public AudioNode {
 
     std::atomic<bool> bufferReady{false};
 
-    std::vector<float> outputSampleBuffer;
+    SampleHandle waveformData;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -162,12 +162,10 @@ public:
     }
 #endif
 
-    Table(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Samples, objParams)
+    Table(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         bufferA.resize(numValues, 0.0f);
         bufferB.resize(numValues, 0.0f);
-
-        outputSampleBuffer.resize(numValues, 0.0f);
 
         auto bufferFromFile = objParams.value("data", bufferA);
 
@@ -187,6 +185,8 @@ public:
 
         addInputPort("control", AudioPort::Data);
 
+        waveformData = SampleHandle::makeSampleHandle(numValues);
+
         eventOnLoad = true;
     }
 
@@ -203,11 +203,23 @@ public:
         bufferReady.store(true, std::memory_order_release);
 #endif
 
+        if (!waveformData.isValid())
+            return;
+
+        auto& samples = waveformData.sample->samples;
+
         for (unsigned long i = 0; i < bufferA.size(); ++i) {
-            outputSampleBuffer[i] = bufferA[i] * 2.0f - 1.0f;
+            samples[i] = bufferA[i] * 2.0f - 1.0f;
         }
 
-        outputPortBuffers[0]->sampleBuffer.set(outputSampleBuffer);
+        if (auto e = context->eventPool.getFreeEvent())
+        {
+            auto dataAtom = context->eventPool.allocateDataAtom();
+            dataAtom->type = DataAtom::DataType::Sample;
+            new (&dataAtom->data.sample) SampleHandle(waveformData);
+            e->data = dataAtom;
+            addEvent(0, e);
+        }
     }
 
     json getSerializedNode() override {
