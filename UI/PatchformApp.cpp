@@ -46,7 +46,7 @@ bool PatchformApp::initialize()
     if (!initMidi())
     {
         std::cerr << "Failed to initialize MIDI" << std::endl;
-        return false;
+        // Not having MIDI is OK (but MIDI nodes won't work obviously!)
     }
 
     if (!initAudio())
@@ -242,28 +242,55 @@ bool PatchformApp::initAudio() {
     int inputDeviceIndex = Pa_GetHostApiInfo(audioDriver)->defaultInputDevice;
     int outputDeviceIndex = Pa_GetHostApiInfo(audioDriver)->defaultOutputDevice;
 
-    if (inputDeviceIndex == paNoDevice || outputDeviceIndex == paNoDevice)
-        return false;
+    const PaDeviceInfo* inputInfo = nullptr;
+    const PaDeviceInfo* outputInfo = nullptr;
 
-    const PaDeviceInfo* inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);
-    const PaDeviceInfo* outputInfo = Pa_GetDeviceInfo(outputDeviceIndex);
-
+    PaStreamParameters* inputParamsPtr = nullptr;
     PaStreamParameters inputParams{};
-    inputParams.device = inputDeviceIndex;
-    inputParams.channelCount = 1;
-    inputParams.sampleFormat = paFloat32;
-    inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
+    if (inputDeviceIndex != paNoDevice)
+    {
+        inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);
 
+        inputParams.device = inputDeviceIndex;
+        inputParams.channelCount = 1;
+        inputParams.sampleFormat = paFloat32;
+        inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
+        inputParamsPtr = &inputParams;
+    }
+
+    PaStreamParameters* outputParamsPtr = nullptr;
     PaStreamParameters outputParams{};
-    outputParams.device = outputDeviceIndex;
-    outputParams.channelCount = 1;
-    outputParams.sampleFormat = paFloat32;
-    outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
+    if (outputDeviceIndex != paNoDevice)
+    {
+        outputInfo = Pa_GetDeviceInfo(outputDeviceIndex);
 
-    if (Pa_OpenStream(&stream, &inputParams, &outputParams, sampleRate, frameCount, paClipOff, audioCallback, this) != paNoError)
+        outputParams.device = outputDeviceIndex;
+        outputParams.channelCount = 1;
+        outputParams.sampleFormat = paFloat32;
+        outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
+        outputParamsPtr = &outputParams;
+    }
+
+    if (!inputParamsPtr)
+        std::cout << "No input device found.\n";
+    if (!outputParamsPtr)
+        std::cout << "No output device found.\n";
+
+    // Open the steam
+    auto err = Pa_OpenStream(&stream, inputParamsPtr, outputParamsPtr, sampleRate, frameCount, paClipOff, audioCallback, this);
+    if (err != paNoError)
+    {
+        std::cerr << Pa_GetErrorText(err) << std::endl;
         return false;
+    }
 
-    return (Pa_StartStream(stream) == paNoError);
+    // Start the stream
+    err = Pa_StartStream(stream);
+    if (err != paNoError) {
+        std::cerr << "Failed to start stream: " << Pa_GetErrorText(err) << std::endl;
+        return false;
+    }
+    return true;
 }
 
 
