@@ -21,7 +21,7 @@ public:
 
 private:
     int selectedIndex = 0;
-    int radioCount = 8;
+    std::atomic<int> radioCount = 8;
     std::atomic<bool> emitOnClick = false;
     LayoutType layout = LayoutType::Horizontal;
 
@@ -293,12 +293,17 @@ public:
             emitOnClick.store(emitOnClickParam->getValue());
         };
 
+        radioCountParam->informNodeOfChange = [this]()
+        {
+            radioCount.store(radioCountParam->getValue());
+        };
+
         addInputPort("input", AudioPort::PortType::Data);
     }
 
     json getSerializedNode() override
     {
-        nodeCreationData["numOptions"] = radioCount;
+        nodeCreationData["numOptions"] = radioCount.load();
         // Index can change from the audio thread, so we use the UI's selected index.
         nodeCreationData["selectedIndex"] = reinterpret_cast<RadioBox::UI*>(getOrCreateUI())->getSelectedIndex();
 
@@ -312,7 +317,6 @@ public:
 #ifdef PATCHFORM_WITH_GUI
     void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
-        radioCount = radioCountParam->getValue();
         auto inputEvents = inputPortBuffers[0]->getEvents();
 
         if (!inputEvents.empty())

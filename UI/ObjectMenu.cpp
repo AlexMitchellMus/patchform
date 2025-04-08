@@ -5,18 +5,18 @@
 #include "Object.h"
 #include "Canvas.h"
 #include "ToolDock.h"
-#include "Constants.h"
 #include "../Graph/AudioGraph.h"
 #include "../UI_ToolKit/CompEvent.h"
 #include "CursorBitmaps.h"
+
+using namespace ObjectMenuDefs;
 
 Item::Item(ObjectDef def) : definition(def.definition), icon(def.icon), useIcon(def.useIcon)
 {
     if (!definition.empty())
     {
         name = def.getDisplayName();
-        //json j = json::parse(def.definition);
-        //name = j.value<std::string>("obj", "empty");
+        tint = def.tint;
     }
 }
 
@@ -51,8 +51,10 @@ void Item::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk
 void Item::render(NVGcontext* vg)
 {
     nvgBeginPath(vg);
-    auto col = hovered ? highlight : bg;
-    nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), col, nvgRGB(55, 55, 55), getHeight() * 0.5f);
+    NVGcolor fill = tint;
+    fill.a = hovered ? 25 : 10;
+
+    nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), fill, nvgRGB(55, 55, 55), getHeight() * 0.5f);
 
     if (useIcon)
     {
@@ -70,92 +72,103 @@ void Item::render(NVGcontext* vg)
     nvgText(vg, getWidth() - 10, getHeight() * 0.5f, name.c_str(), nullptr);
 }
 
-ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
-{
-constexpr ObjectDef objectDef[100] = {
-    { R"({"obj": "Metro"})", ICONS::Metro, true, "Metronome" },
-    { R"({"obj": "Osc", "waveform": "sine", "freq": 440})", ICONS::Osc, true, "Oscillator" },
-    { R"({"obj": "tableosc"})", "tosc", false, "Table Oscillator" },
-    { R"({"obj": "Add"})", "add", false, "Add" },
-    { R"({"obj": "mul"})", "mul", false, "Multiply" },
-    { R"({"obj": "div"})", "div", false, "Divide" },
-    { R"({"obj": "lfo"})", ICONS::Lfo, true, "LFO" },
-    { R"({"obj": "env", "attack": 50, "decay": 50})", ICONS::Adsr, true, "Envelope" },
-    { R"({"obj": "gain"})", "gain", false, "Gain" },
-    { R"({"obj": "count"})", ICONS::Count, true, "Counter" },
-    { R"({"obj": "dial", "min": 0, "max": 10, "value": 3})", ICONS::Dial, true, "Dial" },
-    { R"({"obj": "IfElse"})", "ifelse", false, "If / Else" },
-    { R"({"obj": "select", "outputs": 8 })", "sel", false, "Selector" },
-    { R"({"obj": "ain"})", "ain", false, "Audio Input" },
-    { R"({"obj": "aout"})", ICONS::Aout, true, "Audio Output" },
-    { R"({"obj": "floatbox"})", "fb", false, "Float Box" },
-    { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false, "Ping" },
-    { R"({"obj": "scope"})", "Scp", false, "Scope" },
-    { R"({"obj": "bpf"})", "bpf", false, "Bandpass Filter" },
-    { R"({"obj": "spec"})", "spec", false, "Spectrum" },
-    { R"({"obj": "mtof"})", "mtof", false, "MIDI to Frequency" },
-    { R"({"obj": "changed"})", "chg", false, "Change Detector" },
-    { R"({"obj": "fdn"})", "fdn", false, "FDN Reverb" },
-    { R"({"obj": "notein"})", "MIDIIN", false, "Note Input" },
-    { R"({"obj": "get"})", "get", false, "Get Value" },
-    { R"({"obj": "listbox"})", "lb", false, "List Box" },
-    { R"({"obj": "pack", "values": 5 })", "pack", false, "Pack" },
-    { R"({"obj": "tag"})", "tag", false, "Tag" },
-    { R"({"obj": "radiobox"})", "rb", false, "Radio Box" },
-    { R"({"obj": "strip"})", "strp", false, "Strip" },
-    { R"({"obj": "comment"})", "com", false, "Comment" },
-    { R"({"obj": "filtertag"})", "filtag", false, "Filter by Tag" },
-    { R"({"obj": "activemidinotes"})", "act notes", false, "Active MIDI Notes" },
-    { R"({"obj": "random"})", "rnd", false, "Random" },
-    { R"({"obj": "intify", "mode": 0 })", "intify", false, "Intify" },
-    { R"({"obj": "evdelay", "ms": 100 })", "evdel", false, "Event Delay" },
-    { R"({"obj": "drive", "mode": 0 })", "drive", false, "Drive" },
-    { R"({"obj": "loadevent" })", "ldev", false, "Load Event" },
-    { R"({"obj": "specfft" })", "fft", false, "FFT" },
-    { R"({"obj": "specifft" })", "ifft", false, "Inverse FFT" },
-    { R"({"obj": "specmerge" })", "smerge", false, "Spectrum Merge" },
-    { R"({"obj": "multitapdelay" })", "mtdel", false, "Multitap Delay" },
-    { R"({"obj": "zerox" })", "zerox", false, "Zero Crossings" },
-    { R"({"obj": "limiter" })", "limit", false, "Limiter" },
-    { R"({"obj": "pitchdetect" })", "pdetect", false, "Pitch Detect" },
-    { R"({"obj": "table", "size": 256 })", "table", false, "Table" },
-    { R"({"obj": "tablexfade" })", "txf", false, "Table XFade" },
-    { R"({"obj": "value" })", "val", false, "Value Holder" },
-    { R"({"obj": "tablexphase" })", "txp", false, "Table XPhase" },
-    { R"({"obj": "tablexspectral" })", "txs", false, "Table XSpectral" },
+struct CategoryBlock {
+    const char* categoryName;
+    const ObjectMenuDefs::ObjectDef* items;
+    size_t itemCount;
 };
 
+#define COUNT_OF(arr) (sizeof(arr) / sizeof(arr[0]))
 
-    int x = 16;
-    int y = 16;
-    const int paddingX = 12;
-    const int paddingY = 10;
-    const int maxRowWidth = 600;
-    const int itemHeight = 33;
-    const int minItemWidth = 40;
+ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
+{
+    constexpr CategoryBlock objectMenu[] = {
+        { "Control", ControlItems, COUNT_OF(ControlItems) },
+        { "UI", UIItems, COUNT_OF(UIItems) },
+        { "IO", IOItems, COUNT_OF(IOItems) },
+        { "Maths", MathsItems, COUNT_OF(MathsItems) },
+        { "Oscillator", OscillatorItems, COUNT_OF(OscillatorItems) },
+        { "Effect", EffectItems, COUNT_OF(EffectItems) },
+        { "Spectral", SpectralItems, COUNT_OF(SpectralItems) },
+        { "Wavetable", WavetableItems, COUNT_OF(WavetableItems) },
+    };
 
-    for (const auto& def : objectDef)
+    float x = 16;
+    float y = 18;
+    constexpr int paddingX = 12;
+    constexpr int paddingY = 10;
+    constexpr int maxRowWidth = 605;
+    constexpr int itemHeight = 33;
+
+    for (const auto& block : objectMenu)
     {
-        auto item = std::make_unique<Item>(def);
+        // Store the category header position
+        categoryHeaders.push_back({ block.categoryName, {x, y + 10} }); // +16 for vertical centering
 
-        if (item->isInvalid())
-            continue;
+        NVGcolor tint;
 
-        auto objectName = def.getDisplayName();
-        int textWidth = canvas->findParentOfClass<Editor>()->getTextWidthForFont("Regular", 14, objectName );
-        int itemWidth = std::max(minItemWidth, 33 + textWidth + 20);
-
-        if (x + itemWidth > maxRowWidth)
+        switch (hash(block.categoryName))
         {
-            x = 16;
-            y += itemHeight + paddingY;
+        case hash("UI"):
+            tint = nvgRGB(90, 160, 200);        // Teal Blue
+            break;
+        case hash("IO"):
+            tint = nvgRGB(220, 100, 100);       // Warm Red
+            break;
+        case hash("Control"):
+            tint = nvgRGB(220, 200, 60);        // Gold
+            break;
+        case hash("Oscillator"):
+            tint = nvgRGB(80, 220, 220);        // Bright Cyan
+            break;
+        case hash("Effect"):
+            tint = nvgRGB(200, 100, 220);       // Electric Purple
+            break;
+        case hash("Spectral"):
+            tint = nvgRGB(100, 200, 160);       // Soft Aqua
+            break;
+        case hash("Wavetable"):
+            tint = nvgRGB(80, 160, 100);        // Deep Green
+            break;
+        case hash("Maths"):
+            tint = nvgRGB(240, 150, 50);        // Orange
+            break;
+        default:
+            tint = nvgRGB(44, 44, 44);          // Fallback Dark Grey
+            break;
         }
 
-        item->setBounds(x, y, itemWidth, itemHeight);
-        x += itemWidth + paddingX;
+        y += 26;
+        x = 16;
 
-        addComponent(item.get());
-        items.push_back(std::move(item));
+        for (size_t i = 0; i < block.itemCount; ++i)
+        {
+            const auto& def = block.items[i];
+
+            def.tint = tint;
+            auto item = std::make_unique<Item>(def);
+
+            if (item->isInvalid())
+                continue;
+
+            int textWidth = canvas->findParentOfClass<Editor>()->getTextWidthForFont("Regular", 14, def.getDisplayName());
+            int itemWidth = std::max(40, 33 + textWidth + 20);
+
+            if (x + itemWidth > maxRowWidth)
+            {
+                x = 16;
+                y += itemHeight + paddingY;
+            }
+
+            item->setBounds(x, y, itemWidth, itemHeight);
+            x += itemWidth + paddingX;
+
+            addComponent(item.get());
+            items.push_back(std::move(item));
+        }
+
+        y += itemHeight + paddingY * 2;
+        x = 16;
     }
 
     // Set lambdas for each item
@@ -222,6 +235,22 @@ constexpr ObjectDef objectDef[100] = {
     setBounds(0, 0, maxRowWidth, y + itemHeight + paddingY);
     repaint();
 };
+
+void ObjectMenuList::render(NVGcontext* vg)
+{
+    // Render category headers
+    for (const auto& header : categoryHeaders)
+    {
+        nvgFontSize(vg, 14.0f); // Slightly larger than item text
+        nvgFontFace(vg, "SemiBold"); // Or "Bold" if available
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
+        nvgFillColor(vg, nvgRGB(200, 200, 200)); // Light grey text
+        nvgText(vg, header.position.x, header.position.y, header.name, nullptr);
+    }
+
+    // Let children (items) render themselves
+    Component::render(vg);
+}
 
 ObjectMenuView::ObjectMenuView(Canvas* canvas, ToolDock* toolDock)
 {

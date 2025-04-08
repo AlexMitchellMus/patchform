@@ -4,6 +4,8 @@
 #include <UI_ToolKit/PopupComponent.h>
 #include "json.hpp"
 
+#include "ObjectMenuLists.h"
+
 class Object;
 class Canvas;
 class ToolDock;
@@ -11,20 +13,9 @@ class Item;
 
 using json = nlohmann::json;
 
-struct ObjectDef {
-    std::string_view definition;
-    std::string_view icon;
-    bool useIcon = true;
-    std::string_view displayName;
-
-    bool isEmpty() const { return definition.length() > 0; }
-    json getObjectDefinition() const { return json::parse(definition); }
-    std::string getDisplayName() const { return std::string(displayName); };
-};
-
 class Item : public pptk::Component {
 public:
-    Item(ObjectDef def);
+    Item(ObjectMenuDefs::ObjectDef def);
     void render(NVGcontext* vg) override;
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button) override;
     void mouseEnter(pptk::CompEvent& e) override;
@@ -44,6 +35,7 @@ private:
     std::string definition;
     std::string icon;
     std::string name;
+    NVGcolor tint;
 
     NVGcolor bg = nvgRGB(46, 46, 46);
     NVGcolor highlight = nvgRGB(38, 38, 38);
@@ -56,10 +48,20 @@ public:
     ~ObjectMenuList() override = default;
 
 private:
+    void render(NVGcontext* vg) override;
+
     Canvas* cnv;
     ToolDock* td;
     pptk::SafePointer<Object> dndObject;
     std::vector<std::unique_ptr<Item>> items;
+
+    struct CategoryHeader {
+        const char* name;
+        pptk::Point position;
+        NVGcolor tint;
+    };
+
+    std::vector<CategoryHeader> categoryHeaders;
 
     NVGcolor bg = nvgRGB(43, 43, 43);
     NVGcolor outline = nvgRGB(53, 53, 53);
@@ -78,7 +80,7 @@ public:
     void render(NVGcontext* vg) override
     {
         nvgBeginPath(vg);
-        nvgDrawRoundedRect(vg, 0, 0, width, height, bg, bg, 6.0f);
+        nvgDrawRoundedRect(vg, 0, 0, width, height, bg, outline, 6.0f);
     }
 
     void resized() override
@@ -92,4 +94,5 @@ private:
     std::unique_ptr<ObjectMenuView> viewport;
 
     NVGcolor bg = nvgRGB(43, 43, 43);
+    NVGcolor outline = nvgRGB(55, 55, 55);
 };
