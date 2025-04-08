@@ -55,6 +55,7 @@ static constexpr ObjectDef IOItems[] = {
     { R"({"obj": "aout"})", ICONS::Aout, true, "Audio Output" },
     { R"({"obj": "notein"})", "MIDIIN", false, "MIDI Note Input" },
     { R"({"obj": "mtof"})", "mtof", false, "Note number to Frequency" },
+    { R"({"obj": "activemidinotes" })", "", false, "Active MIDI Notes" },
 };
 
 // Oscillator
