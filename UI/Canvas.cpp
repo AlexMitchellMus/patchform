@@ -311,7 +311,7 @@ void Canvas::deleteSelectedObjects()
     {
         if (auto* objPtr = dynamic_cast<Object*>(obj))
         {
-            std::cout << "deleting object which is called: " << objPtr->getName() << std::endl;
+            //std::cout << "deleting object which is called: " << objPtr->getName() << std::endl;
             idsToDelete.push_back(objPtr->nodeID);
             objPtr->audioNode->destroyUI();
         } else if (auto* connPtr = dynamic_cast<Connection*>(obj))

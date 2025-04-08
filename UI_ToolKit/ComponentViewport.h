@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Component.h"
+#include "SDL3/SDL.h"
+#include "CompEvent.h"
 
 namespace pptk
 {

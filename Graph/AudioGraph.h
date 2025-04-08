@@ -1318,7 +1318,7 @@ public:
 
     AudioNode* addObject(const json& jsonObj)
     {
-        std::cout << "adding object from UI" << std::endl;
+        //std::cout << "adding object from UI" << std::endl;
 
         if (!activeGraph)
         {
