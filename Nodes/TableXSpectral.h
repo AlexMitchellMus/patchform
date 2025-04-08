@@ -88,11 +88,19 @@ public:
         const auto bufferB = inputPortBuffers[1]->getEvents();
         const auto bufferX = inputPortBuffers[2]->getEvents();
 
+        bool samplesUpdated = false;
+
         if (!bufferA.empty() && bufferA[0]->data->type == DataAtom::DataType::Sample)
+        {
             sampleA = bufferA[0]->data->data.sample;
+            samplesUpdated = true;
+        }
 
         if (!bufferB.empty() && bufferB[0]->data->type == DataAtom::DataType::Sample)
+        {
             sampleB = bufferB[0]->data->data.sample;
+            samplesUpdated = true;
+        }
 
         if (!sampleA.isValid() || !sampleB.isValid())
             return;
@@ -105,6 +113,14 @@ public:
                 onBlendChanged(newBlend);
                 break;
             }
+        }
+
+        if (samplesUpdated)
+        {
+            constexpr float updateBoost = 2.0f;
+            remainingFrames = static_cast<int>(
+                updateBoost * std::ceil(std::log(convergenceEpsilon) / std::log(1.0f - smoothingAlpha))
+            );
         }
 
         if (remainingFrames <= 0)
@@ -157,10 +173,20 @@ public:
         pffft_transform_ordered(setup, fftOut, tempTime, nullptr, PFFFT_BACKWARD);
 
         auto& output = waveformData.get()->samples;
+        const float* rawA = sampleA.get()->samples.data();
+        const float* rawB = sampleB.get()->samples.data();
+
+        // Edge blend fades in raw table near blend=0 or blend=1
+        // This is because the spectral content of A or B can influence how if the extremes will ever be reached.
+        float edgeFade = 1.0f - std::clamp(targetBlend * (1.0f - targetBlend) * 16.0f, 0.0f, 1.0f);
+
         for (int i = 0; i < defaultTableSize; ++i)
         {
-            float sample = tempTime[i] * (1.0f / defaultTableSize);
-            smoothedOutput[i] = (1.0f - smoothingAlpha) * smoothedOutput[i] + smoothingAlpha * sample;
+            float raw = (1.0f - targetBlend) * rawA[i] + targetBlend * rawB[i];
+            float spec = tempTime[i] * (1.0f / defaultTableSize);
+            float mixed = (1.0f - edgeFade) * spec + edgeFade * raw;
+
+            smoothedOutput[i] = (1.0f - smoothingAlpha) * smoothedOutput[i] + smoothingAlpha * mixed;
             output[i] = smoothedOutput[i];
         }
 

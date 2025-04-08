@@ -24,6 +24,15 @@ namespace SpectralHelpers {
             + (x2 * x2 * x2 * x2) / 40320.0f;
     }
 
+    // Faster, but less precise constexpr cosine approximation using Taylor series (centered at 0)
+    constexpr float fastCos(float x)
+    {
+        // assumes x in [0, π]
+        x = wrapPi(x); // keep x in [-π, π]
+        float x2 = x * x;
+        return 1.0f - x2 * (0.5f - x2 * (1.0f / 24.0f));
+    }
+
     template <size_t N>
     constexpr std::array<float, N> makeHannWindow() {
         std::array<float, N> window{};

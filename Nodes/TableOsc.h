@@ -7,7 +7,8 @@ class TableOsc : public AudioNode {
 
     float phase = 0.0f;
     float freq = 440.0f;
-    SampleHandle currentWaveform;
+    std::vector<float> internalWaveform;
+    bool hasWaveform = false;
 
 public:
     TableOsc(NodeContext* context, const json& objParams)
@@ -15,24 +16,28 @@ public:
     {
         addInputPort("waveform", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Data);
+
+        internalWaveform.assign(2048, 0.0f);
     }
 
     void processAudio(const float*, float*, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
-        // Pull waveform from event port
         const auto& waveformEvents = inputPortBuffers[0]->getEvents();
-        if (!waveformEvents.empty() && waveformEvents[0]->data->type == DataAtom::DataType::Sample)
-            currentWaveform = waveformEvents[0]->data->data.sample;
+        if (!waveformEvents.empty() && waveformEvents[0]->data->type == DataAtom::DataType::Sample) {
+            auto& sample = waveformEvents[0]->data->data.sample;
+            if (sample.isValid()) {
+                internalWaveform = sample.get()->samples; // fast copy
+                hasWaveform = !internalWaveform.empty();
+            }
+        }
 
-        if (!currentWaveform.isValid())
+        if (!hasWaveform)
             return;
 
         auto* output = outputPortBuffers[0]->getAudioBuffer();
+        const float* waveform = internalWaveform.data();
+        const size_t tableSize = internalWaveform.size();
 
-        const auto* waveform = currentWaveform.get()->samples.data();
-        const size_t tableSize = currentWaveform.get()->samples.size();
-
-        // Pull frequency from event port
         const auto& freqEvents = inputPortBuffers[1]->getEvents();
         for (auto e : freqEvents) {
             if (e->data && e->data->type == DataAtom::DataType::Float)
@@ -43,8 +48,6 @@ public:
             return;
 
         const float invSampleRate = 1.0f / context->sampleRate;
-
-        // Check if tableSize is power of two
         const bool isPowerOfTwo = (tableSize & (tableSize - 1)) == 0;
         const size_t mask = tableSize - 1;
 
@@ -59,7 +62,6 @@ public:
 
             int i1 = isPowerOfTwo ? ((i0 + 1) & mask) : ((i0 + 1) % tableSize);
 
-            // Safe bounds
             i0 = std::clamp(i0, 0, static_cast<int>(tableSize - 1));
             i1 = std::clamp(i1, 0, static_cast<int>(tableSize - 1));
 

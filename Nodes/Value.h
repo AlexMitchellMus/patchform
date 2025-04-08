@@ -58,7 +58,7 @@ public:
             output[i] = eventTarget;
         }
 
-        smoother.process(output, output, frameCount, true);
+        smoother.process(output, output, frameCount, false);
     }
 
     json getSerializedNode() override {
