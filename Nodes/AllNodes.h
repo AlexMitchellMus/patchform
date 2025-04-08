@@ -37,8 +37,6 @@
 #include "AudioIn.h"
 #include "AudioOut.h"
 #include "Value.h"
-#include "Oscillator.h"
-#include "TableOsc.h"
 #include "Add_Audio.h"
 #include "Envelope.h"
 #include "LFO.h"
@@ -49,6 +47,11 @@
 #include "Drive.h"
 #include "MultiTapDelay.h"
 #include "Limiter.h"
+
+// Oscillators
+#include "Oscillator.h"
+#include "TableOsc.h"
+#include "TableIndexOsc.h"
 
 // Mixed
 #include "Zerox.h"
