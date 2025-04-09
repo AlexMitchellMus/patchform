@@ -124,12 +124,9 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
 
 void Port::render(NVGcontext* nvg)
 {
-    nvgBeginPath(nvg);
-
     auto radius = getWidth() / 2;
-    nvgCircle(nvg, radius, radius, radius);
-    //https://colorkit.co/color/1c4977/
-    //nvgRGB(119, 28, 118)
+    auto size = radius * 2;
+
     auto orange = nvgRGB(120, 74, 28);
     auto blue = nvgRGB(28, 73, 119);
     auto portCol = portType == PortType::Event ? blue : orange;
@@ -137,15 +134,15 @@ void Port::render(NVGcontext* nvg)
     if (canvasLocked)
         portCol.a *= 0.3f;
 
-    nvgFillColor(nvg, portCol); // Blue fill for ports
-    nvgFill(nvg);
+    // Draw main port as rounded rect (circle)
+    nvgDrawRoundedRect(nvg, 0, 0, size, size, portCol, portCol, radius);
 
-    if (isHovered | isHoveredFromCable)
+    // Hover effect
+    if (isHovered || isHoveredFromCable)
     {
-        nvgBeginPath(nvg);
-        nvgCircle(nvg, 5, 5, 10);
-        portCol.a = 120;
-        nvgFillColor(nvg, portCol);
-        nvgFill(nvg);
+        NVGcolor hoverCol = portCol;
+        hoverCol.a = 120;
+        nvgDrawRoundedRect(nvg, -5, -5, 20, 20, hoverCol, hoverCol, 10);
     }
 }
+

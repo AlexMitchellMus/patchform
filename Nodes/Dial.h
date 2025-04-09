@@ -40,10 +40,12 @@ public:
             float actualValue = dial->dialValue * (maxV - minV) + minV;
 
             value = (maxV != minV) ? (actualValue - minV) / (maxV - minV) : 0.0f;
+            updateAngle();
         }
 
-        float valueToAngle(float value) {
-            return (minAngle - NVG_PI * 0.5f) + (maxAngle - minAngle) * value;
+        void updateAngle()
+        {
+            angle = (minAngle - NVG_PI * 0.5f) + (maxAngle - minAngle) * value;
         }
 
         void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button) override {
@@ -51,6 +53,7 @@ public:
                 if (cnv->isInLockedMode()) {
                     value -= delta.y * 0.005f * cnv->scale;
                     value = std::clamp(value, 0.0f, 1.0f);
+                    updateAngle();
 
                     auto dial = reinterpret_cast<Dial*>(audioNode);
                     dial->eventQueue.enqueue(value);
@@ -64,27 +67,31 @@ public:
         }
 
         void drawGUI(NVGcontext* nvg) override {
-            const auto centre = getWidth() * 0.5f;
-            const auto radius = getWidth() * 0.4f;
+            const float size = getWidth();
+            const float centre = size * 0.5f;
+            const float radius = size * 0.4f;
 
-            nvgBeginPath(nvg);
-            nvgCircle(nvg, centre, centre, radius);
-            nvgFillColor(nvg, nvgRGBA(50, 50, 50, 255));
-            nvgFill(nvg);
+            // Draw base knob as a rounded rect (circle)
+            float knobSize = radius * 2.0f;
+            float knobX = centre - radius;
+            float knobY = centre - radius;
 
+            NVGcolor baseColor = nvgRGBA(50, 50, 50, 255);
+            nvgDrawRoundedRect(nvg, knobX, knobY, knobSize, knobSize, baseColor, baseColor, radius);
+
+            // Dot
             float dotRadius = radius * 0.2f;
-            auto angle = valueToAngle(value);
-            float dotX = centre + (radius - dotRadius - 10) * cos(angle);
-            float dotY = centre + (radius - dotRadius - 10) * sin(angle);
+            float dotX = centre + (radius - dotRadius - 10) * cosf(angle) - dotRadius;
+            float dotY = centre + (radius - dotRadius - 10) * sinf(angle) - dotRadius;
 
-            nvgBeginPath(nvg);
-            nvgCircle(nvg, dotX, dotY, dotRadius);
-            nvgFillColor(nvg, nvgRGBA(28, 28, 28, 255));
-            nvgFill(nvg);
+            float dotSize = dotRadius * 2.0f;
+            NVGcolor dotColor = nvgRGBA(28, 28, 28, 255);
+            nvgDrawRoundedRect(nvg, dotX, dotY, dotSize, dotSize, dotColor, dotColor, dotRadius);
         }
 
     private:
         float value = 0.0f;
+        float angle = 0.0f;
         const float minAngle = -NVG_PI * 0.75f;
         const float maxAngle =  NVG_PI * 0.75f;
     };
