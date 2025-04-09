@@ -95,14 +95,18 @@ public:
 
         void drawGUI(NVGcontext* nvg) override
         {
-            const auto centre = getWidth() * 0.5f;
-            const auto radius = getWidth() * 0.3f;
+            const float size = getWidth();
+            const float centre = size * 0.5f;
+            const float radius = size * 0.3f;
 
-            nvgBeginPath(nvg);
-            nvgCircle(nvg, centre, centre, radius);
-            auto blue = nvgRGB(28, 73, 119);
-            nvgFillColor(nvg, triggered ? blue : nvgRGBA(50, 50, 50, 255));  // Dark gray background
-            nvgFill(nvg);
+            const float knobSize = radius * 2.0f;
+            const float knobX = centre - radius;
+            const float knobY = centre - radius;
+
+            NVGcolor blue = nvgRGB(28, 73, 119);
+            NVGcolor bg = triggered ? blue : nvgRGBA(50, 50, 50, 255);
+
+            nvgDrawRoundedRect(nvg, knobX, knobY, knobSize, knobSize, bg, bg, radius);
         }
     private:
         bool triggered = false;
