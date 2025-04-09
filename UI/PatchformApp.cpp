@@ -287,6 +287,7 @@ bool PatchformApp::initAudio() {
             inputParams.device = inputDeviceIndex;
             inputParams.channelCount = 1;
             inputParams.sampleFormat = paFloat32;
+            inputParams.hostApiSpecificStreamInfo = nullptr;
             inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
             inputParamsPtr = &inputParams;
         }
@@ -302,6 +303,7 @@ bool PatchformApp::initAudio() {
     outputParams.device = outputDeviceIndex;
     outputParams.channelCount = 1;
     outputParams.sampleFormat = paFloat32;
+    outputParams.hostApiSpecificStreamInfo = nullptr;
     outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
     outputParamsPtr = &outputParams;
 
