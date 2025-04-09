@@ -155,6 +155,7 @@ public:
         value.store(newValue, std::memory_order_release);
         onParameterChanged();
         informNodeOfChange();
+        updateNodeUI(value);
     }
 
     bool getValue() const {

@@ -41,6 +41,7 @@ static constexpr ObjectDef ControlItems[] = {
 static constexpr ObjectDef UIItems[] = {
     { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false, "Ping" },
     { R"({"obj": "dial", "min": 0, "max": 10, "value": 3})", ICONS::Dial, true, "Dial" },
+    { R"({"obj": "keyboard" })", "", false, "Piano Keyboard" },
     { R"({"obj": "radiobox"})", "rb", false, "Radio Box" },
     { R"({"obj": "floatbox"})", "fb", false, "Float Box" },
     { R"({"obj": "listbox"})", "lb", false, "List Box" },

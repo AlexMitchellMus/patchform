@@ -71,6 +71,7 @@
 #include "Scope.h"
 #include "Comment.h"
 #include "Table.h"
+#include "Keyboard.h"
 
 // Wavetable
 #include "TableXFade.h"

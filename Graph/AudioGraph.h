@@ -1213,6 +1213,9 @@ public:
         case hash("get"):
             return addNode<Get>(idString, node);
 
+        case hash("keyboard"):
+            return addNode<Keyboard>(idString, node);
+
         case hash("rnd"):
         case hash("random"):
             return addNode<Random>(idString, node);
