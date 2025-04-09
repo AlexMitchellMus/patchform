@@ -192,7 +192,10 @@ void Component::renderAll(NVGcontext* vg)
     for (auto& child : children)
     {
         if (child->isVisible())
+        {
+
             child->renderAll(vg);
+        }
     }
 
     nvgRestore(vg);
