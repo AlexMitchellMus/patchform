@@ -137,7 +137,7 @@ public:
             if (dialogWindow)
             {
                 dialogWindow.reset();
-                dialogWindowModalBackground.reset();
+                dialogWindowModalBackground->setVisible(false);
             }
         };
         addComponent(dialogWindowModalBackground.get());
