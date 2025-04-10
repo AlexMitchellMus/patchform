@@ -4,7 +4,7 @@
 
 class Envelope final : public AudioNode
 {
-    DEFINE_AND_REGISTER_NODE("Envelope", "env", true);
+    DEFINE_AND_REGISTER_NODE("AHR Envelope", "AHRenv", true);
 
     FloatParameter* attackValParam = nullptr;
     FloatParameter* holdValParam = nullptr;
