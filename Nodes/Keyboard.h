@@ -12,6 +12,9 @@ public:
     std::atomic<bool> isVertical = false;
     BoolParameter* isVerticalParam = nullptr;
 
+    std::atomic<bool> holdMode = false;
+    BoolParameter* holdModeParam = nullptr;
+
 #ifdef PATCHFORM_WITH_GUI
     std::function<void()> repaintFromDSP = []()
     {
@@ -30,6 +33,8 @@ public:
         int lastNotePressed = -1;
 
         bool verticalLayout = false;
+
+        bool holdModeVal = false;
 
     public:
         std::atomic<bool> isDirty = false;
@@ -61,6 +66,14 @@ public:
 
                         repaint();
                     }
+                }
+            };
+
+            kb->holdModeParam->updateNodeUI = [this](const std::variant<int, float, std::string>& value) mutable
+            {
+                if (auto isHoldMode = std::get_if<int>(&value))
+                {
+                    holdModeVal = (*isHoldMode != 0);
                 }
             };
         }
@@ -129,7 +142,11 @@ public:
                     }
 
                     auto* kb = reinterpret_cast<Keyboard*>(audioNode);
-                    kb->selectedNote = note;
+                    if (holdModeVal && kb->selectedNote != note)
+                    {
+                        kb->eventQueue.enqueue(-kb->selectedNote.load());
+                    }
+                    kb->selectedNote.store(note);
                     lastNotePressed = note;
                     kb->eventQueue.enqueue(note);
                     kb->setNodeDirty();
@@ -142,7 +159,7 @@ public:
         void mouseButtonUp(pptk::CompEvent& e) override
         {
             auto* kb = reinterpret_cast<Keyboard*>(audioNode);
-            if (lastNotePressed >= 0)
+            if (!holdModeVal && lastNotePressed >= 0)
             {
                 if (lastNotePressed >= 0)
                 {
@@ -258,7 +275,7 @@ public:
                 float h = keyHeightAdjusted;
                 float w = getWidth();
 
-                if (midiNote == kb->selectedNote)
+                if (midiNote == kb->selectedNote.load())
                 {
                     nvgBeginPath(vg);
                     if (whiteIndex == 0)
@@ -317,7 +334,7 @@ public:
                 float y = whiteIndex * keyHeightAdjusted - (keyHeightAdjusted / 4.0f);
                 float h = keyHeightAdjusted * 0.5f;
                 float w = getWidth() * 0.6f;
-                NVGcolor col = (midiNote == kb->selectedNote) ? nvgRGB(50, 50, 50) : nvgRGB(0, 0, 0);
+                NVGcolor col = (midiNote == kb->selectedNote.load()) ? nvgRGB(50, 50, 50) : nvgRGB(0, 0, 0);
                 nvgDrawRoundedRect(vg, 0, y, w, h, col, col, 0);
             }
         }
@@ -460,6 +477,9 @@ public:
     {
         isVertical = objParams.value("Vertical", false);
         isVerticalParam = addParameter<BoolParameter>("Vertical", isVertical.load());
+
+        holdMode = objParams.value("holdMode", false);
+        holdModeParam = addParameter<BoolParameter>("Hold", holdMode);
     }
 
     json getSerializedNode() override
