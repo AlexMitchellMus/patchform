@@ -35,6 +35,9 @@ static constexpr ObjectDef ControlItems[] = {
     { R"({"obj": "evdelay", "ms": 100 })", "evdel", false, "Event Delay" },
     { R"({"obj": "loadevent" })", "ldev", false, "Load Event" },
     { R"({"obj": "value" })", "val", false, "Value" },
+    { R"({"obj": "mtof"})", "mtof", false, "Note number to Frequency" },
+    { R"({"obj": "activemidinotes" })", "", false, "Active MIDI Notes" },
+    { R"({"obj": "polynoteout" })", "", false, "Poly Voice Manager" },
 };
 
 // UI
@@ -55,8 +58,6 @@ static constexpr ObjectDef IOItems[] = {
     { R"({"obj": "ain"})", "ain", false, "Audio Input" },
     { R"({"obj": "aout"})", ICONS::Aout, true, "Audio Output" },
     { R"({"obj": "notein"})", "MIDIIN", false, "MIDI Note Input" },
-    { R"({"obj": "mtof"})", "mtof", false, "Note number to Frequency" },
-    { R"({"obj": "activemidinotes" })", "", false, "Active MIDI Notes" },
 };
 
 // Oscillator
@@ -74,6 +75,7 @@ static constexpr ObjectDef EffectItems[] = {
     { R"({"obj": "drive", "mode": 0 })", "drive", false, "Drive" },
     { R"({"obj": "multitapdelay" })", "mtdel", false, "Multitap Delay" },
     { R"({"obj": "limiter" })", "limit", false, "Limiter" },
+    { R"({"obj": "chorus" })", "", false, "Chorus" },
 };
 
 // Spectral

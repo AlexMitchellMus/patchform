@@ -1216,6 +1216,12 @@ public:
         case hash("keyboard"):
             return addNode<Keyboard>(idString, node);
 
+        case hash("polynoteout"):
+            return addNode<PolyNoteOut>(idString, node);
+
+        case hash("chorus"):
+            return addNode<Chorus>(idString, node);
+
         case hash("rnd"):
         case hash("random"):
             return addNode<Random>(idString, node);

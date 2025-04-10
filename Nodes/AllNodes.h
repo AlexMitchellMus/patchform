@@ -21,7 +21,6 @@
 #include "TagEvent.h"
 #include "Strip.h"
 #include "FilterTag.h"
-#include "ActiveMidiNotes.h"
 #include "Random.h"
 #include "EventDelay.h"
 #include "Select.h"
@@ -47,6 +46,7 @@
 #include "Drive.h"
 #include "MultiTapDelay.h"
 #include "Limiter.h"
+#include "Chorus.h"
 
 // Oscillators
 #include "Oscillator.h"
@@ -80,3 +80,5 @@
 
 // MIDI
 #include "MidiNoteIn.h"
+#include "ActiveMidiNotes.h"
+#include "PolyNoteOut.h"
