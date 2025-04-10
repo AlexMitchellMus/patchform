@@ -97,7 +97,7 @@ ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas)
     float y = 18;
     constexpr int paddingX = 12;
     constexpr int paddingY = 10;
-    constexpr int maxRowWidth = 605;
+    constexpr int maxRowWidth = 760;
     constexpr int itemHeight = 33;
 
     for (const auto& block : objectMenu)

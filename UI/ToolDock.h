@@ -162,7 +162,11 @@ public:
 
     pptk::Rect calculateObjectMenuBounds()
     {
-        return pptk::Rect((getRootComponent()->getWidth() / 2) - 308, getRootComponent()->getHeight() - 355, 616, 280);
+        if (auto root = getRootComponent())
+        {
+            return pptk::Rect(root->getWidth() * 0.5f - 400, root->getHeight() * 0.5f - 300, 800, 600);
+        }
+        return { };
     }
 
     void render(NVGcontext* nvg) override
