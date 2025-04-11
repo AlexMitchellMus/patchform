@@ -104,7 +104,7 @@ target_compile_options(linenoise PRIVATE
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
-add_executable(PatchformStandalone WIN32 PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
+add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
 target_compile_definitions(PatchformStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
 target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"

@@ -163,7 +163,7 @@ public:
         if (selectedInput >= 0) {
             const PaDeviceInfo* dev = Pa_GetDeviceInfo(selectedInput);
             if (dev) {
-                inputDeviceDropdown->setSelected(std::string(Pa_GetHostApiInfo(dev->hostApi)->name) + " - " + dev->name);
+                inputDeviceDropdown->setSelected(dev->name);
                 inputChannelsLabel->setText("Input Channels: " + std::to_string(dev->maxInputChannels));
                 createInputOutputChannelToggles(dev->maxInputChannels, false);
             }
@@ -176,7 +176,7 @@ public:
         if (selectedOutput >= 0) {
             const PaDeviceInfo* dev = Pa_GetDeviceInfo(selectedOutput);
             if (dev) {
-                outputDeviceDropdown->setSelected(std::string(Pa_GetHostApiInfo(dev->hostApi)->name) + " - " + dev->name);
+                outputDeviceDropdown->setSelected(dev->name);
                 outputChannelsLabel->setText("Output Channels: " + std::to_string(dev->maxOutputChannels));
                 createInputOutputChannelToggles(dev->maxOutputChannels, true);
             }

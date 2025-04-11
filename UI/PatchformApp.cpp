@@ -45,6 +45,12 @@ PatchformApp::~PatchformApp()
 
 bool PatchformApp::initialize()
 {
+    settings.load();
+
+    selectedApiIndex = settings.selectedApiIndex;
+    selectedInputDeviceIndex = settings.selectedInputDeviceIndex;
+    selectedOutputDeviceIndex = settings.selectedOutputDeviceIndex;
+
     if (!initMidi())
     {
         std::cerr << "Failed to initialize MIDI" << std::endl;
@@ -66,6 +72,10 @@ bool PatchformApp::initialize()
 
 void PatchformApp::shutdown()
 {
+    settings.selectedApiIndex = getSelectedApiIndex();
+    settings.selectedInputDeviceIndex = getSelectedInputDeviceIndex();
+    settings.selectedOutputDeviceIndex = getSelectedOutputDeviceIndex();
+
     shutdownAudio();
 
     if (invalidFB) {
@@ -85,6 +95,8 @@ void PatchformApp::shutdown()
     }
 
     SDL_Quit();
+
+    settings.save();
 }
 
 void PatchformApp::run()
@@ -308,7 +320,43 @@ bool PatchformApp::initAudio() {
     auto err = Pa_OpenStream(&stream, inputParamsPtr, outputParamsPtr, sampleRate, frameCount, paClipOff, audioCallback, this);
     if (err != paNoError) {
         std::cerr << "Pa_OpenStream failed: " << Pa_GetErrorText(err) << "\n";
-        return false;
+        std::cerr << "Falling back to default devices...\n";
+
+        int defIn = Pa_GetDefaultInputDevice();
+        int defOut = Pa_GetDefaultOutputDevice();
+
+        const PaDeviceInfo* inDev = defIn != paNoDevice ? Pa_GetDeviceInfo(defIn) : nullptr;
+        const PaDeviceInfo* outDev = defOut != paNoDevice ? Pa_GetDeviceInfo(defOut) : nullptr;
+
+        PaStreamParameters inParams{}, outParams{};
+        PaStreamParameters* inParamsPtr = nullptr;
+        PaStreamParameters* outParamsPtr = nullptr;
+
+        if (inDev && inDev->maxInputChannels > 0) {
+            inParams.device = defIn;
+            inParams.channelCount = std::min(2, inDev->maxInputChannels);
+            inParams.sampleFormat = paFloat32 | paNonInterleaved;
+            inParams.suggestedLatency = inDev->defaultLowInputLatency;
+            inParams.hostApiSpecificStreamInfo = nullptr;
+            inParamsPtr = &inParams;
+        }
+
+        if (outDev && outDev->maxOutputChannels > 0) {
+            outParams.device = defOut;
+            outParams.channelCount = std::min(2, outDev->maxOutputChannels);
+            outParams.sampleFormat = paFloat32 | paNonInterleaved;
+            outParams.suggestedLatency = outDev->defaultLowOutputLatency;
+            outParams.hostApiSpecificStreamInfo = nullptr;
+            outParamsPtr = &outParams;
+        }
+
+        err = Pa_OpenStream(&stream, inParamsPtr, outParamsPtr, sampleRate, frameCount, paClipOff, audioCallback, this);
+
+
+        if (err != paNoError) {
+            std::cerr << "Default Pa_OpenStream also failed: " << Pa_GetErrorText(err) << "\n";
+            return false;
+        }
     }
 
     err = Pa_StartStream(stream);

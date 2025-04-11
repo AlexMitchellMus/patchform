@@ -11,6 +11,7 @@
 #include "../Graph/AudioGraph.h"
 #include "Editor.h"
 #include "../UI_ToolKit/EventManager.h"
+#include "Settings.h"
 
 #include "../Glad/gl.h"
 
@@ -61,6 +62,8 @@ public:
     int getSelectedOutputDeviceIndex() const { return selectedOutputDeviceIndex; }
 
 private:
+    Settings settings;
+
     int sampleRate;
     unsigned long frameCount;
     PaStream* stream = nullptr;
