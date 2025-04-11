@@ -95,6 +95,10 @@ void Canvas::updateGraphValuesIfNeeded()
 
 void Canvas::mouseButtonDown(pptk::CompEvent& e)
 {
+    // Only allow lasso select in edit mode
+    if (mode != DisplayMode::Edit)
+        return;
+
     if (e.sdlEvent.button.button == SDL_BUTTON_LEFT)
     {
         clearSelection();

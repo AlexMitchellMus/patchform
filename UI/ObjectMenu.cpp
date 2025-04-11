@@ -51,10 +51,14 @@ void Item::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk
 void Item::render(NVGcontext* vg)
 {
     nvgBeginPath(vg);
-    NVGcolor fill = tint;
-    fill.a = hovered ? 25 : 10;
 
-    nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), fill, nvgRGB(55, 55, 55), getHeight() * 0.5f);
+    NVGcolor outline = tint;
+    outline.a = 50;
+
+    NVGcolor fill = tint;
+    fill.a = hovered ? 35 : 20;
+
+    nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), fill, outline, getHeight() * 0.5f);
 
     if (useIcon)
     {

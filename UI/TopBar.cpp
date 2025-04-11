@@ -7,6 +7,7 @@
 #include "TopBar.h"
 #include "Editor.h"
 #include "AboutDialog.h"
+#include "SettingsDialog.h"
 #include "../Graph/AudioGraph.h"
 #include "../UI_ToolKit/PlatformHelpers.h"
 
@@ -63,6 +64,14 @@ MainMenu::MainMenu()
 
     applicationSettings = std::make_unique<MenuItem>("Settings...");
     addComponent(applicationSettings.get());
+    applicationSettings->onClick = [this]()
+    {
+        if (auto* ed = findParentOfClass<Editor>())
+        {
+            setVisible(false);
+            ed->openDialogWindow(std::make_unique<SettingsDialog>());
+        }
+    };
 
     aboutApp = std::make_unique<MenuItem>("About...");
     addComponent(aboutApp.get());

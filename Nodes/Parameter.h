@@ -172,7 +172,7 @@ public:
 
 #ifdef PATCHFORM_WITH_GUI
     std::unique_ptr<pptk::Component> createEditorComponent() override {
-        auto toggle = std::make_unique<ToggleSwitch>();
+        auto toggle = std::make_unique<pptk::ToggleSwitch>();
         toggle->setState(getValue());
         toggle->onToggle = [this](bool state) {
             setValue(state);

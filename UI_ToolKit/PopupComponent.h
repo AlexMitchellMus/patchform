@@ -1,10 +1,7 @@
-//
-// Created by alexw on 1/02/2025.
-//
-
 #pragma once
 
 #include "Component.h"
+#include "SafePointer.h"
 #include "ToggleButton.h"
 
 namespace pptk
@@ -12,18 +9,19 @@ namespace pptk
     class PopupComponent : public Component
     {
     public:
-        PopupComponent()
-        {
-        }
+        PopupComponent() = default;
 
-        void registerMouseListener(ToggleButton* toggleButton)
+        void registerMouseListener(Component* trigger)
         {
-            button = toggleButton;
+            button = trigger;
+
             registerGlobalMouseListener([this](Component* comp)
             {
                 if (!(this->isOrHasChild(comp) || comp == button.get()))
                 {
-                    button->setActive(false);
+                    if (auto toggle = dynamic_cast<ToggleButton*>(button.get()))
+                        toggle->setActive(false);
+
                     close();
                 }
             });
@@ -31,18 +29,25 @@ namespace pptk
 
         virtual ~PopupComponent()
         {
-            if (button)
-                button->setActive(false);
+            if (auto toggle = dynamic_cast<ToggleButton*>(button.get()))
+                toggle->setActive(false);
+
             unregisterGlobalMouseListener();
+
+            if (button)
+                button->repaint();
         }
 
         virtual void close()
         {
             unregisterGlobalMouseListener();
             setPopupComponent(nullptr);
+
+            if (button)
+                button->repaint();
         }
 
     private:
-        SafePointer<ToggleButton> button;
+        SafePointer<Component> button;
     };
 }
