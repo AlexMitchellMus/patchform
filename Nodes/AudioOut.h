@@ -12,18 +12,24 @@
 class AudioOut : public AudioNode {
     DEFINE_AND_REGISTER_NODE("AudioOut", "aout", true);
 public:
-    AudioOut(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
+    AudioOut(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::None, objParams)
     {
-        addInputPort("Signal", AudioPort::PortType::Signal);
+        addInputPort("Left", AudioPort::Signal);
+        addInputPort("Right", AudioPort::Signal);
     }
 
-    void processAudio(const float* in, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* buffer, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
-        // The input port audio is directly sent to the PortAudio stream
-        const auto* inputPort = inputPortBuffers[0]->getAudioBuffer();
+        auto* left = inputPortBuffers[0]->getAudioBuffer();
+        auto* right = inputPortBuffers[1]->getAudioBuffer();
 
-        // We can't copy here, because we may have multiple audio outs in the patch
-        for (uint32_t i = 0; i < frameCount; i++)
-            buffer[i] = std::clamp(buffer[i] + inputPort[i], -1.0f, 1.0f);
+        //TODO: Make a way to know how many channels we have!
+        float* bufferR = buffer + frameCount;
+
+        for (uint32_t i = 0; i < frameCount; ++i)
+        {
+            buffer[i]     = buffer[i] + left[i];
+            bufferR[i]    = bufferR[i] + right[i];
+        }
     }
 };
