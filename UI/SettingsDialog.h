@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PatchformApp.h"
 #include "UI_ToolKit/Label.h"
 #include "UI_ToolKit/DropdownSelector.h"
 #include "UI_ToolKit/PopupListComponent.h"
@@ -15,70 +16,226 @@ class AudioSettingsPanel : public pptk::Component
 public:
     AudioSettingsPanel()
     {
-        // Audio Settings Title
+        auto app = PatchformApp::getApp();
+        if (!app) return;
+
+        // Title
         audioLabel = std::make_unique<pptk::Label>("Audio Settings:");
         addComponent(audioLabel.get());
 
-        // Driver controls.
+        // --- Driver Dropdown ---
         driverLabel = std::make_unique<pptk::Label>("Driver:");
         addComponent(driverLabel.get());
-        driverDropdown = std::make_unique<pptk::DropdownSelector>(std::vector<std::string>{
-            "ASIO", "WASAPI", "DirectSound"
-        });
-        driverDropdown->setOnSelect([](const std::string& selected) {
-            std::cout << "Selected audio driver: " << selected << std::endl;
-        });
+
+        auto drivers = app->getAvailableAudioApis();
+        driverDropdown = std::make_unique<pptk::DropdownSelector>(drivers);
         addComponent(driverDropdown.get());
 
-        // Input Device controls.
+        driverDropdown->setOnSelect([this, app](const std::string& selectedApi)
+        {
+            auto apis = app->getAvailableAudioApis();
+            auto it = std::find(apis.begin(), apis.end(), selectedApi);
+            if (it == apis.end()) return;
+
+            int apiIndex = static_cast<int>(std::distance(apis.begin(), it));
+            selectedApiIndex = apiIndex;
+
+            std::vector<std::string> inputDevices, outputDevices;
+            int deviceCount = Pa_GetDeviceCount();
+
+            for (int i = 0; i < deviceCount; ++i)
+            {
+                const PaDeviceInfo* dev = Pa_GetDeviceInfo(i);
+                if (!dev || dev->hostApi != apiIndex) continue;
+
+                std::string name = dev->name;
+                if (dev->maxInputChannels > 0)
+                    inputDevices.push_back(name);
+                if (dev->maxOutputChannels > 0)
+                    outputDevices.push_back(name);
+            }
+
+            inputDevices.insert(inputDevices.begin(), "None");
+            outputDevices.insert(outputDevices.begin(), "None");
+
+            inputDeviceDropdown->updateOptions(inputDevices);
+            outputDeviceDropdown->updateOptions(outputDevices);
+
+            app->setAudioDriver(apiIndex);
+        });
+
+        // --- Device Dropdown ---
         inputDeviceLabel = std::make_unique<pptk::Label>("Input Device:");
         addComponent(inputDeviceLabel.get());
-        inputDeviceDropdown = std::make_unique<pptk::DropdownSelector>(std::vector<std::string>{
-            "Device A", "Device B", "Device C"
-        });
-        inputDeviceDropdown->setOnSelect([](const std::string& selected) {
-            std::cout << "Selected input device: " << selected << std::endl;
-        });
+
+        inputDeviceDropdown = std::make_unique<pptk::DropdownSelector>(std::vector<std::string>{});
         addComponent(inputDeviceDropdown.get());
 
-        // Input Channels label.
+        inputDeviceDropdown->setOnSelect([this, app](const std::string& selectedDevice)
+        {
+            if (selectedApiIndex < 0) return;
+
+            if (selectedDevice == "None")
+            {
+                app->setAudioInputDevice(selectedApiIndex, -1);
+                inputChannelsLabel->setText("Input Channels: 0");
+                createInputOutputChannelToggles(0);
+                return;
+            }
+
+            auto allDevices = app->getAvailableDevices(selectedApiIndex);
+            auto it = std::find(allDevices.begin(), allDevices.end(), selectedDevice);
+            if (it != allDevices.end())
+            {
+                int globalIndex = static_cast<int>(std::distance(allDevices.begin(), it));
+                const PaDeviceInfo* info = app->setAudioInputDevice(selectedApiIndex, globalIndex);
+                if (info)
+                {
+                    inputChannelsLabel->setText("Input Channels: " + std::to_string(info->maxInputChannels));
+                    createInputOutputChannelToggles(info->maxInputChannels);
+                }
+            }
+        });
+
         inputChannelsLabel = std::make_unique<pptk::Label>("Input Channels:");
         addComponent(inputChannelsLabel.get());
 
-        // Create a couple of input channel rows (for example purposes, 2 channels).
-        for (int i = 0; i < 2; ++i)
-        {
-            auto channelLabel = std::make_unique<pptk::Label>("Channel " + std::to_string(i + 1));
-            auto toggle = std::make_unique<pptk::ToggleSwitch>();
-            // Optionally, you could attach a callback to each toggle switch.
-            toggle->onToggle = [i](bool state) {
-                std::cout << "Input Channel " << (i + 1) << " toggled " << (state ? "On" : "Off") << std::endl;
-            };
+        // --- Output Device Dropdown ---
+        outputDeviceLabel = std::make_unique<pptk::Label>("Output Device:");
+        addComponent(outputDeviceLabel.get());
 
-            inputChannelLabels.push_back(std::move(channelLabel));
-            inputChannelToggles.push_back(std::move(toggle));
-            addComponent(inputChannelLabels.back().get());
-            addComponent(inputChannelToggles.back().get());
-        }
+        outputDeviceDropdown = std::make_unique<pptk::DropdownSelector>(std::vector<std::string>{});
+        addComponent(outputDeviceDropdown.get());
+
+        outputDeviceDropdown->setOnSelect([this, app](const std::string& selectedDevice)
+        {
+            if (selectedApiIndex < 0) return;
+
+            if (selectedDevice == "None")
+            {
+                app->setAudioOutputDevice(selectedApiIndex, -1);
+                outputChannelsLabel->setText("Output Channels: 0");
+                createInputOutputChannelToggles(0, true);
+                return;
+            }
+
+            auto allDevices = app->getAvailableDevices(selectedApiIndex);
+            auto it = std::find(allDevices.begin(), allDevices.end(), selectedDevice);
+            if (it != allDevices.end())
+            {
+                int globalIndex = static_cast<int>(std::distance(allDevices.begin(), it));
+                const PaDeviceInfo* info = app->setAudioOutputDevice(selectedApiIndex, globalIndex);
+                if (info)
+                {
+                    outputChannelsLabel->setText("Output Channels: " + std::to_string(info->maxOutputChannels));
+                    createInputOutputChannelToggles(info->maxOutputChannels, true);
+                }
+            }
+        });
 
         // Output Channels label.
         outputChannelsLabel = std::make_unique<pptk::Label>("Output Channels:");
         addComponent(outputChannelsLabel.get());
 
-        // Create a couple of output channel rows (again, 2 channels for demonstration).
-        for (int i = 0; i < 2; ++i)
+        updateAudioProperties();
+    }
+
+    void updateAudioProperties()
+    {
+        auto* app = PatchformApp::getApp();
+        if (!app) return;
+
+        int currentApi = app->getSelectedApiIndex() >= 0 ? app->getSelectedApiIndex() : Pa_GetDefaultHostApi();
+        selectedApiIndex = currentApi;
+
+        auto drivers = app->getAvailableAudioApis();
+        driverDropdown->updateOptions(drivers);
+        if (currentApi < drivers.size())
+            driverDropdown->setSelected(drivers[currentApi]);
+
+        std::vector<std::string> inputDevices = {"None"};
+        std::vector<std::string> outputDevices = {"None"};
+
+        int selectedInput = app->getSelectedInputDeviceIndex();
+        int selectedOutput = app->getSelectedOutputDeviceIndex();
+
+        for (int i = 0; i < Pa_GetDeviceCount(); ++i)
         {
-            auto channelLabel = std::make_unique<pptk::Label>("Channel " + std::to_string(i + 1));
+            const PaDeviceInfo* dev = Pa_GetDeviceInfo(i);
+            if (!dev || dev->hostApi != currentApi) continue;
+
+            if (dev->maxInputChannels > 0)
+                inputDevices.push_back(dev->name);
+            if (dev->maxOutputChannels > 0)
+                outputDevices.push_back(dev->name);
+        }
+
+        inputDeviceDropdown->updateOptions(inputDevices);
+        outputDeviceDropdown->updateOptions(outputDevices);
+
+        if (selectedInput >= 0)
+        {
+            const PaDeviceInfo* dev = Pa_GetDeviceInfo(selectedInput);
+            if (dev)
+            {
+                inputDeviceDropdown->setSelected(dev->name);
+                inputChannelsLabel->setText("Input Channels: " + std::to_string(dev->maxInputChannels));
+                createInputOutputChannelToggles(dev->maxInputChannels, false);
+            }
+        }
+        else
+        {
+            inputDeviceDropdown->setSelected("None");
+            inputChannelsLabel->setText("Input Channels: 0");
+            createInputOutputChannelToggles(0, false);
+        }
+
+        if (selectedOutput >= 0)
+        {
+            const PaDeviceInfo* dev = Pa_GetDeviceInfo(selectedOutput);
+            if (dev)
+            {
+                outputDeviceDropdown->setSelected(dev->name);
+                outputChannelsLabel->setText("Output Channels: " + std::to_string(dev->maxOutputChannels));
+                createInputOutputChannelToggles(dev->maxOutputChannels, true);
+            }
+        }
+        else
+        {
+            outputDeviceDropdown->setSelected("None");
+            outputChannelsLabel->setText("Output Channels: 0");
+            createInputOutputChannelToggles(0, true);
+        }
+    }
+
+    void createInputOutputChannelToggles(int count, bool isOutput = false)
+    {
+        auto& labelList = isOutput ? outputChannelLabels : inputChannelLabels;
+        auto& toggleList = isOutput ? outputChannelToggles : inputChannelToggles;
+
+        for (auto& label : labelList) removeComponent(label.get());
+        for (auto& toggle : toggleList) removeComponent(toggle.get());
+        labelList.clear();
+        toggleList.clear();
+
+        for (int i = 0; i < count; ++i)
+        {
+            auto label = std::make_unique<pptk::Label>("Channel " + std::to_string(i + 1));
             auto toggle = std::make_unique<pptk::ToggleSwitch>();
-            toggle->onToggle = [i](bool state) {
-                std::cout << "Output Channel " << (i + 1) << " toggled " << (state ? "On" : "Off") << std::endl;
+            toggle->onToggle = [i, isOutput](bool state)
+            {
+                const char* type = isOutput ? "Output" : "Input";
+                std::cout << type << " Channel " << (i + 1) << " toggled " << (state ? "On" : "Off") << std::endl;
             };
 
-            outputChannelLabels.push_back(std::move(channelLabel));
-            outputChannelToggles.push_back(std::move(toggle));
-            addComponent(outputChannelLabels.back().get());
-            addComponent(outputChannelToggles.back().get());
+            addComponent(label.get());
+            addComponent(toggle.get());
+
+            labelList.push_back(std::move(label));
+            toggleList.push_back(std::move(toggle));
         }
+
+        resized();
     }
 
     void resized() override
@@ -99,12 +256,12 @@ public:
 
         // Layout Driver controls.
         driverLabel->setBounds(margin, y, labelWidth, labelHeight);
-        driverDropdown->setBounds(margin + labelWidth, y, dropdownWidth, dropdownHeight);
+        driverDropdown->setBounds(margin + labelWidth, y, getWidth() - (margin * 2 + labelWidth), dropdownHeight);
         y += labelHeight + spacing;
 
         // Layout Input Device controls.
         inputDeviceLabel->setBounds(margin, y, labelWidth, labelHeight);
-        inputDeviceDropdown->setBounds(margin + labelWidth, y, dropdownWidth, dropdownHeight);
+        inputDeviceDropdown->setBounds(margin + labelWidth, y, getWidth() - (margin * 2 + labelWidth), dropdownHeight);
         y += labelHeight + spacing;
 
         // Layout Input Channels.
@@ -117,6 +274,11 @@ public:
             inputChannelToggles[i]->setBounds(margin + 130, y, toggleWidth, toggleHeight);
             y += labelHeight + spacing;
         }
+
+        // NEW: Layout Output Device controls.
+        outputDeviceLabel->setBounds(margin, y, labelWidth, labelHeight);
+        outputDeviceDropdown->setBounds(margin + labelWidth, y, getWidth() - (margin * 2 + labelWidth), dropdownHeight);
+        y += labelHeight + spacing;
 
         // Layout Output Channels.
         outputChannelsLabel->setBounds(margin, y, 200, labelHeight);
@@ -131,6 +293,8 @@ public:
     }
 
 private:
+    int selectedApiIndex = -1;
+
     // Top-level labels and dropdowns.
     std::unique_ptr<pptk::Label> audioLabel;
     std::unique_ptr<pptk::Label> driverLabel;
@@ -138,6 +302,9 @@ private:
 
     std::unique_ptr<pptk::Label> inputDeviceLabel;
     std::unique_ptr<pptk::DropdownSelector> inputDeviceDropdown;
+
+    std::unique_ptr<pptk::Label> outputDeviceLabel;
+    std::unique_ptr<pptk::DropdownSelector> outputDeviceDropdown;
 
     // Input channels.
     std::unique_ptr<pptk::Label> inputChannelsLabel;

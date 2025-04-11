@@ -14,6 +14,18 @@ namespace pptk
                 selected = options[0];
         }
 
+        void updateOptions(const std::vector<std::string>& newOptions) {
+            options = newOptions;
+
+            // Auto-select first item if available
+            if (!options.empty())
+                selected = options[0];
+            else
+                selected.clear();
+
+            repaint();
+        }
+
         void setOnSelect(std::function<void(const std::string&)> cb) { onSelect = std::move(cb); }
 
         void render(NVGcontext* vg) override
@@ -87,6 +99,13 @@ namespace pptk
             auto globalPos = localToGlobal(0, getHeight());
             popupMenu->setPosition(globalPos.x, globalPos.y);
             popupMenu->registerMouseListener(this);
+        }
+
+        void setSelected(const std::string& item) {
+            if (std::find(options.begin(), options.end(), item) != options.end()) {
+                selected = item;
+                repaint();
+            }
         }
 
     private:

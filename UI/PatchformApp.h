@@ -25,13 +25,40 @@ class WindowPeer;
 
 class PatchformApp {
 public:
+    static PatchformApp* instance;
+
+    static PatchformApp* getApp() {
+        return instance;
+    }
+
     PatchformApp(int sampleRate, unsigned long frameCount);
     ~PatchformApp();
 
     bool initialize();
     void shutdown();
     void run();
-    void reinitializeAudio();
+
+    std::vector<std::string> getAvailableAudioApis();
+    std::vector<std::string> getAvailableDevices(int apiIndex);
+    bool setAudioDriver(int apiIndex);
+
+    const PaDeviceInfo* setAudioInputDevice(int apiIndex, int deviceIndex) {
+        selectedApiIndex = apiIndex;
+        selectedInputDeviceIndex = deviceIndex;
+        reinitAudio();
+        return Pa_GetDeviceInfo(deviceIndex);
+    }
+
+    const PaDeviceInfo* setAudioOutputDevice(int apiIndex, int deviceIndex) {
+        selectedApiIndex = apiIndex;
+        selectedOutputDeviceIndex = deviceIndex;
+        reinitAudio();
+        return Pa_GetDeviceInfo(deviceIndex);
+    }
+
+    int getSelectedApiIndex() const { return selectedApiIndex; }
+    int getSelectedInputDeviceIndex() const { return selectedInputDeviceIndex; }
+    int getSelectedOutputDeviceIndex() const { return selectedOutputDeviceIndex; }
 
 private:
     int sampleRate;
@@ -69,7 +96,18 @@ private:
     const uint32_t targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
 
     bool initAudio();
+    void reinitAudio();
     void shutdownAudio();
+
+    std::atomic<int> inputChannels = 0;
+    std::atomic<int> outputChannels = 0;
+    std::atomic<bool> bypassMode = false;
+    std::atomic<bool> shuttingDownAudio = false;
+
+    int selectedApiIndex = -1;
+    int selectedDeviceIndex = -1;
+    int selectedInputDeviceIndex = -1;
+    int selectedOutputDeviceIndex = -1;
 
     bool initMidi();
     void shutdownMidi();

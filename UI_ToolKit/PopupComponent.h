@@ -43,8 +43,8 @@ namespace pptk
             unregisterGlobalMouseListener();
             setPopupComponent(nullptr);
 
-            if (button)
-                button->repaint();
+            //if (button)
+            //    button->repaint();
         }
 
     private:

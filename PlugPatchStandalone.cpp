@@ -4,6 +4,8 @@
 
 #include "GitInfo.h"
 
+#define PATCHFORM_STANDALONE
+
 int main(int argc, char* argv[]) {
     unsigned long frameCount = 64;
     int sampleRate = 44100;

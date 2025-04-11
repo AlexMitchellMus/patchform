@@ -26,6 +26,8 @@
 #include "PatchformApp.h"
 #include "../UI_ToolKit/WindowPeer.h"
 
+PatchformApp* PatchformApp::instance = nullptr;
+
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     : graphManager(sampleRate, frameCount)
     , sampleRate(sampleRate)
@@ -33,7 +35,7 @@ PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     ,windowWidth(1920)
     , windowHeight(1080)
 {
-
+    instance = this;
 }
 
 PatchformApp::~PatchformApp()
@@ -93,10 +95,12 @@ void PatchformApp::run()
     while (running)
     {
         // Check if audio device was disconnected
-        if (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream))
-        {
+        static bool restarting = false;
+        if (!restarting && (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream))) {
+            restarting = true;
             std::cerr << "Audio stream stopped unexpectedly. Restarting..." << std::endl;
-            reinitializeAudio();
+            reinitAudio();
+            restarting = false;
         }
 
         Uint32 currentFrameTime = SDL_GetTicks();
@@ -176,45 +180,55 @@ void PatchformApp::run()
     }
 }
 
-void PatchformApp::reinitializeAudio()
-{
-    shutdownAudio();
-    initAudio();
-}
-
 int PatchformApp::audioCallback(const void* input, void* output,
-                         unsigned long frameCount,
-                         const PaStreamCallbackTimeInfo* timeInfo,
-                         PaStreamCallbackFlags statusFlags,
-                         void* userData)
+                                unsigned long frameCount,
+                                const PaStreamCallbackTimeInfo*,
+                                PaStreamCallbackFlags statusFlags,
+                                void* userData)
 {
     PlatformHelpers::disableDenormalsOncePerThread();
 
-    if (!output) {
-        return paAbort; // Prevent crashing if output buffer is invalid
-    }
-
     auto* app = static_cast<PatchformApp*>(userData);
 
-    auto* in = static_cast<const float*>(input);
-    auto* out = static_cast<float*>(output);
+    if (app->shuttingDownAudio.load(std::memory_order_acquire))
+        return paAbort;
 
-    std::fill(out, out + frameCount, 0.0f);
+    auto inputChannels = app->inputChannels.load(std::memory_order_relaxed);
+    auto outputChannels = app->outputChannels.load(std::memory_order_relaxed);
 
-    // Process any pending MIDI messages from the queue
-    MidiMessage midiMsg;
-    std::vector<MidiMessage> midiMessages;
-    while (app->midiQueue.try_dequeue(midiMsg))
+    auto bypassMode = app->bypassMode.load(std::memory_order_relaxed);
+
+    if (!bypassMode && outputChannels == 0)
+        return paContinue;
+
+    const float* const* in = reinterpret_cast<const float* const*>(input);
+    float** out = static_cast<float**>(output);
+
+    // Clear output
+    if (out && outputChannels > 0)
     {
+        for (int ch = 0; ch < outputChannels; ++ch)
+        {
+            if (out[ch])
+                std::fill(out[ch], out[ch] + frameCount, 0.0f);
+        }
+    }
+
+    // MIDI
+    std::vector<MidiMessage> midiMessages;
+    MidiMessage midiMsg;
+    while (app->midiQueue.try_dequeue(midiMsg))
         midiMessages.push_back(midiMsg);
-    }
 
-    app->graphManager.process(in, out, frameCount, midiMessages);  // Process the audio graph
+    thread_local static float bypassBuffer[2048] = {0};// hard coded to max buffer size TODO: Set max buffer size!
 
-    if (statusFlags & (paOutputUnderflow | paInputOverflow)) {
+    const float* inputChannel0 = (in && inputChannels > 0 && in[0]) ? in[0] : bypassBuffer;
+    float* outputChannel0 = (out && outputChannels > 0 && out[0]) ? out[0] : bypassBuffer;
+
+    app->graphManager.process(inputChannel0, outputChannel0, frameCount, midiMessages);
+
+    if (statusFlags & (paOutputUnderflow | paInputOverflow))
         std::cerr << "Audio underflow or overflow detected" << std::endl;
-        //return paAbort; // Force PortAudio to restart stream
-    }
 
     return paContinue;
 }
@@ -227,85 +241,69 @@ bool PatchformApp::initAudio() {
     if (numApis <= 0)
         return false;
 
-    int apiToUse = 3;
-    int audioDriver = std::min(numApis - 1, apiToUse);
+    int audioDriver = selectedApiIndex >= 0 ? selectedApiIndex : Pa_GetDefaultHostApi();
+    std::cout << "Setting audio driver to: " << audioDriver << std::endl;
     const PaHostApiInfo* apiInfo = Pa_GetHostApiInfo(audioDriver);
 
     std::cout << "\n==== Audio Driver Info ====\n";
-
-    // Validate output device
-    if (!apiInfo || apiInfo->defaultOutputDevice == paNoDevice ||
-        Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultOutputDevice) == paInvalidDevice) {
-        std::cerr << "Invalid or no output device on selected API. Falling back to default.\n";
-        audioDriver = Pa_GetDefaultHostApi();
-        apiInfo = Pa_GetHostApiInfo(audioDriver);
-    }
-
     for (int i = 0; i < numApis; ++i) {
         const PaHostApiInfo* info = Pa_GetHostApiInfo(i);
         if (info)
             std::cout << (audioDriver == i ? "Active" : "Inactive") << " API " << i << " " << info->name << std::endl;
     }
 
-    // Final fallback check
-    if (!apiInfo || apiInfo->defaultOutputDevice == paNoDevice ||
-        Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultOutputDevice) == paInvalidDevice) {
-        std::cerr << "No usable output device. Listing all devices:\n";
+    int inputDeviceIndex = selectedInputDeviceIndex;
+    int outputDeviceIndex = selectedOutputDeviceIndex;
 
-        int numDevices = Pa_GetDeviceCount();
-        for (int i = 0; i < numDevices; ++i) {
-            const PaDeviceInfo* dev = Pa_GetDeviceInfo(i);
-            const PaHostApiInfo* host = Pa_GetHostApiInfo(dev->hostApi);
-            std::cout << "[" << i << "] " << dev->name << " (" << host->name << ")\n";
-        }
+    const PaDeviceInfo* inputInfo = (inputDeviceIndex >= 0) ? Pa_GetDeviceInfo(inputDeviceIndex) : nullptr;
+    const PaDeviceInfo* outputInfo = (outputDeviceIndex >= 0) ? Pa_GetDeviceInfo(outputDeviceIndex) : nullptr;
 
-        return false;
+    if (!inputInfo && !outputInfo) {
+        std::cout << "No input or output device selected.\n";
+        return true; // Not an error, just no audio stream
     }
-
-    // Convert to global indices
-    int inputDeviceIndex = paNoDevice;
-    int outputDeviceIndex = Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultOutputDevice);
-
-    if (apiInfo->defaultInputDevice != paNoDevice) {
-        int globalInput = Pa_HostApiDeviceIndexToDeviceIndex(audioDriver, apiInfo->defaultInputDevice);
-        if (globalInput != paInvalidDevice)
-            inputDeviceIndex = globalInput;
-    }
-
-    // Set up stream params
-    const PaDeviceInfo* inputInfo = nullptr;
-    const PaDeviceInfo* outputInfo = nullptr;
 
     PaStreamParameters inputParams{}, outputParams{};
     PaStreamParameters* inputParamsPtr = nullptr;
     PaStreamParameters* outputParamsPtr = nullptr;
 
-    if (inputDeviceIndex != paInvalidDevice && inputDeviceIndex != paNoDevice) {
-        inputInfo = Pa_GetDeviceInfo(inputDeviceIndex);
-        if (inputInfo) {
-            std::cout << "Using input: " << inputInfo->name << "\n";
-            inputParams.device = inputDeviceIndex;
-            inputParams.channelCount = 1;
-            inputParams.sampleFormat = paFloat32;
-            inputParams.hostApiSpecificStreamInfo = nullptr;
-            inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
-            inputParamsPtr = &inputParams;
-        }
+    if (inputInfo) {
+        std::cout << "Using input: " << inputInfo->name << "\n";
+        inputParams.device = inputDeviceIndex;
+        inputParams.channelCount = std::min(2, inputInfo->maxInputChannels);
+        inputParams.sampleFormat = paFloat32 | paNonInterleaved;
+        inputParams.suggestedLatency = inputInfo->defaultLowInputLatency;
+        inputParamsPtr = &inputParams;
     }
 
-    outputInfo = Pa_GetDeviceInfo(outputDeviceIndex);
-    if (!outputInfo) {
-        std::cerr << "Output device info is null\n";
-        return false;
+    if (outputInfo) {
+        std::cout << "Using output: " << outputInfo->name << "\n";
+        outputParams.device = outputDeviceIndex;
+        outputParams.channelCount = std::min(2, outputInfo->maxOutputChannels);
+        outputParams.sampleFormat = paFloat32 | paNonInterleaved;
+        outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
+        outputParamsPtr = &outputParams;
+
+        bypassMode.store(false);
     }
 
-    std::cout << "Using output: " << outputInfo->name << "\n";
-    outputParams.device = outputDeviceIndex;
-    outputParams.channelCount = 1;
-    outputParams.sampleFormat = paFloat32;
-    outputParams.hostApiSpecificStreamInfo = nullptr;
-    outputParams.suggestedLatency = outputInfo->defaultLowOutputLatency;
-    outputParamsPtr = &outputParams;
+    if (!outputParamsPtr) {
+        // Open with 1 output channel to ensure callback runs, but set bypass mode to true,
+        // which connects the callback in/out to a disconnected buffer
+        outputParams.device = Pa_GetDefaultOutputDevice();
+        const PaDeviceInfo* dummyInfo = Pa_GetDeviceInfo(outputParams.device);
+
+        outputParams.channelCount = 1;
+        outputParams.sampleFormat = paFloat32 | paNonInterleaved;
+        outputParams.suggestedLatency = dummyInfo ? dummyInfo->defaultHighOutputLatency : 0.1;
+        outputParamsPtr = &outputParams;
+
+        // We don't actually use this — just force PortAudio to run callback
+        bypassMode.store(true);
+    }
+
+    inputChannels.store(inputParamsPtr ? inputParams.channelCount : 0);
+    outputChannels.store(outputParamsPtr ? outputParams.channelCount : 0);
 
     auto err = Pa_OpenStream(&stream, inputParamsPtr, outputParamsPtr, sampleRate, frameCount, paClipOff, audioCallback, this);
     if (err != paNoError) {
@@ -322,13 +320,62 @@ bool PatchformApp::initAudio() {
     return true;
 }
 
+void PatchformApp::reinitAudio() {
+    // FULL teardown
+    shutdownAudio();
+
+    // Brief delay to let drivers release
+    SDL_Delay(100);
+
+    if (Pa_Initialize() != paNoError) {
+        std::cerr << "Failed to reinitialize PortAudio\n";
+        return;
+    }
+
+    initAudio();
+}
+
 void PatchformApp::shutdownAudio() {
+    shuttingDownAudio.store(true, std::memory_order_release);
+    inputChannels.store(0, std::memory_order_relaxed);
+    outputChannels.store(0, std::memory_order_relaxed);
+    bypassMode.store(false, std::memory_order_relaxed);
+
     if (stream) {
-        Pa_StopStream(stream);
+        Pa_AbortStream(stream);  // force exit if Stop hangs
         Pa_CloseStream(stream);
         stream = nullptr;
     }
+
     Pa_Terminate();
+    shuttingDownAudio.store(false, std::memory_order_release);
+}
+
+std::vector<std::string> PatchformApp::getAvailableAudioApis() {
+    std::vector<std::string> apis;
+    int count = Pa_GetHostApiCount();
+    for (int i = 0; i < count; ++i) {
+        if (const auto* info = Pa_GetHostApiInfo(i))
+            apis.push_back(info->name);
+    }
+    return apis;
+}
+
+std::vector<std::string> PatchformApp::getAvailableDevices(int apiIndex) {
+    std::vector<std::string> devices;
+    int count = Pa_GetDeviceCount();
+    for (int i = 0; i < count; ++i) {
+        const PaDeviceInfo* dev = Pa_GetDeviceInfo(i);
+        if (dev && Pa_GetDeviceInfo(i)->hostApi == apiIndex)
+            devices.push_back(dev->name);
+    }
+    return devices;
+}
+
+bool PatchformApp::setAudioDriver(int apiIndex) {
+    selectedApiIndex = apiIndex;
+    selectedDeviceIndex = -1; // reset device
+    return reinitAudio(), true;
 }
 
 bool PatchformApp::initMidi()

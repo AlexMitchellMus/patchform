@@ -160,6 +160,10 @@ public:
 
     void setSize(float newWidth, float newHeight)
     {
+        constexpr float epsilon = 0.1f;
+        if (std::abs(width - newWidth) < epsilon && std::abs(height - newHeight) < epsilon)
+            return;
+
         width = newWidth;
         height = newHeight;
 

@@ -15,9 +15,8 @@ class PopupListComponent : public PopupComponent
 {
 public:
 
-    PopupListComponent(const std::vector<std::string>& labels)
+    PopupListComponent(const std::vector<std::string>& listItems) : labels(listItems)
     {
-        int y = 5;
         for (const auto& label : labels)
         {
             auto item = std::make_unique<Item>(label, [this, label]() {
@@ -25,14 +24,34 @@ public:
                     onItemSelected(label);
             });
 
-            item->setBounds(5, y, 180, 28);
-            y += 30;
-
             addComponent(item.get());
             items.push_back(std::move(item));
         }
+    }
 
-        setBounds(0, 0, 190, y);
+    void resized() override
+    {
+        float maxTextWidth = 0.0f;
+        const float padding = 20.0f;
+        const float minWidth = 150.0f;
+        const float maxWidth = 400.0f;
+
+        for (const auto& label : labels)
+        {
+            float width = getTextWidthForFont("Regular", 14.0f, label);
+            maxTextWidth = std::max(maxTextWidth, width);
+        }
+
+        float popupWidth = std::clamp(maxTextWidth + padding, minWidth, maxWidth);
+        int y = 5;
+
+        for (auto& item : items)
+        {
+            item->setBounds(5, y, popupWidth - 10, 28);
+            y += 30;
+        }
+
+        setSize(popupWidth, y);
     }
 
     std::function<void(const std::string&)> onItemSelected;
@@ -83,6 +102,7 @@ public:
     }
 
 private:
+    std::vector<std::string> labels;
     std::vector<std::unique_ptr<Item>> items;
     std::function<void(const std::string&)> onSelectCallback;
 
