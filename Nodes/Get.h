@@ -12,6 +12,7 @@
 class Get : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("GetValue", "get", false);
+    DEFINE_NODE_ALIASES("get");
 
     IntParameter* atomNumberParam;
     std::atomic<size_t> atomNumber;
@@ -111,3 +112,5 @@ public:
         }
     }
 };
+
+REGISTER(Get);

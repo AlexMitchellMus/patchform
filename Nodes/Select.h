@@ -4,6 +4,7 @@
 
 class Select : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Select", "sel", false);
+    DEFINE_NODE_ALIASES("sel", "select");
 
 public:
     Select(NodeContext* context, const json& objParams)
@@ -43,3 +44,5 @@ public:
         return nodeCreationData;
     }
 };
+
+REGISTER(Select);

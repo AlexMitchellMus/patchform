@@ -6,6 +6,7 @@
 class FilterTag : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("FilterTag", "filtag", false);
+    DEFINE_NODE_ALIASES("filtertag");
 
     std::string tag;
     StringParameter* tagParameter;
@@ -41,3 +42,5 @@ public:
         }
     }
 };
+
+REGISTER(FilterTag);

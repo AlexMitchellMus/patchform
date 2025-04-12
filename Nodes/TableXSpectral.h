@@ -9,6 +9,7 @@
 class TableXSpectral : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("TableXSpectral", "tableXspectral", true);
+    DEFINE_NODE_ALIASES("tablexspectral");
 
     PFFFT_Setup* setup = nullptr;
     float* fftA = nullptr;
@@ -213,3 +214,5 @@ public:
         }
     }
 };
+
+REGISTER(TableXSpectral);

@@ -12,6 +12,7 @@
 class Ping final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Ping", "png", false);
+    DEFINE_NODE_ALIASES("ping");
 
     std::function<void()> repaintFromDSP = [](){};
 
@@ -164,3 +165,5 @@ public:
     }
 #endif
 };
+
+REGISTER(Ping);

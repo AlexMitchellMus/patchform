@@ -4,6 +4,7 @@
 
 class SpecMerge final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("SpecMerge", "specMerge", true);
+    DEFINE_NODE_ALIASES("specmerge");
 
 public:
     static constexpr size_t FFT_SIZE = 512;
@@ -174,3 +175,5 @@ private:
     StringParameter* modeParam = nullptr;
     std::atomic<uint32_t> modeHash;
 };
+
+REGISTER(SpecMerge);

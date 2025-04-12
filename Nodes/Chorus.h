@@ -2,6 +2,7 @@
 
 class Chorus : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Chorus", "chorus", true);
+    DEFINE_NODE_ALIASES("chorus");
 
     std::vector<float> delayBuffer;
     size_t bufferSize = 0;
@@ -113,3 +114,5 @@ public:
         }
     }
 };
+
+REGISTER(Chorus);

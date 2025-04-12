@@ -114,6 +114,7 @@ static constexpr auto triangleWaveTable = generateTriangleWave();
 class Oscillator : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Oscillator", "osc", true);
+    DEFINE_NODE_ALIASES("osc", "oscillator");
 
 protected:
     inline static bool initialized;
@@ -341,3 +342,5 @@ public:
         }
     }
 };
+
+REGISTER(Oscillator);

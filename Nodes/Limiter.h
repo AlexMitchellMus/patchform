@@ -7,6 +7,7 @@
 
 class Limiter : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Limiter", "limiter", true);
+    DEFINE_NODE_ALIASES("limiter");
 
     std::atomic<float> threshold;
     FloatParameter* thresholdParam;
@@ -62,3 +63,5 @@ public:
         }
     }
 };
+
+REGISTER(Limiter);

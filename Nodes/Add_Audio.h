@@ -11,6 +11,7 @@
 // AddNode that sums two signals
 class Add_Audio : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Add_Audio", "aadd", true);
+    DEFINE_NODE_ALIASES("audioadd");
 
 public:
     Add_Audio(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
@@ -31,3 +32,4 @@ public:
         }
     }
 };
+REGISTER(Add_Audio);

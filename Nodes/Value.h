@@ -5,6 +5,7 @@
 
 class Value : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Value", "val", true);
+    DEFINE_NODE_ALIASES("value", "val");
 
     LinearSmoother smoother;
     float eventTarget = 0.0f;
@@ -67,3 +68,5 @@ public:
         return nodeCreationData;
     }
 };
+
+REGISTER(Value);

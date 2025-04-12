@@ -10,6 +10,7 @@
 
 class MultiTapDelay : public AudioNode {
     DEFINE_AND_REGISTER_NODE("MultiTapDelay", "multitap_delay", true);
+    DEFINE_NODE_ALIASES("multitapdelay");
 
     static constexpr size_t kMaxDelayMs = 2000;
 
@@ -111,3 +112,5 @@ public:
         }
     }
 };
+
+REGISTER(MultiTapDelay);

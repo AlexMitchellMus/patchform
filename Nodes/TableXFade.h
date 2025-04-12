@@ -4,6 +4,7 @@
 
 class TableXFade : public AudioNode {
     DEFINE_AND_REGISTER_NODE("TableXfade", "tableXfade", true);
+    DEFINE_NODE_ALIASES("tablexfade");
 
     SampleHandle sampleA;
     SampleHandle sampleB;
@@ -57,3 +58,5 @@ public:
         }
     }
 };
+
+REGISTER(TableXFade);

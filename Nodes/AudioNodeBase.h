@@ -30,19 +30,37 @@ using json = nlohmann::json;
 
 // Helper macro to name and register node (used in derived node class)
 // <Fullname> <ShortName> <should constantly process>
-#define DEFINE_AND_REGISTER_NODE(nodeName, shortNodeName, processAudio)         \
-public:                                                                         \
-    static inline const std::string name = nodeName;                            \
-    static inline const std::string shortName = shortNodeName;                  \
-    static inline const bool registered = []() {                                \
-        NodeRegistry::getInstance().registerNode(name);                         \
-        return true;                                                            \
-    }();                                                                        \
-    const std::string& getName() const override { return name; }                \
-    const std::string& getShortName() const override { return shortName; }      \
-    static inline const bool isAudioProcessor = processAudio;                   \
-    const bool& alwaysProcess() const override { return isAudioProcessor; } \
-    private:                                                                    \
+#define DEFINE_AND_REGISTER_NODE(nodeName, shortNodeName, processAudio)      \
+public:                                                                      \
+    static inline const std::string name = nodeName;                         \
+    static inline const std::string shortName = shortNodeName;               \
+    const std::string& getName() const override { return name; }             \
+    const std::string& getShortName() const override { return shortName; }   \
+    static inline const bool isAudioProcessor = processAudio;                \
+    const bool& alwaysProcess() const override { return isAudioProcessor; }  \
+    private:                                                                 \
+
+#define DEFINE_NODE_ALIASES(...)                                                            \
+public:                                                                                     \
+    static inline const std::vector<std::string> aliases = { __VA_ARGS__ };                 \
+
+#define REGISTER(className)                                                                                 \
+    static inline const bool _##className##_registered = [] {                                               \
+        NodeRegistry::getInstance().registerNode(className::name);                                          \
+        NodeRegistry::getInstance().registerAlias(className::aliases, [](NodeContext* ctx, const json& j) { \
+            return new className(ctx, j);                                                                   \
+        });                                                                                                 \
+        return true;                                                                                        \
+    }();
+
+#define REGISTER_PLUGIN(className)																			\
+    static AudioNode* create_##className(NodeContext* ctx, const json& j) {									\
+        return new className(ctx, j);																		\
+    }																										\
+    extern "C" __declspec(dllexport) void registerPatchformNodes() {										\
+        NodeRegistry::getInstance().registerNode(className::name);											\
+        NodeRegistry::getInstance().registerAlias(className::aliases, create_##className);					\
+    }										                                                                \
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

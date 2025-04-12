@@ -3,6 +3,7 @@
 class Keyboard final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Keyboard", "keyboard", false);
+    DEFINE_NODE_ALIASES("keyboard");
 
 public:
     std::atomic<int> noteState[128] = {};
@@ -525,3 +526,5 @@ public:
     }
 #endif
 };
+
+REGISTER(Keyboard);

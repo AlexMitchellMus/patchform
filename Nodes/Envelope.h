@@ -5,6 +5,7 @@
 class Envelope final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("AHR Envelope", "AHRenv", true);
+    DEFINE_NODE_ALIASES("env", "envelope");
 
     FloatParameter* attackValParam = nullptr;
     FloatParameter* holdValParam = nullptr;
@@ -169,3 +170,5 @@ public:
         }
     }
 };
+
+REGISTER(Envelope);

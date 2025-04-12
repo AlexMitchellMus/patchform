@@ -10,6 +10,7 @@
 class MidiNoteIn : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("MidiNoteIn", "notein", true);
+    DEFINE_NODE_ALIASES("midinotein", "notein");
 
 public:
     MidiNoteIn(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
@@ -68,3 +69,5 @@ public:
         }
     }
 };
+
+REGISTER(MidiNoteIn);

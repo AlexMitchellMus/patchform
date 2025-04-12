@@ -18,6 +18,7 @@
 class Spec final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("SpectralPlot", "spec", true);
+    DEFINE_NODE_ALIASES("spec");
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -212,3 +213,5 @@ private:
     size_t dspBufferIndex = 0;
 #endif
 };
+
+REGISTER(Spec);

@@ -6,6 +6,7 @@
 class Random : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Random", "rnd", false);
+    DEFINE_NODE_ALIASES("rnd", "random");
 
     FloatParameter* minParam;
     FloatParameter* maxParam;
@@ -49,3 +50,5 @@ public:
         return nodeCreationData;
     }
 };
+
+REGISTER(Random);

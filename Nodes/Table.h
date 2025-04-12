@@ -4,6 +4,7 @@
 
 class Table final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Table", "table", false);
+    DEFINE_NODE_ALIASES("table");
 
     int numValues = defaultTableSize;  // hardcoded for now
     std::vector<float> bufferA;
@@ -231,3 +232,5 @@ public:
         return nodeCreationData;
     }
 };
+
+REGISTER(Table);

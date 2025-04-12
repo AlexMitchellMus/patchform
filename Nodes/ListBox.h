@@ -20,6 +20,7 @@
 class ListBox final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("ListBox", "lb", false);
+    DEFINE_NODE_ALIASES("lb", "listbox");
 
     float value;
 
@@ -492,3 +493,5 @@ public:
         }
     }
 };
+
+REGISTER(ListBox);

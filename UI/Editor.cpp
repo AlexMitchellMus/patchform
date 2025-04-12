@@ -105,28 +105,37 @@ void Editor::updateObjectsFromDSP() const
 {
     canvas->updateGraphValuesIfNeeded();
 
-    float val;
-    float sumPeaks = 0.0f;
+    std::vector<float> peaks;
+    float sumL = 0.0f, sumR = 0.0f;
     int count = 0;
 
-    //  Read and process all available peak values
-    while (graphManager->volumeMeterQueue.try_dequeue(val))
+    while (graphManager->volumeMeterQueue.try_dequeue(peaks))
     {
-        sumPeaks += val;
-        count++;
+        if (peaks.size() == 2)
+        {
+            sumL += peaks[0];
+            sumR += peaks[1];
+            count++;
+        }
     }
 
     if (count > 0)
     {
-        float averagedPeak = sumPeaks / count;  // ✅ Process the average
-        float lastValue = topBar->getVolumeMeterValue();
+        float avgL = sumL / count;
+        float avgR = sumR / count;
 
-        //  Only update if there’s a significant change
+        float lastL = topBar->getVolumeMeterLeft();
+        float lastR = topBar->getVolumeMeterRight();
+
         constexpr float PEAK_THRESHOLD = 0.0001f;
-        if (std::abs(averagedPeak - lastValue) > PEAK_THRESHOLD)
-        {
-            topBar->setVolumeMeterValue(averagedPeak);
-        }
+
+        if (std::abs(avgL - lastL) > PEAK_THRESHOLD)
+            lastL = avgL;
+
+        if (std::abs(avgR - lastR) > PEAK_THRESHOLD)
+            lastR = avgR;
+
+        topBar->setVolumeMeterValue(lastL, lastR);
     }
 
     topBar->setDSPValue(graphManager->getDspTiming());

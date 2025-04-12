@@ -11,6 +11,7 @@
 // AddNode that sums two signals
 class Add : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Add", "add", false);
+    DEFINE_NODE_ALIASES("add");
 
     float coldValue;
 public:
@@ -45,3 +46,5 @@ public:
         }
     }
 };
+
+REGISTER(Add);

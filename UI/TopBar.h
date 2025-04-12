@@ -14,65 +14,73 @@
 
 class MainVolumeMeter : public pptk::Component
 {
-    public:
-    MainVolumeMeter(){};
+public:
+    MainVolumeMeter() = default;
 
-    void setValue(float value)
+    void setValue(float left, float right)
     {
-        // Clamp to avoid log(0) and keep within valid range
-        value = std::clamp(value, 1e-6f, 1.0f);
+        left = std::clamp(left, 1e-6f, 1.0f);
+        right = std::clamp(right, 1e-6f, 1.0f);
 
-        // Convert linear to dB
-        float dbValue = 20.0f * std::log10(value);
+        leftMeterPeakVal = 20.0f * std::log10(left);
+        rightMeterPeakVal = 20.0f * std::log10(right);
 
-        // Define dB range (e.g. from -40 dB to 0 dB)
-        // We use 40dB as the small meter can't really fit a larger dB range into it
         constexpr float dbRange = 40.0f;
+        float meterLeft = std::clamp((leftMeterPeakVal + dbRange) / dbRange, 0.0f, 1.0f);
+        float meterRight = std::clamp((rightMeterPeakVal + dbRange) / dbRange, 0.0f, 1.0f);
 
-        // Normalize to 0.0 - 1.0
-        meterPeakValue = std::clamp((dbValue + dbRange) / dbRange, 0.0f, 1.0f);
-
-        // UI scale
         float meterWidth = width - (height * 2) * getAccumulatedScale();
-        int scaledPos = meterPeakValue * meterWidth * 2;
-        if (peakMeterPos != scaledPos)
+        int newPos = static_cast<int>((meterLeft + meterRight) * 0.5f * meterWidth * 2);
+
+        if (peakMeterPos != newPos)
         {
-            peakMeterPos = scaledPos;
+            peakMeterPos = newPos;
             repaint();
         }
+
+        meterLeftNorm = meterLeft;
+        meterRightNorm = meterRight;
     }
 
-    float getValue()
-    {
-        return meterPeakValue;
-    }
+    float getLeftVal() { return meterLeftNorm; }
+    float getRightVal() { return meterRightNorm; }
 
     void render(NVGcontext* nvg) override
     {
         nvgBeginPath(nvg);
         auto bgColor = nvgRGBA(33, 33, 33, 255);
+        float halfHeight = getHeight() * 0.5f;
 
-        auto halfHeight = getHeight() * 0.5f;
         nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bgColor, bgColor, halfHeight);
 
         float meterWidth = width - (halfHeight * 2);
-        float meterX = getHeight() * 0.5f;
+        float meterX = halfHeight;
+        float meterY = height * 0.25f;
+        float meterH = height * 0.2f;
 
+        // Left channel
         auto meterBgCol = nvgRGBA(40, 40, 40, 255);
-        nvgDrawRoundedRect(nvg, meterX, height * 0.3f, meterWidth, height * 0.4f, meterBgCol, meterBgCol, 0);
+        nvgDrawRoundedRect(nvg, meterX, meterY, meterWidth, meterH, meterBgCol, meterBgCol, 0);
+        float leftX = meterWidth * meterLeftNorm;
+        auto colL = meterLeftNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
+        nvgDrawRoundedRect(nvg, meterX, meterY, leftX, meterH, colL, colL, 0);
 
-        // Convert peak value to X position
-        float peakX = meterWidth * meterPeakValue;
-
-        const auto blue = nvgRGBA(28, 73, 119, 255 * 0.7f);
-        const auto peak = nvgRGB(255, 0, 0);
-        auto col = meterPeakValue > 0.99 ? peak : blue;
-        nvgDrawRoundedRect(nvg, meterX, height * 0.3f, peakX, height * 0.4f, col, col, 0);
+        // Right channel
+        meterY = height * 0.55f;
+        nvgDrawRoundedRect(nvg, meterX, meterY, meterWidth, meterH, meterBgCol, meterBgCol, 0);
+        float rightX = meterWidth * meterRightNorm;
+        auto colR = meterRightNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
+        nvgDrawRoundedRect(nvg, meterX, meterY, rightX, meterH, colR, colR, 0);
     }
+
 private:
-    float meterPeakValue = 0.0f;
+    float leftMeterPeakVal = 0.0f;
+    float rightMeterPeakVal = 0.0f;
+    float meterLeftNorm = 0.0f;
+    float meterRightNorm = 0.0f;
     int peakMeterPos = 0;
 };
+
 
 class AboutDialog;
 
@@ -246,16 +254,24 @@ public:
         repaint();
     }
 
-    void setVolumeMeterValue(float value)
+    void setVolumeMeterValue(float left, float right)
     {
         if (volumeMeter)
-            volumeMeter->setValue(value);
+            volumeMeter->setValue(left, right);
     }
 
-    float getVolumeMeterValue()
+    float getVolumeMeterLeft()
     {
         if (volumeMeter)
-            return volumeMeter->getValue();
+            return volumeMeter->getLeftVal();
+
+        return 0.0f;
+    }
+
+    float getVolumeMeterRight()
+    {
+        if (volumeMeter)
+            return volumeMeter->getRightVal();
 
         return 0.0f;
     }

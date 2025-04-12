@@ -13,6 +13,7 @@
 class Comment final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Comment", "com", false);
+    DEFINE_NODE_ALIASES("comment");
 
     std::string commentText;
 
@@ -131,3 +132,5 @@ public:
         return false;
     }
 };
+
+REGISTER(Comment);

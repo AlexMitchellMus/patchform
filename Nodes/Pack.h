@@ -12,6 +12,7 @@
 class Pack : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Pack", "pack", false);
+    DEFINE_NODE_ALIASES("pack");
 
     int packNum = 0;
     // One persistent DataAtom pointer per input port.
@@ -168,3 +169,5 @@ public:
 private:
     int freelistSize = 0;
 };
+
+REGISTER(Pack);

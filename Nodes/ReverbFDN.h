@@ -14,6 +14,7 @@
 // Improved FDN Reverb Node
 class ReverbFDN : public AudioNode {
     DEFINE_AND_REGISTER_NODE("ReverbFDN", "fdn", true);
+    DEFINE_NODE_ALIASES("reverb_fdn", "fdn");
 
     static constexpr int numDelays = 8;
     std::array<std::vector<float>, numDelays> delayBuffers;
@@ -69,3 +70,5 @@ public:
         }
     }
 };
+
+REGISTER(ReverbFDN);

@@ -11,6 +11,7 @@
 // Gain node that multiplies the outputs of two input nodes
 class Gain : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Gain", "gain", true);
+    DEFINE_NODE_ALIASES("vol", "volume", "gain");
 
     float eventVal1 = 0.0f;
     float eventVal2 = 0.0f;
@@ -78,3 +79,5 @@ public:
         }
     }
 };
+
+REGISTER(Gain);

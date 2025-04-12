@@ -11,6 +11,7 @@
 // AudioOutNode that outputs audio to the PortAudio stream
 class AudioIn : public AudioNode {
     DEFINE_AND_REGISTER_NODE("AudioIn", "ain", true);
+    DEFINE_NODE_ALIASES("ain", "audioin");
 public:
     AudioIn(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::None, objParams)
     {
@@ -30,3 +31,5 @@ public:
         std::memcpy(right, inR, frameCount * sizeof(float));
     }
 };
+
+REGISTER(AudioIn);

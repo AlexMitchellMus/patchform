@@ -11,6 +11,7 @@
 // Strip removes data atoms from events, return's anly an event
 class Strip : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Strip", "strip", false);
+    DEFINE_NODE_ALIASES("strip");
 
     IntParameter *atomNumberParam;
     int atomNumber;
@@ -35,3 +36,5 @@ public:
         }
     }
 };
+
+REGISTER(Strip);

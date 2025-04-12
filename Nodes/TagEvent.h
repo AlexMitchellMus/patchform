@@ -12,6 +12,7 @@
 class TagEvent : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("TagEvent", "tag", false);
+    DEFINE_NODE_ALIASES("tag");
 
     std::string tag;
     StringParameter* tagParameter;
@@ -48,3 +49,5 @@ public:
         }
     }
 };
+
+REGISTER(TagEvent);

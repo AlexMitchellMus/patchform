@@ -4,6 +4,7 @@
 
 class Multiply : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Multiply", "mul", false);
+    DEFINE_NODE_ALIASES("mul");
 
     float coldValue;
 
@@ -31,3 +32,5 @@ public:
         }
     }
 };
+
+REGISTER(Multiply);

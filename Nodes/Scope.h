@@ -17,6 +17,7 @@
 class Scope final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Scope", "scope", true);
+    DEFINE_NODE_ALIASES("scope");
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -133,7 +134,8 @@ public:
             const int h = getHeight();
 
             // Draw a dark, rounded background.
-            auto bg = nvgRGBA(11, 11, 11, 255);
+            const auto bg = nvgRGBA(11, 11, 11, 255);
+            const auto fg = nvgRGBA(255, 255, 255, 30);
             nvgDrawRoundedRect(nvg, 1, 1, w - 2, h - 2, bg, bg, 5);
 
             //if (!waveformValid)
@@ -158,15 +160,20 @@ public:
             // Then map [0,1] to [h,0]: normalized value 0 gives y = h (bottom),
             // normalized value 1 gives y = 0 (top)
             float prevY = h * (1.0f - normalized);
-            nvgMoveTo(nvg, x, prevY);
+            // Before visible waveform
+            nvgMoveTo(nvg, -100.0f, height * 0.5f);
 
-            for (size_t i = 1; i < DISPLAY_SIZE; ++i)
+            // Main waveform
+            for (size_t i = 0; i < DISPLAY_SIZE; ++i)
             {
                 x = i * xStep;
                 normalized = (waveform[i] - negRange) / rangeWidth;
                 float currentY = h * (1.0f - normalized);
                 nvgLineTo(nvg, x, currentY);
             }
+
+            // After visible waveform
+            nvgLineTo(nvg, width + 100.0f, height * 0.5f);
 
             // Scissor the waveform only
             nvgSave(nvg);
@@ -175,12 +182,12 @@ public:
             nvgLineStyle(nvg, NVG_SOLID);
             nvgStrokeColor(nvg, nvgRGBA(200, 200, 200, 255));
             nvgStrokeWidth(nvg, 1.0f);
+            nvgFillColor(nvg, fg);
+            nvgFill(nvg);
             nvgStroke(nvg);
 
             nvgRestore(nvg);
         }
-
-
 
     private:
         // Buffer holding the most recent DSP_BUFFER_SIZE samples.
@@ -280,3 +287,5 @@ private:
 
 #endif
 };
+
+REGISTER(Scope);

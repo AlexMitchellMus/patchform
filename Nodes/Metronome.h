@@ -13,6 +13,7 @@
 
 class Metronome : public AudioNode
 {
+    DEFINE_NODE_ALIASES("metronome", "metro");
     DEFINE_AND_REGISTER_NODE("Metronome", "metro", true);
 
     FloatParameter* tickParam;
@@ -128,3 +129,5 @@ public:
 #endif
     }
 };
+
+REGISTER(Metronome);

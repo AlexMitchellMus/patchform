@@ -13,6 +13,7 @@
 class FloatBox final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Floatbox", "fb", false);
+    DEFINE_NODE_ALIASES("floatbox");
 
     float value;
 
@@ -106,3 +107,5 @@ public:
     }
 #endif
 };
+
+REGISTER(FloatBox);

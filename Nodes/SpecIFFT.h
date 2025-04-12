@@ -9,6 +9,7 @@
 
 class SpecIFFT final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("SpecIFFT", "specIFFT", true);
+    DEFINE_NODE_ALIASES("specifft");
 
 public:
     static constexpr size_t FFT_SIZE = 512;
@@ -71,3 +72,5 @@ private:
     size_t outputWritePos = 0;
     size_t hopCounter = 0;
 };
+
+REGISTER(SpecIFFT);

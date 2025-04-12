@@ -11,6 +11,7 @@
 // AddNode that sums two signals
 class If : public AudioNode {
     DEFINE_AND_REGISTER_NODE("If", "if", false);
+    DEFINE_NODE_ALIASES("if");
 
     IntParameter* ifParam;
     FloatParameter* retParam;
@@ -71,3 +72,5 @@ public:
         }
     }
 };
+
+REGISTER(If);

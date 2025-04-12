@@ -13,6 +13,7 @@
 class LoadEvent final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("LoadEvent", "loadEvent", false);
+    DEFINE_NODE_ALIASES("loadevent")
 
 public:
 
@@ -29,3 +30,5 @@ public:
         }
     }
 };
+
+REGISTER(LoadEvent);

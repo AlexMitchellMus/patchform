@@ -980,37 +980,28 @@ public:
         };
     }
 
-    template <typename NodeType>
-    AudioNode* addNode(const std::string& finalID, json& nodeCreationData)
+    AudioNode* addNode(const std::string& finalID, AudioNode* node)
     {
-        auto node = std::make_unique<NodeType>(context, nodeCreationData);
-        auto rawNode = node.get();
+        if (!node) return nullptr;
 
-        if (nodeCreationData.contains("pos") && nodeCreationData["pos"].is_array() &&
-            nodeCreationData["pos"].size() >= 2)
+        if (node->nodeCreationData.contains("pos") && node->nodeCreationData["pos"].is_array() &&
+            node->nodeCreationData["pos"].size() >= 2)
         {
             node->canvasPos = pptk::Point(
-                nodeCreationData["pos"][0].get<float>(),
-                nodeCreationData["pos"][1].get<float>()
+                node->nodeCreationData["pos"][0].get<float>(),
+                node->nodeCreationData["pos"][1].get<float>()
             );
         }
 
-        // Generate a unique node ID
         uint32_t nodeID = generateID();
-
-        // Assign both integer ID and string ID
         node->nodeID = nodeID;
         node->nodeIDString = finalID;
-
-        // Ensure mapping is correct
         objectIDMap[finalID] = nodeID;
 
-        //std::cout << "Node added: ID " << nodeID << " (" << finalID << ")" << std::endl;
+        setSummingFunctionForNode(node);
+        objects.push_back(std::unique_ptr<AudioNode>(node));  // take ownership
 
-        setSummingFunctionForNode(node.get());
-        objects.push_back(std::move(node));
-
-        return rawNode;
+        return node;
     }
 
     // Generate a unique node ID (integer)
@@ -1096,196 +1087,13 @@ public:
             idString = newId;
         }
 
-        switch (hash(object))
-        {
-        case hash("add"):
-            return addNode<Add>(idString, node);
-
-        case hash("mul"):
-            return addNode<Multiply>(idString, node);
-
-        case hash("div"):
-            return addNode<Divide>(idString, node);
-
-        case hash("count"):
-            return addNode<Count>(idString, node);
-
-        case hash("dial"):
-            return addNode<Dial>(idString, node);
-
-        case hash("print"):
-            return addNode<Print>(idString, node);
-
-        case hash("if"):
-            return addNode<If>(idString, node);
-
-        case hash("ifelse"):
-            return addNode<IfElse>(idString, node);
-
-        case hash("sel"):
-        case hash("select"):
-            return addNode<Select>(idString, node);
-
-        case hash("env"):
-        case hash("envelope"):
-            return addNode<Envelope>(idString, node);
-
-        case hash("metro"):
-        case hash("metronome"):
-            return addNode<Metronome>(idString, node);
-
-        case hash("val"):
-        case hash("value"):
-            return addNode<Value>(idString, node);
-
-        case hash("lfo"):
-            return addNode<LFO>(idString, node);
-
-        // TODO: Remove old name, but leave in vol & volume for now
-        case hash("vol"):
-        case hash("volume"):
-        case hash("gain"):
-            return addNode<Gain>(idString, node);
-
-        case hash("osc"):
-        case hash("oscillator"):
-            return addNode<Oscillator>(idString, node);
-
-        case hash("tableosc"):
-            return addNode<TableOsc>(idString, node);
-
-        case hash("tablexfade"):
-            return addNode<TableXFade>(idString, node);
-
-        case hash("ain"):
-        case hash("audioin"):
-            return addNode<AudioIn>(idString, node);
-
-        case hash("aout"):
-        case hash("audioout"):
-            return addNode<AudioOut>(idString, node);
-
-        case hash("floatbox"):
-            return addNode<FloatBox>(idString, node);
-
-        case hash("radiobox"):
-            return addNode<RadioBox>(idString, node);
-
-        case hash("ping"):
-            return addNode<Ping>(idString, node);
-
-        case hash("scope"):
-            return addNode<Scope>(idString, node);
-
-        case hash("spec"):
-            return addNode<Spec>(idString, node);
-
-        case hash("bpf"):
-        case hash("bandpassfilter"):
-            return addNode<BandPassFilter>(idString, node);
-
-        case hash("mtof"):
-        case hash("midi2freq"):
-            return addNode<MidiToFreq>(idString, node);
-
-        case hash("chg"):
-        case hash("change"):
-        case hash("changed"):
-            return addNode<Changed>(idString, node);
-
-        case hash("loadevent"):
-            return addNode<LoadEvent>(idString, node);
-
-        case hash("reverb_fdn"):
-        case hash("fdn"):
-            return addNode<ReverbFDN>(idString, node);
-
-        case hash("midinotein"):
-        case hash("notein"):
-            return addNode<MidiNoteIn>(idString, node);
-
-        case hash("activemidinotes"):
-            return addNode<ActiveMidiNotes>(idString, node);
-
-        case hash("filtertag"):
-            return addNode<FilterTag>(idString, node);
-
-        case hash("get"):
-            return addNode<Get>(idString, node);
-
-        case hash("keyboard"):
-            return addNode<Keyboard>(idString, node);
-
-        case hash("polynoteout"):
-            return addNode<PolyNoteOut>(idString, node);
-
-        case hash("chorus"):
-            return addNode<Chorus>(idString, node);
-
-        case hash("rnd"):
-        case hash("random"):
-            return addNode<Random>(idString, node);
-
-        case hash("lb"):
-        case hash("listbox"):
-            return addNode<ListBox>(idString, node);
-
-        case hash("pack"):
-            return addNode<Pack>(idString, node);
-
-        case hash("tag"):
-            return addNode<TagEvent>(idString, node);
-
-        case hash("strip"):
-            return addNode<Strip>(idString, node);
-
-        case hash("comment"):
-            return addNode<Comment>(idString, node);
-
-        case hash("intify"):
-            return addNode<Intify>(idString, node);
-
-        case hash("evdelay"):
-            return addNode<EventDelay>(idString, node);
-
-        case hash("drive"):
-            return addNode<Drive>(idString, node);
-
-        case hash("specfft"):
-            return addNode<SpecFFT>(idString, node);
-
-        case hash("specifft"):
-            return addNode<SpecIFFT>(idString, node);
-
-        case hash("specmerge"):
-            return addNode<SpecMerge>(idString, node);
-
-        case hash("multitapdelay"):
-            return addNode<MultiTapDelay>(idString, node);
-
-        case hash("zerox"):
-            return addNode<Zerox>(idString, node);
-
-        case hash("limiter"):
-            return addNode<Limiter>(idString, node);
-
-        case hash("pitchdetect"):
-            return addNode<PitchDetector>(idString, node);
-
-        case hash("table"):
-            return addNode<Table>(idString, node);
-
-        case hash("tablexphase"):
-            return addNode<TableXPhase>(idString, node);
-
-        case hash("tablexspectral"):
-            return addNode<TableXSpectral>(idString, node);
-
-        default:
-            // Unknown object name, return error
-            std::cout << "Unknown object: " << object << std::endl;
+        //  Use the static NodeRegistry for reflection-based lookup of node names and aliases
+        auto* nodePtr = NodeRegistry::getInstance().createNode(object.str(), context, node);
+        if (!nodePtr) {
+            std::cerr << "Unknown node type: " << object << "\n";
             return nullptr;
         }
+        return addNode(idString, nodePtr);
     };
 
     void printGraph()
@@ -1825,21 +1633,29 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
     }
 
     // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
-    moodycamel::ConcurrentQueue<float> volumeMeterQueue = moodycamel::ConcurrentQueue<float>(100);
+    moodycamel::ConcurrentQueue<std::vector<float>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::vector<float>>(100);
 
 private:
     DspTimer dspTimer;
 
-    // Take the average peak and send it to the GUI when the GUI requests an update
+    // Take the average peak and send it to the GUI
     void processPeak(const float* buffer, unsigned long frameCount)
     {
-        float peak = 0.0f;
-        for (unsigned long i = 0; i < frameCount; i++)
+        constexpr int kUpdateInterval = 4;
+        const float* right = buffer + frameCount;
+
+        for (unsigned long i = 0; i < frameCount; ++i)
         {
-            peak = std::max(peak, std::abs(buffer[i]));
+            accumulatedPeakL = std::max(accumulatedPeakL, std::abs(buffer[i]));
+            accumulatedPeakR = std::max(accumulatedPeakR, std::abs(right[i]));
         }
 
-        volumeMeterQueue.enqueue(peak);
+        if (++peakFrameCounter >= kUpdateInterval)
+        {
+            peakFrameCounter = 0;
+            volumeMeterQueue.enqueue(std::vector<float>{accumulatedPeakL, accumulatedPeakR});
+            accumulatedPeakL = accumulatedPeakR = 0.0f;
+        }
     }
 
 protected:
@@ -1853,4 +1669,8 @@ protected:
 
 
     bool patchLoadSuccess = false;
+
+    int peakFrameCounter = 0;
+    float accumulatedPeakL = 0.0f;
+    float accumulatedPeakR = 0.0f;
 };

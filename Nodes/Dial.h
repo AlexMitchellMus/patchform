@@ -6,6 +6,7 @@
 class Dial final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Dial", "dial", false);
+    DEFINE_NODE_ALIASES("dial");
 
     bool firstRun = true;
 
@@ -177,3 +178,5 @@ public:
     }
 #endif
 };
+
+REGISTER(Dial);

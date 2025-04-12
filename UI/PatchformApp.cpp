@@ -172,6 +172,9 @@ void PatchformApp::run()
             continue;
         }
 
+        //static int c = 0;
+        //std::cout << c++ << " repainting" << std::endl;
+
         if (!invalidFB || newWidth != windowWidth || newHeight != windowHeight)
         {
             windowWidth = newWidth;
@@ -234,8 +237,8 @@ int PatchformApp::audioCallback(const void* input, void* output,
 
     thread_local static float bypassBuffer[2048] = {0};// hard coded to max buffer size TODO: Set max buffer size!
 
-    const float* inputChannel0 = (in && inputChannels > 0 && in[0]) ? in[0] : bypassBuffer;
-    float* outputChannel0 = (out && outputChannels > 0 && out[0]) ? out[0] : bypassBuffer;
+    float* outputChannel0 = (out && outputChannels > 0 && out[0] && !bypassMode) ? out[0] : bypassBuffer;
+    const float* inputChannel0 = (in && inputChannels > 0 && in[0] && !bypassMode) ? in[0] : bypassBuffer;
 
     app->graphManager.process(inputChannel0, outputChannel0, frameCount, midiMessages);
 

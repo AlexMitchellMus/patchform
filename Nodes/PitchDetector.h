@@ -8,6 +8,7 @@
 
 class PitchDetector final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("PitchDetector", "pitch", true);
+    DEFINE_NODE_ALIASES("pitchdetect");
 
     static constexpr size_t WINDOW_SIZE = 4096;
     static constexpr size_t MIN_LAG = 16;
@@ -102,3 +103,5 @@ public:
         }
     }
 };
+
+REGISTER(PitchDetector);

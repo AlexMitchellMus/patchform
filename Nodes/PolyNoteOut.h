@@ -1,5 +1,6 @@
 class PolyNoteOut : public AudioNode {
     DEFINE_AND_REGISTER_NODE("PolyNoteOut", "polyNoteOut", false);
+    DEFINE_NODE_ALIASES("polynoteout");
 
     struct VoiceSlot {
         bool active = false;
@@ -78,3 +79,5 @@ public:
         }
     }
 };
+
+REGISTER(PolyNoteOut);

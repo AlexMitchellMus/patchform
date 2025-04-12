@@ -15,6 +15,7 @@
 class RadioBox final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("RadioBox", "radiobox", false);
+    DEFINE_NODE_ALIASES("radiobox");
 
 public:
     enum class LayoutType { Horizontal, Vertical, Grid };
@@ -359,3 +360,5 @@ public:
     }
 #endif
 };
+
+REGISTER(RadioBox);

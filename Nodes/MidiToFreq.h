@@ -13,6 +13,7 @@
 class MidiToFreq : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("MIDI2Freq", "mtof", false);
+    DEFINE_NODE_ALIASES("midi2freq", "mtof");
 
     // Storage for the Scala tuning table.
     // If set via a "scale" event, it is assumed to cover one octave.
@@ -97,3 +98,5 @@ public:
         }
     }
 };
+
+REGISTER(MidiToFreq);

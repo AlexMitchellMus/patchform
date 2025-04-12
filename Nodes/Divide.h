@@ -6,6 +6,7 @@
 // DivideNode that divides A by B
 class Divide : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Divide", "div", false);
+    DEFINE_NODE_ALIASES("divide", "div");
 
     float coldValue;
 
@@ -37,3 +38,5 @@ public:
         }
     }
 };
+
+REGISTER(Divide);

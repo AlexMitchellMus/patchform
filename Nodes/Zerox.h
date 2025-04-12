@@ -6,6 +6,7 @@
 // DivideNode that divides A by B
 class Zerox final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Zerox", "zerox", true);
+    DEFINE_NODE_ALIASES("zerox");
 
 public:
     explicit Zerox(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
@@ -41,3 +42,5 @@ public:
         }
     }
 };
+
+REGISTER(Zerox);

@@ -11,6 +11,7 @@
 // LFONode that modulates a value (e.g., frequency modulation)
 class LFO : public AudioNode {
     DEFINE_AND_REGISTER_NODE("LFO", "lfo", true);
+    DEFINE_NODE_ALIASES("lfo");
 
     FloatParameter* freqParam;
 
@@ -47,3 +48,5 @@ public:
         }
     }
 };
+
+REGISTER(LFO);

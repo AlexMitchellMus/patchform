@@ -11,6 +11,7 @@
 class Changed : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Changed", "chg", false);
+    DEFINE_NODE_ALIASES("chg", "change", "changed");
 
     float lastValue = std::numeric_limits<float>::quiet_NaN();
 
@@ -47,3 +48,5 @@ public:
         }
     }
 };
+
+REGISTER(Changed);

@@ -5,6 +5,7 @@
 
 class IfElse : public AudioNode {
     DEFINE_AND_REGISTER_NODE("IfElse", "ifelse", false);
+    DEFINE_NODE_ALIASES("ifelse");
 
     FloatParameter* ifParam;
     StringParameter* modeParam;
@@ -117,3 +118,5 @@ public:
         return nodeCreationData;
     }
 };
+
+REGISTER(IfElse);

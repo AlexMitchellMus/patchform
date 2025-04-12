@@ -4,6 +4,7 @@
 
 class TableOsc : public AudioNode {
     DEFINE_AND_REGISTER_NODE("TableOsc", "tblosc", true);
+    DEFINE_NODE_ALIASES("tableosc");
 
     float phase = 0.0f;
     float freq = 440.0f;
@@ -72,3 +73,5 @@ public:
         }
     }
 };
+
+REGISTER(TableOsc);

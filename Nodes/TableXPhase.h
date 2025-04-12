@@ -4,6 +4,7 @@
 
 class TableXPhase : public AudioNode {
     DEFINE_AND_REGISTER_NODE("TableXPhase", "tableXPhase", false);
+    DEFINE_NODE_ALIASES("tablexphase");
 
     SampleHandle sampleA;
     SampleHandle sampleB;
@@ -54,3 +55,5 @@ public:
         }
     }
 };
+
+REGISTER(TableXPhase);

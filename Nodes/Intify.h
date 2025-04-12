@@ -12,6 +12,7 @@
 class Intify : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Intify", "intify", false);
+    DEFINE_NODE_ALIASES("intify");
 
     enum Mode
     {
@@ -99,3 +100,5 @@ public:
         }
     }
 };
+
+REGISTER(Intify);
