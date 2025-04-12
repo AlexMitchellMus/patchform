@@ -203,7 +203,7 @@ public:
 
     Point getPositionInParent()
     {
-        return getPositionInParent(parent);
+        return getPositionInParent(parent.get());
     }
 
     Point getPositionInParent(Component* specificParent) const
@@ -216,7 +216,7 @@ public:
         {
             relativePosition.x += current->x;
             relativePosition.y += current->y;
-            current = current->parent;
+            current = current->parent.get();
         }
 
         if (!current) {
@@ -279,7 +279,7 @@ public:
             {
                 return parent; // Found a parent of the specified type
             }
-            current = current->parent; // Move up to the parent
+            current = current->parent.get(); // Move up to the parent
         }
         return nullptr; // No parent of the specified type found
     }
@@ -401,7 +401,7 @@ public:
     // If so we set the opacity
     float opacity = -1.0f;
 
-    Component* getParent() const { return parent; };
+    Component* getParent() const { return parent.get(); };
 
     // Compute accumulated scale from root to this component
     float getAccumulatedScale() const {
@@ -467,7 +467,7 @@ protected:
     std::vector<Component*> children;
     bool isDragging = false;
 
-    Component* parent = nullptr;
+    SafePointer<Component> parent;
 
     Component* rootComponent = nullptr;
 };

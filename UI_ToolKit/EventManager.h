@@ -21,7 +21,7 @@ public:
 
     void handleMouseButtonDown(SDL_Event& e) {
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state
-        auto wrappedEvent = CompEvent(e, rootComponent);
+        CompEvent wrappedEvent(e, rootComponent);
         if (const auto comp = findDeepestHitComponent(rootComponent, wrappedEvent))
         {
             rootComponent->setDraggingComponent(comp);
@@ -36,10 +36,7 @@ public:
 
             comp->mouseButtonDown(wrappedEvent);
 
-            for (auto& [c, handler] : rootComponent->globalMouseHandlers)
-            {
-                handler(comp);
-            }
+            rootComponent->callGlobalMouseHandlersOn(comp);
         }
     }
 

@@ -10,12 +10,13 @@ namespace pptk {
     class CompEvent {
     public:
         SDL_Event sdlEvent;
-
-        // Use SafePointer instead of a raw pointer.
         SafePointer<Component> originalComponent;
-
-        // A flag to indicate if propagation should stop.
         bool stopPropagation = false;
+
+        CompEvent() = default;
+
+        CompEvent(const SDL_Event& evt, Component* source)
+            : sdlEvent(evt), originalComponent(source) {}
     };
 
 } // namespace pptk

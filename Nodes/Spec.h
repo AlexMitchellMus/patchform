@@ -89,6 +89,7 @@ public:
             nvgSave(nvg);
             nvgScissor(nvg, 1, 1, w, h);
             nvgLineStyle(nvg, NVG_SOLID);
+            nvgLineJoin(nvg, NVG_ROUND);
             nvgStrokeColor(nvg, nvgRGBA(200, 200, 200, 255));
             nvgStrokeWidth(nvg, 1.0f);
             nvgStroke(nvg);

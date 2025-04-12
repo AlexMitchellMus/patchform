@@ -109,6 +109,8 @@
             ]
         },
         {
+            "default": 0.0,
+            "emitOnLoad": false,
             "id": "0",
             "max": 2000.0,
             "min": 0.0,

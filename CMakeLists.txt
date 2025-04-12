@@ -1,13 +1,19 @@
 cmake_minimum_required(VERSION 3.30)
 project(PlugPatch LANGUAGES CXX)
 
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(RUN_TESTS "Build and run tests" OFF)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+if (ENABLE_ASAN)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL" CACHE STRING "" FORCE)
+else()
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+endif()
 
-option(RUN_TESTS "Build and run tests" ON)
 
 # Define the Git command to get the full commit hash
 set(BUILDINFO_CPP ${CMAKE_BINARY_DIR}/GitInfo.cpp)
@@ -52,6 +58,11 @@ add_subdirectory(external/glaze)
 add_subdirectory(external/SDL2)
 add_subdirectory(external/nanovg)
 add_subdirectory(external/rtmidi)
+
+if (ENABLE_ASAN AND MSVC)
+    target_compile_options(nanovg PRIVATE /fsanitize=address)
+    target_compile_options(rtmidi PRIVATE /fsanitize=address)
+endif()
 
 # Enable static SDL2 build
 #set(SDL_SHARED OFF CACHE BOOL "Disable SDL shared library" FORCE)
@@ -134,20 +145,46 @@ target_link_libraries(PatchformStandalone PRIVATE
 target_compile_definitions(PatchformStandalone PRIVATE
         -DPA_USE_ASIO=ON
 )
-
-# Apply optimizations for MSVC
 if (MSVC)
-    add_link_options($<$<CONFIG:Debug>:/DEBUG>)
+    if (ENABLE_ASAN)
+        message(STATUS "Building with MSVC ASAN")
 
-    target_compile_options(PatchformStandalone PRIVATE
-            /std:c++latest
-            /Zc:preprocessor
-            $<$<CONFIG:Debug>:/Od /Zi /RTC1>
-            $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
-            $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
+        # Path to ASAN libs
+        set(ASAN_LIB_PATH "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/lib/x64")
+        target_link_directories(PatchformStandalone PRIVATE "${ASAN_LIB_PATH}")
 
-    )
-endif ()
+        target_compile_options(PatchformStandalone PRIVATE /fsanitize=address /Od /Zi)
+        target_link_options(PatchformStandalone PRIVATE /INFERASANLIBS)
+
+        # Force all static libs to match runtime (important!)
+        set_target_properties(nanovg PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+        set_target_properties(rtmidi PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+        set_target_properties(portaudio PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+        set_target_properties(pffft PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+    else()
+        target_compile_options(PatchformStandalone PRIVATE
+                /std:c++latest
+                /Zc:preprocessor
+                $<$<CONFIG:Debug>:/Od /Zi /RTC1>
+                $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
+                $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
+        )
+        add_link_options($<$<CONFIG:Debug>:/DEBUG>)
+    endif()
+endif()
+
+if (ENABLE_ASAN AND MSVC)
+    set(ASAN_DLL_PATH "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/clang_rt.asan_dynamic-x86_64.dll")
+
+    if (EXISTS "${ASAN_DLL_PATH}")
+        add_custom_command(TARGET PatchformStandalone POST_BUILD
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${ASAN_DLL_PATH}"
+                "$<TARGET_FILE_DIR:PatchformStandalone>")
+    else()
+        message(WARNING "ASAN DLL not found: ${ASAN_DLL_PATH}")
+    endif()
+endif()
 
 # ======================== TEST SETUP ========================
 

@@ -17,14 +17,6 @@ namespace pptk
 
             Scrollbar() = default;
 
-            ~Scrollbar()
-            {
-                // Manually manage the lifetime of the frametimer!
-                // FIXME! we shouldn't need to, this should be handled by the timer!
-                stopFrameTimer(0);
-                stopFrameTimer(1);
-            }
-
             bool shouldApplyViewportOffset() const override { return false; };
 
             void setScrollbarHeight(float barHeight)

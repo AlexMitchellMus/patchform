@@ -1,127 +1,113 @@
-/*
-// Copyright (c) 2025 Alex Mitchell
-// For information on usage and redistribution, and for a DISCLAIMER OF ALL
-// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
-*/
-
-
 #pragma once
 
-#include <vector>
+#include <type_traits>
 #include <algorithm>
-#include <iostream>
+#include <atomic>
+#include <stdexcept>
+
+// Control block based safe pointer system, based on: https://www.codeproject.com/Articles/5316026/5316026/ptr_to_unique.zip
 
 namespace pptk
 {
-    class SafePointerBase
+    class SafeControlBlock
     {
     public:
-        virtual void invalidate() = 0;
-        virtual ~SafePointerBase() = default;
-    };
+        SafeControlBlock() = default;
 
-    template <typename T>
-    class SafePointer;
+        // Non-copyable
+        SafeControlBlock(const SafeControlBlock&) = delete;
+        SafeControlBlock& operator=(const SafeControlBlock&) = delete;
+
+        void invalidate() { valid.store(false, std::memory_order_release); }
+        bool isValid() const { return valid.load(std::memory_order_acquire); }
+
+        void addRef() { refCount.fetch_add(1, std::memory_order_relaxed); }
+
+        bool release()
+        {
+            // Decrement reference count and check if it's the last reference
+            if (refCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+            {
+                delete this;
+                return true;
+            }
+            return false;
+        }
+
+    private:
+        std::atomic<int> refCount{0};
+        std::atomic<bool> valid{true};
+    };
 
     class SafeObject
     {
-    private:
-        std::vector<SafePointerBase*> observers;
-
     public:
-        void addObserver(SafePointerBase* ptr)
+        SafeObject() : controlBlock(new SafeControlBlock())
         {
-            observers.push_back(ptr);
-        }
-
-        void removeObserver(SafePointerBase* ptr)
-        {
-            // Force-remove all instances of ptr from observers
-            observers.erase(std::remove(observers.begin(), observers.end(), ptr), observers.end());
-        }
-
-        bool hasObserver(SafePointerBase* ptr) const
-        {
-            return std::find(observers.begin(), observers.end(), ptr) != observers.end();
+            controlBlock->addRef();
         }
 
         virtual ~SafeObject()
         {
-            while (!observers.empty())
+            if (controlBlock)
             {
-                SafePointerBase* ptr = observers.back();
-                observers.pop_back();
-                if (ptr)
-                {
-                    ptr->invalidate();
-                }
+                controlBlock->invalidate(); // Mark as invalid before destroying
+                controlBlock->release();    // Properly release the reference
+                controlBlock = nullptr;
             }
-
-            observers.clear(); // Ensure the list is empty
         }
+
+        SafeControlBlock* getControlBlock() const
+        {
+            return controlBlock;
+        }
+
+    private:
+        SafeControlBlock* controlBlock;
     };
 
-    /**
-     * @class SafePointer
-     * @brief A smart pointer for safely observing objects without owning them.
-     *
-     * SafePointer<T> is a lightweight observer pointer that automatically
-     * invalidates itself when the observed object is deleted. It prevents
-     * dangling pointer issues by unregistering itself from the tracked object.
-     *
-     * Unlike std::shared_ptr or std::unique_ptr, SafePointer does not manage
-     * the object's lifetime—it simply observes it safely.
-     *
-     * @tparam T The type of object to observe (must inherit from SafeObject).
-     *
-     * Features:
-     * - Observer Pattern: Tracks an object without preventing its deletion.
-     * - Automatic Invalidation: Becomes null when the observed object is deleted.
-     * - Safe Assignments: Ensures old references are properly removed.
-     * - Move Semantics: Efficiently transfers tracking without duplicate observers.
-     *
-     * @note SafePointer should only be used with classes derived from SafeObject.
-     */
-
     template <typename T>
-    class SafePointer : public SafePointerBase
+    class SafePointer
     {
-    private:
-        T* ptr = nullptr;
-
     public:
-        SafePointer()
+        SafePointer() = default;
+
+        explicit SafePointer(T* p) { assign(p); }
+
+        SafePointer(const SafePointer& other)
         {
+            assign(other.ptr);
         }
 
-        SafePointer(T* p)
+        SafePointer& operator=(const SafePointer& other)
         {
-            assign(p);
+            if (this != &other)
+                assign(other.ptr);
+            return *this;
         }
-
-        SafePointer(const SafePointer& other) = delete;
-        SafePointer& operator=(const SafePointer& other) = delete;
 
         SafePointer(SafePointer&& other) noexcept
         {
             ptr = other.ptr;
+            block = other.block;
             other.ptr = nullptr;
+            other.block = nullptr;
         }
 
         SafePointer& operator=(SafePointer&& other) noexcept
         {
             if (this != &other)
             {
-                assign(other.ptr);
-                other.reset();
+                reset();
+                ptr = other.ptr;
+                block = other.block;
+                other.ptr = nullptr;
+                other.block = nullptr;
             }
             return *this;
         }
 
-        ~SafePointer()
-        {
-            reset();
-        }
+        virtual ~SafePointer() { reset(); }
 
         SafePointer& operator=(T* newPtr)
         {
@@ -131,49 +117,96 @@ namespace pptk
 
         void assign(T* newPtr)
         {
-            if (ptr == newPtr) return; // No-op if same pointer
+            // Store old values before changing them
+            SafeControlBlock* oldBlock = block;
 
-            reset();
+            // Reset internal pointers
+            ptr = nullptr;
+            block = nullptr;
 
-            ptr = newPtr;
-            if (ptr)
+            // Release the old control block after nullifying our pointers
+            if (oldBlock)
             {
-                if (!ptr->hasObserver(this))
+                oldBlock->release();
+            }
+
+            // Now assign the new pointer
+            if (newPtr != nullptr)
+            {
+                ptr = newPtr;
+
+                if constexpr (std::is_base_of_v<SafeObject, T>)
                 {
-                    ptr->addObserver(this);
-                }
-                else
-                {
-                    //std::cout << "[SafePointer] Already an observer, skipping add.\n";
+                    // Use a static_cast when we know it's a SafeObject
+                    SafeObject* safeObj = static_cast<SafeObject*>(newPtr);
+                    block = safeObj->getControlBlock();
+
+                    // Only add reference if the control block is valid
+                    if (block && block->isValid())
+                    {
+                        block->addRef();
+                    }
+                    else
+                    {
+                        // If control block is invalid, don't store the pointer
+                        ptr = nullptr;
+                        block = nullptr;
+                    }
                 }
             }
         }
 
         void reset()
         {
-            if (ptr)
+            // Create local copies of the pointers
+            T* oldPtr = ptr;
+            SafeControlBlock* oldBlock = block;
+
+            // Clear our member pointers first to avoid reentrance issues
+            ptr = nullptr;
+            block = nullptr;
+
+            // Now release the block if we have one
+            if (oldBlock)
             {
-                ptr->removeObserver(this);
-                ptr = nullptr;
+                // We don't need to check isValid here - we just release our reference
+                oldBlock->release();
             }
         }
 
-        void invalidate() override
+        T* get() const
         {
-            ptr = nullptr;
+            // Check if we have a valid control block before returning the pointer
+            return (block && block->isValid()) ? ptr : nullptr;
         }
 
-        T* get() const { return ptr; }
-        T* operator->() const { return ptr; }
-        T& operator*() const { return *ptr; }
+        T* operator->() const
+        {
+            T* p = get();
+            if (!p)
+                return nullptr; // Return nullptr instead of throwing, caller needs to check
+            return p;
+        }
 
-        explicit operator bool() const { return ptr != nullptr; }
+        T& operator*() const
+        {
+            T* p = get();
+            if (!p)
+                throw std::runtime_error("Attempt to dereference null SafePointer");
+            return *p;
+        }
+
+        explicit operator bool() const { return get() != nullptr; }
+
+    private:
+        T* ptr = nullptr;
+        SafeControlBlock* block = nullptr;
     };
 
-    // Helper function for type deduction
     template <typename T>
     SafePointer<T> makeSafePointer(T* ptr)
     {
         return SafePointer<T>(ptr);
     }
+
 } // namespace pptk

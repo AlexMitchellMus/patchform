@@ -18,6 +18,7 @@ namespace pptk
     class RootComponent : public Component
     {
     public:
+        
         void handleTime(uint32_t time, uint32_t deltaTime)
         {
             auto callbacksCopy = timerCallbacks; // Copy to avoid iterator invalidation
@@ -42,14 +43,14 @@ namespace pptk
         {
             for (auto& [c, callback, id] : timerCallbacks)
             {
-                if (c == component && id == timerID)
+                if (c.get() == component && id == timerID)
                     c = nullptr; // Mark for deletion
             }
 
             // Remove all marked entries after iteration is complete
             timerCallbacks.erase(
                 std::ranges::remove_if(timerCallbacks,
-                                       [](auto& tup) { return std::get<0>(tup) == nullptr; }).begin(),
+                                       [](auto& tup) { return std::get<0>(tup).get() == nullptr; }).begin(),
                 timerCallbacks.end()
             );
         }
@@ -84,6 +85,15 @@ namespace pptk
             }
         }
 
+        void callGlobalMouseHandlersOn(Component* comp)
+        {
+            for (auto& [c, handler] : globalMouseHandlers)
+            {
+                if (c.get())
+                    handler(comp);
+            }
+        }
+
         void registerGlobalMouse(Component* c, const std::function<void(pptk::Component*)>& callback)
         {
             globalMouseHandlers.emplace_back(c, callback);
@@ -94,17 +104,15 @@ namespace pptk
             {
                 // Remove all tuples whose first element (Component*) equals cPtr
                 globalMouseHandlers.erase(
-                    std::remove_if(globalMouseHandlers.begin(), globalMouseHandlers.end(),
-                                   [component](auto& tup)
-                                   {
-                                       return std::get<0>(tup) == component;
-                                   }),
+                    std::ranges::remove_if(globalMouseHandlers,
+                                           [component](auto& tup)
+                                           {
+                                               return std::get<0>(tup).get() == component;
+                                           }).begin(),
                     globalMouseHandlers.end()
                 );
             }
         }
-
-        std::vector<std::tuple<Component*, std::function<void(Component*)>>> globalMouseHandlers;
 
         std::unique_ptr<PopupComponent> popupWindow;
 
@@ -131,6 +139,8 @@ namespace pptk
         SafePointer<Component> focusedComponent;
         SafePointer<Component> lastFocusedComponent;
 
-        std::vector<std::tuple<Component*, std::function<void(uint32_t, uint32_t)>, int>> timerCallbacks;
+        std::vector<std::tuple<SafePointer<Component>, std::function<void(uint32_t, uint32_t)>, int>> timerCallbacks;
+
+        std::vector<std::tuple<SafePointer<Component>, std::function<void(Component*)>>> globalMouseHandlers;
     };
 }

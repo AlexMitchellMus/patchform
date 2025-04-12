@@ -180,6 +180,7 @@ public:
             nvgScissor(nvg, 0, 1, width, height - 2);
 
             nvgLineStyle(nvg, NVG_SOLID);
+            nvgLineJoin(nvg, NVG_ROUND);
             nvgStrokeColor(nvg, nvgRGBA(200, 200, 200, 255));
             nvgStrokeWidth(nvg, 1.0f);
             nvgFillColor(nvg, fg);

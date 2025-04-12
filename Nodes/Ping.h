@@ -43,7 +43,7 @@ public:
 
         ~UI() override
         {
-            stopFrameTimer();
+            //stopFrameTimer();
         };
 
         void updateGraphValues() override

@@ -161,11 +161,11 @@ private:
     // TODO: Move to Toolkit
     WindowPeer* windowPeer;
 
-    std::unique_ptr<Canvas> canvas;
     std::unique_ptr<TopBar> topBar;
     std::unique_ptr<ToolDock> toolDock;
     std::unique_ptr<LeftPanel> leftPanel;
     std::unique_ptr<RightPanel> rightPanel;
+    std::unique_ptr<Canvas> canvas;
 
     float toolDockAnimator = 1.0f;
     bool animateToolDock = false;

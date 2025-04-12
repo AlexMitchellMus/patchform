@@ -14,18 +14,23 @@
 
 namespace pptk {
 
-Component::~Component()
-{
-    // Then! Remove component
-    removeFromParent();
-
-    for (auto* child : children)
+    Component::~Component()
     {
-        child->parent = nullptr;
-    }
+        // Remove from parent first
+        removeFromParent();
 
-    children.clear();
-}
+        // Make a copy of children before clearing
+        auto childrenCopy = children;
+        children.clear(); // clear now to avoid mutation while destructing
+
+        for (auto* child : childrenCopy)
+        {
+            if (child)
+            {
+                child->parent = nullptr;
+            }
+        }
+    }
 
 void Component::handleMouseMove(CompEvent& e)
 {
@@ -88,9 +93,9 @@ Component* Component::getRootComponent()
 
     Component* current = this;
     // Traverse upward until no parent exists.
-    while (current->parent != nullptr)
+    while (current->parent.get() != nullptr)
     {
-        current = current->parent;
+        current = current->parent.get();
     }
     // Cache the computed root.
     rootComponent = current;
@@ -157,17 +162,22 @@ void Component::setVisible(bool shouldBeVisible)
 };
 
 void Component::removeFromParent()
-{
-    if (parent)
     {
-        auto& siblings = parent->children;
+        if (parent)
+        {
+            auto& siblings = parent->children;
 
-        siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
-        parent = nullptr;
-        // FIXME: not sure if we should or shouldn't do this, leave it out for now
-        rootComponent = nullptr;
+            // Safety guard: only erase if you're actually in the vector
+            auto it = std::find(siblings.begin(), siblings.end(), this);
+            if (it != siblings.end())
+            {
+                siblings.erase(it);
+            }
+
+            parent = nullptr;
+            rootComponent = nullptr;
+        }
     }
-}
 
 void Component::removeAllChildren()
 {
