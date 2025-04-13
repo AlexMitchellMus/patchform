@@ -8,7 +8,7 @@ class Select : public AudioNode {
 
 public:
     Select(NodeContext* context, const json& objParams)
-        : AudioNode(context, AudioPort::PortType::Data, objParams)
+        : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         addInputPort("input", AudioPort::PortType::Data);
 
@@ -40,7 +40,6 @@ public:
 
     json getSerializedNode() override
     {
-        nodeCreationData["outputs"] = (int)outputPortBuffers.size();
         return nodeCreationData;
     }
 };
