@@ -76,6 +76,15 @@ public:
         return Component::hitTest(x, y);
     }
 
+    void setHoveredFromCable(const bool shouldBeHovered)
+    {
+        if (isHoveredFromCable != shouldBeHovered)
+        {
+            isHoveredFromCable = shouldBeHovered;
+            repaint();
+        }
+    }
+
 private:
     Direction direction;
     int portNum;

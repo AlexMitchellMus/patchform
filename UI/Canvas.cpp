@@ -291,9 +291,33 @@ bool Canvas::consumeEvent(pptk::CompEvent& e)
     return isDragging = false;
 }
 
-Port* Canvas::findPort(int x, int y)
+Port* Canvas::findPort(int x, int y, Port::Direction dragFrom)
 {
-    return dynamic_cast<Port*>(objectsLayer.findComponentAt(x, y));
+    auto* comp = objectsLayer.findComponentAt(x, y);
+    if (auto* port = dynamic_cast<Port*>(comp))
+        return port;
+
+    auto* node = dynamic_cast<Object*>(comp);
+    if (!node)
+        return nullptr;
+
+    pptk::Point local = node->globalToLocal(x, y);
+
+    if (dragFrom == Port::Direction::Output && node->getNumInputs() > 0)
+    {
+        float segmentWidth = node->getWidth() / node->getNumInputs();
+        int index = std::clamp(static_cast<int>(local.x / segmentWidth), 0, node->getNumInputs() - 1);
+        return node->getInPort(index);
+    }
+
+    if (dragFrom == Port::Direction::Input && node->getNumOutputs() > 0)
+    {
+        float segmentWidth = node->getWidth() / node->getNumOutputs();
+        int index = std::clamp(static_cast<int>(local.x / segmentWidth), 0, node->getNumOutputs() - 1);
+        return node->getOutPort(index);
+    }
+
+    return nullptr;
 }
 
 

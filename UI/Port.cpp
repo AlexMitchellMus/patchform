@@ -94,26 +94,25 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
                     conn->setConnectionDest(globalPos);
                 }
 
-                if (auto* port = cnv->findPort(globalPos.x, globalPos.y))
+                if (auto* port = cnv->findPort(globalPos.x, globalPos.y, direction))
                 {
                     // Only connect once for a new port, and if the port directions are correct: input->output or output->input
                     if ((direction != port->direction) && (port != foundPort.get()))
                     {
+                        // If we have a previous found port, reset it now
+                        if (foundPort)
+                            foundPort->setHoveredFromCable(false);
+
                         foundPort = port;
-                        foundPort->isHoveredFromCable = true;
-                        std::cout << "found PORT!" << port->portNum << std::endl;
+                        foundPort->setHoveredFromCable(true);
                     }
                 }
-                // TODO: Make it so a cable dragged over an object will connect to closest port
-                //else if (auto* object = dynamic_cast<Object*>(c))
-                //{
-                //        std::cout << "found object!" << object->getName() << std::endl;
-                //}
                 else
                 {
                     if (foundPort)
                     {
-                        foundPort->isHoveredFromCable = false;
+                        foundPort->setHoveredFromCable(false);
+                        // Reset the found port to nothing
                         foundPort.reset();
                     }
                 }
