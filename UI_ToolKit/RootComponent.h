@@ -21,7 +21,14 @@ namespace pptk
         
         void handleTime(uint32_t time, uint32_t deltaTime)
         {
-            auto callbacksCopy = timerCallbacks; // Copy to avoid iterator invalidation
+            std::vector<std::tuple<SafePointer<Component>, std::function<void(uint32_t, uint32_t)>, int>> callbacksCopy;
+            callbacksCopy.reserve(timerCallbacks.size());
+
+            for (auto& [componentPtr, callback, id] : timerCallbacks)
+            {
+                if (componentPtr)
+                    callbacksCopy.emplace_back(componentPtr, callback, id);
+            }
 
             for (auto& [componentPtr, callback, id] : callbacksCopy)
             {

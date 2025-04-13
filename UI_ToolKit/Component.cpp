@@ -14,23 +14,10 @@
 
 namespace pptk {
 
-    Component::~Component()
-    {
-        // Remove from parent first
-        removeFromParent();
-
-        // Make a copy of children before clearing
-        auto childrenCopy = children;
-        children.clear(); // clear now to avoid mutation while destructing
-
-        for (auto* child : childrenCopy)
-        {
-            if (child)
-            {
-                child->parent = nullptr;
-            }
-        }
-    }
+Component::~Component()
+{
+    removeFromParent();
+}
 
 void Component::handleMouseMove(CompEvent& e)
 {

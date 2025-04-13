@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <atomic>
 #include <stdexcept>
+#include <memory>
 
 // Control block based safe pointer system, based on: https://www.codeproject.com/Articles/5316026/5316026/ptr_to_unique.zip
 
@@ -12,58 +13,34 @@ namespace pptk
     class SafeControlBlock
     {
     public:
-        SafeControlBlock() = default;
-
-        // Non-copyable
-        SafeControlBlock(const SafeControlBlock&) = delete;
-        SafeControlBlock& operator=(const SafeControlBlock&) = delete;
-
         void invalidate() { valid.store(false, std::memory_order_release); }
         bool isValid() const { return valid.load(std::memory_order_acquire); }
 
-        void addRef() { refCount.fetch_add(1, std::memory_order_relaxed); }
-
-        bool release()
-        {
-            // Decrement reference count and check if it's the last reference
-            if (refCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
-            {
-                delete this;
-                return true;
-            }
-            return false;
-        }
-
     private:
-        std::atomic<int> refCount{0};
         std::atomic<bool> valid{true};
     };
 
     class SafeObject
     {
     public:
-        SafeObject() : controlBlock(new SafeControlBlock())
-        {
-            controlBlock->addRef();
-        }
+        SafeObject() : controlBlock(std::make_shared<SafeControlBlock>()){}
 
         virtual ~SafeObject()
         {
             if (controlBlock)
             {
                 controlBlock->invalidate(); // Mark as invalid before destroying
-                controlBlock->release();    // Properly release the reference
-                controlBlock = nullptr;
+                controlBlock.reset();
             }
         }
 
-        SafeControlBlock* getControlBlock() const
+        std::shared_ptr<SafeControlBlock>  getControlBlock() const
         {
             return controlBlock;
         }
 
     private:
-        SafeControlBlock* controlBlock;
+        std::shared_ptr<SafeControlBlock> controlBlock;
     };
 
     template <typename T>
@@ -111,46 +88,36 @@ namespace pptk
 
         SafePointer& operator=(T* newPtr)
         {
-            assign(newPtr);
+            if (!newPtr) {
+                reset(); // Just reset if nullptr
+            } else {
+                assign(newPtr); // Otherwise use assign with validity checks
+            }
             return *this;
         }
 
         void assign(T* newPtr)
         {
-            // Store old values before changing them
-            SafeControlBlock* oldBlock = block;
-
-            // Reset internal pointers
             ptr = nullptr;
-            block = nullptr;
+            block.reset();
 
-            // Release the old control block after nullifying our pointers
-            if (oldBlock)
-            {
-                oldBlock->release();
-            }
-
-            // Now assign the new pointer
             if (newPtr != nullptr)
             {
-                ptr = newPtr;
-
                 if constexpr (std::is_base_of_v<SafeObject, T>)
                 {
-                    // Use a static_cast when we know it's a SafeObject
                     SafeObject* safeObj = static_cast<SafeObject*>(newPtr);
-                    block = safeObj->getControlBlock();
+                    std::shared_ptr<SafeControlBlock> newBlock;
 
-                    // Only add reference if the control block is valid
-                    if (block && block->isValid())
-                    {
-                        block->addRef();
+                    try {
+                        newBlock = safeObj->getControlBlock();
+                    } catch (...) {
+                        return;
                     }
-                    else
+
+                    if (newBlock && newBlock->isValid())
                     {
-                        // If control block is invalid, don't store the pointer
-                        ptr = nullptr;
-                        block = nullptr;
+                        block = std::move(newBlock);
+                        ptr = newPtr;
                     }
                 }
             }
@@ -158,20 +125,8 @@ namespace pptk
 
         void reset()
         {
-            // Create local copies of the pointers
-            T* oldPtr = ptr;
-            SafeControlBlock* oldBlock = block;
-
-            // Clear our member pointers first to avoid reentrance issues
             ptr = nullptr;
-            block = nullptr;
-
-            // Now release the block if we have one
-            if (oldBlock)
-            {
-                // We don't need to check isValid here - we just release our reference
-                oldBlock->release();
-            }
+            block.reset(); // shared_ptr::reset() releases the reference
         }
 
         T* get() const
@@ -200,7 +155,7 @@ namespace pptk
 
     private:
         T* ptr = nullptr;
-        SafeControlBlock* block = nullptr;
+        std::shared_ptr<SafeControlBlock> block;
     };
 
     template <typename T>
