@@ -79,10 +79,12 @@ Component* Component::findComponentAt(int globalX, int globalY, Component* selfC
 Component* Component::getRootComponent()
 {
     if (rootComponent)
+    {
         return rootComponent;
+    }
 
+    // Walk parent and try to find root
     Component* current = this;
-
     while (current->parent)
     {
         Component* next = current->parent.get();
@@ -92,10 +94,17 @@ Component* Component::getRootComponent()
     }
 
     // If we find the real root, cache the root component, otherwise return nullptr
-
     const auto rootComp = dynamic_cast<RootComponent*>(current);
     if (rootComp)
         rootComponent = rootComp;
+
+    // If we have not found root, then this component is not part of the component hierarchy!
+
+    //if (!rootComp)
+    //{
+    //    static int c = 0;
+    //    std::cerr << c++ << " Failed to find root component!" << std::endl;
+    //}
 
     return rootComp;
 }
