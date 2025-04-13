@@ -294,6 +294,8 @@ bool Canvas::consumeEvent(pptk::CompEvent& e)
 Port* Canvas::findPort(int x, int y, Port::Direction dragFrom)
 {
     auto* comp = objectsLayer.findComponentAt(x, y);
+
+    // We check ports first - as ports are in-front of the object layer
     if (auto* port = dynamic_cast<Port*>(comp))
         return port;
 
@@ -301,7 +303,7 @@ Port* Canvas::findPort(int x, int y, Port::Direction dragFrom)
     if (!node)
         return nullptr;
 
-    pptk::Point local = node->globalToLocal(x, y);
+    const pptk::Point local = node->globalToLocal(x, y);
 
     if (dragFrom == Port::Direction::Output && node->getNumInputs() > 0)
     {

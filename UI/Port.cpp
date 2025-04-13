@@ -96,6 +96,9 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
 
                 if (auto* port = cnv->findPort(globalPos.x, globalPos.y, direction))
                 {
+                    if (port->getParent() == this->getParent())
+                        return; // or continue if inside a loop
+                    
                     // Only connect once for a new port, and if the port directions are correct: input->output or output->input
                     if ((direction != port->direction) && (port != foundPort.get()))
                     {
