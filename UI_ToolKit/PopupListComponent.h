@@ -43,13 +43,15 @@ public:
         }
 
         float popupWidth = std::clamp(maxTextWidth + padding, minWidth, maxWidth);
-        int y = 5;
+        int y = 5; // Top margin of inner list
 
         for (auto& item : items)
         {
             item->setBounds(5, y, popupWidth - 10, 28);
             y += 30;
         }
+
+        y += 4; // Bottom margin
 
         setSize(popupWidth, y);
     }
