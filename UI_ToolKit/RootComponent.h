@@ -21,22 +21,18 @@ namespace pptk
         
         void handleTime(uint32_t time, uint32_t deltaTime)
         {
-            std::vector<std::tuple<SafePointer<Component>, std::function<void(uint32_t, uint32_t)>, int>> callbacksCopy;
-            callbacksCopy.reserve(timerCallbacks.size());
+            auto callbacksCopy = timerCallbacks;
 
-            for (auto& [componentPtr, callback, id] : timerCallbacks)
+            for (const auto& [componentPtr, callback, id] : callbacksCopy)
             {
                 if (componentPtr)
-                    callbacksCopy.emplace_back(componentPtr, callback, id);
+                    callback(time, deltaTime);
             }
 
-            for (auto& [componentPtr, callback, id] : callbacksCopy)
-            {
-                if (componentPtr) // Ensure component still exists
-                {
-                    callback(time, deltaTime); // Execute the callback (even if the original vector changed)
-                }
-            }
+            // Clean up invalid pointers after execution
+            std::erase_if(timerCallbacks, [](const auto& tup) {
+                return !std::get<0>(tup);
+            });
         }
 
         void registerTimerCallback(Component* c, const std::function<void(uint32_t, uint32_t)>& callback, int timerID = 0)
@@ -94,6 +90,11 @@ namespace pptk
 
         void callGlobalMouseHandlersOn(Component* comp)
         {
+            std::erase_if(globalMouseHandlers, [](auto& tup) {
+                return !std::get<0>(tup); // remove if SafePointer is expired
+            });
+
+            // Make a copy of the global handlers, as the call lambda's could register new global handlers!
             auto handlersCopy = globalMouseHandlers;
             for (auto& [c, handler] : handlersCopy)
             {
