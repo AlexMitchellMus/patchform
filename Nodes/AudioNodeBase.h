@@ -200,7 +200,7 @@ public:
     // Method to get input ports for sorting
     AudioPort* getOutputPort(const int index = 0) const
     {
-        if (outputPortBuffers.size())
+        if (outputPortBuffers.size() > index)
             return outputPortBuffers[index].get();
 
         return nullptr;
@@ -208,7 +208,7 @@ public:
 
     AudioPort* getInputPort(const int index = 0) const
     {
-        if (inputPortBuffers.size())
+        if (inputPortBuffers.size() > index)
             return inputPortBuffers[index].get();
 
         return nullptr;

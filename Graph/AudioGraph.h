@@ -512,12 +512,9 @@ public:
                                   ? objectIDMap[connection["targetNode"].get<std::string>()]
                                   : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
 
-            //std::cout << "connecting: (" << source <<  " -> " << target << ")" << std::endl;
-
             // connections use unique ID's for nodes
             // FIXME: Is this really correct? we use the overloaded connect to connect with the stringID
-            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID,
-                    connection["targetPort"]);
+            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
         }
         return true;
     }
@@ -577,8 +574,8 @@ public:
                         if (objectIDtoSortedIndex.find(connectedObjectID) != objectIDtoSortedIndex.end())
                         {
                             size_t connectedSortedIndex = objectIDtoSortedIndex[connectedObjectID];
-                            auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort(connectedNode.second);
-                            upstreamPorts.push_back(connectedPort);
+                            if (auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort(connectedNode.second))
+                                upstreamPorts.push_back(connectedPort);
                         }
                     }
                 }
