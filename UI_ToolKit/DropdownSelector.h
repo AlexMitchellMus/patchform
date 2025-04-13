@@ -14,15 +14,17 @@ namespace pptk
                 selected = options[0];
         }
 
-        void updateOptions(const std::vector<std::string>& newOptions) {
+        void updateOptions(const std::vector<std::string>& newOptions)
+        {
             options = newOptions;
 
-            // Auto-select first item if available
-            if (!options.empty())
-                selected = options[0];
-            else
-                selected.clear();
+            if (!options.empty()) {
+                if (std::find(options.begin(), options.end(), selected) == options.end()) {
+                    selected = options[0]; // fallback to first item
+                }
+            }
 
+            resized();
             repaint();
         }
 
@@ -31,7 +33,7 @@ namespace pptk
         void render(NVGcontext* vg) override
         {
             //Background
-            auto bgCol = nvgRGB(40, 40, 40);
+            auto bgCol = nvgRGB(38, 38, 38);
             nvgDrawRoundedRect(vg, 0, 0, width, height, bgCol, bgCol, 3);
 
             nvgBeginPath(vg);
@@ -39,7 +41,7 @@ namespace pptk
             nvgFontFace(vg, "Regular");
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
             nvgFillColor(vg, nvgRGB(220, 220, 220));
-            nvgText(vg, 10, getHeight() * 0.5f, selected.c_str(), nullptr);
+            nvgText(vg, 10, getHeight() * 0.5f, displayText.c_str(), nullptr);
 
             // Define parameters for the downward chevron
             float chevronSize = 8.0f;     // Adjust the size of the chevron
@@ -63,9 +65,52 @@ namespace pptk
             nvgStroke(vg);
         }
 
+        void resized() override
+        {
+            auto* root = getRootComponent();
+            if (!root)
+                return;
+
+            constexpr float chevronSize = 8.0f;
+            constexpr float chevronPadding = 10.0f;
+            constexpr float textLeftPadding = 10.0f;
+            constexpr float textChevronBuffer = 8.0f;
+
+            const std::string ellipsis = "…";
+            float ellipsisWidth = root->getTextWidthForFont("Regular", 14.0f, ellipsis);
+
+            // Total available space for visible text *excluding* ellipsis
+            float available = getWidth()
+                            - textLeftPadding
+                            - chevronSize
+                            - chevronPadding
+                            - textChevronBuffer
+                            - ellipsisWidth;
+
+            if (root->getTextWidthForFont("Regular", 14.0f, selected) <= available + ellipsisWidth) {
+                displayText = selected;
+                return;
+            }
+
+            int low = 0;
+            int high = static_cast<int>(selected.size());
+
+            while (low < high) {
+                int mid = (low + high) / 2;
+                std::string test = selected.substr(0, mid);
+
+                if (root->getTextWidthForFont("Regular", 14.0f, test) <= available)
+                    low = mid + 1;
+                else
+                    high = mid;
+            }
+
+            displayText = selected.substr(0, std::max(0, low - 1)) + ellipsis;
+        }
+
         void mouseButtonDown(pptk::CompEvent&) override
         {
-            // Dismiss if already open
+            // Close existing menu
             if (popupMenu && popupMenu->isVisible())
             {
                 popupMenu->close();
@@ -74,44 +119,77 @@ namespace pptk
                 return;
             }
 
-            auto* self = this;
+            // Clear previous popup safely
+            setPopupComponent(nullptr);
 
-            auto popup = std::make_unique<pptk::PopupListComponent>(options);
-            popup->onItemSelected = [self](const std::string& choice)
+            // Create new popup
+            auto popup = std::make_unique<PopupListComponent>(options);
+            popup->setSelected(selected);
+            auto* popupRaw = popup.get();
+
+            popup->onItemSelected = [_this = makeSafePointer(this), this](const std::string& choice)
             {
-                self->selected = choice;
-                if (self->onSelect)
-                    self->onSelect(choice);
+                if (!_this)
+                    return;
 
-                self->repaint();
+                selected = choice;
+                resized();
 
-                if (self->popupMenu)
-                {
-                    self->popupMenu->close();
-                }
+                if (onSelect)
+                    onSelect(choice);
+
+                repaint();
+
+                if (popupMenu)
+                    popupMenu->close(); // this safely triggers destroy
             };
 
-            popupMenu = pptk::SafePointer(popup.get());
-            setPopupComponent(std::move(popup));
-            getRootComponent()->addComponent(popupMenu.get());
+            setPopupComponent(std::move(popup));            // assigns and deletes old popup
+            getRootComponent()->addComponent(popupRaw);     // now safe to add to tree
+            popupMenu = SafePointer(popupRaw);        // now safe to track it
 
-            // Position below dropdown
-            auto globalPos = localToGlobal(0, getHeight());
-            popupMenu->setPosition(globalPos.x, globalPos.y);
-            popupMenu->registerMouseListener(this);
+            auto pos = clampPopupPositionInsideWindow(popupRaw, this);
+            popupRaw->setPosition(pos.x, pos.y);
+            popupRaw->registerMouseListener(this);
         }
 
         void setSelected(const std::string& item) {
-            if (std::find(options.begin(), options.end(), item) != options.end()) {
+            if (std::find(options.begin(), options.end(), item) != options.end())
+            {
                 selected = item;
+                resized();
                 repaint();
             }
         }
 
     private:
+        inline Point clampPopupPositionInsideWindow(Component* popup, Component* anchor, float offsetY = 0.0f)
+        {
+            auto root = anchor->getRootComponent();
+            auto popupBounds = popup->getBounds();
+            auto globalPos = anchor->localToGlobal(0, anchor->getHeight() + offsetY);
+            auto rootBounds = root->getAbsoluteBounds().reduced(8);
+
+            float x = globalPos.x;
+            float y = globalPos.y;
+
+            if (x + popupBounds.w > rootBounds.x + rootBounds.w)
+                x = rootBounds.x + rootBounds.w - popupBounds.w;
+
+            if (y + popupBounds.h > rootBounds.y + rootBounds.h)
+                y = rootBounds.y + rootBounds.h - popupBounds.h;
+
+            x = std::max(x, rootBounds.x);
+            y = std::max(y, rootBounds.y);
+
+            return { x, y };
+        }
+
         std::vector<std::string> options;
         std::string selected;
+        std::string displayText;
         std::function<void(const std::string&)> onSelect;
-        pptk::SafePointer<pptk::PopupListComponent> popupMenu;
+        SafePointer<PopupListComponent> popupMenu;
     };
+
 } // namespace pptk

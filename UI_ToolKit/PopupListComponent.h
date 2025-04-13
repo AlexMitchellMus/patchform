@@ -29,11 +29,29 @@ public:
         }
     }
 
+    void setSelected(const std::string& value)
+    {
+        for (const auto& item : items)
+        {
+            auto matching = item->getItemName() == value;
+            item->setSelected(matching);
+        }
+    }
+
+    void mouseEnter(CompEvent& e) override
+    {
+        // The moment the mouse enters the list, the current selected is moved to the mouse hover
+        for (const auto& item : items)
+        {
+            item->setSelected(false);
+        }
+    }
+
     void resized() override
     {
         float maxTextWidth = 0.0f;
-        const float padding = 20.0f;
-        const float minWidth = 150.0f;
+        const float padding = 28.0f;
+        const float minWidth = 50.0f;
         const float maxWidth = 400.0f;
 
         for (const auto& label : labels)
@@ -66,7 +84,7 @@ public:
 
         void render(NVGcontext* vg) override
         {
-            if (isHovered)
+            if (isHovered || isSelected)
             {
                 nvgBeginPath(vg);
                 nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), hover, hover, 4.0f);
@@ -79,6 +97,17 @@ public:
             nvgText(vg, 10, getHeight() * 0.5f, name.c_str(), nullptr);
         }
 
+        void setSelected(bool shouldBeSelected)
+        {
+            isSelected = shouldBeSelected;
+            repaint();
+        }
+
+        std::string& getItemName()
+        {
+            return name;
+        }
+
         // In your Item:
         void mouseButtonDown(CompEvent&) override
         {
@@ -86,13 +115,19 @@ public:
                 onClickFn(); // no longer destroys anything!
         }
 
-        void mouseEnter(CompEvent&) override { isHovered = true; repaint(); }
+        void mouseEnter(CompEvent&) override
+        {
+            isHovered = true;
+            isSelected = false;
+            repaint();
+        }
         void mouseLeave(CompEvent&) override { isHovered = false; repaint(); }
 
     private:
         std::string name;
         std::function<void()> onClickFn;
         bool isHovered = false;
+        bool isSelected = false;
         NVGcolor hover = nvgRGB(53, 53, 53);
     };
 

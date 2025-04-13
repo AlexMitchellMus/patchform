@@ -132,9 +132,14 @@ struct Rect {
         return result;
     }
 
-    Rect expanded(int toExpand)
+    Rect expanded(int toExpand) const
     {
         return Rect(x - toExpand, y - toExpand, w + 2 * toExpand, h + 2 * toExpand);
+    }
+
+    Rect reduced(int toReduce) const
+    {
+        return Rect(x + toReduce, y + toReduce, w - 2 * toReduce, h - 2 * toReduce);
     }
 
     std::string toString() const

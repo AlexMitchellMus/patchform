@@ -5,6 +5,7 @@
 */
 
 #include <utility>
+#include <glaze/util/string_literal.hpp>
 
 #include "RootComponent.h"
 #include "PopupComponent.h"
@@ -29,7 +30,10 @@ void Component::handleMouseMove(CompEvent& e)
 
 Component* Component::findComponentFromRootAt(int globalX, int globalY)
 {
-    return (getRootComponent())->findComponentAt(globalX, globalY, this);
+    if (auto root = getRootComponent())
+        return root->findComponentAt(globalX, globalY, this);
+
+    return nullptr;
 }
 
 Component* Component::findComponentAt(int x, int y)
@@ -74,19 +78,26 @@ Component* Component::findComponentAt(int globalX, int globalY, Component* selfC
 
 Component* Component::getRootComponent()
 {
-    // Return the cached root if available.
-    if (rootComponent != nullptr)
+    if (rootComponent)
         return rootComponent;
 
     Component* current = this;
-    // Traverse upward until no parent exists.
-    while (current->parent.get() != nullptr)
+
+    while (current->parent)
     {
-        current = current->parent.get();
+        Component* next = current->parent.get();
+        if (!next)
+            break; // prevent use-after-free
+        current = next;
     }
-    // Cache the computed root.
-    rootComponent = current;
-    return current;
+
+    // If we find the real root, cache the root component, otherwise return nullptr
+
+    const auto rootComp = dynamic_cast<RootComponent*>(current);
+    if (rootComp)
+        rootComponent = rootComp;
+
+    return rootComp;
 }
 
 void Component::addComponent(Component* child)
@@ -98,7 +109,7 @@ void Component::addComponent(Component* child)
 
     child->parent = this;
     children.push_back(child);
-    child->rootComponent = rootComponent;
+    rootComponent = nullptr; // Force to refind root
     child->resized();
 
     if (auto resizibleChild = dynamic_cast<ResizableComponent*>(child))
@@ -149,22 +160,22 @@ void Component::setVisible(bool shouldBeVisible)
 };
 
 void Component::removeFromParent()
+{
+    if (parent)
     {
-        if (parent)
+        if (Component* p = parent.get())
         {
-            auto& siblings = parent->children;
+            auto& siblings = p->children;
 
-            // Safety guard: only erase if you're actually in the vector
             auto it = std::find(siblings.begin(), siblings.end(), this);
             if (it != siblings.end())
-            {
                 siblings.erase(it);
-            }
-
-            parent = nullptr;
-            rootComponent = nullptr;
         }
+
+        parent = nullptr;
+        rootComponent = nullptr;
     }
+}
 
 void Component::removeAllChildren()
 {
@@ -260,43 +271,52 @@ void Component::setPosition(const Point& point)
 
 void Component::startFrameTimer(std::function<void(uint32_t, uint32_t)> callback, int timerID)
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->registerTimerCallback(this, std::move(callback), timerID);
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        root->registerTimerCallback(this, std::move(callback), timerID);
 }
 
 void Component::stopFrameTimer(int timerID)
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->unregisterTimerCallback(this, timerID);
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        root->unregisterTimerCallback(this, timerID);
 }
 
 void Component::registerGlobalMouseListener(std::function<void(Component*)> callback)
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->registerGlobalMouse(this, callback);
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        root->registerGlobalMouse(this, callback);
 }
 
 void Component::unregisterGlobalMouseListener()
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->unregisterGlobalMouse(this);
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        root->unregisterGlobalMouse(this);
 }
 
 PopupComponent* Component::getPopupComponent()
 {
-    return reinterpret_cast<RootComponent*>(getRootComponent())->popupWindow.get();
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        return root->popupWindow.get();
+
+    return nullptr;
 }
 
 void Component::setPopupComponent(std::unique_ptr<PopupComponent> popupWindow)
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->popupWindow = std::move(popupWindow);
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        root->popupWindow = std::move(popupWindow);
 }
 
 void Component::gainFocus()
 {
-    reinterpret_cast<RootComponent*>(getRootComponent())->setFocusedComponent(this);
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        root->setFocusedComponent(this);
 }
 
 void Component::loseFocus()
 {
-    std::cout << "should be losing focus" << std::endl;
-    reinterpret_cast<RootComponent*>(getRootComponent())->setFocusedComponent(nullptr);
+    if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
+        root->setFocusedComponent(nullptr);
 }
 
 Point Component::globalToLocal(float globalX, float globalY) const
@@ -357,9 +377,8 @@ Point Component::localToGlobal(float localX, float localY) const
 float Component::getTextWidthForFont(const std::string& fontName, float size, const std::string& text)
 {
     if (auto root = dynamic_cast<RootComponent*>(getRootComponent()))
-    {
         return root->getTextWidth(fontName, size, text);
-    }
+
     return -3.0f;
 }
 

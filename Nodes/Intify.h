@@ -23,7 +23,7 @@ class Intify : public AudioNode
     };
     std::atomic<Mode> mode;
 
-    StringParameter* modeParam;
+    ListParameter* modeParam;
 
     Mode stringToMode(const std::string& modeString)
     {
@@ -48,7 +48,7 @@ public:
 
         mode.store(stringToMode(initialMode));
 
-        modeParam = addParameter<StringParameter>("mode", initialMode);
+        modeParam = addParameter<ListParameter>("mode", std::vector<std::string>{ "round", "floor", "ceil", "trunc"}, initialMode);
 
         modeParam->informNodeOfChange = [this]() {
             mode.store(stringToMode(modeParam->getValue()));

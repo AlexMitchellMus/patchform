@@ -20,7 +20,7 @@ public:
 
         addOutputPort("imag", AudioPort::Spectral);
 
-        modeParam = addParameter<StringParameter>("mode", objParams.value("mode", "vocoder"));
+        modeParam = addParameter<ListParameter>("mode", std::vector<std::string>{ "vocoder", "multiply", "phasereplace", "magreplace", "add", "sub", "maxmag", "crossfade", "magdiff", "warp" }, objParams.value("mode", "vocoder"));
         modeHash.store(hash(modeParam->getValue()));
 
         modeParam->informNodeOfChange = [this]() {
@@ -172,7 +172,7 @@ public:
     }
 
 private:
-    StringParameter* modeParam = nullptr;
+    ListParameter* modeParam = nullptr;
     std::atomic<uint32_t> modeHash;
 };
 

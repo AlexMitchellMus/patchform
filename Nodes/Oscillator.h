@@ -158,7 +158,7 @@ protected:
 
     XorShift fastRNG;
 
-    StringParameter* waveformParameter;
+    ListParameter* waveformChoiceParameter;
 
     // All tables now have FULL_TABLE_SIZE samples.
     // We use a pointer to float and an effective cycle length.
@@ -214,14 +214,14 @@ public:
         auto waveform = objParams.value("waveform", "sine");
         freq = objParams.value("freq", 440.0f);
 
-        waveformParameter = addParameter<StringParameter>("Waveform", waveform);
+        waveformChoiceParameter = addParameter<ListParameter>("waveform", std::vector<std::string>{ "sine", "saw", "square", "triangle", "noise" }, waveform);
 
-        waveformParameter->informNodeOfChange = [this]()
+        waveformChoiceParameter->informNodeOfChange = [this]()
         {
-            waveformHash.store(updateWaveform(hash(waveformParameter->getValue())));
+            waveformHash.store(updateWaveform(hash(waveformChoiceParameter->getValue())));
         };
 
-        waveformHash.store(updateWaveform(hash(waveformParameter->getValue())));
+        waveformHash.store(updateWaveform(hash(waveformChoiceParameter->getValue())));
 
         context->stringMap.intern("sine", "saw", "square", "triangle", "tri", "noise");
 

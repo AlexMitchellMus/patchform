@@ -94,9 +94,10 @@ namespace pptk
 
         void callGlobalMouseHandlersOn(Component* comp)
         {
-            for (auto& [c, handler] : globalMouseHandlers)
+            auto handlersCopy = globalMouseHandlers;
+            for (auto& [c, handler] : handlersCopy)
             {
-                if (c.get())
+                if (c)
                     handler(comp);
             }
         }

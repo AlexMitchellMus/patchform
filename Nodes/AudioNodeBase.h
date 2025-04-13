@@ -241,10 +241,9 @@ public:
     uint32_t nodeID;
     std::string nodeIDString;
 
-    template<typename T, typename... Args>
-    T* addParameter(const std::string& name, Args&&... args) {
-        static_assert(std::is_base_of_v<Parameter, T>, "T must be a subclass of Parameter");
-        auto param = std::make_unique<T>(name, std::forward<Args>(args)...);
+    template <typename T, typename... Args>
+    T* addParameter(Args&&... args) {
+        auto param = std::make_unique<T>(std::forward<Args>(args)...);
         T* ptr = param.get();
         parameters.push_back(std::move(param));
         return ptr;

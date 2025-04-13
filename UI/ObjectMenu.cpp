@@ -210,30 +210,41 @@ ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas)
                 if (dndObject)
                 {
                     updateDraggedObject(dndObject.get());
+                    return;
                 }
-                else
-                {
-                    auto newAudioNode = reinterpret_cast<Editor*>(getRootComponent())->graphManager->addObject(itemDef);
-                    if (!newAudioNode)
-                    {
-                        std::cerr << "Failed to create new Audio Node." << std::endl;
-                        return;
-                    }
-                    // Check it again - just to be super safe (this hasn't been an issue yet!)
-                    if ((dndObject = newAudioNode->getOrCreateUI()))
-                    {
-                        dndObject->scale = cnv->scale;
-                        dndObject->opacity = 0.4f;
-                        getRootComponent()->addComponent(dndObject.get());
-                        updateDraggedObject(dndObject.get());
 
-                        findParentOfClass<ObjectMenu>()->setVisible(false);
-                    }
-                    else
-                    {
-                        std::cerr << "Failed to create/get audio node UI!" << std::endl;
-                    }
+                auto* root = getRootComponent();
+                if (!root)
+                    return;
+
+                auto* editor = dynamic_cast<Editor*>(root);
+                if (!editor)
+                {
+                    std::cerr << "Root is not an Editor!" << std::endl;
+                    return;
                 }
+
+                auto* newAudioNode = editor->graphManager->addObject(itemDef);
+                if (!newAudioNode)
+                {
+                    std::cerr << "Failed to create new Audio Node." << std::endl;
+                    return;
+                }
+
+                dndObject = newAudioNode->getOrCreateUI();
+                if (!dndObject)
+                {
+                    std::cerr << "Failed to create/get audio node UI!" << std::endl;
+                    return;
+                }
+
+                dndObject->scale = cnv->scale;
+                dndObject->opacity = 0.4f;
+                root->addComponent(dndObject.get());
+                updateDraggedObject(dndObject.get());
+
+                if (auto* menu = findParentOfClass<ObjectMenu>())
+                    menu->setVisible(false);
             };
     }
     setBounds(0, 0, maxRowWidth, y + itemHeight + paddingY);

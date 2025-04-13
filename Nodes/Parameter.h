@@ -7,6 +7,7 @@
 #include "../UI_ToolKit/Component.h"
 #include "../UI_ToolKit/TextEditor.h"
 #include "../UI_ToolKit/ToggleSwitch.h"
+#include "../UI_ToolKit/DropdownSelector.h"
 #endif
 
 class Parameter {
@@ -26,8 +27,10 @@ public:
 
 #ifdef PATCHFORM_WITH_GUI
     virtual std::unique_ptr<pptk::Component> createEditorComponent() = 0;
-    virtual void resizeEditorComponent(pptk::Component* c, int parentWidth, int parentHeight) {
-        if (c) c->setBounds(parentWidth - 100, 4, 90, 22);
+    virtual void resizeEditorComponent(pptk::Component* c, int parentWidth, int parentHeight)
+    {
+        if (c)
+            c->setBounds(parentWidth * 0.5f, 4, parentWidth * 0.5f, 22);
     }
 #endif
 
@@ -180,8 +183,10 @@ public:
         return toggle;
     }
 
-    void resizeEditorComponent(pptk::Component* c, int parentWidth, int parentHeight) override {
-        if (c) c->setBounds(parentWidth - 90, 6, 33, 18);
+    void resizeEditorComponent(pptk::Component* c, int parentWidth, int parentHeight) override \
+    {
+        if (c)
+            c->setBounds(parentWidth * 0.5f + 10, 6, 33, 18);
     }
 #endif
 
@@ -231,5 +236,45 @@ public:
 
 private:
     std::string value;
+    moodycamel::ConcurrentQueue<std::string> queue;
+};
+
+class ListParameter : public Parameter {
+public:
+    ListParameter(const std::string& name, const std::vector<std::string>& options, const std::string& defaultValue)
+        : Parameter(name), choices(options), selectedValue(defaultValue) {}
+
+    void setValue(const std::string& newValue) {
+        if (selectedValue != newValue && std::find(choices.begin(), choices.end(), newValue) != choices.end()) {
+            selectedValue = newValue;
+            queue.enqueue(newValue);
+            onParameterChanged();
+            informNodeOfChange();
+            updateNodeUI(selectedValue);
+        }
+    }
+
+    std::string getValue() {
+        std::string newValue;
+        if (queue.try_dequeue(newValue))
+            selectedValue = newValue;
+        return selectedValue;
+    }
+
+    std::string getAsString() const override { return selectedValue; }
+    void setFromString(const std::string& input) override { setValue(input); }
+
+#ifdef PATCHFORM_WITH_GUI
+    std::unique_ptr<pptk::Component> createEditorComponent() override {
+        auto dropdown = std::make_unique<pptk::DropdownSelector>(choices);
+        dropdown->setSelected(getValue());
+        dropdown->setOnSelect([this](const std::string& choice) { setValue(choice); });
+        return dropdown;
+    }
+#endif
+
+private:
+    std::vector<std::string> choices;
+    std::string selectedValue;
     moodycamel::ConcurrentQueue<std::string> queue;
 };
