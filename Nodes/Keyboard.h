@@ -37,6 +37,8 @@ public:
 
         bool holdModeVal = false;
 
+        std::atomic<int> noteState[128] = {};
+
     public:
         std::atomic<bool> isDirty = false;
 
@@ -83,7 +85,17 @@ public:
         {
             if (isDirty.exchange(false))
             {
-                repaint();
+                auto kb = reinterpret_cast<Keyboard*>(audioNode);
+                int note = 0;
+                while (kb->eventQueueFromDSP.try_dequeue(note))
+                {
+                    if (note < 0)
+                        noteState[-note] = false;
+                    else
+                        noteState[note] = true;
+
+                    repaint();
+                }
             }
         }
 
@@ -360,7 +372,7 @@ public:
                 if (isBlack) continue;
 
                 int x = whiteIndex * keyWidth;
-                if (midiNote == lastNotePressed)
+                if (noteState[midiNote])
                 {
                     nvgBeginPath(vg);
                     if (whiteIndex == 0)
@@ -417,7 +429,7 @@ public:
                 }
 
                 int x = whiteIndex * keyWidth - (keyWidth / 4);
-                NVGcolor col = (midiNote == lastNotePressed) ? nvgRGB(50, 50, 50) : nvgRGB(0, 0, 0);
+                NVGcolor col = noteState[midiNote] ? nvgRGB(50, 50, 50) : nvgRGB(0, 0, 0);
                 nvgDrawRoundedRect(vg, x, 1, keyWidth * 0.5f, keyHeight * 0.6f, col, col, 0);
             }
         }
@@ -425,8 +437,7 @@ public:
         bool isBlackKey(int midiNote)
         {
             int noteInOctave = midiNote % 12;
-            return noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8 || noteInOctave ==
-                10;
+            return noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8 || noteInOctave == 10;
         }
 
         bool isWhiteKeyAdjacent(int midiNote)
@@ -481,6 +492,8 @@ public:
 
         holdMode = objParams.value("holdMode", false);
         holdModeParam = addParameter<BoolParameter>("Hold", holdMode);
+
+        addInputPort("midi-in", AudioPort::PortType::Data);
     }
 
     json getSerializedNode() override
@@ -493,6 +506,37 @@ public:
 #ifdef PATCHFORM_WITH_GUI
     void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
     {
+        auto& inputEv = inputPortBuffers[0]->getEvents();
+
+        for (const auto* ev : inputEv) // "midi-in" is input port 0
+        {
+            const auto tag = ev->getTagHash();
+            if (tag != hash("note-on") && tag != hash("note-off"))
+                continue;
+
+            if (!ev->data)
+                continue;
+
+            int note = static_cast<int>(ev->data->data.atom);
+            bool isOn = (tag == hash("note-on"));
+
+            selectedNote = note;
+            if (note < 0 || note >= 128)
+                continue;
+            noteState[note] = isOn ? 1 : 0;
+
+            if (Event* out = context->eventPool.getFreeEvent())
+            {
+                out->shallowCopyFrom(ev);
+                addEvent(0, out);
+            }
+
+#ifdef PATCHFORM_WITH_GUI
+            eventQueueFromDSP.enqueue(isOn ? note : -note);
+            repaintFromDSP();
+#endif
+        }
+
         int note;
         while (eventQueue.try_dequeue(note))
         {
@@ -519,8 +563,7 @@ public:
                     addEvent(0, e);
                 }
             }
-
-            eventQueueFromDSP.enqueue(note);
+            eventQueueFromDSP.enqueue(isNoteOn ? note : -note);
             repaintFromDSP();
         }
     }

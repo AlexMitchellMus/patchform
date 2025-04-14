@@ -153,7 +153,7 @@ if (MSVC)
         set(ASAN_LIB_PATH "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/lib/x64")
         target_link_directories(PatchformStandalone PRIVATE "${ASAN_LIB_PATH}")
 
-        target_compile_options(PatchformStandalone PRIVATE /fsanitize=address /Od /Zi)
+        target_compile_options(PatchformStandalone PRIVATE /fsanitize=address /Od /Zi /bigobj)
         target_link_options(PatchformStandalone PRIVATE /INFERASANLIBS)
 
         # Force all static libs to match runtime (important!)
@@ -165,9 +165,9 @@ if (MSVC)
         target_compile_options(PatchformStandalone PRIVATE
                 /std:c++latest
                 /Zc:preprocessor
-                $<$<CONFIG:Debug>:/Od /Zi /RTC1>
-                $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast>
-                $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL>
+                $<$<CONFIG:Debug>:/Od /Zi /RTC1 /bigobj>
+                $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast /bigobj>
+                $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL /bigobj>
         )
         add_link_options($<$<CONFIG:Debug>:/DEBUG>)
     endif()

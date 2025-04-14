@@ -36,38 +36,45 @@ struct CategoryBlock
 static constexpr ObjectDef ControlItems[] = {
     { R"({"obj": "Metro"})", ICONS::Metro, true, "Metronome" },
     { R"({"obj": "count"})", ICONS::Count, true, "Counter" },
-    { R"({"obj": "IfElse"})", "ifelse", false, "If / Else" },
-    { R"({"obj": "select", "outputs": 8 })", "sel", false, "Select" },
-    { R"({"obj": "changed"})", "chg", false, "Changed" },
-    { R"({"obj": "tag"})", "tag", false, "Tag" },
-    { R"({"obj": "filtertag"})", "filtag", false, "Filter by Tag" },
-    { R"({"obj": "random"})", "rnd", false, "Random" },
-    { R"({"obj": "evdelay", "ms": 100 })", "evdel", false, "Event Delay" },
-    { R"({"obj": "loadevent" })", "ldev", false, "Load Event" },
-    { R"({"obj": "value" })", "val", false, "Value" },
-    { R"({"obj": "mtof"})", "mtof", false, "Note number to Frequency" },
+    { R"({"obj": "if"})", "", false, "If" },
+    { R"({"obj": "IfElse"})", "", false, "If / Else" },
+    { R"({"obj": "select", "outputs": 8 })", "", false, "Select" },
+    { R"({"obj": "changed"})", "", false, "Changed" },
+    { R"({"obj": "tag"})", "", false, "Tag" },
+    { R"({"obj": "filtertag"})", "", false, "Filter by Tag" },
+    { R"({"obj": "random"})", "", false, "Random" },
+    { R"({"obj": "evdelay", "ms": 100 })", "", false, "Event Delay" },
+    { R"({"obj": "loadevent" })", "", false, "Load Event" },
+    { R"({"obj": "value" })", "", false, "Value" },
+    { R"({"obj": "mtof"})", "", false, "Note number to Frequency" },
     { R"({"obj": "activemidinotes" })", "", false, "Active MIDI Notes" },
     { R"({"obj": "polynoteout" })", "", false, "Poly Voice Manager" },
+    { R"({"obj": "get"})", "", false, "Get Value" },
+    { R"({"obj": "pack", "values": 5 })", "", false, "Pack" },
+    { R"({"obj": "unpack", "values": 5 })", "", false, "UnPack" },
+    { R"({"obj": "strip"})", "", false, "Strip" },
+    { R"({"obj": "zerox" })", "", false, "Zero Crossings" },
 };
 
 // UI
 static constexpr ObjectDef UIItems[] = {
-    { R"({"obj": "ping", "width": 60, "height": 60})", "Png", false, "Ping" },
+    { R"({"obj": "ping", "width": 60, "height": 60})", "", false, "Ping" },
     { R"({"obj": "dial", "min": 0, "max": 10, "value": 3})", ICONS::Dial, true, "Dial" },
     { R"({"obj": "keyboard" })", "", false, "Piano Keyboard" },
-    { R"({"obj": "radiobox"})", "rb", false, "Radio Box" },
-    { R"({"obj": "floatbox"})", "fb", false, "Float Box" },
-    { R"({"obj": "listbox"})", "lb", false, "List Box" },
-    { R"({"obj": "comment"})", "com", false, "Comment" },
-    { R"({"obj": "scope"})", "scope", false, "Oscilloscope" },
-    { R"({"obj": "spec"})", "spec", false, "Spectrum Analyzer" },
+    { R"({"obj": "radiobox"})", "", false, "Radio Box" },
+    { R"({"obj": "floatbox"})", "", false, "Float Box" },
+    { R"({"obj": "listbox"})", "", false, "List Box" },
+    { R"({"obj": "comment"})", "", false, "Comment" },
+    { R"({"obj": "scope"})", "", false, "Oscilloscope" },
+    { R"({"obj": "spec"})", "", false, "Spectrum Analyzer" },
+    { R"({"obj": "pad"})", "", false, "XY Pad" },
 };
 
 // IO
 static constexpr ObjectDef IOItems[] = {
-    { R"({"obj": "ain"})", "ain", false, "Audio Input" },
+    { R"({"obj": "ain"})", "", false, "Audio Input" },
     { R"({"obj": "aout"})", ICONS::Aout, true, "Audio Output" },
-    { R"({"obj": "notein"})", "MIDIIN", false, "MIDI Note Input" },
+    { R"({"obj": "notein"})", "", false, "MIDI Note Input" },
 };
 
 // Oscillator
@@ -107,12 +114,9 @@ static constexpr ObjectDef WavetableItems[] = {
 // Maths
 static constexpr ObjectDef MathsItems[] = {
     { R"({"obj": "Add"})", "", false, "Add" },
+    { R"({"obj": "Subtract"})", "", false, "Subtract" },
     { R"({"obj": "mul"})", "", false, "Multiply" },
     { R"({"obj": "div"})", "", false, "Divide" },
-    { R"({"obj": "get"})", "", false, "Get Value" },
-    { R"({"obj": "pack", "values": 5 })", "", false, "Pack" },
-    { R"({"obj": "strip"})", "", false, "Strip" },
-    { R"({"obj": "zerox" })", "", false, "Zero Crossings" },
 };
 
 static constexpr ObjectDef MathsUnaryItems[] = {

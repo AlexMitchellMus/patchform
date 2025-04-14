@@ -18,6 +18,7 @@
 #include "Changed.h"
 #include "Get.h"
 #include "Pack.h"
+#include "UnPack.h"
 #include "TagEvent.h"
 #include "Strip.h"
 #include "FilterTag.h"
@@ -30,6 +31,7 @@
 #include "Multiply.h"
 #include "Divide.h"
 #include "Add.h"
+#include "Subtract.h"
 #include "Intify.h"
 #include "MathsUnary.h"
 
@@ -73,6 +75,7 @@
 #include "Comment.h"
 #include "Table.h"
 #include "Keyboard.h"
+#include "Pad.h"
 
 // Wavetable
 #include "TableXFade.h"
