@@ -178,19 +178,13 @@ public:
 
         void mouseButtonDown(pptk::CompEvent& e) override
         {
-            if (auto cnv = findParentOfClass<Canvas>())
-            {
-                if (!cnv->isInLockedMode())
-                {
-                    // Enable editing on double-click.
-                    if (e.sdlEvent.button.clicks == 2)
-                        textEditor->setInteractable(true);
-                    else
-                        textEditor->setInteractable(false);
+            // Enable editing on double-click.
+            if (e.sdlEvent.button.clicks == 2)
+                textEditor->setInteractable(true);
+            else
+                textEditor->setInteractable(false);
 
-                    AudioNode::UI::mouseButtonDown(e);
-                }
-            }
+            AudioNode::UI::mouseButtonDown(e);
         }
 
         void resized() override

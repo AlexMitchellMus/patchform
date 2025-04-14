@@ -14,7 +14,10 @@ public:
     std::function<void()> onTextChanged = [](){};
     std::function<void()> onTextReturned = [](){};
 
-    TextEditor(bool isNumber = true) : cursorPos(0), isNumber(isNumber){}
+    TextEditor(bool isNumber = true) : cursorPos(0), isNumber(isNumber)
+    {
+        setWantsFocus(true);
+    }
 
     void setText(const std::string& newText)
     {
@@ -58,7 +61,7 @@ public:
             if (editorFirstActive)
             {
                 auto blue = nvgRGB(28, 73, 119);
-                nvgDrawRoundedRect(vg, 10, yMin, 10 + fullTextWidth, yMax - yMin, blue, blue, 0.0f);
+                nvgDrawRoundedRect(vg, 10, yMin, fullTextWidth, yMax - yMin, blue, blue, 0.0f);
             }
 
             auto carrotCol = nvgRGBA(200, 200, 200, 255);
@@ -78,7 +81,7 @@ public:
 */
     void focusLost() override
     {
-        editorActive = false;
+        setActive(false);
         onTextReturned();
         repaint();
     }
@@ -122,20 +125,28 @@ public:
             }
             break;
         case SDLK_LEFT:
-            editorFirstActive = false;
-            if (cursorPos > 0)
+            if (editorFirstActive)
+            {
+                cursorPos = 0;
+            }
+            else if (cursorPos > 0)
             {
                 cursorPos--;
-                repaint();
             }
+            editorFirstActive = false;
+            repaint();
             break;
         case SDLK_RIGHT:
-            editorFirstActive = false;
-            if (cursorPos < text.length())
+            if (editorFirstActive)
+            {
+                cursorPos = text.length();
+            }
+            else if (cursorPos < text.length())
             {
                 cursorPos++;
-                repaint();
             }
+            editorFirstActive = false;
+            repaint();
             break;
         case SDLK_RETURN:
         case SDLK_RETURN2:
@@ -236,9 +247,7 @@ public:
         wasDragged = false;
         if (e.sdlEvent.button.clicks == 2)
         {
-            editorActive = true;
-            editorFirstActive = true;
-            gainFocus();
+            setActive(true);
             repaint();
         } else if (isNumber && e.sdlEvent.button.clicks == 1)
         {
@@ -251,15 +260,27 @@ public:
         wasDragged = false;
     }
 
-    void setInteractable(bool shouldInteract)
+    void setActive(const bool shouldBeActive)
+    {
+        editorActive = shouldBeActive;
+        editorFirstActive = shouldBeActive;
+    }
+
+    void setInteractable(const bool shouldInteract)
     {
         if (isInteractable != shouldInteract)
         {
             isInteractable = shouldInteract;
             if (isInteractable)
-                focusGained();
+            {
+                setActive(true);
+                gainFocus();
+            }
             else
-                focusLost();
+            {
+                setActive(false);
+                loseFocus();
+            }
             repaint();
         }
     }
