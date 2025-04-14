@@ -233,17 +233,19 @@ void Connection::keyPressed(pptk::CompEvent& e)
     }
 }
 
-void Connection::render(NVGcontext* nvg) {
+void Connection::render(NVGcontext* nvg)
+{
     nvgSave(nvg);
 
     nvgBeginPath(nvg);
-
     nvgMoveTo(nvg, endPoint.x, endPoint.y);
-    nvgBezierTo(nvg, controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, startPoint.x, startPoint.y);
 
-    // Straight cable style (not used atm)
-    //nvgLineTo(nvg, originPos.x, originPos.y);
-    //nvgStrokeColor(nvg, nvgRGB(100, 100, 100));
+    const auto straightCon = false;
+
+    if (straightCon)
+        nvgLineTo(nvg, startPoint.x, startPoint.y);
+    else
+        nvgBezierTo(nvg, controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, startPoint.x, startPoint.y);
 
     const auto bgCol = nvgRGBA(30, 30, 30, 180);
 
