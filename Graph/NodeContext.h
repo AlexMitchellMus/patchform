@@ -169,7 +169,7 @@ private:
     std::vector<size_t> allocatedList;
 };
 
-class AudioGraph;
+class Graph;
 
 class NodeContext {
 public:
@@ -179,7 +179,7 @@ public:
 
     OwnershipBlockPool ownershipBlockPool;
 
-    moodycamel::ConcurrentQueue<std::function<void(AudioGraph& runningGraph)>> messageQueue;
+    moodycamel::ConcurrentQueue<std::function<void(Graph& runningGraph)>> messageQueue;
 
     LockFreeHashMap stringMap;
 

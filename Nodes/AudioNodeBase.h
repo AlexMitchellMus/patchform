@@ -11,14 +11,9 @@
 
 #include "AudioPort.h"
 #include "../Graph/NodeContext.h"
-#include "NodeRegistry.h"
-
-#include "../Graph/Logger.h"
-
 #include "glaze/glaze.hpp"
-
 #include "Parameter.h"
-
+#include "NodeRegistry.h"
 #include "JsonHelpers.h"
 
 #ifdef PATCHFORM_WITH_GUI
@@ -66,7 +61,7 @@ public:                                                                         
 #define M_PI 3.14159265358979323846
 #endif
 
-class AudioGraph;
+class Graph;
 
 struct MidiMessage {
     std::vector<unsigned char> message;
@@ -227,9 +222,9 @@ public:
         hasEvents = true;
     }
 
-    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, AudioGraph&, const int)> pushOutputEvents;
+    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, Graph&, const int)> pushOutputEvents;
 
-    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const AudioGraph&, const int)> sumInputBuffers;
+    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const Graph&, const int)> sumInputBuffers;
 
     // Sets the bit field mask for this node in the context, where the current running graph will
     // then process this in the next skip
@@ -267,7 +262,7 @@ private:
 
     bool hasEvents = false;
 
-    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, AudioGraph& runningGraph, const int index)
+    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& runningGraph, const int index)
     {
         if (!shouldProcess(frameCount))
         {
@@ -297,7 +292,7 @@ private:
 #ifdef PATCHFORM_WITH_GUI
     std::unique_ptr<UI> ui = nullptr;
 #endif
-    friend class AudioGraph;
+    friend class Graph;
 
 protected:
     std::vector<std::unique_ptr<Parameter>> parameters;

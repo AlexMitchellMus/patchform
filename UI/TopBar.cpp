@@ -8,7 +8,6 @@
 #include "Editor.h"
 #include "AboutDialog.h"
 #include "SettingsDialog.h"
-#include "../Graph/AudioGraph.h"
 #include "../UI_ToolKit/PlatformHelpers.h"
 
 MainMenu::MainMenu()

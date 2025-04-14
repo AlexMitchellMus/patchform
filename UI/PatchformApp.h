@@ -8,7 +8,7 @@
 #include "portaudio.h"
 #include "rtmidi.h"
 
-#include "../Graph/AudioGraph.h"
+#include "../Graph/GraphManager.h"
 #include "Editor.h"
 #include "../UI_ToolKit/EventManager.h"
 #include "Settings.h"

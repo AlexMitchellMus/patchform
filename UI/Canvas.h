@@ -136,10 +136,5 @@ private:
     NVGframebuffer* tileFB = nullptr;
     bool frameBufferRepaint = true;
 
-#ifdef GENERATE_TEST_OBJECTS
-    // ONLY FOR TESTING! These objects are not connected to the DSP system
-    std::vector<std::unique_ptr<Object>> testObjects;
-#endif
-
     void clearSelection();
 };

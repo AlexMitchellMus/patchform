@@ -5,7 +5,7 @@
 #include "Object.h"
 #include "Canvas.h"
 #include "ToolDock.h"
-#include "../Graph/AudioGraph.h"
+#include "../Graph/GraphManager.h"
 #include "../UI_ToolKit/CompEvent.h"
 #include "CursorBitmaps.h"
 
