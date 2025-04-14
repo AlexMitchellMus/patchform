@@ -8,7 +8,7 @@ class IfElse : public AudioNode {
     DEFINE_NODE_ALIASES("ifelse");
 
     FloatParameter* ifParam;
-    StringParameter* modeParam;
+    ListParameter* modeParam;
 
     std::atomic<float> coldValueIf;
     std::atomic<int> modeHash;
@@ -44,7 +44,7 @@ public:
         coldValueIf = objParams.value("if", 0.0f);
         std::string initialMode = objParams.value("mode", "==");
 
-        modeParam = addParameter<StringParameter>("mode", initialMode);
+        modeParam = addParameter<ListParameter>("mode", std::vector<std::string>{ "==", "!=", ">", ">=", "<", "<=" }, initialMode);
         ifParam = addParameter<FloatParameter>("if", coldValueIf, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
         modeHash.store(hash(initialMode));
