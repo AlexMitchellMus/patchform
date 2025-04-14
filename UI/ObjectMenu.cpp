@@ -11,12 +11,13 @@
 
 using namespace ObjectMenuDefs;
 
-Item::Item(ObjectDef def) : definition(def.definition), icon(def.icon), useIcon(def.useIcon)
+Item::Item(ObjectDef def) : definition(def.definition), icon(def.icon)
 {
     if (!definition.empty())
     {
         name = def.getDisplayName();
         tint = def.tint;
+        hasIcon = !icon.empty();
     }
 }
 
@@ -60,7 +61,7 @@ void Item::render(NVGcontext* vg)
 
     nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), fill, outline, getHeight() * 0.5f);
 
-    if (useIcon)
+    if (hasIcon)
     {
         nvgFontSize(vg, 28.0f);
         nvgFontFace(vg, "object_icons");

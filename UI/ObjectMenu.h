@@ -30,7 +30,7 @@ public:
 
 private:
     bool hovered = false;
-    bool useIcon = true;
+    bool hasIcon = true;
 
     std::string definition;
     std::string icon;

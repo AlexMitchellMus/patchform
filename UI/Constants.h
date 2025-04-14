@@ -18,4 +18,8 @@ namespace ICONS
     static constexpr std::string_view Aout = "F";
     static constexpr std::string_view Count = "G";
     static constexpr std::string_view Dial = "H";
+    static constexpr std::string_view MathBinary = "J";
+    static constexpr std::string_view MathUnary = "K";
+    static constexpr std::string_view Logic = "L";
+    static constexpr std::string_view Mic = "M";
 }
