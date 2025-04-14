@@ -11,7 +11,6 @@ namespace pptk {
     public:
         SDL_Event sdlEvent;
         SafePointer<Component> originalComponent;
-        bool stopPropagation = false;
 
         CompEvent() = default;
 
