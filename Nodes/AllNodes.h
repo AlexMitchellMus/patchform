@@ -31,6 +31,7 @@
 #include "Divide.h"
 #include "Add.h"
 #include "Intify.h"
+#include "MathsUnary.h"
 
 // Audio
 #include "AudioIn.h"

@@ -22,6 +22,16 @@ struct ObjectDef {
     std::string getDisplayName() const { return std::string(displayName); };
 };
 
+struct CategoryBlock
+{
+    const char* categoryName;
+    const ObjectMenuDefs::ObjectDef* items;
+    size_t itemCount;
+    uint8_t tint[3] = { 0 }; // R G B tint
+};
+
+#define COUNT_OF(arr) (sizeof(arr) / sizeof(arr[0]))
+
 // Control
 static constexpr ObjectDef ControlItems[] = {
     { R"({"obj": "Metro"})", ICONS::Metro, true, "Metronome" },
@@ -96,13 +106,40 @@ static constexpr ObjectDef WavetableItems[] = {
 
 // Maths
 static constexpr ObjectDef MathsItems[] = {
-    { R"({"obj": "Add"})", "add", false, "Add" },
-    { R"({"obj": "mul"})", "mul", false, "Multiply" },
-    { R"({"obj": "div"})", "div", false, "Divide" },
-    { R"({"obj": "get"})", "get", false, "Get Value" },
-    { R"({"obj": "pack", "values": 5 })", "pack", false, "Pack" },
-    { R"({"obj": "strip"})", "strp", false, "Strip" },
-    { R"({"obj": "zerox" })", "zerox", false, "Zero Crossings" },
-    { R"({"obj": "intify", "mode": 0 })", "intify", false, "Intify" },
+    { R"({"obj": "Add"})", "", false, "Add" },
+    { R"({"obj": "mul"})", "", false, "Multiply" },
+    { R"({"obj": "div"})", "", false, "Divide" },
+    { R"({"obj": "get"})", "", false, "Get Value" },
+    { R"({"obj": "pack", "values": 5 })", "", false, "Pack" },
+    { R"({"obj": "strip"})", "", false, "Strip" },
+    { R"({"obj": "zerox" })", "", false, "Zero Crossings" },
+};
+
+static constexpr ObjectDef MathsUnaryItems[] = {
+    { R"({"obj": "intify", "mode": 0 })", "", false, "Intify" },
+    { R"({"obj": "abs"})", "", false, "Abs" },
+    { R"({"obj": "sin"})", "", false, "Sine" },
+    { R"({"obj": "cos"})", "", false, "Cosine" },
+    { R"({"obj": "tan"})", "", false, "Tangent" },
+    { R"({"obj": "asin"})", "", false, "Arcsin" },
+    { R"({"obj": "acos"})", "", false, "Arccos" },
+    { R"({"obj": "atan"})", "", false, "Arctan" },
+    { R"({"obj": "sqrt"})", "", false, "Sqrt" },
+    { R"({"obj": "exp"})", "", false, "Exp" },
+    { R"({"obj": "log"})", "", false, "Log" },
+    { R"({"obj": "log10"})", "", false, "Log10" },
+    { R"({"obj": "sign"})", "", false, "Sign" },
+};
+
+static constexpr CategoryBlock objectMenu[] = {
+    {"Control", ControlItems, COUNT_OF(ControlItems), {220, 200, 60}},
+    {"UI", UIItems, COUNT_OF(UIItems), {90, 160, 200}},
+    {"IO", IOItems, COUNT_OF(IOItems), {220, 100, 100}},
+    {"Maths", MathsItems, COUNT_OF(MathsItems), {240, 150, 50}},
+    {"Maths Unary", MathsUnaryItems, COUNT_OF(MathsUnaryItems), {240, 150, 50}},
+    {"Oscillator", OscillatorItems, COUNT_OF(OscillatorItems), {80, 220, 220}},
+    {"Effect", EffectItems, COUNT_OF(EffectItems), {200, 100, 220}},
+    {"Spectral", SpectralItems, COUNT_OF(SpectralItems), {100, 200, 160}},
+    {"Wavetable", WavetableItems, COUNT_OF(WavetableItems), {80, 160, 100}},
 };
 } // end namespace

@@ -76,27 +76,8 @@ void Item::render(NVGcontext* vg)
     nvgText(vg, getWidth() - 10, getHeight() * 0.5f, name.c_str(), nullptr);
 }
 
-struct CategoryBlock {
-    const char* categoryName;
-    const ObjectMenuDefs::ObjectDef* items;
-    size_t itemCount;
-};
-
-#define COUNT_OF(arr) (sizeof(arr) / sizeof(arr[0]))
-
 ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas), td(toolDock)
 {
-    constexpr CategoryBlock objectMenu[] = {
-        { "Control", ControlItems, COUNT_OF(ControlItems) },
-        { "UI", UIItems, COUNT_OF(UIItems) },
-        { "IO", IOItems, COUNT_OF(IOItems) },
-        { "Maths", MathsItems, COUNT_OF(MathsItems) },
-        { "Oscillator", OscillatorItems, COUNT_OF(OscillatorItems) },
-        { "Effect", EffectItems, COUNT_OF(EffectItems) },
-        { "Spectral", SpectralItems, COUNT_OF(SpectralItems) },
-        { "Wavetable", WavetableItems, COUNT_OF(WavetableItems) },
-    };
-
     float x = 16;
     float y = 18;
     constexpr int paddingX = 12;
@@ -109,38 +90,7 @@ ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas)
         // Store the category header position
         categoryHeaders.push_back({ block.categoryName, {x, y + 10} }); // +16 for vertical centering
 
-        NVGcolor tint;
-
-        switch (hash(block.categoryName))
-        {
-        case hash("UI"):
-            tint = nvgRGB(90, 160, 200);        // Teal Blue
-            break;
-        case hash("IO"):
-            tint = nvgRGB(220, 100, 100);       // Warm Red
-            break;
-        case hash("Control"):
-            tint = nvgRGB(220, 200, 60);        // Gold
-            break;
-        case hash("Oscillator"):
-            tint = nvgRGB(80, 220, 220);        // Bright Cyan
-            break;
-        case hash("Effect"):
-            tint = nvgRGB(200, 100, 220);       // Electric Purple
-            break;
-        case hash("Spectral"):
-            tint = nvgRGB(100, 200, 160);       // Soft Aqua
-            break;
-        case hash("Wavetable"):
-            tint = nvgRGB(80, 160, 100);        // Deep Green
-            break;
-        case hash("Maths"):
-            tint = nvgRGB(240, 150, 50);        // Orange
-            break;
-        default:
-            tint = nvgRGB(44, 44, 44);          // Fallback Dark Grey
-            break;
-        }
+        const NVGcolor tint = nvgRGB(block.tint[0], block.tint[1], block.tint[2]);
 
         y += 26;
         x = 16;
