@@ -70,6 +70,15 @@ public:
         return serializeSelectedNodes(activeNodes);
     }
 
+    // Call cleanup on all objects that have been removed from the graph when swapping with new graph
+    void processCleanup() const
+    {
+        for (auto* node : graph->objectsToCleanup)
+        {
+            node->cleanupAudio();
+        }
+    }
+
     // Get the json string for only the selected nodes and the selected objects interconnected connections
     json serializeSelectedNodes(const std::vector<uint32_t>& selectedNodeIDs) const
     {

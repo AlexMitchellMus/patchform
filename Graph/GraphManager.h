@@ -60,10 +60,7 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
 
         auto newNode = transitioningGraph->createObject(jsonObj);
-
-        transitioningGraph->updateConnections();
-        transitioningGraph->sortNodes();
-        transitioningGraph->updateOutputInputPortMap();
+        updateAndFinalizeGraph();
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
@@ -79,10 +76,7 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
 
         transitioningGraph->removeObject(id);
-
-        transitioningGraph->updateConnections();
-        transitioningGraph->sortNodes();
-        transitioningGraph->updateOutputInputPortMap();
+        updateAndFinalizeGraph();
 
         auto connectionState = transitioningGraph->getConnections();
 
@@ -109,9 +103,7 @@ public:
             transitioningGraph->removeEdge(edgeHash);
         }
 
-        transitioningGraph->updateConnections();
-        transitioningGraph->sortNodes();
-        transitioningGraph->updateOutputInputPortMap();
+        updateAndFinalizeGraph();
 
         auto connectionState = transitioningGraph->getConnections();
 
@@ -150,9 +142,7 @@ public:
             return activeGraph->getConnections();
         }
 
-        transitioningGraph->updateConnections();
-        transitioningGraph->sortNodes();
-        transitioningGraph->updateOutputInputPortMap();
+        updateAndFinalizeGraph();
 
         auto allConnections = transitioningGraph->getConnections();
 
@@ -178,13 +168,41 @@ public:
             return false;
         }
 
-        transitioningGraph->updateConnections();
-        transitioningGraph->sortNodes();
-        transitioningGraph->updateOutputInputPortMap();
+        updateAndFinalizeGraph();
 
         // Mark the transitioning graph as ready to replace the active graph
         swapGraph.store(true, std::memory_order_release);
         return true;
+    }
+
+    void prepareObjectsToCleanup() const
+    {
+        if (!activeGraph || !transitioningGraph)
+            return;
+
+        auto oldObjs = activeGraph->getObjects();
+        auto newObjs = transitioningGraph->getObjects();
+
+        ankerl::unordered_dense::set<AudioNode*> newNodes;
+        for (auto* node : newObjs)
+            newNodes.insert(node);
+
+        auto* graph = activeGraph->getGraph();
+        graph->objectsToCleanup.clear();
+
+        for (auto* node : oldObjs)
+        {
+            if (!newNodes.contains(node))
+                graph->objectsToCleanup.push_back(node);
+        }
+    }
+
+    void updateAndFinalizeGraph()
+    {
+        prepareObjectsToCleanup();
+        transitioningGraph->updateConnections();
+        transitioningGraph->sortNodes();
+        transitioningGraph->updateOutputInputPortMap();
     }
 
     void printAdjacencyList()
@@ -231,8 +249,9 @@ public:
             return {};
         }
 
-        patchLoadSuccess = true;
+        prepareObjectsToCleanup();
 
+        patchLoadSuccess = true;
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
         transitioningGraph->updateOutputInputPortMap();
@@ -384,10 +403,7 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
         }
     }
 
-    // Finalize graph updates.
-    transitioningGraph->updateConnections();
-    transitioningGraph->sortNodes();
-    transitioningGraph->updateOutputInputPortMap();
+    updateAndFinalizeGraph();
 
     auto loadedObjects = getObjects();
     auto connections = transitioningGraph->getConnections();
@@ -523,8 +539,12 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 #endif
         if (swapGraph.load(std::memory_order_acquire))
         {
+            if (activeGraph)
+                activeGraph->processCleanup();
+
             // Perform the swap on the audio thread
             activeGraph.swap(transitioningGraph);
+
             swapGraph.store(false, std::memory_order_release);
         }
 

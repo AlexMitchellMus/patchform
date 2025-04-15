@@ -367,5 +367,7 @@ public:
         size_t bufferSize = 0;
     };
 
+    std::vector<AudioNode*> objectsToCleanup;
+
     std::vector<std::vector<CachedInputSum>> cachedInputSumsPerNode;
 };
