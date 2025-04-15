@@ -126,6 +126,11 @@ struct Rect {
         return !noOverlap; // Rectangles intersect if there is overlap
     }
 
+    Rect withHeight(int newHeight)
+    {
+        return Rect(x, y, w, newHeight);
+    }
+
     Rect removeFromTop(int toRemove)
     {
         Rect result = Rect(x, y + toRemove, w, h - toRemove - y);
@@ -135,6 +140,12 @@ struct Rect {
     Rect expanded(int toExpand) const
     {
         return Rect(x - toExpand, y - toExpand, w + 2 * toExpand, h + 2 * toExpand);
+    }
+
+    Rect removeFromBottom(int toRemove)
+    {
+        Rect result = Rect(x, y, w, h - toRemove);
+        return result;
     }
 
     Rect reduced(int toReduce) const

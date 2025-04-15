@@ -1,0 +1,66 @@
+#pragma once
+
+#include <UI_ToolKit/Component.h>
+#include <UI_ToolKit/Label.h>
+#include <string>
+#include <vector>
+#include <functional>
+#include <memory>
+
+struct PatchInfo {
+    std::string fullPath;
+    std::string fileName;
+    std::function<void()> onClose;
+
+    PatchInfo(const std::string& path, std::function<void()> close)
+        : fullPath(path), onClose(std::move(close))
+    {
+        size_t slash = path.find_last_of("/\\");
+        std::string base = (slash != std::string::npos) ? path.substr(slash + 1) : path;
+
+        size_t dot = base.find_last_of('.');
+        fileName = (dot != std::string::npos) ? base.substr(0, dot) : base;
+    }
+};
+
+class PatchItem : public pptk::Component {
+public:
+    std::function<void()> onClick = [](){};
+
+    explicit PatchItem(const PatchInfo& info);
+
+    void mouseButtonDown(pptk::CompEvent& e) override;
+    void mouseEnter(pptk::CompEvent& e) override;
+    void mouseLeave(pptk::CompEvent& e) override;
+    void resized() override;
+    void render(NVGcontext* vg) override;
+
+    std::string& getPatchName();
+    std::string& getPatchPath();
+
+    bool isSelected = false;
+
+private:
+    std::unique_ptr<pptk::Label> label;
+
+    PatchInfo patchInfo;
+    std::string patchName;
+    bool isHovered = false;
+};
+
+class Editor;
+class LoadedPatchesPanel : public pptk::Component {
+public:
+    explicit LoadedPatchesPanel(Editor* ed);
+
+    void updateTabs(const std::vector<std::string>& tabs);
+
+    void setPatches(const std::vector<PatchInfo>& patches);
+    void resized() override;
+
+    void setSelected(const std::string& selectedPatch);
+
+private:
+    std::vector<std::unique_ptr<PatchItem>> patchItems;
+    Editor* editor;
+};

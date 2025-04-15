@@ -12,6 +12,8 @@
 #include <xutility>
 #include <set>
 
+#include <filesystem>
+
 #include "json.hpp"
 using json = nlohmann::json;
 

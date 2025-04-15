@@ -17,9 +17,7 @@ public:
     BoolParameter* holdModeParam = nullptr;
 
 #ifdef PATCHFORM_WITH_GUI
-    std::function<void()> repaintFromDSP = []()
-    {
-    };
+    std::function<void()> repaintFromDSP = [](){};
     moodycamel::ConcurrentQueue<int> eventQueue;
     moodycamel::ConcurrentQueue<int> eventQueueFromDSP;
 
@@ -47,7 +45,11 @@ public:
             setSize(getKeyboardWidth(baseMidiNote, totalKeys, keyWidth), keyHeight);
 
             auto kb = reinterpret_cast<Keyboard*>(audioNode);
-            kb->repaintFromDSP = [this]() { isDirty.store(true); };
+            kb->repaintFromDSP = [_this = pptk::SafePointer(this)]()
+            {
+                if (_this)
+                    _this->isDirty.store(true);
+            };
 
             kb->isVerticalParam->updateNodeUI = [this](const std::variant<int, float, std::string>& value) mutable
             {

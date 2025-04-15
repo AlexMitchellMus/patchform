@@ -3,37 +3,52 @@
 // For information on usage and redistribution, and for a DISCLAIMER OF ALL
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
-
+#include <filesystem>
 #include "Editor.h"
-#include "../Graph/GraphManager.h"
+#include "../Graph/GraphSystem.h"
 #include "../UI_ToolKit/WindowPeer.h"
 
 Editor::Editor(WindowPeer* peer) : windowPeer(peer) {};
 
-void Editor::init(GraphManager* gm)
+void Editor::init(GraphSystem* gm)
 {
-    graphManager = gm;
+    std::cout << "reinit editor" << std::endl;
+    graphSystem = gm;
 
-    canvas = std::make_unique<Canvas>(graphManager);
+    canvas = std::make_unique<Canvas>(graphSystem);
     canvas->setName("canvas");
     addComponent(canvas.get());
 
-    topBar = std::make_unique<TopBar>();
+    topBar = std::make_unique<TopBar>(this);
     topBar->setName("topBar");
     addComponent(topBar.get());
 
-    canvas->onPatchChanged = [this]()
-    {
-        topBar->setPatchName(canvas->getPatchName());
-    };
+    topBar->setPatchName(canvas->getPatchName());
 
     toolDock = std::make_unique<ToolDock>(canvas.get());
     toolDock->setName("toolDock");
     addComponent(toolDock.get());
 
-    leftPanel = std::make_unique<LeftPanel>(canvas.get());
+    leftPanel = std::make_unique<LeftPanel>(this);
     leftPanel->setName("leftPanel");
     addComponent(leftPanel.get());
+
+    canvas->onPatchChanged = [this]()
+    {
+        topBar->setPatchName(canvas->getPatchName());
+        leftPanel->updateSelectedTab();
+    };
+
+    graphSystem->onPatchLoaded = [this](GraphSystem::Graphs& loadedGraphs)
+    {
+        std::vector<std::string> tabs;
+        for (const auto& graph : loadedGraphs)
+        {
+            tabs.push_back(graph->getPatchFile());
+        }
+
+        leftPanel->updateTabs(tabs);
+    };
 
     rightPanel = std::make_unique<RightPanel>(canvas.get());
     rightPanel->setName("rightPanel");
@@ -61,13 +76,84 @@ void Editor::init(GraphManager* gm)
 #endif
     };
 
+    newEmptyFile();
+
     Editor::resized();
+}
+
+void Editor::newEmptyFile() const
+{
+    nlohmann::json emptyPatch = {
+        { "nodes", nlohmann::json::array() },
+        { "connections", nlohmann::json::array() }
+    };
+
+    std::string virtualPath = generateUniqueUntitledName();
+    auto shortName = virtualPath.substr(virtualPath.find_last_of('/') + 1);
+
+    auto [ graphObjects, connEdges ] = graphSystem->loadPatch(virtualPath, emptyPatch, false);
+    graphSystem->setActiveGraph(virtualPath);
+    canvas->setPatchName(shortName);
+    canvas->reloadAllCanvasObjects(graphObjects);
+    canvas->reloadConnections(connEdges);
+    canvas->gainFocus();
+    leftPanel->resetScroll();
+}
+
+std::string Editor::generateUniqueUntitledName() const
+{
+    int counter = 1;
+    while (true)
+    {
+        std::string name = "Untitled-" + std::to_string(counter);
+        std::string virtualPath = "virtual://" + name;
+
+        const auto& loaded = graphSystem->getLoadedPatches();
+        bool exists = std::any_of(loaded.begin(), loaded.end(),
+            [&](const std::string& path) { return path == virtualPath; });
+
+        if (!exists)
+            return virtualPath;
+
+        ++counter;
+    }
 }
 
 void Editor::loadFile(const std::string& fileName) const
 {
     if (fileName.empty())
         return;
+
+    auto normalizePath = [](const std::string& in) -> std::string {
+        char out[MAX_PATH];
+        return _fullpath(out, in.c_str(), MAX_PATH) ? std::string(out) : in;
+    };
+
+    auto getStem = [](const std::string& path) -> std::string {
+        size_t slash = path.find_last_of("/\\");
+        std::string file = (slash != std::string::npos) ? path.substr(slash + 1) : path;
+        size_t dot = file.find_last_of('.');
+        return (dot != std::string::npos) ? file.substr(0, dot) : file;
+    };
+
+    std::string absPath = normalizePath(fileName);
+
+    // If the patch is already loaded, load it into the canvas, and make it active
+    for (const std::string& path : graphSystem->getLoadedPatches()) {
+        if (path == absPath || getStem(path) == getStem(absPath)) {
+            if (canvas->getPatchName() == getStem(path))
+                return;
+
+            auto [graphObjects, connEdges] = graphSystem->getGraphDump(path);
+            graphSystem->setActiveGraph(path);
+            canvas->setPatchName(getStem(path));
+            canvas->reloadAllCanvasObjects(graphObjects);
+            canvas->reloadConnections(connEdges);
+            canvas->gainFocus();
+            leftPanel->resetScroll();
+            return;
+        }
+    }
 
     std::ifstream file(fileName);
 
@@ -77,15 +163,11 @@ void Editor::loadFile(const std::string& fileName) const
     try {
         nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, true, true);
         if (!patch.empty()) {
-            auto filePath = std::filesystem::absolute(fileName).string();
-            auto [ graphObjects, connEdges ] = graphManager->setActiveGraph(filePath, patch, false);
+            auto filePath = absolute(fileName).string();
+            auto [ graphObjects, connEdges ] = graphSystem->loadPatch(filePath, patch, false);
 
-            if (!graphManager->wasPatchLoadSuccessful())
-            {
-                std::cerr << "Failed to load graph: " << filePath << std::endl;
-                return;
-            }
-            std::filesystem::path filePathObj(fileName);
+            path filePathObj(fileName);
+            graphSystem->setActiveGraph(filePath);
             canvas->setPatchName(filePathObj.stem().string());
             canvas->reloadAllCanvasObjects(graphObjects);
             canvas->reloadConnections(connEdges);
@@ -109,15 +191,15 @@ void Editor::updateObjectsFromDSP() const
     float sumL = 0.0f, sumR = 0.0f;
     int count = 0;
 
-    while (graphManager->volumeMeterQueue.try_dequeue(peaks))
-    {
-        if (peaks.size() == 2)
-        {
-            sumL += peaks[0];
-            sumR += peaks[1];
-            count++;
-        }
-    }
+    //while (graphManager->volumeMeterQueue.try_dequeue(peaks))
+    //{
+    //    if (peaks.size() == 2)
+    //    {
+    //        sumL += peaks[0];
+    //        sumR += peaks[1];
+    //        count++;
+    //    }
+    //}
 
     if (count > 0)
     {
@@ -138,5 +220,5 @@ void Editor::updateObjectsFromDSP() const
         topBar->setVolumeMeterValue(lastL, lastR);
     }
 
-    topBar->setDSPValue(graphManager->getDspTiming());
+    //topBar->setDSPValue(graphManager->getDspTiming());
 }

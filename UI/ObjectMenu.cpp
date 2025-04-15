@@ -2,6 +2,9 @@
 // Created by alexw on 30/01/2025.
 //
 #include "ObjectMenu.h"
+
+#include <Graph/GraphSystem.h>
+
 #include "Object.h"
 #include "Canvas.h"
 #include "ToolDock.h"
@@ -175,7 +178,7 @@ ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas)
                     return;
                 }
 
-                auto* newAudioNode = editor->graphManager->addObject(itemDef);
+                auto* newAudioNode = editor->graphSystem->getActiveGraph()->addObject(itemDef);
                 if (!newAudioNode)
                 {
                     std::cerr << "Failed to create new Audio Node." << std::endl;

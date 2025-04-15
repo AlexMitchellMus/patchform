@@ -35,15 +35,15 @@ public:
 
             setSize(pingNode->width, pingNode->height);
 
-            pingNode->repaintFromDSP = [this]()
+            pingNode->repaintFromDSP = [_this = pptk::SafePointer(this)]()
             {
-                isDirty.store(true, std::memory_order::release);
+                if (_this)
+                    _this->isDirty.store(true, std::memory_order::release);
             };
         }
 
         ~UI() override
         {
-            //stopFrameTimer();
         };
 
         void updateGraphValues() override

@@ -12,29 +12,28 @@
 #include "../UI_ToolKit/Component.h"
 #include "../UI_ToolKit/Resizer.h"
 
-#include "../Glad/gl.h"
-
-#include <nanovg.h>
-#ifdef NANOVG_GL_IMPLEMENTATION
-#    undef NANOVG_GL_IMPLEMENTATION
-#    include <nanovg_gl_utils.h>
-#    define NANOVG_GL_IMPLEMENTATION 1
-#endif
-
+class LoadedPatchesPanel;
 class ObjectsListViewport;
+class Editor;
 class Canvas;
 class LeftPanel : public pptk::ResizableComponent
 {
 public:
-    explicit LeftPanel(Canvas* canvas);
+    explicit LeftPanel(Editor* ed);
 
     void render(NVGcontext* nvg) override;
 
     void resized() override;
 
+    void updateTabs(std::vector<std::string> tabs);
+
+    void updateSelectedTab() const;
+
     void resetScroll();
 
 private:
-    pptk::SafePointer<Canvas> cnv;
+    Canvas* cnv;
     std::unique_ptr<ObjectsListViewport> objectsList;
+
+    std::unique_ptr<LoadedPatchesPanel> loadedPatchesPanel;
 };

@@ -8,7 +8,7 @@
 #include "portaudio.h"
 #include "rtmidi.h"
 
-#include "../Graph/GraphManager.h"
+#include "../Graph/GraphSystem.h"
 #include "Editor.h"
 #include "../UI_ToolKit/EventManager.h"
 #include "Settings.h"
@@ -71,7 +71,7 @@ private:
     std::unique_ptr<RtMidiIn> midiIn;
     moodycamel::ConcurrentQueue<MidiMessage> midiQueue;
 
-    GraphManager graphManager;
+    GraphSystem graphSystem;
 
     std::unique_ptr<Editor> editor;
     std::unique_ptr<pptk::EventManager> eventManager;

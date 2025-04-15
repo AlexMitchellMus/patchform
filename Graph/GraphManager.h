@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <UI_ToolKit/PlatformHelpers.h>
+#include <filesystem>
 
 #include "json.hpp"
 using json = nlohmann::json;
@@ -277,7 +278,8 @@ public:
     std::vector<Object*> getObjects()
     {
         std::vector<Object*> objects;
-
+        if (!transitioningGraph)
+            return objects;
         for (auto* aNode : transitioningGraph->getObjects())
         {
             if (auto object = reinterpret_cast<Object*>(aNode->getOrCreateUI()))
@@ -286,6 +288,24 @@ public:
             }
         }
         return objects;
+    }
+
+    std::vector<Object*> getActiveObjects()
+    {
+        std::vector<Object*> objects;
+        for (auto* aNode : activeGraph->getObjects())
+        {
+            if (auto object = reinterpret_cast<Object*>(aNode->getOrCreateUI()))
+            {
+                objects.push_back(object);
+            }
+        }
+        return objects;
+    }
+
+    std::vector<Edge*> getConnections() const
+    {
+        return activeGraph ? activeGraph->getConnections() : std::vector<Edge*>{};
     }
 
     const std::string& getPatchFile()

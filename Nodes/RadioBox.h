@@ -70,8 +70,10 @@ public:
 
             setSize(calculateWidth(), calculateHeight());
 
-            radio->repaintFromDSP = [this]() {
-                isDirty.store(true, std::memory_order::release);
+            radio->repaintFromDSP = [_this = pptk::SafePointer(this)]()
+            {
+                if (_this)
+                    _this->isDirty.store(true, std::memory_order::release);
             };
 
             // Update UI when the number of cells changes.

@@ -6,11 +6,16 @@
 
 #include "LeftPanel.h"
 
+#include <Graph/GraphSystem.h>
+
+#include "LoadedPatchesPanel.h"
+
 #include <UI_Toolkit/ComponentViewport.h>
 
 #include "SDL3/SDL.h"
 #include "Object.h"
 #include "Canvas.h"
+#include "Editor.h"
 
 class ObjectItem : public pptk::Component
 {
@@ -52,17 +57,18 @@ class ObjectItem : public pptk::Component
 
     void render(NVGcontext* nvg) override
     {
-        if (isSelected) {
-            const auto selectedCol = nvgRGB(43, 43, 43);
-            nvgDrawRoundedRect(nvg, 8, 4, width - 16, height - 8, selectedCol, selectedCol, 6.0f);
-        }
-        else if (isHovered) {
-            const auto hoveredCol = nvgRGBA(43, 43, 43, 255 * 0.4f);
-            nvgDrawRoundedRect(nvg, 8, 4, width - 16, height - 8, hoveredCol, hoveredCol, 6.0f);
+        if (isSelected || isHovered)
+        {
+            NVGcolor bg = isSelected
+                ? nvgRGB(43, 43, 43)
+                : nvgRGBA(43, 43, 43, static_cast<unsigned char>(255 * 0.4f));
+
+            nvgDrawRoundedRect(nvg, 8, 4, width - 16, height - 8, bg, bg, 6.0f);
         }
 
         nvgFillColor(nvg, nvgRGB(220, 220, 220));
         nvgFontFace(nvg, "Regular");
+        nvgFontSize(nvg, 14.0f);
         nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgText(nvg, 24, ((height - 10) * 0.5f) + 5, name.c_str(), nullptr);
     }
@@ -317,10 +323,18 @@ class ObjectsListViewport : public pptk::ComponentViewport
     }
 };
 
-LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
+void LeftPanel::updateSelectedTab() const
+{
+    loadedPatchesPanel->setSelected(cnv->getPatchName());
+}
+
+LeftPanel::LeftPanel(Editor* ed) : cnv(ed->getCanvas())
 {
     setMinMaxSize(150, 350, 0, 0);
     setResizable(pptk::Resizer::ResizerMode::Right);
+
+    loadedPatchesPanel = std::make_unique<LoadedPatchesPanel>(ed);
+    addComponent(loadedPatchesPanel.get());
 
     if (cnv)
     {
@@ -331,7 +345,7 @@ LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
         });
     }
 
-    objectsList = std::make_unique<ObjectsListViewport>(cnv.get());
+    objectsList = std::make_unique<ObjectsListViewport>(cnv);
     objectsList->setName("object list viewport");
     addComponent(objectsList.get());
 
@@ -343,13 +357,21 @@ LeftPanel::LeftPanel(Canvas* canvas) : cnv(canvas)
 void LeftPanel::resized()
 {
     getResizer().setBounds(getBounds());
-    auto viewportBounds = getBounds().removeFromTop(30);
+
+    loadedPatchesPanel->setBounds(getBounds().withHeight(300));
+
+    auto viewportBounds = getBounds().removeFromTop(300);
     objectsList->setBounds(viewportBounds);
 }
 
 void LeftPanel::resetScroll()
 {
     objectsList->resetViewport();
+}
+
+void LeftPanel::updateTabs(std::vector<std::string> tabs)
+{
+    loadedPatchesPanel->updateTabs(tabs);
 }
 
 void LeftPanel::render(NVGcontext* nvg)
@@ -362,11 +384,11 @@ void LeftPanel::render(NVGcontext* nvg)
     float textX = 24; // Padding from the left edge
     float textY = 40; // Starting Y position with padding from the top
 
-    nvgFontSize(nvg, 14.0f);
-    nvgFontFace(nvg, "SemiBold");
-    nvgTextAlign(nvg, NVG_ALIGN_LEFT);
-    nvgFillColor(nvg, nvgRGB(220, 220, 220));
-    nvgText(nvg, textX, textY, "Objects", nullptr);
+    //nvgFontSize(nvg, 14.0f);
+    //nvgFontFace(nvg, "SemiBold");
+    //nvgTextAlign(nvg, NVG_ALIGN_LEFT);
+    //nvgFillColor(nvg, nvgRGB(220, 220, 220));
+    //nvgText(nvg, textX, textY, "Objects", nullptr);
 
     // Vertical edge line
     nvgBeginPath(nvg);

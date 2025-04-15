@@ -21,15 +21,20 @@ namespace pptk
         
         void handleTime(uint32_t time, uint32_t deltaTime)
         {
-            auto callbacksCopy = timerCallbacks;
+            std::vector<decltype(timerCallbacks)::value_type> callbacksCopy;
+
+            for (const auto& tup : timerCallbacks)
+            {
+                if (std::get<0>(tup)) // SafePointer is valid
+                    callbacksCopy.push_back(tup);
+            }
 
             for (const auto& [componentPtr, callback, id] : callbacksCopy)
             {
-                if (componentPtr)
-                    callback(time, deltaTime);
+                callback(time, deltaTime);
             }
 
-            // Clean up invalid pointers after execution
+            // Remove expired callbacks
             std::erase_if(timerCallbacks, [](const auto& tup) {
                 return !std::get<0>(tup);
             });

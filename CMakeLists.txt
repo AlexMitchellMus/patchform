@@ -14,7 +14,6 @@ else()
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
 endif()
 
-
 # Define the Git command to get the full commit hash
 set(BUILDINFO_CPP ${CMAKE_BINARY_DIR}/GitInfo.cpp)
 
@@ -116,6 +115,7 @@ file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
 add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
+
 target_compile_definitions(PatchformStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
 target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"
@@ -142,6 +142,7 @@ target_link_libraries(PatchformStandalone PRIVATE
         pffft
         rtmidi
 )
+
 target_compile_definitions(PatchformStandalone PRIVATE
         -DPA_USE_ASIO=ON
 )
@@ -153,7 +154,7 @@ if (MSVC)
         set(ASAN_LIB_PATH "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/lib/x64")
         target_link_directories(PatchformStandalone PRIVATE "${ASAN_LIB_PATH}")
 
-        target_compile_options(PatchformStandalone PRIVATE /fsanitize=address /Od /Zi /bigobj)
+        target_compile_options(PatchformStandalone PRIVATE /fsanitize=address /Od /Zi /bigobj /Zc:__cplusplus)
         target_link_options(PatchformStandalone PRIVATE /INFERASANLIBS)
 
         # Force all static libs to match runtime (important!)
@@ -165,7 +166,7 @@ if (MSVC)
         target_compile_options(PatchformStandalone PRIVATE
                 /std:c++latest
                 /Zc:preprocessor
-                $<$<CONFIG:Debug>:/Od /Zi /RTC1 /bigobj>
+                $<$<CONFIG:Debug>:/Od /Zi /RTC1 /bigobj /Zc:__cplusplus>
                 $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast /bigobj>
                 $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL /bigobj>
         )

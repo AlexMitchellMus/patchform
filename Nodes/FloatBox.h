@@ -35,9 +35,10 @@ public:
         {
             setSize(150, getHeight());
 
-            reinterpret_cast<FloatBox*>(audioNode)->repaintFromDSP = [this]()
+            reinterpret_cast<FloatBox*>(audioNode)->repaintFromDSP = [_this = pptk::SafePointer(this)]()
             {
-                isDirty.store(true);
+                if (_this)
+                    _this->isDirty.store(true);
             };
         };
 

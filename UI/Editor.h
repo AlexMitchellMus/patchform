@@ -22,13 +22,6 @@
 #include "Object.h"
 #include "TopBar.h"
 
-#include <nanovg.h>
-#ifdef NANOVG_GL_IMPLEMENTATION
-#    undef NANOVG_GL_IMPLEMENTATION
-#    include <nanovg_gl_utils.h>
-#    define NANOVG_GL_IMPLEMENTATION 1
-#endif
-
 #ifdef max
 #undef max
 #endif
@@ -60,13 +53,13 @@ public:
     NVGcolor darkenBg = nvgRGBA(0, 0, 0, 80);
 };
 
-class GraphManager;
+class GraphSystem;
 class WindowPeer;
 class Editor : public pptk::RootComponent {
 public:
     Editor(WindowPeer* peer);
 
-    void init(GraphManager* gm);
+    void init(GraphSystem* gm);
 
     void updateObjectsFromDSP() const;
 
@@ -80,10 +73,16 @@ public:
         }
     }
 
-    Canvas* getActiveCanvas() const
+    // Get the editors canvas (it only has one, loaded / changing a patch reloads into same canvas)
+    Canvas* getCanvas() const
     {
         return canvas.get();
     }
+
+    // Make a new empty file
+    void newEmptyFile() const;
+
+    std::string generateUniqueUntitledName() const;
 
     void loadFile(const std::string& file) const;
 
@@ -152,7 +151,7 @@ public:
         repaint();
     }
 
-    GraphManager* graphManager;
+    GraphSystem* graphSystem;
 
 private:
     std::unique_ptr<ModalBackground> dialogWindowModalBackground;

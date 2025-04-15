@@ -21,7 +21,7 @@ class Lasso;
 class Object;
 class Port;
 class CanvasItem;
-class GraphManager;
+class GraphSystem;
 class CanvasInteractionLayer;
 class Edge;
 
@@ -36,7 +36,7 @@ public:
 
     using ObjectChangedListeners = std::vector<std::function<void()>>;
 
-    Canvas(GraphManager* gm);
+    Canvas(GraphSystem* gm);
 
     std::vector<Object*> getObjects() const;
     std::vector<Object*> getSelectedObjects() const;
@@ -115,7 +115,7 @@ private:
     pptk::Point getMousePositionOnCanvas();
 
     // TODO: Move graph manager outside of canvas!
-    GraphManager* graphManager;
+    GraphSystem* graphSystem;
 
     void resized() override;
 

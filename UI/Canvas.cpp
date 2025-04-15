@@ -15,6 +15,7 @@
 #include "Canvas.h"
 
 #include <glaze/core/common.hpp>
+#include <Graph/GraphSystem.h>
 
 #include "Object.h"
 #include "Connection.h"
@@ -23,7 +24,7 @@
 #include "../Graph/GraphManager.h"
 #include "../Graph/Edge.h"
 
-Canvas::Canvas(GraphManager* gm) : graphManager(gm)
+Canvas::Canvas(GraphSystem* gm) : graphSystem(gm)
 {
     objectsLayer.setSize(infinteCanvasSize, infinteCanvasSize);
     connectionsLayer.setSize(infinteCanvasSize, infinteCanvasSize);
@@ -35,6 +36,11 @@ Canvas::Canvas(GraphManager* gm) : graphManager(gm)
     connectionsLayer.setInterceptsMouseClicks(false, true);
 
     setWantsFocus(true);
+
+    if (auto* activeGraph = gm->getActiveGraph())
+    {
+        setPatchName(activeGraph->getPatchFile());
+    }
 }
 
 std::vector<Object*> Canvas::getObjects() const
@@ -335,7 +341,7 @@ void Canvas::deleteSelectedObjects()
         }
     }
 
-    auto graphManager = reinterpret_cast<Editor*>(getRootComponent())->graphManager;
+    auto graphManager = reinterpret_cast<Editor*>(getRootComponent())->graphSystem->getActiveGraph();
 
     auto newConnState = graphManager->removeObjects(idsToDelete, edgeHashToDelete);
 
@@ -662,7 +668,10 @@ void Canvas::addObject(Object* toAdd, pptk::Point position)
 {
     std::cout << "adding object into graph: " << toAdd->getObjectDefinition() << std::endl;
 
-    auto audioObject = graphManager->addObject(toAdd->getObjectDefinition());
+    if (!graphSystem->getActiveGraph())
+        return;
+
+    auto audioObject = graphSystem->getActiveGraph()->addObject(toAdd->getObjectDefinition());
 
     if (audioObject == nullptr)
         return;
@@ -706,7 +715,6 @@ void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
 
 void Canvas::reloadConnections(std::vector<Edge*>& edges)
 {
-    std::cout << "reloading ALL connections" << std::endl;
     connections.clear();
 
     // Optionally, build a mapping for faster lookup:
@@ -794,7 +802,7 @@ void Canvas::addMultipleConnections(std::vector<std::tuple<Port*, Port*>> connec
         newConnections.emplace_back(outputNodeID, origin->getPortNum(), inputNodeID, dest->getPortNum());
     }
 
-    auto newConnState = graphManager->connectMultiple(newConnections);
+    auto newConnState = graphSystem->getActiveGraph()->connectMultiple(newConnections);
 
     reloadConnections(newConnState);
 }
@@ -817,7 +825,7 @@ void Canvas::pasteFromClipboard()
     try {
         auto clipboardGraph = json::parse(clipboardText);
 
-        auto [ pastedObjects, allObjects, allConnections ] = graphManager->pasteGraph(clipboardGraph);
+        auto [ pastedObjects, allObjects, allConnections ] = graphSystem->getActiveGraph()->pasteGraph(clipboardGraph);
 
         pptk::Point mousePos = getMousePositionOnCanvas();
 
@@ -874,7 +882,7 @@ void Canvas::copySelectionToClipboard() const
         if (auto* obj = dynamic_cast<Object*>(node))
             selectedNodes.push_back(obj->nodeID);
     }
-    auto selectedGraph = graphManager->copySelected(selectedNodes);
+    auto selectedGraph = graphSystem->getActiveGraph()->copySelected(selectedNodes);
 
     SDL_SetClipboardText(selectedNodes.size() ? to_string(selectedGraph).c_str() : "");
 }
@@ -891,8 +899,8 @@ void Canvas::duplicateSelection()
     if (selectedNodes.empty())
         return;
 
-    auto clipboardGraph = graphManager->copySelected(selectedNodes);
-    auto [ duplicatedObjects, allObjects, allConnections ] = graphManager->pasteGraph(clipboardGraph);
+    auto clipboardGraph = graphSystem->getActiveGraph()->copySelected(selectedNodes);
+    auto [ duplicatedObjects, allObjects, allConnections ] = graphSystem->getActiveGraph()->pasteGraph(clipboardGraph);
 
     const float offset = 20.0f;
 

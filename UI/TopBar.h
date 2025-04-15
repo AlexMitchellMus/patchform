@@ -83,7 +83,7 @@ private:
 
 
 class AboutDialog;
-
+class Editor;
 class MainMenu : public pptk::PopupComponent
 {
 public:
@@ -95,6 +95,12 @@ public:
         MenuItem(const std::string& itemName) : name(itemName)
         {
         };
+
+        void setActivated(bool shouldBeActive)
+        {
+            isActive = shouldBeActive;
+            repaint();
+        }
 
         void mouseEnter(pptk::CompEvent& e) override
         {
@@ -110,12 +116,13 @@ public:
 
         void mouseButtonDown(pptk::CompEvent& e) override
         {
-            onClick();
+            if (isActive)
+                onClick();
         }
 
         void render(NVGcontext* vg) override
         {
-            if (isHovered)
+            if (isHovered && isActive)
             {
                 nvgBeginPath(vg);
                 nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), outline, outline, 8.0f);
@@ -126,40 +133,53 @@ public:
             nvgFontSize(vg, 16.0f);
             nvgFontFace(vg, "Regular");
             nvgTextAlign(vg, NVG_ALIGN_LEFT);
-            nvgFillColor(vg, nvgRGB(220, 220, 220)); // Text color
+            auto col = isActive ? nvgRGB(255, 255, 255) : nvgRGB(100, 100, 100);
+            nvgFillColor(vg, col); // Text color
             nvgText(vg, 10, 22, name.c_str(), nullptr);
         }
     private:
         std::string name;
         NVGcolor outline = nvgRGB(53, 53, 53);
 
+        bool isActive = true;
         bool isHovered = false;
     };
 
-    MainMenu();
+    MainMenu(Editor* ed);
 
     void resized() override
     {
+        auto offset = [](float& value)
+        {
+            value += 35;
+        };
+
         auto b = getBounds();
         b.h = 30;
         b.x = 5;
         b.y = 5;
         b.w = getWidth() - 10;
+        if (newPatch)
+            newPatch->setBounds(b);
+        offset(b.y);
         if (loadPatch)
             loadPatch->setBounds(b);
-        b.y += 35;
+        offset(b.y);
         if (savePatch)
             savePatch->setBounds(b);
-        b.y += 35;
+        offset(b.y);
         if (saveAsPatch)
             saveAsPatch->setBounds(b);
-        b.y += 35;
+        offset(b.y);
+        if (closePatch)
+            closePatch->setBounds(b);
+        offset(b.y);
         if (applicationSettings)
             applicationSettings->setBounds(b);
-        b.y += 35;
+        offset(b.y);
         if (aboutApp)
             aboutApp->setBounds(b);
-        b.y += 35;
+        offset(b.y);
         if (quitApplication)
             quitApplication->setBounds(b);
     }
@@ -172,9 +192,11 @@ public:
     }
 
 private:
+    std::unique_ptr<MenuItem> newPatch;
     std::unique_ptr<MenuItem> loadPatch;
     std::unique_ptr<MenuItem> savePatch;
     std::unique_ptr<MenuItem> saveAsPatch;
+    std::unique_ptr<MenuItem> closePatch;
     std::unique_ptr<MenuItem> applicationSettings;
     std::unique_ptr<MenuItem> aboutApp;
     std::unique_ptr<MenuItem> quitApplication;
@@ -186,57 +208,12 @@ private:
     std::unique_ptr<AboutDialog> aboutDialog;
 };
 
+class Editor;
 class TopBar : public pptk::Component {
 public:
     std::function<void(bool)> hideShowPanels = [](bool){};
 
-    TopBar()
-    {
-        mainMenuButton = std::make_unique<ToggleButton>("A", "A");
-        mainMenuButton->setName("MainMenu");
-        mainMenuButton->onClick = [this]()
-        {
-            if (mainMenu && mainMenu->isVisible()
-            )
-            {
-                setPopupComponent(nullptr);
-                mainMenuButton->setActive(false);
-                return;
-            }
-
-            auto popup = std::make_unique<MainMenu>();
-            mainMenu = popup.get();
-            setPopupComponent(std::move(popup));
-            getRootComponent()->addComponent(mainMenu.get());
-            mainMenu->registerMouseListener(mainMenuButton.get());
-            mainMenu->setPosition(18, 50);
-            mainMenuButton->setActive(true);
-        };
-
-        addComponent(mainMenuButton.get());
-
-        undo = std::make_unique<ToggleButton>("B", "B");
-        undo->setName("Undo");
-        addComponent(undo.get());
-
-        redo = std::make_unique<ToggleButton>("C", "C");
-        redo->setName("Redo");
-        addComponent(redo.get());
-
-        volumeMeter = std::make_unique<MainVolumeMeter>();
-        addComponent(volumeMeter.get());
-
-        hideSidePanelsToggle = std::make_unique<ToggleButton>("D", "D");
-        hideSidePanelsToggle->setName("HidePanels");
-        addComponent(hideSidePanelsToggle.get());
-
-        hideSidePanelsToggle->onToggle = [this](const bool state)
-        {
-            hideShowPanels(state);
-        };
-
-        TopBar::resized();
-    }
+    explicit TopBar(Editor* ed);
 
     void setDSPValue(float dspVal)
     {

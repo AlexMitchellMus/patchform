@@ -29,8 +29,7 @@
 PatchformApp* PatchformApp::instance = nullptr;
 
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
-    : graphManager(sampleRate, frameCount)
-    , sampleRate(sampleRate)
+    : sampleRate(sampleRate)
     , frameCount(frameCount)
     ,windowWidth(1920)
     , windowHeight(1080)
@@ -240,7 +239,7 @@ int PatchformApp::audioCallback(const void* input, void* output,
     float* outputChannel0 = (out && outputChannels > 0 && out[0] && !bypassMode) ? out[0] : bypassBuffer;
     const float* inputChannel0 = (in && inputChannels > 0 && in[0] && !bypassMode) ? in[0] : bypassBuffer;
 
-    app->graphManager.process(inputChannel0, outputChannel0, frameCount, midiMessages);
+    app->graphSystem.processAll(inputChannel0, outputChannel0, frameCount, midiMessages);
 
     if (statusFlags & (paOutputUnderflow | paInputOverflow))
         std::cerr << "Audio underflow or overflow detected" << std::endl;
@@ -510,7 +509,7 @@ bool PatchformApp::initUI() {
 
     editor->cacheFontMetrics(nvg, fonts, { 14.0f, 16.0f, 100.0f });
 
-    editor->init(&graphManager);
+    editor->init(&graphSystem);
 
     eventManager = std::make_unique<pptk::EventManager>(editor.get());
 
