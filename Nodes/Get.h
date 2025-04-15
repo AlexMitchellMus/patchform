@@ -51,6 +51,12 @@ public:
         return nodeCreationData;
     }
 
+    void cleanupAudio() override
+    {
+
+        context->makeDataPersistent(savedData, false, nodeID);
+    }
+
     void processAudio(const float* in, float* out, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const auto& aEvents = inputPortBuffers[0]->getEvents();

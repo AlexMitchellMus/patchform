@@ -24,6 +24,10 @@ class ListBox final : public AudioNode
 
     float value;
 
+    BoolParameter* emitOnLoadParam = nullptr;
+
+    bool firstRun = false;
+
     bool isDefaultUI() const override { return false; };
 
 #ifdef PATCHFORM_WITH_GUI
@@ -269,11 +273,18 @@ public:
         listText.reserve(1024);
 
         listText = objParams.value("list", "");
+
+        bool emitOnLoad = objParams.value("emitOnLoad", false);
+        emitOnLoadParam   = addParameter<BoolParameter>("emitOnLoad", emitOnLoad);
+
+        eventOnLoad = true;
+        firstRun = emitOnLoad;
     }
 
     json getSerializedNode() override
     {
         nodeCreationData["list"] = listText;
+        nodeCreationData["emitOnLoad"] = emitOnLoadParam->getValue();
         return nodeCreationData;
     }
 
@@ -390,6 +401,12 @@ public:
         return first;
     }
 
+    void cleanupAudio() override
+    {
+        context->makeDataPersistent(savedData, false, nodeID);
+    }
+
+
     // processAudio receives DSP events that replace the list values.
     void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
@@ -398,6 +415,16 @@ public:
             const char* p = listText.c_str();
             savedData = parseChain(p, context->eventPool);
             context->makeDataPersistent(savedData, true, nodeID);
+
+            if (firstRun)
+            {
+                if (Event* e = context->eventPool.getFreeEvent())
+                {
+                    e->data = savedData;
+                    addEvent(0, e);
+                }
+                firstRun = false;
+            }
         }
 
         const auto& aEvents = inputPortBuffers[0]->getEvents();
