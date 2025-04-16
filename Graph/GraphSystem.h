@@ -45,12 +45,24 @@ public:
 
     GraphManager* getActiveGraph() const { return activeGraph; }
 
+    void unloadActivePatch()
+    {
+        for (auto& mgr : graphManagers)
+        {
+            if (mgr.get() == activeGraph)
+                mgr->flaggedForDeletion.store(true);
+        }
+    }
+
     void processAll(const float* inBuffer, float* outBuffer, unsigned long frameCount, std::vector<MidiMessage>& midi)
     {
         dspTimer.start();
 
         for (auto& mgr : graphManagers)
-            mgr->process(inBuffer, outBuffer, frameCount, midi);
+        {
+            if (!mgr->flaggedForDeletion.load())
+                mgr->process(inBuffer, outBuffer, frameCount, midi);
+        }
 
         dspTimer.end(frameCount, sampleRate);
 

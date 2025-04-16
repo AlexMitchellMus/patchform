@@ -111,10 +111,15 @@ MainMenu::MainMenu(Editor* ed)
                 outputFile.close();
 
 
+                // First change the filepath of the current patch
                 graphManager->setFilePath(newPath);
-                const auto names = ed->graphSystem->getLoadedPatches();
 
+                // Update the names of the left tab bar, this will repaint it
+                const auto names = ed->graphSystem->getLoadedPatches();
                 ed->updateTabs(names);
+
+                // Set the patch name as the active one
+                // This will select the tab with the new name
                 ed->getCanvas()->setPatchName(FilesystemHelpers::getStem(newPath));
 
                 close();
@@ -125,6 +130,12 @@ MainMenu::MainMenu(Editor* ed)
 
     closePatch = std::make_unique<MenuItem>("Close patch");
     addComponent(closePatch.get());
+
+    closePatch->onClick = [this]()
+    {
+        if (auto* ed = findParentOfClass<Editor>())
+            ed->graphSystem->unloadActivePatch();
+    };
 
     applicationSettings = std::make_unique<MenuItem>("Settings...");
     addComponent(applicationSettings.get());
