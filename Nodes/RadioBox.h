@@ -24,18 +24,20 @@ private:
     int selectedIndex = 0;
     std::atomic<int> radioCount = 8;
     std::atomic<bool> emitOnClick = false;
+    // TODO: layout should be atomic!
     LayoutType layout = LayoutType::Horizontal;
 
     IntParameter* radioCountParam = nullptr;
-    StringParameter* layoutParam = nullptr;
+    ListParameter* layoutParam = nullptr;
     BoolParameter* emitOnClickParam = nullptr;
+
+    std::atomic<bool> isDirty = false;
+    std::atomic<bool> hasUI = false;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
 
     bool isDefaultUI() const override { return false; }
-
-    std::function<void()> repaintFromDSP = [](){};
 
     // Lock-free queues for UI -> Audio and vice versa.
     moodycamel::ConcurrentQueue<int> eventQueue;
@@ -55,7 +57,6 @@ public:
         const int gap = 2 * boxMargin;
 
     public:
-        std::atomic<bool> isDirty = std::atomic<bool>(false);
 
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
@@ -69,12 +70,6 @@ public:
             boxHeight = boxWidth;
 
             setSize(calculateWidth(), calculateHeight());
-
-            radio->repaintFromDSP = [_this = pptk::SafePointer(this)]()
-            {
-                if (_this)
-                    _this->isDirty.store(true, std::memory_order::release);
-            };
 
             // Update UI when the number of cells changes.
             radio->radioCountParam->updateNodeUI = [this](const std::variant<int, float, std::string>& value) mutable {
@@ -157,11 +152,9 @@ public:
 
         void updateGraphValues() override
         {
-            if (isDirty.load())
+            const auto radio = reinterpret_cast<RadioBox*>(audioNode);
+            if (radio->isDirty.exchange(false))
             {
-                isDirty.store(false, std::memory_order::release);
-                auto radio = reinterpret_cast<RadioBox*>(audioNode);
-
                 int receivedEvent = 0;
                 while (radio->eventQueueFromDSP.try_dequeue(receivedEvent))
                 {
@@ -254,10 +247,20 @@ public:
                 nvgDrawRoundedRect(nvg, x, y, boxWidth, boxHeight, col, col, 4);
             }
         }
+        ~UI() override
+        {
+            const auto radio = reinterpret_cast<RadioBox*>(audioNode);
+            radio->hasUI.store(false);
+        }
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
+        hasUI.store(true);
+
+        eventQueueFromDSP.enqueue(selectedIndex);
+        isDirty.store(true);
+
         return std::make_unique<UI>(this);
     }
 #endif
@@ -288,7 +291,7 @@ public:
         emitOnClick.store(JsonHelpers::getBoolOrIntFallback(objParams, "emitOnClick", true));
 
         radioCountParam = addParameter<IntParameter>("Cells:", radioCount, 1, 1024);
-        layoutParam = addParameter<StringParameter>("Layout:", layoutName);
+        layoutParam = addParameter<ListParameter>("Layout:", std::vector<std::string>{ "horizontal", "vertical", "grid" }, layoutName);
         emitOnClickParam = addParameter<BoolParameter>("emitOnClick:", emitOnClick);
 
         emitOnClickParam->informNodeOfChange = [this]()
@@ -299,6 +302,11 @@ public:
         radioCountParam->informNodeOfChange = [this]()
         {
             radioCount.store(radioCountParam->getValue());
+        };
+
+        layoutParam->informNodeOfChange = [this]()
+        {
+            layout = getLayoutType(layoutParam->getAsString());
         };
 
         addInputPort("input", AudioPort::PortType::Data);
@@ -339,8 +347,11 @@ public:
                     addEvent(0, outEvent);
                 }
             }
-            eventQueueFromDSP.enqueue(selectedIndex);
-            repaintFromDSP();
+            if (hasUI.load())
+            {
+                eventQueueFromDSP.enqueue(selectedIndex);
+                isDirty.store(true);
+            }
         }
 
         int newIndex;

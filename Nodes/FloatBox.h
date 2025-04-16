@@ -17,7 +17,8 @@ class FloatBox final : public AudioNode
 
     float value;
 
-    std::function<void()> repaintFromDSP = [](){};
+    std::atomic<bool> isDirty = false;
+    std::atomic<bool> hasUI = false;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -29,25 +30,18 @@ public:
 
     class UI final : public AudioNode::UI
     {
-        std::atomic<bool> isDirty = std::atomic<bool>(false);
+        std::string value;
     public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
             setSize(150, getHeight());
-
-            reinterpret_cast<FloatBox*>(audioNode)->repaintFromDSP = [_this = pptk::SafePointer(this)]()
-            {
-                if (_this)
-                    _this->isDirty.store(true);
-            };
         };
 
         void updateGraphValues() override
         {
-            if (isDirty.load())
+            auto floatBox = reinterpret_cast<FloatBox*>(audioNode);
+            if (floatBox->isDirty.exchange(false))
             {
-                auto floatBox = reinterpret_cast<FloatBox*>(audioNode);
-
                 std::vector<float> buffer(16); // Adjust size as needed
                 size_t count = floatBox->queueFromDSP.try_dequeue_bulk(buffer.begin(), buffer.size());
 
@@ -76,12 +70,17 @@ public:
 
             nvgText(nvg, 10, height / 2, value.c_str(), nullptr);
         }
-    private:
-        std::string value;
+
+        ~UI() override
+        {
+            const auto floatBox = reinterpret_cast<FloatBox*>(audioNode);
+            floatBox->hasUI.store(false);
+        }
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
+        hasUI.store(true);
         return std::make_unique<UI>(this);
     };
 #endif
@@ -103,7 +102,10 @@ public:
                 queueFromDSP.enqueue(event->getAtomValue(0));
                 addEvent(0, event);
             }
-            repaintFromDSP();
+            if (hasUI.load())
+            {
+                isDirty.store(true);
+            }
         }
     }
 #endif

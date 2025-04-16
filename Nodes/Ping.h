@@ -14,7 +14,8 @@ class Ping final : public AudioNode
     DEFINE_AND_REGISTER_NODE("Ping", "png", false);
     DEFINE_NODE_ALIASES("ping");
 
-    std::function<void()> repaintFromDSP = [](){};
+    std::atomic<bool> isDirty = false;
+    std::atomic<bool> hasUI = false;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -27,32 +28,25 @@ public:
 
     class UI final : public AudioNode::UI
     {
-        std::atomic<bool> isDirty = std::atomic<bool>(false);
     public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
             auto pingNode = static_cast<Ping*>(node);
 
             setSize(pingNode->width, pingNode->height);
-
-            pingNode->repaintFromDSP = [_this = pptk::SafePointer(this)]()
-            {
-                if (_this)
-                    _this->isDirty.store(true, std::memory_order::release);
-            };
         }
 
         ~UI() override
         {
+            auto pingNode = reinterpret_cast<Ping*>(audioNode);
+            pingNode->hasUI.store(false);
         };
 
         void updateGraphValues() override
         {
-            if (isDirty.load())
+            auto ping = reinterpret_cast<Ping*>(audioNode);
+            if (ping->isDirty.exchange(false))
             {
-                isDirty.store(false, std::memory_order::release);
-                auto ping = reinterpret_cast<Ping*>(audioNode);
-
                 bool receivedEvent = false;
                 if (ping->eventQueueFromDSP.try_dequeue(receivedEvent))
                 {
@@ -115,6 +109,7 @@ public:
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
+        hasUI.store(true);
         return std::make_unique<UI>(this);
     };
 #endif
@@ -149,8 +144,11 @@ public:
                 // Forward the same event from input to output (this should work, but just for now lets see how it goes)
                 addEvent(0, ev);
             }
-            eventQueueFromDSP.enqueue(true);
-            repaintFromDSP();
+            if (hasUI.load())
+            {
+                eventQueueFromDSP.enqueue(true);
+                isDirty.store(true);
+            }
         }
 
         bool newValue;

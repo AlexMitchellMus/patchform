@@ -16,8 +16,10 @@ public:
     std::atomic<bool> holdMode = false;
     BoolParameter* holdModeParam = nullptr;
 
+    std::atomic<bool> isDirty = false;
+    std::atomic<bool> hasUI = false;
+
 #ifdef PATCHFORM_WITH_GUI
-    std::function<void()> repaintFromDSP = [](){};
     moodycamel::ConcurrentQueue<int> eventQueue;
     moodycamel::ConcurrentQueue<int> eventQueueFromDSP;
 
@@ -38,18 +40,11 @@ public:
         std::atomic<int> noteState[128] = {};
 
     public:
-        std::atomic<bool> isDirty = false;
-
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
             setSize(getKeyboardWidth(baseMidiNote, totalKeys, keyWidth), keyHeight);
 
             auto kb = reinterpret_cast<Keyboard*>(audioNode);
-            kb->repaintFromDSP = [_this = pptk::SafePointer(this)]()
-            {
-                if (_this)
-                    _this->isDirty.store(true);
-            };
 
             kb->isVerticalParam->updateNodeUI = [this](const std::variant<int, float, std::string>& value) mutable
             {
@@ -83,11 +78,17 @@ public:
             };
         }
 
+        ~UI() override
+        {
+            const auto kb = reinterpret_cast<Keyboard*>(audioNode);
+            kb->hasUI.store(false);
+        }
+
         void updateGraphValues() override
         {
-            if (isDirty.exchange(false))
+            auto kb = reinterpret_cast<Keyboard*>(audioNode);
+            if (kb->isDirty.exchange(false))
             {
-                auto kb = reinterpret_cast<Keyboard*>(audioNode);
                 int note = 0;
                 while (kb->eventQueueFromDSP.try_dequeue(note))
                 {
@@ -176,13 +177,10 @@ public:
             auto* kb = reinterpret_cast<Keyboard*>(audioNode);
             if (!holdModeVal && lastNotePressed >= 0)
             {
-                if (lastNotePressed >= 0)
-                {
-                    kb->eventQueue.enqueue(-lastNotePressed); // negative = note-off
-                    kb->setNodeDirty();
-                    repaint();
-                    lastNotePressed = -1;
-                }
+                kb->eventQueue.enqueue(-lastNotePressed); // negative = note-off
+                kb->setNodeDirty();
+                repaint();
+                lastNotePressed = -1;
             }
 
             AudioNode::UI::mouseButtonUp(e);
@@ -268,7 +266,7 @@ public:
                 drawHorizontal(vg);
         }
 
-        void drawVertical(NVGcontext* vg)
+        void drawVertical(NVGcontext* vg) const
         {
             auto* kb = reinterpret_cast<Keyboard*>(audioNode);
             const auto white = nvgRGB(200, 200, 200);
@@ -354,9 +352,8 @@ public:
             }
         }
 
-        void drawHorizontal(NVGcontext* vg)
+        void drawHorizontal(NVGcontext* vg) const
         {
-            auto* kb = reinterpret_cast<Keyboard*>(audioNode);
             int whiteIndex = 0;
 
             const auto white = nvgRGB(200, 200, 200);
@@ -436,19 +433,19 @@ public:
             }
         }
 
-        bool isBlackKey(int midiNote)
+        static bool isBlackKey(const int midiNote)
         {
             int noteInOctave = midiNote % 12;
             return noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8 || noteInOctave == 10;
         }
 
-        bool isWhiteKeyAdjacent(int midiNote)
+        static bool isWhiteKeyAdjacent(const int midiNote)
         {
             int noteInOctave = midiNote % 12;
             return noteInOctave == 5 || noteInOctave == 0;
         }
 
-        int getKeyboardWidth(int startNote, int totalKeys, int keyWidth)
+        static int getKeyboardWidth(const int startNote, const int totalKeys, const int keyWidth)
         {
             int whiteKeyCount = 0;
 
@@ -482,6 +479,7 @@ public:
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
+        hasUI.store(true);
         return std::make_unique<UI>(this);
     }
 #endif
@@ -534,8 +532,11 @@ public:
             }
 
 #ifdef PATCHFORM_WITH_GUI
-            eventQueueFromDSP.enqueue(isOn ? note : -note);
-            repaintFromDSP();
+            if (hasUI.load())
+            {
+                eventQueueFromDSP.enqueue(isOn ? note : -note);
+                isDirty.store(true);
+            }
 #endif
         }
 
@@ -565,8 +566,11 @@ public:
                     addEvent(0, e);
                 }
             }
-            eventQueueFromDSP.enqueue(isNoteOn ? note : -note);
-            repaintFromDSP();
+            if (hasUI.load())
+            {
+                eventQueueFromDSP.enqueue(isNoteOn ? note : -note);
+                isDirty.store(true);
+            }
         }
     }
 #endif
