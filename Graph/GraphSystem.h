@@ -2,71 +2,119 @@
 
 #include "GraphManager.h"
 #include "DSPTimer.h"
-
 #include <filesystem>
-using namespace std::filesystem;
+#include <atomic>
+#include <memory>
 
 class GraphSystem
 {
 public:
-    using Graphs = std::vector<std::unique_ptr<GraphManager>>;
+    using Graphs = std::vector<std::shared_ptr<GraphManager>>;
 
-    // Load a patch and add a new graph to the system
     std::tuple<std::vector<Object*>, std::vector<Edge*>> loadPatch(const std::string& path, const json& patch, bool logVerbose)
     {
-        auto manager = std::make_unique<GraphManager>(sampleRate, frameCount);
+        cleanupDeletedGraphs();
+
+        auto manager = std::make_shared<GraphManager>(sampleRate, frameCount);
         auto* ptr = manager.get();
 
         const auto [objects, conns] = ptr->setActiveGraph(path, patch, logVerbose);
         if (!ptr->wasPatchLoadSuccessful())
-            return { };
+            return {};
 
-        graphManagers.push_back(std::move(manager));
+        graphManagersUI.push_back(manager);
+        activeGraph = ptr;
 
-        activeGraph = graphManagers.back().get();
-
-        onPatchLoaded(graphManagers);
+        graphListNeedsSwap.store(true, std::memory_order_release);
+        onPatchLoaded(graphManagersUI);
 
         return {objects, conns};
     }
 
-    void setActiveGraph(const std::string& path)
-    {
-        for (const auto& mgr : graphManagers)
-        {
-            if (mgr->getPatchFile() == path)
-            {
-                activeGraph = mgr.get();
-                return;
-            }
-        }
-        std::cerr << "setActiveGraph: No graph found for path: " << path << std::endl;
-    }
-
-    GraphManager* getActiveGraph() const { return activeGraph; }
-
     void unloadActivePatch()
     {
-        for (auto& mgr : graphManagers)
+        int indexToRemove = -1;
+
+        for (size_t i = 0; i < graphManagersUI.size(); ++i)
         {
-            if (mgr.get() == activeGraph)
-                mgr->flaggedForDeletion.store(true);
+            if (graphManagersUI[i].get() == activeGraph)
+            {
+                graphManagersUI[i]->flaggedForDeletion.store(true);
+                indexToRemove = static_cast<int>(i);
+                break;
+            }
         }
+
+        activeGraph = nullptr;
+
+        if (indexToRemove != -1)
+        {
+            size_t nextIndex =
+                (indexToRemove > 0) ? indexToRemove - 1 :
+                (graphManagersUI.size() > 1 ? 1 : static_cast<size_t>(-1));
+
+            if (nextIndex < graphManagersUI.size() &&
+                !graphManagersUI[nextIndex]->flaggedForDeletion.load())
+            {
+                activeGraph = graphManagersUI[nextIndex].get();
+            }
+        }
+
+        graphListNeedsSwap.store(true, std::memory_order_release);
+    }
+
+
+    void cleanupDeletedGraphs()
+    {
+        std::erase_if(graphManagersUI, [](const auto& mgr) {
+            return mgr->flaggedForDeletion.load();
+        });
     }
 
     void processAll(const float* inBuffer, float* outBuffer, unsigned long frameCount, std::vector<MidiMessage>& midi)
     {
+        if (graphListNeedsSwap.load(std::memory_order_acquire))
+        {
+            graphManagersAudio = std::make_shared<Graphs>(graphManagersUI);
+            graphListNeedsSwap.store(false, std::memory_order_release);
+        }
+
         dspTimer.start();
 
-        for (auto& mgr : graphManagers)
+        for (auto& mgr : *graphManagersAudio)
         {
+            // FIXME: We don't want to check each graph if it's valid, however it's only for a small amount of loaded patches (hopefully)
             if (!mgr->flaggedForDeletion.load())
                 mgr->process(inBuffer, outBuffer, frameCount, midi);
         }
 
         dspTimer.end(frameCount, sampleRate);
-
         processPeak(outBuffer, frameCount);
+    }
+
+    std::function<void(Graphs&)> onPatchLoaded = [](Graphs&) {};
+
+    std::vector<std::string> getLoadedPatches() const
+    {
+        std::vector<std::string> paths;
+        for (const auto& mgr : graphManagersUI)
+        {
+            if (!mgr->flaggedForDeletion.load())
+                paths.push_back(mgr->getPatchFile());
+        }
+        return paths;
+    }
+
+    GraphManager* getActiveGraph() const { return activeGraph; }
+
+    std::tuple<std::vector<Object*>, std::vector<Edge*>> getGraphDump(const std::string& path)
+    {
+        for (auto& mgr : graphManagersUI)
+        {
+            if (mgr->getPatchFile() == path)
+                return {mgr->getActiveObjects(), mgr->getConnections()};
+        }
+        return {};
     }
 
     void setSampleRateAndBlockSize(int sr, unsigned long bs)
@@ -75,26 +123,17 @@ public:
         frameCount = bs;
     }
 
-    std::function<void(Graphs&)> onPatchLoaded = [](Graphs&){};
-
-    std::vector<std::string> getLoadedPatches() const
+    void setActiveGraph(const std::string& path)
     {
-        std::vector<std::string> paths;
-        for (const auto& mgr : graphManagers)
-            paths.push_back(mgr->getPatchFile());
-        return paths;
-    }
-
-    std::tuple<std::vector<Object*>, std::vector<Edge*>> getGraphDump(const std::string& path)
-    {
-        for (auto& mgr : graphManagers)
+        for (const auto& mgr : graphManagersUI)
         {
             if (mgr->getPatchFile() == path)
             {
-                return { mgr->getActiveObjects(), mgr->getConnections() };
+                activeGraph = mgr.get();
+                return;
             }
         }
-        return {};
+        std::cerr << "setActiveGraph: No graph found for path: " << path << std::endl;
     }
 
     float getDspTiming() const
@@ -119,7 +158,7 @@ private:
         if (++peakFrameCounter >= kUpdateInterval)
         {
             peakFrameCounter = 0;
-            volumeMeterQueue.enqueue(std::vector<float>{accumulatedPeakL, accumulatedPeakR});
+            volumeMeterQueue.enqueue({accumulatedPeakL, accumulatedPeakR});
             accumulatedPeakL = accumulatedPeakR = 0.0f;
         }
     }
@@ -130,7 +169,10 @@ private:
     float accumulatedPeakL = 0.0f;
     float accumulatedPeakR = 0.0f;
 
-    Graphs graphManagers;
+    Graphs graphManagersUI;
+    std::shared_ptr<const Graphs> graphManagersAudio = std::make_shared<Graphs>();
+    std::atomic<bool> graphListNeedsSwap = false;
+
     GraphManager* activeGraph = nullptr;
 
     int sampleRate = 44100;

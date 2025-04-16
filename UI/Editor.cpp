@@ -7,6 +7,7 @@
 #include "Editor.h"
 
 #include "FilesystemHelpers.h"
+#include <filesystem>
 #include "../Graph/GraphSystem.h"
 #include "../UI_ToolKit/WindowPeer.h"
 
@@ -158,10 +159,10 @@ void Editor::loadFile(const std::string& fileName) const
     try {
         nlohmann::json patch = nlohmann::json::parse(fileContent, nullptr, true, true);
         if (!patch.empty()) {
-            auto filePath = absolute(fileName).string();
+            auto filePath = std::filesystem::absolute(fileName).string();
             auto [ graphObjects, connEdges ] = graphSystem->loadPatch(filePath, patch, false);
 
-            path filePathObj(fileName);
+            std::filesystem::path filePathObj(fileName);
             graphSystem->setActiveGraph(filePath);
             canvas->setPatchName(filePathObj.stem().string());
             canvas->reloadAllCanvasObjects(graphObjects);

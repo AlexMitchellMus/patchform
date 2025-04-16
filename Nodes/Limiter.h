@@ -36,6 +36,12 @@ public:
         delayBuffer.resize(lookaheadSamples, 0.0f);
     }
 
+    json getSerializedNode() override
+    {
+        nodeCreationData["threshold"] = threshold.load();
+        return nodeCreationData;
+    }
+
     void processAudio(const float* in, float* buffer, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
         const float* input = inputPortBuffers[0]->getAudioBuffer();

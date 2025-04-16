@@ -319,7 +319,7 @@ bool PatchformApp::initAudio() {
     inputChannels.store(inputParamsPtr ? inputParams.channelCount : 0);
     outputChannels.store(outputParamsPtr ? outputParams.channelCount : 0);
 
-    auto err = Pa_OpenStream(&stream, inputParamsPtr, outputParamsPtr, sampleRate, frameCount, paClipOff, audioCallback, this);
+    auto err = Pa_OpenStream(&stream, inputParamsPtr, outputParamsPtr, sampleRate, frameCount, 0, audioCallback, this);
     if (err != paNoError) {
         std::cerr << "Pa_OpenStream failed: " << Pa_GetErrorText(err) << "\n";
         std::cerr << "Falling back to default devices...\n";

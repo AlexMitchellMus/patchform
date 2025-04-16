@@ -134,7 +134,24 @@ MainMenu::MainMenu(Editor* ed)
     closePatch->onClick = [this]()
     {
         if (auto* ed = findParentOfClass<Editor>())
+        {
             ed->graphSystem->unloadActivePatch();
+
+            const auto names = ed->graphSystem->getLoadedPatches();
+            ed->updateTabs(names);
+
+            if (auto graphManager = ed->graphSystem->getActiveGraph())
+            {
+                auto newPath = graphManager->getPatchFile();
+                auto cnv = ed->getCanvas();
+                auto [ graphObjects, connEdges ] = ed->graphSystem->getGraphDump(newPath);
+                cnv->setPatchName(FilesystemHelpers::getStem(newPath));
+                cnv->reloadAllCanvasObjects(graphObjects);
+                cnv->reloadConnections(connEdges);
+                cnv->gainFocus();
+            }
+        }
+        close();
     };
 
     applicationSettings = std::make_unique<MenuItem>("Settings...");
