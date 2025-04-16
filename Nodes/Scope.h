@@ -10,7 +10,7 @@
 #include <array>
 #include <iostream>         // For debugging output
 #include "nanovg.h"         // NanoVG drawing API header.
-#include "concurrentqueue.h"// Moodycamel's lock-free queue header.
+#include "readerwriterqueue.h"// Moodycamel's lock-free queue header.
 #include <utility>          // For std::move
 #include <algorithm>        // For std::copy
 
@@ -21,6 +21,9 @@ class Scope final : public AudioNode
 
 public:
 #ifdef PATCHFORM_WITH_GUI
+
+    std::atomic<bool> hasUI = false;
+    std::atomic<bool> requestBuffer = false;
 
     bool isDefaultUI() const override { return false; }
 
@@ -37,16 +40,16 @@ public:
     static constexpr size_t DOUBLE_BUFFER_SIZE = 2 * DSP_BUFFER_SIZE;
     // Define BufferType as a fixed-size std::array of DSP_BUFFER_SIZE samples.
     using BufferType = std::array<float, DSP_BUFFER_SIZE>;
-    using BufferTypeInt = std::array<int, DSP_BUFFER_SIZE>;
+    using BufferTypeInt = std::array<int, 512>;
 
     // Enqueue fixed–size buffers.
-    moodycamel::ConcurrentQueue<BufferTypeInt> eventQueue = moodycamel::ConcurrentQueue<BufferTypeInt>(6);
+    moodycamel::ReaderWriterQueue<BufferTypeInt> eventQueue = moodycamel::ReaderWriterQueue<BufferTypeInt>(6);
 
     class UI final : public AudioNode::UI
     {
     public:
         // Define the fixed DSP buffer size.
-        static constexpr size_t DSP_BUFFER_SIZE = 1024;
+        static constexpr size_t DSP_BUFFER_SIZE = 512;
         using BufferType = std::array<float, DSP_BUFFER_SIZE>;
 
         float negRange;
@@ -63,6 +66,8 @@ public:
         void updateGraphValues() override
         {
             auto scope = reinterpret_cast<Scope*>(audioNode);
+            scope->requestBuffer.store(true);
+
             BufferTypeInt newBuffer;
             bool gotNewBuffer = false;
 
@@ -190,6 +195,12 @@ public:
             nvgRestore(nvg);
         }
 
+        ~UI() override
+        {
+            const auto scope = reinterpret_cast<Scope*>(audioNode);
+            scope->hasUI.store(false);
+        }
+
     private:
         // Buffer holding the most recent DSP_BUFFER_SIZE samples.
         BufferTypeInt waveformData;
@@ -201,6 +212,7 @@ public:
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
+        hasUI.store(true);
         return std::make_unique<UI>(this);
     }
 #endif
@@ -222,14 +234,12 @@ public:
     void processAudio(const float* in, float* /*out*/, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
         const float* inputBuffer = inputPortBuffers[0]->getAudioBuffer();
-        if (!inputBuffer)
-            return;
 
         // Shift the dspBuffer left by frameCount and append new input at the end
         std::memmove(dspBuffer.data(), dspBuffer.data() + frameCount, (DOUBLE_BUFFER_SIZE - frameCount) * sizeof(float));
         std::memcpy(dspBuffer.data() + (DOUBLE_BUFFER_SIZE - frameCount), inputBuffer, frameCount * sizeof(float));
 
-        if (eventQueue.size_approx() > 0)
+        if (!hasUI.load() || !requestBuffer.exchange(false))
             return;
 
         // Only search for the trigger in the first DSP_BUFFER_SIZE (1024) samples.
@@ -260,11 +270,13 @@ public:
             detectedTrigger = 0;
 
         // Now output a 1024-sample window starting at the trigger.
+        static constexpr size_t UI_BUFFER_SIZE = 512;
         BufferTypeInt buffer;
-        for (size_t j = 0; j < DSP_BUFFER_SIZE; ++j)
+        for (size_t j = 0; j < UI_BUFFER_SIZE; ++j)
         {
-            // Assumes that (detectedTrigger + j) is within dspBuffer's bounds.
-            buffer[j] = static_cast<int>(dspBuffer[detectedTrigger + j] * DATA_BUFFER_QUANT_RES);
+            float a = dspBuffer[detectedTrigger + j * 2];
+            float b = dspBuffer[detectedTrigger + j * 2 + 1];
+            buffer[j] = static_cast<int>(((a + b) * 0.5f) * DATA_BUFFER_QUANT_RES);
         }
 
         // Enqueue for UI

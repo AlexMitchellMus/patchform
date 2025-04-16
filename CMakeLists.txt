@@ -76,6 +76,10 @@ endif()
 add_library(moodycamel_concurrentqueue INTERFACE)
 target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/concurrentqueue")
 
+# Add moodycamel readerwriterqueue
+add_library(moodycamel_readerwriterqueue INTERFACE)
+target_include_directories(moodycamel_readerwriterqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/readerwriterqueue")
+
 add_library(pffft STATIC external/pffft/pffft.c)
 target_include_directories(pffft PUBLIC external/pffft)
 
@@ -99,6 +103,7 @@ target_include_directories(PlugPatchCLI PRIVATE
 target_link_libraries(PlugPatchCLI PRIVATE
         linenoise
         moodycamel_concurrentqueue
+        moodycamel_readerwriterqueue
         unordered_dense
         glaze::glaze
         portaudio
@@ -120,6 +125,7 @@ target_compile_definitions(PatchformStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG
 target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
+        "${CMAKE_SOURCE_DIR}/external/readerwriterqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
         "${CMAKE_SOURCE_DIR}/external/unordered_dense/include/ankerl"
         "${CMAKE_SOURCE_DIR}/external/glaze/include/"
@@ -135,6 +141,7 @@ target_link_libraries(PatchformStandalone PRIVATE
         SDL3::SDL3-static
         portaudio
         moodycamel_concurrentqueue
+        moodycamel_readerwriterqueue
         unordered_dense
         glaze::glaze
         glad
