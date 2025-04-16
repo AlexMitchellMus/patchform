@@ -33,14 +33,14 @@ public:
     float negRange;
     float posRange;
 
-    static constexpr size_t DATA_BUFFER_QUANT_RES = 4096;
+    static constexpr size_t DATA_BUFFER_QUANT_RES = 256;
     // Use a fixed DSP buffer size.
     static constexpr size_t DSP_BUFFER_SIZE = 1024;
     // FULL_BUFFER_SIZE is 2x DSP_BUFFER_SIZE to allow a contiguous block after rotation.
     static constexpr size_t DOUBLE_BUFFER_SIZE = 2 * DSP_BUFFER_SIZE;
     // Define BufferType as a fixed-size std::array of DSP_BUFFER_SIZE samples.
     using BufferType = std::array<float, DSP_BUFFER_SIZE>;
-    using BufferTypeInt = std::array<int, 512>;
+    using BufferTypeInt = std::array<int16_t, 512>;
 
     // Enqueue fixed–size buffers.
     moodycamel::ReaderWriterQueue<BufferTypeInt> eventQueue = moodycamel::ReaderWriterQueue<BufferTypeInt>(6);
@@ -49,8 +49,8 @@ public:
     {
     public:
         // Define the fixed DSP buffer size.
-        static constexpr size_t DSP_BUFFER_SIZE = 512;
-        using BufferType = std::array<float, DSP_BUFFER_SIZE>;
+        static constexpr size_t UI_BUFFER_SIZE = 512;
+        using BufferType = std::array<float, UI_BUFFER_SIZE>;
 
         float negRange;
         float posRange;
@@ -66,7 +66,7 @@ public:
         void updateGraphValues() override
         {
             auto scope = reinterpret_cast<Scope*>(audioNode);
-            scope->requestBuffer.store(true);
+            scope->requestBuffer.store(true, std::memory_order_release);
 
             BufferTypeInt newBuffer;
             bool gotNewBuffer = false;
@@ -154,7 +154,7 @@ public:
             }
 
             // Draw exactly DSP_BUFFER_SIZE samples along the horizontal axis.
-            constexpr size_t DISPLAY_SIZE = DSP_BUFFER_SIZE;
+            constexpr size_t DISPLAY_SIZE = UI_BUFFER_SIZE;
             float xStep = static_cast<float>(w) / (DISPLAY_SIZE - 1);
 
             nvgBeginPath(nvg);
@@ -198,7 +198,7 @@ public:
         ~UI() override
         {
             const auto scope = reinterpret_cast<Scope*>(audioNode);
-            scope->hasUI.store(false);
+            scope->hasUI.store(false, std::memory_order_relaxed);
         }
 
     private:
@@ -212,7 +212,7 @@ public:
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
-        hasUI.store(true);
+        hasUI.store(true, std::memory_order_relaxed);
         return std::make_unique<UI>(this);
     }
 #endif
@@ -239,8 +239,10 @@ public:
         std::memmove(dspBuffer.data(), dspBuffer.data() + frameCount, (DOUBLE_BUFFER_SIZE - frameCount) * sizeof(float));
         std::memcpy(dspBuffer.data() + (DOUBLE_BUFFER_SIZE - frameCount), inputBuffer, frameCount * sizeof(float));
 
-        if (!hasUI.load() || !requestBuffer.exchange(false))
+        if (!hasUI.load(std::memory_order_relaxed) || !requestBuffer.exchange(false, std::memory_order_acquire))
+        {
             return;
+        }
 
         // Only search for the trigger in the first DSP_BUFFER_SIZE (1024) samples.
         int detectedTrigger = 0;
@@ -269,14 +271,17 @@ public:
         if (!found)
             detectedTrigger = 0;
 
-        // Now output a 1024-sample window starting at the trigger.
+        // Now output a 512-sample window starting at the trigger - down sampled from 1024
         static constexpr size_t UI_BUFFER_SIZE = 512;
         BufferTypeInt buffer;
         for (size_t j = 0; j < UI_BUFFER_SIZE; ++j)
         {
             float a = dspBuffer[detectedTrigger + j * 2];
             float b = dspBuffer[detectedTrigger + j * 2 + 1];
-            buffer[j] = static_cast<int>(((a + b) * 0.5f) * DATA_BUFFER_QUANT_RES);
+            float avg = (a + b) * 0.5f;
+
+            // Convert float to fixed-point with shift
+            buffer[j] = static_cast<int16_t>(avg * DATA_BUFFER_QUANT_RES);
         }
 
         // Enqueue for UI
