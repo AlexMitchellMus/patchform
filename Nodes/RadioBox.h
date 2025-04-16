@@ -153,7 +153,7 @@ public:
         void updateGraphValues() override
         {
             const auto radio = reinterpret_cast<RadioBox*>(audioNode);
-            if (radio->isDirty.exchange(false))
+            if (radio->isDirty.exchange(false, std::memory_order_acquire))
             {
                 int receivedEvent = 0;
                 while (radio->eventQueueFromDSP.try_dequeue(receivedEvent))
@@ -256,10 +256,10 @@ public:
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
-        hasUI.store(true);
+        hasUI.store(true, std::memory_order_release);
 
         eventQueueFromDSP.enqueue(selectedIndex);
-        isDirty.store(true);
+        isDirty.store(true, std::memory_order_release);
 
         return std::make_unique<UI>(this);
     }
@@ -347,10 +347,10 @@ public:
                     addEvent(0, outEvent);
                 }
             }
-            if (hasUI.load())
+            if (hasUI.load(std::memory_order_acquire))
             {
                 eventQueueFromDSP.enqueue(selectedIndex);
-                isDirty.store(true);
+                isDirty.store(true, std::memory_order_release);
             }
         }
 

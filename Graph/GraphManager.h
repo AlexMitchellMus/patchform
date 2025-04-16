@@ -17,7 +17,6 @@ using json = nlohmann::json;
 #include "glaze/glaze.hpp"
 #include "../Nodes/AllNodes.h"
 #include "Edge.h"
-#include "DspTimer.h"
 #include "GraphHolder.h"
 
 #undef max
@@ -437,8 +436,6 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 
     void process(const float* inBuffer, float* outBuffer, unsigned long frameCount, std::vector<MidiMessage>& message)
     {
-        dspTimer.start();
-
 #ifdef DEBUG_MIDI
     if (message.message.empty()) {
         std::cout << "Empty MIDI message received" << std::endl;
@@ -574,23 +571,14 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
             activeGraph->process(inBuffer, outBuffer, frameCount, message);
         }
 
-        dspTimer.end(frameCount, ctx->sampleRate);
+        //processPeak(outBuffer, frameCount);
 
-        processPeak(outBuffer, frameCount);
-
-    }
-
-    float getDspTiming()
-    {
-        return dspTimer.getCpuUsage();
     }
 
     // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
     moodycamel::ConcurrentQueue<std::vector<float>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::vector<float>>(100);
 
 private:
-    DspTimer dspTimer;
-
     // Take the average peak and send it to the GUI
     void processPeak(const float* buffer, unsigned long frameCount)
     {

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "GraphManager.h"
+#include "DSPTimer.h"
+
 #include <filesystem>
 using namespace std::filesystem;
 
@@ -30,7 +32,7 @@ public:
 
     void setActiveGraph(const std::string& path)
     {
-        for (auto& mgr : graphManagers)
+        for (const auto& mgr : graphManagers)
         {
             if (mgr->getPatchFile() == path)
             {
@@ -45,8 +47,14 @@ public:
 
     void processAll(const float* inBuffer, float* outBuffer, unsigned long frameCount, std::vector<MidiMessage>& midi)
     {
+        dspTimer.start();
+
         for (auto& mgr : graphManagers)
             mgr->process(inBuffer, outBuffer, frameCount, midi);
+
+        dspTimer.end(frameCount, sampleRate);
+
+        processPeak(outBuffer, frameCount);
     }
 
     void setSampleRateAndBlockSize(int sr, unsigned long bs)
@@ -77,7 +85,39 @@ public:
         return {};
     }
 
+    float getDspTiming() const
+    {
+        return dspTimer.getCpuUsage();
+    }
+
+    moodycamel::ConcurrentQueue<std::vector<float>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::vector<float>>(100);
+
 private:
+    void processPeak(const float* buffer, unsigned long frameCount)
+    {
+        constexpr int kUpdateInterval = 4;
+        const float* right = buffer + frameCount;
+
+        for (unsigned long i = 0; i < frameCount; ++i)
+        {
+            accumulatedPeakL = std::max(accumulatedPeakL, std::abs(buffer[i]));
+            accumulatedPeakR = std::max(accumulatedPeakR, std::abs(right[i]));
+        }
+
+        if (++peakFrameCounter >= kUpdateInterval)
+        {
+            peakFrameCounter = 0;
+            volumeMeterQueue.enqueue(std::vector<float>{accumulatedPeakL, accumulatedPeakR});
+            accumulatedPeakL = accumulatedPeakR = 0.0f;
+        }
+    }
+
+    DspTimer dspTimer;
+
+    int peakFrameCounter = 0;
+    float accumulatedPeakL = 0.0f;
+    float accumulatedPeakR = 0.0f;
+
     Graphs graphManagers;
     GraphManager* activeGraph = nullptr;
 

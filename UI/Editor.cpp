@@ -191,15 +191,15 @@ void Editor::updateObjectsFromDSP() const
     float sumL = 0.0f, sumR = 0.0f;
     int count = 0;
 
-    //while (graphManager->volumeMeterQueue.try_dequeue(peaks))
-    //{
-    //    if (peaks.size() == 2)
-    //    {
-    //        sumL += peaks[0];
-    //        sumR += peaks[1];
-    //        count++;
-    //    }
-    //}
+    while (graphSystem->volumeMeterQueue.try_dequeue(peaks))
+    {
+        if (peaks.size() == 2)
+        {
+            sumL += peaks[0];
+            sumR += peaks[1];
+            count++;
+        }
+    }
 
     if (count > 0)
     {
@@ -220,5 +220,5 @@ void Editor::updateObjectsFromDSP() const
         topBar->setVolumeMeterValue(lastL, lastR);
     }
 
-    //topBar->setDSPValue(graphManager->getDspTiming());
+    topBar->setDSPValue(graphSystem->getDspTiming());
 }
