@@ -575,6 +575,12 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 
     }
 
+
+    void setFilePath(const std::string& newPath)
+    {
+        filePath = newPath;
+    }
+
     // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
     moodycamel::ConcurrentQueue<std::vector<float>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::vector<float>>(100);
 

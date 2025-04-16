@@ -9,6 +9,7 @@
 #include "AboutDialog.h"
 #include "SettingsDialog.h"
 #include "../UI_ToolKit/PlatformHelpers.h"
+#include "FilesystemHelpers.h"
 
 MainMenu::MainMenu(Editor* ed)
 {
@@ -77,6 +78,50 @@ MainMenu::MainMenu(Editor* ed)
 
     saveAsPatch = std::make_unique<MenuItem>("Save patch as...");
     addComponent(saveAsPatch.get());
+
+    saveAsPatch->onClick = [this]()
+    {
+        if (auto* ed = findParentOfClass<Editor>())
+        {
+            if (auto graphManager = ed->graphSystem->getActiveGraph())
+            {
+                setVisible(false);
+
+                std::string fullPath;
+                std::string existingPath = graphManager->getPatchFile();
+
+                if (!existingPath.empty() && existingPath.rfind("virtual://", 0) != 0)
+                    fullPath = existingPath;
+
+                std::string newPath = PlatformHelpers::SaveFileChooserDialog(ed->getWindowPeer(), fullPath);
+                if (newPath.empty())
+                {
+                    close();
+                    return;
+                }
+
+                std::ofstream outputFile(newPath, std::ios::out | std::ios::trunc);
+                if (!outputFile.is_open())
+                {
+                    std::cerr << "Failed to write to " << newPath << "\n";
+                    return;
+                }
+
+                outputFile << graphManager->graphToJSON().dump(4);
+                outputFile.close();
+
+
+                graphManager->setFilePath(newPath);
+                const auto names = ed->graphSystem->getLoadedPatches();
+
+                ed->updateTabs(names);
+                ed->getCanvas()->setPatchName(FilesystemHelpers::getStem(newPath));
+
+                close();
+            }
+        }
+    };
+
 
     closePatch = std::make_unique<MenuItem>("Close patch");
     addComponent(closePatch.get());

@@ -325,6 +325,7 @@ class ObjectsListViewport : public pptk::ComponentViewport
 
 void LeftPanel::updateSelectedTab() const
 {
+    std::cout << "updating selected tab with name: " << cnv->getPatchName();
     loadedPatchesPanel->setSelected(cnv->getPatchName());
 }
 

@@ -5,6 +5,8 @@
 */
 #include <filesystem>
 #include "Editor.h"
+
+#include "FilesystemHelpers.h"
 #include "../Graph/GraphSystem.h"
 #include "../UI_ToolKit/WindowPeer.h"
 
@@ -129,24 +131,17 @@ void Editor::loadFile(const std::string& fileName) const
         return _fullpath(out, in.c_str(), MAX_PATH) ? std::string(out) : in;
     };
 
-    auto getStem = [](const std::string& path) -> std::string {
-        size_t slash = path.find_last_of("/\\");
-        std::string file = (slash != std::string::npos) ? path.substr(slash + 1) : path;
-        size_t dot = file.find_last_of('.');
-        return (dot != std::string::npos) ? file.substr(0, dot) : file;
-    };
-
     std::string absPath = normalizePath(fileName);
 
     // If the patch is already loaded, load it into the canvas, and make it active
     for (const std::string& path : graphSystem->getLoadedPatches()) {
-        if (path == absPath || getStem(path) == getStem(absPath)) {
-            if (canvas->getPatchName() == getStem(path))
+        if (path == absPath || FilesystemHelpers::getStem(path) == FilesystemHelpers::getStem(absPath)) {
+            if (canvas->getPatchName() == FilesystemHelpers::getStem(path))
                 return;
 
             auto [graphObjects, connEdges] = graphSystem->getGraphDump(path);
             graphSystem->setActiveGraph(path);
-            canvas->setPatchName(getStem(path));
+            canvas->setPatchName(FilesystemHelpers::getStem(path));
             canvas->reloadAllCanvasObjects(graphObjects);
             canvas->reloadConnections(connEdges);
             canvas->gainFocus();

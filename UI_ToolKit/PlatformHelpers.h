@@ -64,6 +64,30 @@ namespace PlatformHelpers
         }
         return std::string();                   // Return an empty string if canceled or error.
     }
+
+    static std::string SaveFileChooserDialog(const WindowPeer* peer, const std::string& existingPath = {})
+    {
+        HWND hwnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(peer->getSDLWindow()), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
+
+        char filePath[MAX_PATH] = {0};
+        if (!existingPath.empty())
+            strncpy(filePath, existingPath.c_str(), MAX_PATH - 1);
+
+        OPENFILENAME ofn;
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize  = sizeof(ofn);
+        ofn.hwndOwner    = hwnd;
+        ofn.lpstrFile    = filePath;
+        ofn.nMaxFile     = MAX_PATH;
+        ofn.lpstrFilter  = "Patchform JSON\0*.json\0All Files\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags        = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+        if (GetSaveFileName(&ofn))
+            return std::string(filePath);
+
+        return {};
+    }
 #endif
 
     inline void disableDenormalsOncePerThread()

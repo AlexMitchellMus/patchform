@@ -151,6 +151,11 @@ public:
         repaint();
     }
 
+    void updateTabs(const std::vector<std::string>& tabs) const
+    {
+        leftPanel->updateTabs(tabs);
+    }
+
     GraphSystem* graphSystem;
 
 private:
