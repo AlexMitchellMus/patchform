@@ -57,6 +57,7 @@ add_subdirectory(external/glaze)
 add_subdirectory(external/SDL2)
 add_subdirectory(external/nanovg)
 add_subdirectory(external/rtmidi)
+add_subdirectory(external/libsamplerate)
 
 if (ENABLE_ASAN AND MSVC)
     target_compile_options(nanovg PRIVATE /fsanitize=address)
@@ -107,6 +108,7 @@ target_link_libraries(PlugPatchCLI PRIVATE
         unordered_dense
         glaze::glaze
         portaudio
+        samplerate
 )
 # Fix for linenoise not being updated to C++20
 target_compile_options(linenoise PRIVATE
@@ -136,6 +138,7 @@ target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/pffft"
         "${CMAKE_SOURCE_DIR}/external/rtmidi"
         "${CMAKE_SOURCE_DIR}/external/simde"
+        "${CMAKE_SOURCE_DIR}/external/libsamplerate/src"
 )
 target_link_libraries(PatchformStandalone PRIVATE
         SDL3::SDL3-static

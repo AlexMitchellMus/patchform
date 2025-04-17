@@ -37,3 +37,6 @@
 [submodule "external/readerwriterqueue"]
 	path = external/readerwriterqueue
 	url = https://github.com/cameron314/readerwriterqueue
+[submodule "external/libsamplerate"]
+	path = external/libsamplerate
+	url = https://github.com/libsndfile/libsamplerate
