@@ -67,7 +67,7 @@ public:
                     nvgLineJoin(nvg, NVG_ROUND);
                     for (int i = 0; i < count; ++i) {
                         float x = i * spacing + spacing * 0.5f;
-                        float y = h * (1.0f - values[i]);
+                        float y = h * (0.5f - 0.5f * values[i]);
                         if (i == 0)
                             nvgMoveTo(nvg, x, y);
                         else
@@ -109,7 +109,8 @@ public:
                     const int count = values.size();
                     const float spacing = getWidth() / std::max(count, 1);
                     int index = std::clamp(static_cast<int>(e.sdlEvent.button.x / spacing), 0, count - 1);
-                    float value = 1.0f - std::clamp(e.sdlEvent.button.y / getHeight(), 0.0f, 1.0f);
+                    float norm = 1.0f - std::clamp(e.sdlEvent.button.y / getHeight(), 0.0f, 1.0f);
+                    float value = 2.0f * norm - 1.0f;  // remap [0,1] to [-1,1]
                     values[index] = value;
 
                     auto* tableNode = reinterpret_cast<Table*>(audioNode);
@@ -138,8 +139,8 @@ public:
                     int lastIndex = std::clamp(static_cast<int>(lastPos.x / spacing), 0, count - 1);
                     int currIndex = std::clamp(static_cast<int>(position.x / spacing), 0, count - 1);
 
-                    float lastVal = 1.0f - std::clamp(lastPos.y / getHeight(), 0.0f, 1.0f);
-                    float currVal = 1.0f - std::clamp(position.y / getHeight(), 0.0f, 1.0f);
+                    float lastVal = (1.0f - std::clamp(lastPos.y / getHeight(), 0.0f, 1.0f)) * 2.0f - 1.0f;
+                    float currVal = (1.0f - std::clamp(position.y / getHeight(), 0.0f, 1.0f)) * 2.0f - 1.0f;
 
                     if (lastIndex > currIndex) {
                         std::swap(lastIndex, currIndex);
@@ -239,7 +240,7 @@ public:
         auto& samples = waveformData.sample->samples;
 
         for (unsigned long i = 0; i < bufferA.size(); ++i) {
-            samples[i] = bufferA[i] * 2.0f - 1.0f;
+            samples[i] = bufferA[i];
         }
 
         if (auto e = context->eventPool.getFreeEvent())

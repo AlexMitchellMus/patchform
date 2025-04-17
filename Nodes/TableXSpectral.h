@@ -191,6 +191,17 @@ public:
             output[i] = smoothedOutput[i];
         }
 
+        // Normalize wavetable to -1,1 range
+        float maxAmp = 0.0f;
+        for (float v : output)
+            maxAmp = std::max(maxAmp, std::abs(v));
+
+        if (maxAmp > 1.0f && maxAmp > 0.0f) {
+            float scale = 1.0f / maxAmp;
+            for (float& v : output)
+                v *= scale;
+        }
+
         // Emit event with blended sample
         if (auto e = context->eventPool.getFreeEvent())
         {

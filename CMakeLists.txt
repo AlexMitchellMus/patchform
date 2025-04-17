@@ -108,7 +108,6 @@ target_link_libraries(PlugPatchCLI PRIVATE
         unordered_dense
         glaze::glaze
         portaudio
-        samplerate
 )
 # Fix for linenoise not being updated to C++20
 target_compile_options(linenoise PRIVATE
@@ -138,7 +137,7 @@ target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/pffft"
         "${CMAKE_SOURCE_DIR}/external/rtmidi"
         "${CMAKE_SOURCE_DIR}/external/simde"
-        "${CMAKE_SOURCE_DIR}/external/libsamplerate/src"
+        "${CMAKE_SOURCE_DIR}/external/libsamplerate/include"
 )
 target_link_libraries(PatchformStandalone PRIVATE
         SDL3::SDL3-static
@@ -151,10 +150,12 @@ target_link_libraries(PatchformStandalone PRIVATE
         nanovg
         pffft
         rtmidi
+        samplerate
 )
 
 target_compile_definitions(PatchformStandalone PRIVATE
         -DPA_USE_ASIO=ON
+        SAMPLERATE_STATIC
 )
 if (MSVC)
     if (ENABLE_ASAN)
