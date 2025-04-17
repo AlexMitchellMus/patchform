@@ -57,7 +57,7 @@ namespace pptk {
             return text;
         }
 
-        void render(NVGcontext* vg) override
+        void render(NVGcontext* vg, const Theme& theme) override
         {
             nvgFontSize(vg, 14.0f);
             nvgFontFace(vg, "Regular");

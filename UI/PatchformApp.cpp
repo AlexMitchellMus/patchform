@@ -528,7 +528,7 @@ void PatchformApp::render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     nvgBeginFrame(nvg, windowWidth, windowHeight, 1.0f);
-    editor->renderAll(nvg);
+    editor->renderFrame(nvg);
     nvgGlobalScissor(nvg, 0, 0, windowWidth, windowHeight);
     nvgEndFrame(nvg);
 

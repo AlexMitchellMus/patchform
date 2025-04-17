@@ -31,7 +31,7 @@ public:
         return text;
     }
 
-    void render(NVGcontext* vg) override
+    void render(NVGcontext* vg, const Theme& theme) override
     {
         if (!editorActive && isHovered)
         {

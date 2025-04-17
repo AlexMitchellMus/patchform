@@ -191,7 +191,7 @@ void Component::removeAllChildren()
     children.clear();
 }
 
-void Component::renderAll(NVGcontext* vg)
+void Component::renderAll(NVGcontext* vg, const Theme& theme)
 {
     nvgSave(vg);
 
@@ -203,7 +203,7 @@ void Component::renderAll(NVGcontext* vg)
         nvgGlobalAlpha(vg, opacity);
 
     // Render this component
-    render(vg);
+    render(vg, theme);
 
     // Render children
     for (auto& child : children)
@@ -211,7 +211,7 @@ void Component::renderAll(NVGcontext* vg)
         if (child->isVisible())
         {
 
-            child->renderAll(vg);
+            child->renderAll(vg, theme);
         }
     }
 

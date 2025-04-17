@@ -30,7 +30,7 @@ namespace pptk
 
         void setOnSelect(std::function<void(const std::string&)> cb) { onSelect = std::move(cb); }
 
-        void render(NVGcontext* vg) override
+        void render(NVGcontext* vg, const Theme& theme) override
         {
             //Background
             auto bgCol = nvgRGB(38, 38, 38);

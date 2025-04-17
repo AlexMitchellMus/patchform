@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include "SafePointer.h"
+#include "Theme.h"
 
 #ifdef min
 #undef min
@@ -31,7 +32,6 @@
 namespace pptk {
 
 class CompEvent;
-
 enum class Button { LEFT, RIGHT, MIDDLE };
 
 struct Point {
@@ -313,9 +313,12 @@ public:
     virtual void focusGained() { }
     virtual void focusLost() { }
 
-    virtual void render(NVGcontext* vg) { }
     virtual void resized() { }
-    virtual void renderAll(NVGcontext* vg);
+
+    virtual void themeChanged(const Theme& theme) { }
+
+    virtual void render(NVGcontext* vg, const Theme& theme) { }
+    virtual void renderAll(NVGcontext* vg, const Theme& theme);
 
     Rect getBounds() const
     {

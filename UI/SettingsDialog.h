@@ -315,10 +315,10 @@ public:
         ComponentViewport::onScroll();
     }
 
-    void renderViewportBackground(NVGcontext* nvg) override
+    void renderViewportBackground(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
-        nvgDrawRoundedRect(nvg, 0, 0, width, height, bg, outline, 6.0f);
+        nvgDrawRoundedRect(nvg, 0, 0, width, height, theme.app.dialog_background, theme.app.general_border, 6.0f);
     }
 
     void resized() override
@@ -329,9 +329,6 @@ public:
         ComponentViewport::resized();
     }
 
-private:
-    NVGcolor bg = nvgRGB(46, 46, 46);
-    NVGcolor outline = nvgRGB(53, 53, 53);
 };
 
 class SettingsDialog : public pptk::Component
@@ -345,7 +342,7 @@ public:
         SettingsDialog::resized();
     }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
         nvgDrawRoundedRect(nvg, -3, -3, getWidth() + 6, getHeight() + 6, dropShadowCol, dropShadowCol, 13);

@@ -55,7 +55,7 @@ class ObjectItem : public pptk::Component
         repaint();
     }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         if (isSelected || isHovered)
         {
@@ -300,7 +300,7 @@ class ObjectsListViewport : public pptk::ComponentViewport
         }
     }
 
-    void renderViewportBackground(NVGcontext* nvg) override
+    void renderViewportBackground(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
         nvgFillColor(nvg, nvgRGB(53, 53, 53));
@@ -374,27 +374,16 @@ void LeftPanel::updateTabs(std::vector<std::string> tabs)
     loadedPatchesPanel->updateTabs(tabs);
 }
 
-void LeftPanel::render(NVGcontext* nvg)
+void LeftPanel::render(NVGcontext* nvg, const pptk::Theme& theme)
 {
-    auto selectedCol = nvgRGB(43, 43, 43);
-    nvgFillColor(nvg, nvgRGB(33, 33, 33));
+    nvgFillColor(nvg, theme.app.panel_background);
     nvgFillRect(nvg, 0, 0, width, height);
-
-    // Draw the object list
-    float textX = 24; // Padding from the left edge
-    float textY = 40; // Starting Y position with padding from the top
-
-    //nvgFontSize(nvg, 14.0f);
-    //nvgFontFace(nvg, "SemiBold");
-    //nvgTextAlign(nvg, NVG_ALIGN_LEFT);
-    //nvgFillColor(nvg, nvgRGB(220, 220, 220));
-    //nvgText(nvg, textX, textY, "Objects", nullptr);
 
     // Vertical edge line
     nvgBeginPath(nvg);
     nvgMoveTo(nvg, width - 0.5f, 0);
     nvgLineTo(nvg, width - 0.5f, height);
-    nvgStrokeColor(nvg, nvgRGB(53, 53, 53));
+    nvgStrokeColor(nvg, theme.app.general_border);
     nvgStrokeWidth(nvg, 1.0f);
     nvgStroke(nvg);
 }

@@ -14,6 +14,8 @@ class Table final : public AudioNode {
 
     SampleHandle waveformData;
 
+    std::atomic<bool> isDirty;
+
 public:
 #ifdef PATCHFORM_WITH_GUI
     bool isDefaultUI() const override { return false; }
@@ -41,7 +43,7 @@ public:
             const float spacing = w / std::max(count, 1);
 
             nvgBeginPath(nvg);
-            const auto col = nvgRGB(68, 68, 68);
+            const auto col = nvgRGB(220, 220, 220);
             nvgStrokeColor(nvg, col);
             nvgLineStyle(nvg, NVG_LINE_SOLID);
 
@@ -73,6 +75,18 @@ public:
                     }
                     nvgStroke(nvg);
                     break;
+            }
+        }
+
+        void updateGraphValues() override {
+            auto* tableNode = reinterpret_cast<Table*>(audioNode);
+            if (tableNode->bufferReady.exchange(false)) {
+                tableNode->bufferB = tableNode->bufferA;  // snapshot
+                values = tableNode->bufferB;
+                repaint();
+            } else if (tableNode->isDirty.exchange(false)) {
+                values = tableNode->bufferB;
+                repaint();
             }
         }
 
@@ -193,6 +207,21 @@ public:
 
     void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
     {
+        auto& events = inputPortBuffers[0]->getEvents();
+
+        for (auto* event : events)
+        {
+            if (event->data && event->data->type == DataAtom::DataType::Sample) {
+                auto incoming = event->data->data.sample;
+                if (incoming.isValid()) {
+                    const auto& incomingSamples = incoming.sample->samples;
+                    bufferA = incomingSamples;
+                    bufferReady.store(true, std::memory_order_release);
+                    waveformData = incoming;  // reuse handle
+                    isDirty.store(true);
+                }
+            }
+        }
 #ifdef PATCHFORM_WITH_GUI
         std::pair<int, float> msg;
         while (eventQueue.try_dequeue(msg)) {

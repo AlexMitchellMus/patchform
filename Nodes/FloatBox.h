@@ -54,7 +54,7 @@ public:
             }
         }
 
-        void render(NVGcontext* nvg) override
+        void render(NVGcontext* nvg, const pptk::Theme& theme) override
         {
             nvgBeginPath(nvg);
             auto bgCol = nvgRGB(33, 33, 33);

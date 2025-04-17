@@ -233,7 +233,7 @@ void Connection::keyPressed(pptk::CompEvent& e)
     }
 }
 
-void Connection::render(NVGcontext* nvg)
+void Connection::render(NVGcontext* nvg, const pptk::Theme& theme)
 {
     nvgSave(nvg);
 

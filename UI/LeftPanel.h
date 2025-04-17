@@ -21,7 +21,7 @@ class LeftPanel : public pptk::ResizableComponent
 public:
     explicit LeftPanel(Editor* ed);
 
-    void render(NVGcontext* nvg) override;
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override;
 
     void resized() override;
 

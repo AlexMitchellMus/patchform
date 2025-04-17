@@ -52,7 +52,7 @@ void Item::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk
     onMouseDrag(position, name, getPositionInParent());
 }
 
-void Item::render(NVGcontext* vg)
+void Item::render(NVGcontext* vg, const pptk::Theme& theme)
 {
     nvgBeginPath(vg);
 
@@ -205,7 +205,7 @@ ObjectMenuList::ObjectMenuList(Canvas* canvas, ToolDock* toolDock) : cnv(canvas)
     repaint();
 };
 
-void ObjectMenuList::render(NVGcontext* vg)
+void ObjectMenuList::render(NVGcontext* vg, const pptk::Theme& theme)
 {
     // Render category headers
     for (const auto& header : categoryHeaders)
@@ -218,7 +218,7 @@ void ObjectMenuList::render(NVGcontext* vg)
     }
 
     // Let children (items) render themselves
-    Component::render(vg);
+    Component::render(vg, theme);
 }
 
 ObjectMenuView::ObjectMenuView(Canvas* canvas, ToolDock* toolDock)

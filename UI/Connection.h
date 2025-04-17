@@ -36,7 +36,7 @@ public:
     // Update the position of the destination when dragging a new connection around
     void setConnectionDest(const pptk::Point& globalPos);
 
-    void render(NVGcontext* nvg) override;
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override;
 
     Port* getOriginPort() { return originPort.get(); };
     Port* getDestPort() { return destPort.get(); };

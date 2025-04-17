@@ -24,7 +24,7 @@ namespace pptk
             }
         }
 
-        void render(NVGcontext* vg) override {
+        void render(NVGcontext* vg, const Theme& theme) override {
             const float radius = height * 0.5f;
             constexpr float padding = 3.0f;
             const float knobRadius = radius - padding;

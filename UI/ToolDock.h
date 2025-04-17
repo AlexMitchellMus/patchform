@@ -45,7 +45,7 @@ public:
         onChange(delta.y);
     }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
         if (isHovered)
@@ -59,7 +59,7 @@ public:
         nvgFontSize(nvg, 18.0f);
         nvgFontFace(nvg, "Regular");
         nvgTextAlign(nvg, NVG_ALIGN_RIGHT);
-        nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
+        nvgFillColor(nvg, theme.app.general_text); // Text color
         nvgText(nvg, 60, 24, std::string(std::to_string(zoomValue) + " %").c_str(), nullptr);
     }
 
@@ -169,7 +169,7 @@ public:
         return { };
     }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         auto dropShadowCol = nvgRGBA(0, 0, 0, 30);
         auto dropShadowCornerRadius = (getHeight() + 6) / 2;

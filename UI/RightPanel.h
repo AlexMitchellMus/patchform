@@ -20,7 +20,7 @@ public:
 
     void resized() override;
 
-    void render(NVGcontext* vg) override {
+    void render(NVGcontext* vg, const pptk::Theme& theme) override {
         nvgDrawRoundedRect(vg, 0, 3, width, height - 6, nvgRGB(43, 43, 43), nvgRGB(43, 43, 43), 6.0f);
 
         nvgFillColor(vg, nvgRGB(220, 220, 220));
@@ -38,7 +38,7 @@ public:
     void updateUI();
     void resized() override;
 
-    void render(NVGcontext* vg) override;
+    void render(NVGcontext* vg, const pptk::Theme& theme) override;
 
 private:
     AudioNode* selectedNode = nullptr;

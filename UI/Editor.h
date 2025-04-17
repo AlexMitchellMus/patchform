@@ -44,7 +44,7 @@ public:
         onClick();
     }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
         nvgDrawRoundedRect(nvg, 0, 0, width, height, darkenBg, darkenBg, 0);

@@ -82,7 +82,7 @@ public:
         Item(const std::string& label, std::function<void()> onClick)
             : name(label), onClickFn(std::move(onClick)) {}
 
-        void render(NVGcontext* vg) override
+        void render(NVGcontext* vg, const Theme& theme) override
         {
             if (isHovered || isSelected)
             {
@@ -131,7 +131,7 @@ public:
         NVGcolor hover = nvgRGB(53, 53, 53);
     };
 
-    void render(NVGcontext* vg) override
+    void render(NVGcontext* vg, const Theme& theme) override
     {
         nvgBeginPath(vg);
         nvgDrawRoundedRect(vg, -3, -3, getWidth() + 6, getHeight() + 6, shadow, shadow, 10);

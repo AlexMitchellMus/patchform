@@ -33,7 +33,7 @@ public:
     void mouseEnter(pptk::CompEvent& e) override;
     void mouseLeave(pptk::CompEvent& e) override;
     void resized() override;
-    void render(NVGcontext* vg) override;
+    void render(NVGcontext* vg, const pptk::Theme& theme) override;
 
     std::string& getPatchName();
     std::string& getPatchPath();

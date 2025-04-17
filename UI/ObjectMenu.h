@@ -16,7 +16,7 @@ using json = nlohmann::json;
 class Item : public pptk::Component {
 public:
     Item(ObjectMenuDefs::ObjectDef def);
-    void render(NVGcontext* vg) override;
+    void render(NVGcontext* vg, const pptk::Theme& theme) override;
     void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button) override;
     void mouseEnter(pptk::CompEvent& e) override;
     void mouseLeave(pptk::CompEvent& e) override;
@@ -48,7 +48,7 @@ public:
     ~ObjectMenuList() override = default;
 
 private:
-    void render(NVGcontext* vg) override;
+    void render(NVGcontext* vg, const pptk::Theme& theme) override;
 
     Canvas* cnv;
     ToolDock* td;
@@ -77,7 +77,7 @@ class ObjectMenu : public pptk::PopupComponent {
 public:
     ObjectMenu(Canvas* canvas, ToolDock* toolDock);
 
-    void render(NVGcontext* vg) override
+    void render(NVGcontext* vg, const pptk::Theme& theme) override
     {
         nvgBeginPath(vg);
         nvgDrawRoundedRect(vg, 0, 0, width, height, bg, outline, 6.0f);

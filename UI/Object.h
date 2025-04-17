@@ -33,7 +33,7 @@ public:
     void resized() override;
 
     void setGuiIsTransparent(bool isTransparent);
-    void render(NVGcontext* nvg) override;
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override;
     void drawBackground(NVGcontext* nvg);
     virtual void drawGUI(NVGcontext* nvg);
 

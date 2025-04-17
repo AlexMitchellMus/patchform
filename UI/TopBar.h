@@ -45,7 +45,7 @@ public:
     float getLeftVal() { return meterLeftNorm; }
     float getRightVal() { return meterRightNorm; }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
         auto bgColor = nvgRGBA(33, 33, 33, 255);
@@ -120,7 +120,7 @@ public:
                 onClick();
         }
 
-        void render(NVGcontext* vg) override
+        void render(NVGcontext* vg, const pptk::Theme& theme) override
         {
             if (isHovered && isActive)
             {
@@ -184,7 +184,7 @@ public:
             quitApplication->setBounds(b);
     }
 
-    void render(NVGcontext* vg) override
+    void render(NVGcontext* vg, const pptk::Theme& theme) override
     {
         nvgBeginPath(vg);
         nvgDrawRoundedRect(vg, - 3,  - 3, getWidth() + 6, getHeight() + 6, dropShadowCol, dropShadowCol, 13);
@@ -274,9 +274,9 @@ public:
 
     }
 
-    void render(NVGcontext* nvg) override {
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override {
         nvgBeginPath(nvg);
-        nvgFillColor(nvg, nvgRGB(43, 43, 43));
+        nvgFillColor(nvg, theme.app.topbar_background);
         nvgFillRect(nvg, 0, 0, width, height);
 
         // Horizontal line
@@ -289,7 +289,7 @@ public:
 
         nvgSave(nvg);
 
-        nvgFillColor(nvg, nvgRGB(220, 220, 220));
+        nvgFillColor(nvg, theme.app.general_text);
         nvgFontFace(nvg, "Regular");
         nvgFontSize(nvg, 14.0f);
         nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);

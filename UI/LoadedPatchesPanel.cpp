@@ -34,7 +34,7 @@ void PatchItem::resized()
     label->setBounds(24, 0, width - 32, height); // leave margin for padding
 }
 
-void PatchItem::render(NVGcontext* vg)
+void PatchItem::render(NVGcontext* vg, const pptk::Theme& theme)
 {
     if (isSelected || isHovered)
     {

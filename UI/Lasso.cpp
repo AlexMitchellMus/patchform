@@ -34,7 +34,7 @@ void Lasso::update(const pptk::Point& currentPoint)
     repaint();
 }
 
-void Lasso::render(NVGcontext* nvg)
+void Lasso::render(NVGcontext* nvg, const pptk::Theme& theme)
 {
     auto outerCol = nvgRGB(28, 73, 119);
     auto innerCol = outerCol;

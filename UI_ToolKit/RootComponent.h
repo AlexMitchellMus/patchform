@@ -11,6 +11,7 @@
 #include <memory>
 
 #include "PopupComponent.h"
+#include "Theme.h"
 #include "../UI_ToolKit/FontMetrics.h"
 
 namespace pptk
@@ -18,6 +19,10 @@ namespace pptk
     class RootComponent : public Component
     {
     public:
+        RootComponent()
+        {
+            theme.applyDefaults();
+        }
         
         void handleTime(uint32_t time, uint32_t deltaTime)
         {
@@ -38,6 +43,12 @@ namespace pptk
             std::erase_if(timerCallbacks, [](const auto& tup) {
                 return !std::get<0>(tup);
             });
+        }
+
+        // Entry point for NanoVG rendering
+        void renderFrame(NVGcontext* nvg)
+        {
+            Component::renderAll(nvg, theme);
         }
 
         void registerTimerCallback(Component* c, const std::function<void(uint32_t, uint32_t)>& callback, int timerID = 0)
@@ -152,6 +163,8 @@ namespace pptk
         SafePointer<Component> clickedComponent;
         SafePointer<Component> focusedComponent;
         SafePointer<Component> lastFocusedComponent;
+
+        Theme theme;
 
         std::vector<std::tuple<SafePointer<Component>, std::function<void(uint32_t, uint32_t)>, int>> timerCallbacks;
 

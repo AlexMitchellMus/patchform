@@ -66,19 +66,19 @@ void RightPanel::updateUI()
     resized();
 }
 
-void RightPanel::render(NVGcontext* vg)
+void RightPanel::render(NVGcontext* vg, const pptk::Theme& theme)
 {
-    nvgFillColor(vg, nvgRGB(33, 33, 33));
+    nvgFillColor(vg, theme.app.panel_background);
     nvgFillRect(vg, 0, 0, width, height);
 
     nvgBeginPath(vg);
     nvgMoveTo(vg, 0.5f, 0);
     nvgLineTo(vg, 0.5f, height);
-    nvgStrokeColor(vg, nvgRGB(53, 53, 53));
+    nvgStrokeColor(vg, theme.app.general_border);
     nvgStrokeWidth(vg, 1.0f);
     nvgStroke(vg);
 
-    nvgFillColor(vg, nvgRGB(220, 220, 220));
+    nvgFillColor(vg, theme.app.general_text);
     nvgFontSize(vg, 14.0f);
     nvgFontFace(vg, "SemiBold");
     nvgTextAlign(vg, NVG_ALIGN_LEFT);

@@ -30,7 +30,7 @@ public:
     pptk::Rect getLassoBounds() const;
 
     // Render the lasso rectangle
-    void render(NVGcontext* nvg) override;
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override;
 
     // Check if an object is inside the lasso bounds
     bool isInside(const pptk::Point& objectPosition) const;

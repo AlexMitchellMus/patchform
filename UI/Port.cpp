@@ -124,7 +124,7 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
     }
 }
 
-void Port::render(NVGcontext* nvg)
+void Port::render(NVGcontext* nvg, const pptk::Theme& theme)
 {
     auto radius = getWidth() / 2;
     auto size = radius * 2;

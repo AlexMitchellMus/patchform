@@ -89,7 +89,7 @@ namespace pptk
                 onScroll(position.y - dragOffset);
             }
 
-            void render(NVGcontext* nvg) override
+            void render(NVGcontext* nvg, const Theme& theme) override
             {
                 nvgBeginPath(nvg);
                 float finalWidth = 3;
@@ -198,9 +198,9 @@ namespace pptk
             return e.sdlEvent.type == SDL_EVENT_MOUSE_WHEEL;
         }
 
-        virtual void renderViewportBackground(NVGcontext* nvg) {};
+        virtual void renderViewportBackground(NVGcontext* nvg, const Theme& theme) {};
 
-        void renderAll(NVGcontext* nvg) override
+        void renderAll(NVGcontext* nvg, const Theme& theme) override
         {
             nvgSave(nvg);
             // Apply translation for this component's position
@@ -208,7 +208,7 @@ namespace pptk
             nvgScale(nvg, scale, scale);
 
             nvgScissor(nvg, 0, 0, getWidth(), getHeight());
-            renderViewportBackground(nvg);
+            renderViewportBackground(nvg, theme);
 
             nvgSave(nvg);
 
@@ -216,12 +216,12 @@ namespace pptk
             nvgTranslate(nvg, 0, -viewportY);
 
             if (viewportChild)
-                viewportChild->renderAll(nvg);
+                viewportChild->renderAll(nvg, theme);
 
             nvgRestore(nvg);
 
             if (scrollbar->isVisible())
-                scrollbar->renderAll(nvg);
+                scrollbar->renderAll(nvg, theme);
 
             nvgResetScissor(nvg);
             nvgRestore(nvg);

@@ -34,7 +34,7 @@ class Object::InsetParameter : public Component
         return false;
     };
 
-    void render(NVGcontext* vg) override
+    void render(NVGcontext* vg, const pptk::Theme& theme) override
     {
         auto col = nvgRGBA(44, 44, 44, 255);
         nvgDrawRoundedRect(vg, 0, 0, width, height, col, col, 5);
@@ -234,7 +234,7 @@ void Object::setGuiIsTransparent(bool isTransparent)
 }
 
 
-void Object::render(NVGcontext* nvg)
+void Object::render(NVGcontext* nvg, const pptk::Theme& theme)
 {
     drawBackground(nvg);
 

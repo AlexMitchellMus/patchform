@@ -51,7 +51,7 @@ public:
         repaint();
     };
 
-    void render(NVGcontext* nvg) override;
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override;
 
     [[nodiscard]] bool isOutput() const { return direction == Direction::Output; };
 

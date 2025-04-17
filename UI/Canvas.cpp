@@ -460,7 +460,7 @@ void Canvas::setMode(DisplayMode newMode)
 };
 
 
-void Canvas::render(NVGcontext* nvg)
+void Canvas::render(NVGcontext* nvg, const pptk::Theme& theme)
 {
     // Draw Background color
     nvgBeginPath(nvg);
@@ -566,7 +566,7 @@ void Canvas::updateFrameBuffer(NVGcontext* nvg)
 }
 
 // TODO: We don't need to do this if we deal with it at the component level- remove soon!
-void Canvas::renderAll(NVGcontext* nvg)
+void Canvas::renderAll(NVGcontext* nvg, const pptk::Theme& theme)
 {
     nvgSave(nvg);
 
@@ -574,17 +574,17 @@ void Canvas::renderAll(NVGcontext* nvg)
     nvgScale(nvg, scale, scale);
 
     // Render the background
-    render(nvg);
+    render(nvg, theme);
 
     // TODO: as we are ALSO dealing with this at the component level, don't ALSO do it here!
     if (mode == Canvas::DisplayMode::Edit)
     {
-        renderAllObjects(nvg);
-        renderAllConnections(nvg);
+        renderAllObjects(nvg, theme);
+        renderAllConnections(nvg, theme);
     } else if (mode == Canvas::DisplayMode::Lock)
     {
-        renderAllConnections(nvg);
-        renderAllObjects(nvg);
+        renderAllConnections(nvg, theme);
+        renderAllObjects(nvg, theme);
     }
 
     if (newConnections.size() > 0)
@@ -594,7 +594,7 @@ void Canvas::renderAll(NVGcontext* nvg)
             nvgSave(nvg);
             nvgTranslate(nvg, conn->getX(), conn->getY());
 
-            conn->render(nvg);
+            conn->render(nvg, theme);
 
             nvgRestore(nvg);
         }
@@ -605,7 +605,7 @@ void Canvas::renderAll(NVGcontext* nvg)
         nvgSave(nvg);
         nvgTranslate(nvg, lasso->getX(), lasso->getY());
 
-        lasso->render(nvg);
+        lasso->render(nvg, theme);
 
         nvgRestore(nvg);
     }
@@ -614,17 +614,17 @@ void Canvas::renderAll(NVGcontext* nvg)
     nvgRestore(nvg);
 }
 
-void Canvas::renderAllObjects(NVGcontext* nvg)
+void Canvas::renderAllObjects(NVGcontext* nvg, const pptk::Theme& theme)
 {
     for (auto const& obj : objects)
     {
         // Objects are widgets that have children
         // So we need to render child components
-        obj->renderAll(nvg);
+        obj->renderAll(nvg, theme);
     }
 }
 
-void Canvas::renderAllConnections(NVGcontext* nvg)
+void Canvas::renderAllConnections(NVGcontext* nvg, const pptk::Theme& theme)
 {
     for (auto const& con : connections)
     {
@@ -632,7 +632,7 @@ void Canvas::renderAllConnections(NVGcontext* nvg)
         nvgSave(nvg);
         nvgTranslate(nvg, con->getX(), con->getY());
 
-        con->render(nvg);
+        con->render(nvg, theme);
 
         nvgRestore(nvg);
     }

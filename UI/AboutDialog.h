@@ -14,7 +14,7 @@ public:
     {
     }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
         nvgFillColor(nvg, nvgRGB(220, 220, 220)); // text colour
@@ -126,10 +126,10 @@ public:
         setViewport(std::move(viewedComp));
     }
 
-    void renderViewportBackground(NVGcontext* nvg) override
+    void renderViewportBackground(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
-        nvgDrawRoundedRect(nvg, 0, 0, width, height, bg, outline, 6.0f);
+        nvgDrawRoundedRect(nvg, 0, 0, width, height, theme.app.dialog_level_1, theme.app.general_border, 6.0f);
     }
 
     void resized() override
@@ -139,9 +139,6 @@ public:
 
         ComponentViewport::resized();
     }
-private:
-    NVGcolor bg = nvgRGB(46, 46, 46);
-    NVGcolor outline = nvgRGB(53, 53, 53);
 };
 
 class AboutDialog : public pptk::Component
@@ -155,16 +152,16 @@ class AboutDialog : public pptk::Component
         AboutDialog::resized();
     }
 
-    void render(NVGcontext* nvg) override
+    void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
         nvgDrawRoundedRect(nvg, - 3,  - 3, getWidth() + 6, getHeight() + 6, dropShadowCol, dropShadowCol, 13);
-        nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bg, outline, 10.0f);
+        nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), theme.app.dialog_background, theme.app.general_border, 10.0f);
 
         nvgFontSize(nvg, 24.0f);
         nvgFontFace(nvg, "SemiBold");
         nvgTextAlign(nvg, NVG_ALIGN_CENTER);
-        nvgFillColor(nvg, nvgRGB(220, 220, 220)); // Text color
+        nvgFillColor(nvg, theme.app.general_text); // Text color
 
         int yPos = 50;
         nvgText(nvg, getWidth() * 0.5f, yPos, "Patchform", nullptr);
@@ -213,8 +210,6 @@ class AboutDialog : public pptk::Component
 private:
     std::unique_ptr<LibraryListView> librariesPanel;
 
-    NVGcolor bg = nvgRGB(43, 43, 43);
-    NVGcolor outline = nvgRGB(53, 53, 53);
     NVGcolor dropShadowCol = nvgRGBA(0, 0, 0, 30);
 
     static constexpr std::array<const char*, 4> patreonCredits = { "Nasko", "Joshua A.C.Newman", "Polarity", "el mono" };
