@@ -81,8 +81,6 @@ private:
     int peakMeterPos = 0;
 };
 
-
-class AboutDialog;
 class Editor;
 class MainMenu : public pptk::PopupComponent
 {
@@ -204,8 +202,6 @@ private:
     NVGcolor bg = nvgRGB(43, 43, 43);
     NVGcolor outline = nvgRGB(53, 53, 53);
     NVGcolor dropShadowCol = nvgRGBA(0, 0, 0, 30);
-
-    std::unique_ptr<AboutDialog> aboutDialog;
 };
 
 class Editor;

@@ -10,11 +10,14 @@
 #include <filesystem>
 #include "../Graph/GraphSystem.h"
 #include "../UI_ToolKit/WindowPeer.h"
+#include "CommandManagerCommands.h"
 
 Editor::Editor(WindowPeer* peer) : windowPeer(peer) {};
 
 void Editor::init(GraphSystem* gm)
 {
+    initCommands();
+
     std::cout << "reinit editor" << std::endl;
     graphSystem = gm;
 
@@ -83,6 +86,19 @@ void Editor::init(GraphSystem* gm)
 
     Editor::resized();
 }
+
+void Editor::initCommands()
+{
+    commandIDManager.registerCommand("NewPatch", std::make_unique<NewPatchCommand>(this));
+    commandIDManager.registerCommand("OpenPatch", std::make_unique<OpenCommand>(this));
+    commandIDManager.registerCommand("SavePatch", std::make_unique<SaveCommand>(this));
+    commandIDManager.registerCommand("SavePatchAs", std::make_unique<SaveAsCommand>(this));
+    commandIDManager.registerCommand("ClosePatch", std::make_unique<ClosePatchCommand>(this));
+
+    commandIDManager.registerCommand("ShowSettingsDialog", std::make_unique<ShowSettingsCommand>(this));
+    commandIDManager.registerCommand("ShowAboutDialog", std::make_unique<ShowAboutCommand>(this));
+}
+
 
 void Editor::newEmptyFile() const
 {

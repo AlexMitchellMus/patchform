@@ -6,8 +6,7 @@
 
 #include "TopBar.h"
 #include "Editor.h"
-#include "AboutDialog.h"
-#include "SettingsDialog.h"
+#include "../Graph/GraphSystem.h"
 #include "../UI_ToolKit/PlatformHelpers.h"
 #include "FilesystemHelpers.h"
 
@@ -22,7 +21,7 @@ MainMenu::MainMenu(Editor* ed)
         if (auto* ed = findParentOfClass<Editor>())
         {
             setVisible(false);
-            ed->newEmptyFile();
+            ed->commandIDManager["NewPatch"]->invoke();
             close();
         }
     };
@@ -34,8 +33,7 @@ MainMenu::MainMenu(Editor* ed)
         if (auto* ed = findParentOfClass<Editor>())
         {
             setVisible(false);
-            auto fileToOpen = PlatformHelpers::OpenFileChooserDialog(ed->getWindowPeer());
-            ed->loadFile(fileToOpen);
+            ed->commandIDManager["OpenPatch"]->invoke();
             close();
         }
     };
@@ -50,30 +48,10 @@ MainMenu::MainMenu(Editor* ed)
     {
         if (auto* ed = findParentOfClass<Editor>())
         {
-            auto graphMananger = ed->graphSystem->getActiveGraph();
             setVisible(false);
-            auto filePath = graphMananger->getPatchFile();
-            if (filePath.empty())
-            {
-                close();
-                return;
-            }
-
-            auto jsonData = graphMananger->graphToJSON();
-
-            std::ofstream outputFile(filePath, std::ios::out | std::ios::trunc);
-
-            if (!outputFile.is_open()) {
-                std::cerr << "Unable to write to: " << std::filesystem::absolute(filePath).string() << std::endl;
-            }
-
-            // Write the JSON to the file with pretty formatting
-            outputFile << jsonData.dump(4);
-            outputFile.close();
-
-            std::cout << "Graph successfully saved to " << std::filesystem::absolute(filePath).string() << std::endl;
-            close();
+            ed->commandIDManager["SavePatch"]->invoke();
         }
+        close();
     };
 
     saveAsPatch = std::make_unique<MenuItem>("Save patch as...");
@@ -83,48 +61,10 @@ MainMenu::MainMenu(Editor* ed)
     {
         if (auto* ed = findParentOfClass<Editor>())
         {
-            if (auto graphManager = ed->graphSystem->getActiveGraph())
-            {
-                setVisible(false);
-
-                std::string fullPath;
-                std::string existingPath = graphManager->getPatchFile();
-
-                if (!existingPath.empty() && existingPath.rfind("virtual://", 0) != 0)
-                    fullPath = existingPath;
-
-                std::string newPath = PlatformHelpers::SaveFileChooserDialog(ed->getWindowPeer(), fullPath);
-                if (newPath.empty())
-                {
-                    close();
-                    return;
-                }
-
-                std::ofstream outputFile(newPath, std::ios::out | std::ios::trunc);
-                if (!outputFile.is_open())
-                {
-                    std::cerr << "Failed to write to " << newPath << "\n";
-                    return;
-                }
-
-                outputFile << graphManager->graphToJSON().dump(4);
-                outputFile.close();
-
-
-                // First change the filepath of the current patch
-                graphManager->setFilePath(newPath);
-
-                // Update the names of the left tab bar, this will repaint it
-                const auto names = ed->graphSystem->getLoadedPatches();
-                ed->updateTabs(names);
-
-                // Set the patch name as the active one
-                // This will select the tab with the new name
-                ed->getCanvas()->setPatchName(FilesystemHelpers::getStem(newPath));
-
-                close();
-            }
+            setVisible(false);
+            ed->commandIDManager["SavePatchAs"]->invoke();
         }
+        close();
     };
 
 
@@ -135,21 +75,7 @@ MainMenu::MainMenu(Editor* ed)
     {
         if (auto* ed = findParentOfClass<Editor>())
         {
-            ed->graphSystem->unloadActivePatch();
-
-            const auto names = ed->graphSystem->getLoadedPatches();
-            ed->updateTabs(names);
-
-            if (auto graphManager = ed->graphSystem->getActiveGraph())
-            {
-                auto newPath = graphManager->getPatchFile();
-                auto cnv = ed->getCanvas();
-                auto [ graphObjects, connEdges ] = ed->graphSystem->getGraphDump(newPath);
-                cnv->setPatchName(FilesystemHelpers::getStem(newPath));
-                cnv->reloadAllCanvasObjects(graphObjects);
-                cnv->reloadConnections(connEdges);
-                cnv->gainFocus();
-            }
+            ed->commandIDManager["ClosePatch"]->invoke();
         }
         close();
     };
@@ -161,7 +87,7 @@ MainMenu::MainMenu(Editor* ed)
         if (auto* ed = findParentOfClass<Editor>())
         {
             setVisible(false);
-            ed->openDialogWindow(std::make_unique<SettingsDialog>());
+            ed->commandIDManager["ShowSettingsDialog"]->invoke();
         }
     };
 
@@ -172,7 +98,7 @@ MainMenu::MainMenu(Editor* ed)
         if (auto* ed = findParentOfClass<Editor>())
         {
             setVisible(false);
-            ed->openDialogWindow(std::make_unique<AboutDialog>());
+            ed->commandIDManager["ShowAboutDialog"]->invoke();
         }
     };
 
