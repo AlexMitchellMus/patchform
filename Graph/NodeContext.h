@@ -17,9 +17,9 @@
 
 class EventPool {
 public:
-    EventPool(std::size_t initialSize = 1024) {
-        growAtomPool(initialSize * 100);
-        growPool(initialSize * 10);
+    EventPool() {
+        growAtomPool(1 << 17);  // 131072 atoms
+        growPool(1 << 14);      // 16384 events
     }
 
     int eventPoolSize() {
@@ -28,21 +28,19 @@ public:
 
     // Acquire a free Event (returns nullptr if none available)
     Event* getFreeEvent() {
-        if (freeStack.empty()) {
+        if (freestackPos == 0) {
             std::cout << "No free events left!" << std::endl;
             return nullptr;
         }
 
-        auto eventIndex = freeStack.back();
-        freeStack.pop_back();
-
+        auto eventIndex = freeStack[--freestackPos];
         Event* evt = &events[eventIndex];
         evt->resetAtoms();
         return evt;
     }
 
     void releaseAllEvents() {
-        freeStack = templateStack;
+        freestackPos = freestackSize;
         resetFreeList();
     }
 
@@ -78,8 +76,8 @@ public:
         freeStack.resize(newSize);
         std::iota(freeStack.begin(), freeStack.end(), 0);
 
-        templateStack.resize(newSize);
-        std::iota(templateStack.begin(), templateStack.end(), 0);
+        freestackPos = newSize;
+        freestackSize = newSize;
     }
 
     // Grow the atom pool
@@ -159,7 +157,8 @@ public:
 private:
     std::vector<Event> events;
     std::vector<std::size_t> freeStack;
-    std::vector<std::size_t> templateStack;
+    size_t freestackPos = 0;
+    size_t freestackSize = 0;
 
 
     std::vector<uint64_t> persistentAtoms;

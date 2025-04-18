@@ -66,6 +66,7 @@ public:
                 case TableStyle::PolyLine:
                     nvgStrokeWidth(nvg, 1.5f);
                     nvgLineJoin(nvg, NVG_ROUND);
+                    nvgLineCap(nvg, NVG_ROUND);
                     for (int i = 0; i < count; ++i) {
                         float x = i * spacing + spacing * 0.5f;
                         float y = h * (0.5f - 0.5f * values[i]);
