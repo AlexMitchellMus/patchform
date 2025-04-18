@@ -12,9 +12,10 @@
 
 MainMenu::MainMenu(Editor* ed)
 {
-    setSize(150, 8 * 35 + 5);
+    setSize(230, 8 * 35 + 5);
 
     newPatch = std::make_unique<MenuItem>("New patch");
+    newPatch->setKeyCommand(PlatformHelpers::formatKey(SDLK_N, SDL_KMOD_CTRL));
     addComponent(newPatch.get());
     newPatch->onClick = [this]()
     {
@@ -27,6 +28,7 @@ MainMenu::MainMenu(Editor* ed)
     };
 
     loadPatch = std::make_unique<MenuItem>("Open patch...");
+    loadPatch->setKeyCommand(PlatformHelpers::formatKey(SDLK_O, SDL_KMOD_CTRL));
     addComponent(loadPatch.get());
     loadPatch->onClick = [this]()
     {
@@ -39,6 +41,7 @@ MainMenu::MainMenu(Editor* ed)
     };
 
     savePatch = std::make_unique<MenuItem>("Save patch");
+    savePatch->setKeyCommand(PlatformHelpers::formatKey(SDLK_S, SDL_KMOD_CTRL));
     addComponent(savePatch.get());
 
     if (ed->graphSystem->getActiveGraph()->getPatchFile().contains("virtual"))
@@ -55,6 +58,7 @@ MainMenu::MainMenu(Editor* ed)
     };
 
     saveAsPatch = std::make_unique<MenuItem>("Save patch as...");
+    saveAsPatch->setKeyCommand(PlatformHelpers::formatKey(SDLK_S, SDL_KMOD_CTRL | SDL_KMOD_SHIFT));
     addComponent(saveAsPatch.get());
 
     saveAsPatch->onClick = [this]()
@@ -69,6 +73,7 @@ MainMenu::MainMenu(Editor* ed)
 
 
     closePatch = std::make_unique<MenuItem>("Close patch");
+    closePatch->setKeyCommand(PlatformHelpers::formatKey(SDLK_W, SDL_KMOD_CTRL));
     addComponent(closePatch.get());
 
     closePatch->onClick = [this]()
@@ -81,6 +86,7 @@ MainMenu::MainMenu(Editor* ed)
     };
 
     applicationSettings = std::make_unique<MenuItem>("Settings...");
+    applicationSettings->setKeyCommand(PlatformHelpers::formatKey(SDLK_COMMA, SDL_KMOD_CTRL));
     addComponent(applicationSettings.get());
     applicationSettings->onClick = [this]()
     {
@@ -103,6 +109,7 @@ MainMenu::MainMenu(Editor* ed)
     };
 
     quitApplication = std::make_unique<MenuItem>("Exit");
+    quitApplication->setKeyCommand(PlatformHelpers::formatKey(SDLK_Q, SDL_KMOD_CTRL));
     addComponent(quitApplication.get());
     quitApplication->onClick = [this]()
     {

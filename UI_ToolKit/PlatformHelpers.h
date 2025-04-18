@@ -38,6 +38,23 @@
 
 namespace PlatformHelpers
 {
+    static std::string formatKey(const SDL_Keycode key, SDL_Keymod mod)
+    {
+#ifdef __APPLE__
+        std::string out;
+        if (mod & SDL_KMOD_CTRL)  out += u8"⌘+";
+        if (mod & SDL_KMOD_SHIFT) out += u8"⇧+";
+        if (mod & SDL_KMOD_ALT)   out += u8"⌥+";
+#else
+        std::string out;
+        if (mod & SDL_KMOD_CTRL)  out += "Ctrl+";
+        if (mod & SDL_KMOD_SHIFT) out += "Shift+";
+        if (mod & SDL_KMOD_ALT)   out += "Alt+";
+#endif
+        out += SDL_GetKeyName(key);
+        return out;
+    }
+
 #ifdef _WIN32
     static std::string OpenFileChooserDialog(const WindowPeer* peer)
     {

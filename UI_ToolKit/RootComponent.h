@@ -13,6 +13,7 @@
 #include "PopupComponent.h"
 #include "Theme.h"
 #include "../UI_ToolKit/FontMetrics.h"
+#include "../UI_ToolKit/CommandIDManager.h"
 
 namespace pptk
 {
@@ -158,6 +159,8 @@ namespace pptk
         {
             applyThemeChange(theme);
         }
+
+        CommandIDManager commandIDManager;
 
     private:
         FontMetricsCache fontMetricsCache;

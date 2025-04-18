@@ -94,6 +94,11 @@ public:
         {
         };
 
+        void setKeyCommand(const std::string& key) {
+            keyCommand = key;
+            repaint();
+        }
+
         void setActivated(bool shouldBeActive)
         {
             isActive = shouldBeActive;
@@ -128,15 +133,25 @@ public:
 
             nvgBeginPath(vg);
 
-            nvgFontSize(vg, 16.0f);
+            nvgFontSize(vg, 14.0f);
             nvgFontFace(vg, "Regular");
             nvgTextAlign(vg, NVG_ALIGN_LEFT);
             auto col = isActive ? nvgRGB(255, 255, 255) : nvgRGB(100, 100, 100);
             nvgFillColor(vg, col); // Text color
             nvgText(vg, 10, 22, name.c_str(), nullptr);
+
+            if (!keyCommand.empty()) {
+                nvgFontSize(vg, 14.0f);
+                nvgFontFace(vg, "Regular");
+                nvgTextAlign(vg, NVG_ALIGN_RIGHT);
+                auto keyColor = isActive ? nvgRGB(100, 100, 100) : nvgRGB(60, 60, 60);
+                nvgFillColor(vg, keyColor);
+                nvgText(vg, getWidth() - 10, 22, keyCommand.c_str(), nullptr);
+            }
         }
     private:
         std::string name;
+        std::string keyCommand;
         NVGcolor outline = nvgRGB(53, 53, 53);
 
         bool isActive = true;

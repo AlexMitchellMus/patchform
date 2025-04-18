@@ -8,7 +8,6 @@
 
 #include "../UI_ToolKit/RootComponent.h"
 #include "../UI_ToolKit/ToggleButton.h"
-#include "../UI_ToolKit/CommandIDManager.h"
 
 #include <memory>
 #include <vector>
@@ -158,8 +157,6 @@ public:
     }
 
     GraphSystem* graphSystem;
-
-    CommandIDManager commandIDManager;
 
 private:
     void initCommands();

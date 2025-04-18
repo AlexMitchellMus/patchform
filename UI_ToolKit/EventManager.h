@@ -103,6 +103,9 @@ public:
 
     void handleKeyDown(SDL_Event& e)
     {
+        // Pass key commands directly to command ID manager
+        rootComponent->commandIDManager.invokeByKey(e.key.key, e.key.mod);
+
         if (auto focusedComponent = rootComponent->getFocusedComponent()) {
             auto wrappedEvent = CompEvent(e, focusedComponent);
             focusedComponent->keyPressed(wrappedEvent);
