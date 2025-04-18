@@ -21,9 +21,13 @@
 - SDL3
 - PortAudio
 - RtMidi
+- libsamplerate
+- pffft
 - NanoVG
 - simde (SIMD math library)
 - moodycamel::ConcurrentQueue
+- moodycamel::readerwriterqueue
+- nlohmann json
 
 ---
 

@@ -76,6 +76,8 @@ public:
                     holdModeVal = (*isHoldMode != 0);
                 }
             };
+
+            holdModeVal = kb->holdMode.load();
         }
 
         ~UI() override
@@ -493,12 +495,15 @@ public:
         holdMode = objParams.value("holdMode", false);
         holdModeParam = addParameter<BoolParameter>("Hold", holdMode);
 
+        holdModeParam->informNodeOfChange = [this]() { holdMode.store(holdModeParam->getValue()); };
+
         addInputPort("midi-in", AudioPort::PortType::Data);
     }
 
     json getSerializedNode() override
     {
         nodeCreationData["selectedNote"] = selectedNote.load();
+        nodeCreationData["holdMode"] = holdMode.load();
         nodeCreationData["emitOnClick"] = emitOnClick.load();
         return nodeCreationData;
     }

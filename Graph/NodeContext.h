@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "concurrentqueue.h"
+#include "readerwriterqueue.h"
 
 #include <iostream>
 #include <vector>
@@ -179,7 +179,7 @@ public:
 
     OwnershipBlockPool ownershipBlockPool;
 
-    moodycamel::ConcurrentQueue<std::function<void(Graph& runningGraph)>> messageQueue;
+    moodycamel::ReaderWriterQueue<std::function<void(Graph& runningGraph)>> messageQueue;
 
     LockFreeHashMap stringMap;
 

@@ -154,6 +154,11 @@ namespace pptk
             return fontMetricsCache.getTextWidth(fontName, size, text);
         }
 
+        void applyTheme(const Theme& theme)
+        {
+            applyThemeChange(theme);
+        }
+
     private:
         FontMetricsCache fontMetricsCache;
 

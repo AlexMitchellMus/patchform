@@ -315,14 +315,19 @@ public:
 
     virtual void resized() { }
 
-    virtual void themeChanged(const Theme& theme) { }
-
     virtual void render(NVGcontext* vg, const Theme& theme) { }
     virtual void renderAll(NVGcontext* vg, const Theme& theme);
 
+    // Gets the actual bounds of this object inside parent
     Rect getBounds() const
     {
         return Rect{ x, y, width, height };
+    }
+
+    // Gets the local bounds (origin {0,0} )
+    Rect getLocalBounds() const
+    {
+        return Rect{ 0, 0, width, height };
     }
 
     void setMinWidth(const float width)
@@ -452,6 +457,10 @@ public:
     void gainFocus();
     void loseFocus();
 
+    // Provides a theme change when called, theme only exists for this call
+    // It's up to the class to save the theme colours it needs
+    virtual void themeChanged(const Theme& theme) {};
+
 private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);
 
@@ -463,7 +472,20 @@ private:
     // If true and m_allowClicksOnThisComponent is false, then child components can still be clicked.
     bool m_allowClicksOnChildComponents = true;
 
+
+    // Only accessible via root component (EDITOR)
+    friend class RootComponent;
+    void applyThemeChange(const Theme& theme)
+    {
+        for (auto* child : children)
+        {
+            child->themeChanged(theme);
+            child->applyThemeChange(theme);
+        }
+    }
+
 protected:
+
     std::string name;
 
     bool isDirty = true;

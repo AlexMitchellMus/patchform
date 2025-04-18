@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioNodeBase.h"
+#include "readerwriterqueue.h"
 
 class Table final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Table", "table", false);
@@ -20,7 +21,7 @@ public:
 #ifdef PATCHFORM_WITH_GUI
     bool isDefaultUI() const override { return false; }
 
-    moodycamel::ConcurrentQueue<std::pair<int, float>> eventQueue;
+    moodycamel::ReaderWriterQueue<std::pair<int, float>> eventQueue;
 
     class UI final : public AudioNode::UI {
         pptk::Point lastPos{0, 0};
@@ -243,10 +244,11 @@ public:
             samples[i] = bufferA[i];
         }
 
-        if (auto e = context->eventPool.getFreeEvent())
+        if (auto* e = context->eventPool.getFreeEvent())
         {
-            auto dataAtom = context->eventPool.allocateDataAtom();
+            auto* dataAtom = context->eventPool.allocateDataAtom();
             dataAtom->type = DataAtom::DataType::Sample;
+            // Placement new
             new (&dataAtom->data.sample) SampleHandle(waveformData);
             e->data = dataAtom;
             addEvent(0, e);

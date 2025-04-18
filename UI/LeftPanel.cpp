@@ -358,9 +358,12 @@ void LeftPanel::resized()
 {
     getResizer().setBounds(getBounds());
 
-    loadedPatchesPanel->setBounds(getBounds().withHeight(300));
+    auto loadedPatchesBounds = getLocalBounds().withHeight(300);
+    loadedPatchesPanel->setBounds(loadedPatchesBounds);
 
-    auto viewportBounds = getBounds().removeFromTop(300);
+    std::cout << "loaded patch bounds: " << loadedPatchesBounds.toString() << std::endl;
+
+    auto viewportBounds = getLocalBounds().removeFromTop(300);
     objectsList->setBounds(viewportBounds);
 }
 

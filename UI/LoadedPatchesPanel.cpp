@@ -102,7 +102,7 @@ void LoadedPatchesPanel::setSelected(const std::string& selectedPatch)
 void LoadedPatchesPanel::resized()
 {
     setSize(getParent()->getWidth(), static_cast<int>(patchItems.size()) * 32 + 10);
-    int offsetY = 0;
+    int offsetY = 5;
     for (auto& item : patchItems) {
         item->setBounds(0, offsetY, getWidth(), 32);
         offsetY += 32;

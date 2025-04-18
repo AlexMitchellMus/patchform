@@ -19,7 +19,7 @@ class TableOsc : public AudioNode {
     size_t upLen;
     std::vector<float> oversampled;
     std::vector<float> filtered;
-    int oversampleFactor = 8;
+    int oversampleFactor = 4;
 
 public:
     TableOsc(NodeContext* context, const json& objParams)
@@ -45,7 +45,7 @@ public:
     {
         const auto& waveformEvents = inputPortBuffers[0]->getEvents();
         if (!waveformEvents.empty() && waveformEvents[0]->data->type == DataAtom::DataType::Sample) {
-            auto& sample = waveformEvents[0]->data->data.sample;
+            const auto& sample = waveformEvents[0]->data->data.sample;
             if (sample.isValid()) {
                 internalWaveform = sample.get()->samples;
                 hasWaveform = !internalWaveform.empty();
@@ -59,7 +59,7 @@ public:
         const size_t tableSize = internalWaveform.size();
 
         const auto& freqEvents = inputPortBuffers[1]->getEvents();
-        for (auto e : freqEvents)
+        for (const auto* e : freqEvents)
             if (e->data && e->data->type == DataAtom::DataType::Float)
                 freq = e->data->data.atom;
 
@@ -70,13 +70,13 @@ public:
             if (phase >= 1.0f) phase -= 1.0f;
             if (phase < 0.0f) phase += 1.0f;
 
-            float idx = phase * static_cast<float>(tableSize);
-            int i0 = std::min(static_cast<int>(idx), static_cast<int>(tableSize - 2));
-            int i1 = i0 + 1;
-            float frac = idx - static_cast<float>(i0);
+            const float idx = phase * static_cast<float>(tableSize);
+            const int i0 = std::min(static_cast<int>(idx), static_cast<int>(tableSize - 2));
+            const int i1 = i0 + 1;
+            const float frac = idx - static_cast<float>(i0);
 
-            float s0 = waveform[i0];
-            float s1 = waveform[i1];
+            const float s0 = waveform[i0];
+            const float s1 = waveform[i1];
 
             oversampled[i] = s0 + frac * (s1 - s0);
         }
@@ -96,15 +96,15 @@ public:
             return;
         }
 
-        int err = src_process(srcState, &srcData);
-        if (err != 0) {
+        if (const int err = src_process(srcState, &srcData); err != 0) {
             std::fill_n(output, frameCount, 0.0f);
             return;
         }
 
         // Fill output with filtered data
-        long actual = std::min(srcData.output_frames_gen, static_cast<long>(frameCount));
-        std::copy(filtered.begin(), filtered.begin() + actual, output);
+        const long actual = std::min(srcData.output_frames_gen, static_cast<long>(frameCount));
+        std::copy_n(filtered.begin(), actual, output);
+
         if (actual < static_cast<long>(frameCount))
             std::fill(output + actual, output + frameCount, 0.0f);
     }

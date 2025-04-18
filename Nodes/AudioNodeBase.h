@@ -129,10 +129,7 @@ public:
     // Returns the current UI, otherwise nullptr
     UI* getUI()
     {
-        if (ui)
-            return ui.get();
-
-        return nullptr;
+        return ui.get();
     }
 
     UI* getOrCreateUI()

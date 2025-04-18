@@ -14,6 +14,16 @@ public:
     {
     }
 
+    int getLibraryHeight()
+    {
+        int height = 20;
+        for (auto lib : libraries)
+        {
+            height += std::ranges::count(lib, '\n') * 20 + 30;
+        }
+        return height;
+    }
+
     void render(NVGcontext* nvg, const pptk::Theme& theme) override
     {
         nvgBeginPath(nvg);
@@ -29,7 +39,7 @@ public:
         }
     }
 private:
-    void drawLibraryEntry(NVGcontext* nvg, float x, int& y, const std::string_view& entry) {
+    void drawLibraryEntry(NVGcontext* nvg, float x, int& y, const std::string_view entry) {
         auto tokenize = [](std::string_view str, char delimiter) -> std::vector<std::string> {
             std::vector<std::string> tokens;
             size_t pos = 0;
@@ -57,62 +67,73 @@ private:
         }
     }
 
-    static constexpr std::array<std::string_view, 11> libraries = {{
-R"(linenoise-ng (CLI REPL)
-Martijn van Steenbergen
-BSD-3-Clause License
-https://github.com/arangodb/linenoise-ng)",
+    static constexpr std::string_view libraries[] = {
+// TODO: Not implemented yet for standalone, bring it back soon for CLI mode
+//{R"(linenoise-ng (CLI REPL)
+//Martijn van Steenbergen
+//BSD-3-Clause License
+//https://github.com/arangodb/linenoise-ng)"},
 
-R"(moodycamel ConcurrentQueue (Lockfree queue)
+{R"(moodycamel ConcurrentQueue (Lockfree queue)
 Cameron Desrochers
 Simplified BSD License
-https://github.com/cameron314/concurrentqueue)",
+https://github.com/cameron314/concurrentqueue)"},
 
-R"(nlohmann/json (JSON file parsing)
+{R"(readerwriterqueue (Fast single-producer/consumer lock-free queue)
+Cameron Desrochers
+Simplified BSD License
+https://github.com/cameron314/readerwriterqueue)"},
+
+{R"(nlohmann/json (JSON file parsing)
 Niels Lohmann
 MIT License
-https://github.com/nlohmann/json)",
+https://github.com/nlohmann/json)"},
 
-R"(PortAudio (Standalone Audio I/O)
+{R"(libsamplerate (Sample Rate Conversion Library)
+Erik de Castro Lopo
+2-Clause BSD License
+https://github.com/libsndfile/libsamplerate)"},
+
+{R"(PortAudio (Standalone Audio I/O)
 PortAudio Team
 MIT License
-https://github.com/PortAudio/portaudio)",
+https://github.com/PortAudio/portaudio)"},
 
-R"(NanoVG (Vector Graphics Rendering)
+{R"(NanoVG (Vector Graphics Rendering)
 Mikko Mononen / Timothy Schoen
 Zlib License
-https://github.com/timothyschoen/nanovg)",
+https://github.com/timothyschoen/nanovg)"},
 
-R"(PFFFT (Fast Fourier Transform)
+{R"(PFFFT (Fast Fourier Transform)
 Julien Pommier
 BSD-Like License
-https://bitbucket.org/jpommier/pffft/src/master/)",
+https://bitbucket.org/jpommier/pffft/src/master/)"},
 
-R"(SDL2 (Simple DirectMedia Layer)
+{R"(SDL2 (Simple DirectMedia Layer)
 SDL Team
 zlib License
-https://github.com/libsdl-org/SDL)",
+https://github.com/libsdl-org/SDL)"},
 
-R"(unordered_dense (Replacement for std::unordered_map)
+{R"(unordered_dense (Replacement for std::unordered_map)
 Martin Ankerl
 MIT License
-https://github.com/martinus/unordered_dense)",
+https://github.com/martinus/unordered_dense)"},
 
-R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
+{R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
 Stephen Berry
 MIT License
-https://github.com/stephenberry/glaze)",
+https://github.com/stephenberry/glaze)"},
 
-R"(RTMidi (Realtime MIDI I/O library for cross‐platform MIDI support)
+{R"(RTMidi (Realtime MIDI I/O library for cross‐platform MIDI support)
 Gary P. Scavone
 MIT License
-https://www.music.mcgill.ca/~gary/rtmidi/)",
+https://www.music.mcgill.ca/~gary/rtmidi/)"},
 
-R"(SIMDe (SIMD Everywhere – portable SIMD support for C/C++)
+{R"(SIMDe (SIMD Everywhere – portable SIMD support for C/C++)
 Evan Nemerson and contributors
 MIT License
-https://github.com/simd-everywhere/simde)",
-    }};
+https://github.com/simd-everywhere/simde)"},
+    };
 };
 
 
@@ -122,7 +143,7 @@ public:
     LibraryListView()
     {
         auto viewedComp = std::make_unique<LibraryList>();
-        viewedComp->setBounds(0, 0, getWidth(), 1350);
+        viewedComp->setBounds(0, 0, getWidth(), viewedComp->getLibraryHeight());
         setViewport(std::move(viewedComp));
     }
 
@@ -134,8 +155,8 @@ public:
 
     void resized() override
     {
-        if (auto viewed = getViewedComponent())
-            viewed->setBounds(0, 0, getWidth(), 1350);
+        if (auto viewed = dynamic_cast<LibraryList*>(getViewedComponent()))
+            viewed->setBounds(0, 0, getWidth(), viewed->getLibraryHeight());
 
         ComponentViewport::resized();
     }

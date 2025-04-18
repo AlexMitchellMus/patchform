@@ -64,17 +64,17 @@ namespace pptk
     // Theme Macros
     // --------------------
 #define DECLARE_THEME_FIELD(section, name, hex) NVGcolor section##_##name;
-#define REGISTER_THEME_FIELD(section, name, hex) \
+#define REGISTER_THEME_FIELD(section, name, hex)   \
 out.push_back({ #section "." #name, &section##_##name, hex });
 
-#define DEFINE_THEME(className, FIELD_MACRO)               \
-struct className : public pptk::BaseTheme {                \
-FIELD_MACRO(DECLARE_THEME_FIELD)                       \
-std::vector<Field> getFields() override {              \
+#define DEFINE_THEME(className, FIELD_MACRO)       \
+struct className : public pptk::BaseTheme {        \
+FIELD_MACRO(DECLARE_THEME_FIELD)                   \
+std::vector<Field> getFields() override {          \
 std::vector<Field> out;                            \
 FIELD_MACRO(REGISTER_THEME_FIELD)                  \
 return out;                                        \
-}                                                      \
+}                                                  \
 };
 
     // --------------------
@@ -100,9 +100,9 @@ X(dialog,  level_1,    "#ff2e2e2e")
     // --------------------
     // CanvasTheme fields
     // --------------------
-#define CANVAS_THEME_FIELDS(X)              \
-X(canvas, background, "#ff1e1e1e")       \
-X(canvas, grid,       "#ff303030")       \
+#define CANVAS_THEME_FIELDS(X)          \
+X(canvas, background, "#ff1e1e1e")      \
+X(canvas, grid,       "#ff303030")      \
 X(canvas, border,     "#ff353535")
 
     // --------------------
