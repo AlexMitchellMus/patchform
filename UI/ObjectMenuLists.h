@@ -64,6 +64,7 @@ namespace ObjectMenuDefs
         {R"({"obj": "scope"})", "", "Oscilloscope"},
         {R"({"obj": "spec"})", "", "Spectrum Analyzer"},
         {R"({"obj": "pad"})", "", "XY Pad"},
+        {R"({"obj": "table", "size": 256 })", "", "Table"},
     };
 
     // Logic
@@ -109,7 +110,6 @@ namespace ObjectMenuDefs
 
     // Wavetable
     static constexpr ObjectDef WavetableItems[] = {
-        {R"({"obj": "table", "size": 256 })", "", "Table"},
         {R"({"obj": "tablexfade" })", "", "Table X Fade"},
         {R"({"obj": "tablexphase" })", "", "Table X Phase"},
         {R"({"obj": "tablexspectral" })", "", "Table X Spectral"},
