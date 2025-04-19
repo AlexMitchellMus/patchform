@@ -86,15 +86,16 @@ void Canvas::updateGraphValuesIfNeeded()
 
 void Canvas::mouseButtonDown(pptk::CompEvent& e)
 {
+    // TODO: Lets clear for now if clicked on empty space, however we will load canvas (patch) parameter when clicked on
+    clearSelection();
+
     // Only allow lasso select in edit mode
     if (mode != DisplayMode::Edit)
         return;
 
     if (e.sdlEvent.button.button == SDL_BUTTON_LEFT)
     {
-        clearSelection();
-
-        lasso = std::make_unique<Lasso>(pptk::Point(e.sdlEvent.button.x, e.sdlEvent.button.y));   //lasso->start({e.button.x, e.button.y});
+        lasso = std::make_unique<Lasso>(pptk::Point(e.sdlEvent.button.x, e.sdlEvent.button.y));
         addComponent(lasso.get());
     }
 }

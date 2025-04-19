@@ -9,10 +9,10 @@ class Chorus : public AudioNode {
     size_t writeIndex = 0;
     size_t sampleRate = 48000;
 
-    std::atomic<float> baseDelayMs{6.0f};   // in ms
-    std::atomic<float> depthMs{2.0f};       // modulation depth
-    std::atomic<float> rateHz{0.25f};       // modulation speed
-    std::atomic<float> feedback{0.0f};      // feedback amount [0, 0.95]
+    std::atomic<float> baseDelayMs{6.0f};
+    std::atomic<float> depthMs{2.0f};
+    std::atomic<float> rateHz{0.25f};
+    std::atomic<float> feedback{0.0f};
 
     FloatParameter* delayParam;
     FloatParameter* depthParam;
@@ -23,12 +23,18 @@ class Chorus : public AudioNode {
     float lfoInc = 0.0f;
     float lfoDir = 1.0f;
 
-    float feedbackFiltered = 0.0f; // state for 1-pole LPF
+    float feedbackFiltered = 0.0f;
+    float smoothedDelayMs = 6.0f;
 
 public:
     Chorus(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::Signal, objParams)
     {
         addInputPort("In", AudioPort::Signal);
+
+        baseDelayMs = objParams.value("Delay", 6.0f);
+        depthMs = objParams.value("Depth", 2.0f);
+        rateHz = objParams.value("Rate", 0.25f);
+        feedback = objParams.value("Feedback", 0.0f);
 
         delayParam = addParameter<FloatParameter>("Delay", baseDelayMs, 1.0f, 30.0f);
         depthParam = addParameter<FloatParameter>("Depth", depthMs, 0.0f, 10.0f);
@@ -36,21 +42,22 @@ public:
         feedbackParam = addParameter<FloatParameter>("Feedback", feedback, 0.0f, 0.95f);
 
         sampleRate = static_cast<size_t>(context->sampleRate);
-        bufferSize = sampleRate * 2; // 2 seconds safety
+        bufferSize = sampleRate * 2;
         delayBuffer.resize(bufferSize, 0.0f);
 
-        delayParam->informNodeOfChange = [this]() {
-            baseDelayMs.store(delayParam->getValue());
-        };
-        depthParam->informNodeOfChange = [this]() {
-            depthMs.store(depthParam->getValue());
-        };
-        rateParam->informNodeOfChange = [this]() {
-            rateHz.store(rateParam->getValue());
-        };
-        feedbackParam->informNodeOfChange = [this]() {
-            feedback.store(feedbackParam->getValue());
-        };
+        delayParam->informNodeOfChange = [this]() { baseDelayMs.store(delayParam->getValue()); };
+        depthParam->informNodeOfChange = [this]() { depthMs.store(depthParam->getValue()); };
+        rateParam->informNodeOfChange  = [this]() { rateHz.store(rateParam->getValue()); };
+        feedbackParam->informNodeOfChange = [this]() { feedback.store(feedbackParam->getValue()); };
+    }
+
+    json getSerializedNode() override
+    {
+        nodeCreationData["Delay"] = baseDelayMs.load();
+        nodeCreationData["Depth"] = depthMs.load();
+        nodeCreationData["Rate"] = rateHz.load();
+        nodeCreationData["Feedback"] = feedback.load();
+        return nodeCreationData;
     }
 
     void processAudio(const float*, float*, unsigned long frameCount, std::vector<MidiMessage>&) override
@@ -58,21 +65,19 @@ public:
         auto* in = inputPortBuffers[0]->getAudioBuffer();
         auto* out = outputPortBuffers[0]->getAudioBuffer();
 
-        float delayMs = delayParam->getValue();
-        float depth = depthParam->getValue();
-        float rate = rateParam->getValue();
+        // Smoothed parameters (block smoothing = low CPU)
+        constexpr float smoothing = 0.01f;
+        smoothedDelayMs += (baseDelayMs.load() - smoothedDelayMs) * smoothing;
+        float delayMs = smoothedDelayMs;
+
+        float depth = depthMs.load();
+        float rate = rateHz.load();
         float fb = feedback.load();
 
-        float maxModMs = delayMs + depth;
-        float maxDelaySamples = (maxModMs / 1000.0f) * sampleRate;
-
-        lfoInc = rate / float(sampleRate);
-
-        float lastOut = 0.0f;
+        lfoInc = rate / sampleRate;
 
         for (unsigned long i = 0; i < frameCount; ++i)
         {
-            // triangle LFO
             float lfo = 2.0f * std::fabs(lfoPhase - 0.5f) - 1.0f;
             float modMs = delayMs + (lfo * depth);
             float modSamples = std::clamp((modMs / 1000.0f) * sampleRate, 1.0f, float(bufferSize - 2));
@@ -81,14 +86,11 @@ public:
             if (readIndex < 0) readIndex += bufferSize;
 
             int i1 = int(readIndex);
-            if (i1 < 0) i1 += bufferSize;
             int i2 = (i1 + 1) % bufferSize;
-            float frac = readIndex - int(readIndex);
+            float frac = readIndex - i1;
 
             float delayed = (1.0f - frac) * delayBuffer[i1] + frac * delayBuffer[i2];
 
-            // --- 1-pole lowpass filter for feedback ---
-            // You can tweak alpha for smoother/stronger filtering (0.05–0.2 range typical)
             constexpr float alpha = 0.1f;
             feedbackFiltered = (1.0f - alpha) * feedbackFiltered + alpha * delayed;
 
@@ -97,17 +99,13 @@ public:
 
             out[i] = (in[i] + delayed) * 0.5f;
 
-            lastOut = delayed;
-
             writeIndex = (writeIndex + 1) % bufferSize;
 
-            // triangle LFO update
             lfoPhase += lfoInc * lfoDir;
             if (lfoPhase >= 1.0f) {
                 lfoPhase = 1.0f;
                 lfoDir = -1.0f;
-            }
-            else if (lfoPhase <= 0.0f) {
+            } else if (lfoPhase <= 0.0f) {
                 lfoPhase = 0.0f;
                 lfoDir = 1.0f;
             }

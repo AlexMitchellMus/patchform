@@ -19,6 +19,7 @@ public:
         addInputPort("A", AudioPort::PortType::Data);
         addInputPort("B", AudioPort::PortType::Data);
 
+        // FIXME we want to store the hot mode as a string in the json!
         mode.store(objParams.value("hot", 1));
         latestA.store(objParams.value("defaultA", 0.0f));
         latestB.store(objParams.value("defaultB", 0.0f));

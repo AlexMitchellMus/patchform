@@ -17,6 +17,9 @@ class Table final : public AudioNode {
 
     std::atomic<bool> isDirty;
 
+    BoolParameter* emitOnLoadParam = nullptr;
+    BoolParameter* saveTableOnClose = nullptr;
+
 public:
 #ifdef PATCHFORM_WITH_GUI
     bool isDefaultUI() const override { return false; }
@@ -205,7 +208,21 @@ public:
 
         waveformData = SampleHandle::makeSampleHandle(numValues);
 
-        eventOnLoad = true;
+        // Populate the waveform buffer with samples from bufferA
+        // FIXME: Are we sure we can do this from the UI thread!?
+        auto& samples = waveformData.sample->samples;
+        for (unsigned long i = 0; i < bufferA.size(); ++i) {
+            samples[i] = bufferA[i];
+        }
+        bufferReady.store(true, std::memory_order_release);
+
+        bool emitOnLoad = objParams.value("emitOnLoad", false);
+        emitOnLoadParam   = addParameter<BoolParameter>("emitOnLoad", emitOnLoad);
+
+        bool saveOnClose = objParams.value("saveOnClose", false);
+        saveTableOnClose = addParameter<BoolParameter>("saveTableOnClose", saveOnClose);
+
+        eventOnLoad = emitOnLoad;
     }
 
     void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
@@ -250,18 +267,27 @@ public:
             auto* dataAtom = context->eventPool.allocateDataAtom();
             dataAtom->type = DataAtom::DataType::Sample;
             // Placement new
-            new (&dataAtom->data.sample) SampleHandle(waveformData);
+            new(&dataAtom->data.sample) SampleHandle(waveformData);
             e->data = dataAtom;
             addEvent(0, e);
         }
     }
 
-    json getSerializedNode() override {
-        if (bufferReady.exchange(false, std::memory_order_acquire)) {
-            bufferB = bufferA;
+    json getSerializedNode() override
+    {
+        auto saveData = saveTableOnClose->getValue();
+        nodeCreationData["saveOnClose"] = saveTableOnClose->getValue();
+        if (saveData)
+        {
+            if (bufferReady.exchange(false, std::memory_order_acquire))
+            {
+                bufferB = bufferA;
+            }
+            nodeCreationData["size"] = static_cast<int>(bufferB.size());
+            nodeCreationData["data"] = bufferB;
         }
-        nodeCreationData["size"] = static_cast<int>(bufferB.size());
-        nodeCreationData["data"] = bufferB;
+
+        nodeCreationData["emitOnLoad"] = emitOnLoadParam->getValue();
         return nodeCreationData;
     }
 };
