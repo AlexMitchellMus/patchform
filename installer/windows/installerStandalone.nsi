@@ -27,19 +27,22 @@ Page custom CustomOptions CustomOptionsLeave
 ; Installer settings
 !insertmacro MUI_LANGUAGE "English"
 
-!define PATCH_DIR "${OUTPUT_DIR}\patches"
+!define PATCH_DIR "${OUTPUT_DIR}\Patches"
 !define ASSET_DIR "${OUTPUT_DIR}\Assets"
 
 Section "Install"
     SetOutPath "$INSTDIR"
     File "${OUTPUT_DIR}\PatchformStandalone.exe"
+    File "plugpatchicon.ico"
+
+    SetOutPath "$INSTDIR\Patches"
     File "${PATCH_DIR}\count.json5"
     File "${PATCH_DIR}\graph.json"
     File "${PATCH_DIR}\graph1.json"
     File "${PATCH_DIR}\graph2.json"
     File "${PATCH_DIR}\graph3.json"
     File "${PATCH_DIR}\graph4.json5"
-    File "plugpatchicon.ico"
+    File "${PATCH_DIR}\WavetableMovement.json"
 
     SetOutPath "$INSTDIR\Assets\Fonts"
     File "${ASSET_DIR}\Fonts\Inter_18pt-Regular.ttf"
@@ -67,17 +70,31 @@ SectionEnd
 
 Section "Uninstall"
     Delete "$INSTDIR\PatchformStandalone.exe"
-    Delete "$INSTDIR\graph.json"
-    Delete "$INSTDIR\graph1.json"
-    Delete "$INSTDIR\graph2.json"
-    Delete "$INSTDIR\graph3.json"
-    Delete "$INSTDIR\graph4.json5"
-    Delete "$INSTDIR\count.json5"
     Delete "$INSTDIR\plugpatchicon.ico"
+    Delete "$INSTDIR\uninstall.exe"
+
+    ; Delete patch files
+    Delete "$INSTDIR\Patches\*.json"
+    Delete "$INSTDIR\Patches\*.json5"
+    RMDir "$INSTDIR\Patches"
+
+    ; Delete fonts
+    Delete "$INSTDIR\Assets\Fonts\*.ttf"
+    RMDir "$INSTDIR\Assets\Fonts"
+
+    ; Delete icons
+    Delete "$INSTDIR\Assets\Icons\*.ttf"
+    RMDir "$INSTDIR\Assets\Icons"
+
+    ; Delete assets folder
+    RMDir "$INSTDIR\Assets"
+
+    ; Delete shortcuts
     Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
     Delete "$SMPROGRAMS\${APP_NAME}\Uninstall ${APP_NAME}.lnk"
     Delete "$DESKTOP\${APP_NAME}.lnk"
-    Delete "$INSTDIR\uninstall.exe"
+
+    ; Clean up folders
     RMDir "$SMPROGRAMS\${APP_NAME}"
     RMDir "$INSTDIR"
 SectionEnd

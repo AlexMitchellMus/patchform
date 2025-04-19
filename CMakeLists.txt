@@ -232,6 +232,7 @@ set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Patches/graph3.json"
         "${CMAKE_SOURCE_DIR}/Patches/graph4.json5"
         "${CMAKE_SOURCE_DIR}/Patches/count.json5"
+        "${CMAKE_SOURCE_DIR}/Patches/WavetableMovement.json"
         "${CMAKE_SOURCE_DIR}/Patches/Inter-VariableFont_opsz,wght.ttf"
         "${CMAKE_SOURCE_DIR}/Assets/Icons/IconFontPlugPatch.ttf"
         "${CMAKE_SOURCE_DIR}/Assets/Icons/IconFontPlugPatch_google.ttf"
@@ -241,7 +242,7 @@ set(SOURCE_FILES
 add_custom_target(copy_patches
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/Patches"
-        "$<TARGET_FILE_DIR:PlugPatchCLI>/Patches"
+        "$<TARGET_FILE_DIR:PatchformStandalone>/Patches"
         COMMENT "Copying Patches directory to the output directory"
 )
 
