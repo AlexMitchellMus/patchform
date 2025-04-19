@@ -127,7 +127,6 @@ public:
         {
             if (isHovered && isActive)
             {
-                nvgBeginPath(vg);
                 nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), outline, outline, 8.0f);
             }
 
@@ -135,18 +134,19 @@ public:
 
             nvgFontSize(vg, 14.0f);
             nvgFontFace(vg, "Regular");
-            nvgTextAlign(vg, NVG_ALIGN_LEFT);
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE_ASCENT);
+            auto middle = getHeight() * 0.5f;
             auto col = isActive ? nvgRGB(255, 255, 255) : nvgRGB(100, 100, 100);
             nvgFillColor(vg, col); // Text color
-            nvgText(vg, 10, 22, name.c_str(), nullptr);
+            nvgText(vg, 10, middle, name.c_str(), nullptr);
 
             if (!keyCommand.empty()) {
                 nvgFontSize(vg, 14.0f);
                 nvgFontFace(vg, "Regular");
-                nvgTextAlign(vg, NVG_ALIGN_RIGHT);
+                nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE_ASCENT);
                 auto keyColor = isActive ? nvgRGB(100, 100, 100) : nvgRGB(60, 60, 60);
                 nvgFillColor(vg, keyColor);
-                nvgText(vg, getWidth() - 10, 22, keyCommand.c_str(), nullptr);
+                nvgText(vg, getWidth() - 10, middle, keyCommand.c_str(), nullptr);
             }
         }
     private:
@@ -167,6 +167,8 @@ public:
             value += 35;
         };
 
+        spacers.clear();
+
         auto b = getBounds();
         b.h = 30;
         b.x = 5;
@@ -178,23 +180,29 @@ public:
         if (loadPatch)
             loadPatch->setBounds(b);
         offset(b.y);
+        if (closePatch)
+            closePatch->setBounds(b);
+        offset(b.y);
+        addSpacer(b.y);
         if (savePatch)
             savePatch->setBounds(b);
         offset(b.y);
         if (saveAsPatch)
             saveAsPatch->setBounds(b);
         offset(b.y);
-        if (closePatch)
-            closePatch->setBounds(b);
-        offset(b.y);
+        addSpacer(b.y);
         if (applicationSettings)
             applicationSettings->setBounds(b);
         offset(b.y);
         if (aboutApp)
             aboutApp->setBounds(b);
         offset(b.y);
+        addSpacer(b.y);
         if (quitApplication)
             quitApplication->setBounds(b);
+        offset(b.y);
+
+        setSize(230, b.y);
     }
 
     void render(NVGcontext* vg, const pptk::Theme& theme) override
@@ -202,9 +210,29 @@ public:
         nvgBeginPath(vg);
         nvgDrawRoundedRect(vg, - 3,  - 3, getWidth() + 6, getHeight() + 6, dropShadowCol, dropShadowCol, 13);
         nvgDrawRoundedRect(vg, 0, 0, getWidth(), getHeight(), bg, outline, 10.0f);
+
+        nvgBeginPath(vg);
+        nvgStrokeColor(vg, theme.app.general_border);
+        nvgLineStyle(vg, NVG_LINE_SOLID);
+        nvgStrokeWidth(vg, 1);
+
+        for (auto yPos : spacers)
+        {
+            nvgMoveTo(vg, 0, yPos);
+            nvgLineTo(vg, getWidth() - 0, yPos);
+        }
+        nvgStroke(vg);
     }
 
 private:
+    void addSpacer(float& pos)
+    {
+        pos += 2.5f;
+        spacers.push_back(pos - 2.5f);
+        pos += 2.5f;
+    }
+    std::vector<float> spacers;
+
     std::unique_ptr<MenuItem> newPatch;
     std::unique_ptr<MenuItem> loadPatch;
     std::unique_ptr<MenuItem> savePatch;

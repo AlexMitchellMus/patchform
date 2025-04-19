@@ -33,6 +33,12 @@ public:
 
     void unloadActivePatch()
     {
+        // TODO: Allow empty patch state in future (with welcome panel?)
+        const int activePatches = static_cast<int>(std::ranges::count_if(graphManagersUI, [](const auto& gm) { return !gm->flaggedForDeletion.load(); }));
+
+        if (activePatches <= 1)
+            return; // Don’t allow unloading the last remaining patch
+
         int indexToRemove = -1;
 
         for (size_t i = 0; i < graphManagersUI.size(); ++i)
@@ -45,24 +51,40 @@ public:
             }
         }
 
-        activeGraph = nullptr;
-
         if (indexToRemove != -1)
         {
-            size_t nextIndex =
-                (indexToRemove > 0) ? indexToRemove - 1 :
-                (graphManagersUI.size() > 1 ? 1 : static_cast<size_t>(-1));
-
-            if (nextIndex < graphManagersUI.size() &&
-                !graphManagersUI[nextIndex]->flaggedForDeletion.load())
+            // Try the one before first
+            for (int i = indexToRemove - 1; i >= 0; --i)
             {
-                activeGraph = graphManagersUI[nextIndex].get();
+                if (!graphManagersUI[i]->flaggedForDeletion.load())
+                {
+                    activeGraph = graphManagersUI[i].get();
+                    graphListNeedsSwap.store(true, std::memory_order_release);
+                    return;
+                }
+            }
+
+            // Then try the one after
+            for (size_t i = indexToRemove + 1; i < graphManagersUI.size(); ++i)
+            {
+                if (!graphManagersUI[i]->flaggedForDeletion.load())
+                {
+                    activeGraph = graphManagersUI[i].get();
+                    graphListNeedsSwap.store(true, std::memory_order_release);
+                    return;
+                }
             }
         }
 
+        // If none found
+        activeGraph = nullptr;
         graphListNeedsSwap.store(true, std::memory_order_release);
     }
 
+    bool graphSwapPending() const
+    {
+        return graphListNeedsSwap.load(std::memory_order_acquire);
+    }
 
     void cleanupDeletedGraphs()
     {

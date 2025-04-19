@@ -12,8 +12,6 @@
 
 MainMenu::MainMenu(Editor* ed)
 {
-    setSize(230, 8 * 35 + 5);
-
     newPatch = std::make_unique<MenuItem>("New patch");
     newPatch->setKeyCommand(PlatformHelpers::formatKey(SDLK_N, SDL_KMOD_CTRL));
     addComponent(newPatch.get());

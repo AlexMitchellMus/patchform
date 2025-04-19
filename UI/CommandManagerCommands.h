@@ -31,6 +31,24 @@ public:
     {
         ed->graphSystem->unloadActivePatch();
 
+        // We have to wait until the old graph has been swapped out to the active graph
+        // We can't just get the active graph right away
+        // FIXME: This should fixable. What we need to do is ask if the graph is swapping, and take either transitioning or active!
+        // But currently, waiting worst case 4ms is fine for now (on UI thread)
+        // As a unload/load is happening, the UI will be changing radically anyway!
+        int msDelay = 0;
+        for (msDelay; msDelay < 50; ++msDelay)
+        {
+            if (!ed->graphSystem->graphSwapPending())
+                break;
+            SDL_Delay(1);
+        }
+
+        if (msDelay)
+        {
+            std::cout << "waited " << msDelay << "ms for graph swap to complete" << std::endl;
+        }
+
         const auto names = ed->graphSystem->getLoadedPatches();
         ed->updateTabs(names);
 

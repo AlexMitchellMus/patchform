@@ -70,7 +70,7 @@ void Item::render(NVGcontext* vg, const pptk::Theme& theme)
         nvgFontFace(vg, "object_icons");
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFillColor(vg, nvgRGB(220, 220, 220));
-        nvgText(vg, 6, getHeight() * 0.5f - 3.0f, icon.c_str(), nullptr);
+        nvgText(vg, 6, getHeight() * 0.5 - 3, icon.c_str(), nullptr);
     }
 
     nvgFontSize(vg, 14.0f);
