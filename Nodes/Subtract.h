@@ -19,17 +19,38 @@ public:
         addInputPort("A", AudioPort::PortType::Data);
         addInputPort("B", AudioPort::PortType::Data);
 
-        modeParam = addParameter<ListParameter>("hot", std::vector<std::string>{ "A", "B", "A+B" }, "B");
+        mode.store(objParams.value("hot", 1));
+        latestA.store(objParams.value("defaultA", 0.0f));
+        latestB.store(objParams.value("defaultB", 0.0f));
+
+        auto modeToInt = [](const std::string& mode)
+        {
+            switch (hash(mode))
+            {
+            default:
+            case hash("A"):
+                return 0;
+            case hash("B"):
+                return 1;
+            case hash("A+B"):
+                return 2;
+            }
+        };
+
+        auto intToMode = [](int mode) -> std::string
+        {
+            switch (mode)
+            {
+            case 0: return "A";
+            case 1: return "B";
+            case 2: return "A+B";
+            default: return "A";
+            }
+        };
+
+        modeParam = addParameter<ListParameter>("hot", std::vector<std::string>{ "A", "B", "A+B" }, intToMode(mode));
         defaultAParam = addParameter<FloatParameter>("defaultA", 0.0f, -1000.0f, 1000.0f);
         defaultBParam = addParameter<FloatParameter>("defaultB", 0.0f, -1000.0f, 1000.0f);
-
-        latestA.store(defaultAParam->getValue());
-        latestB.store(defaultBParam->getValue());
-
-        const auto& initVal = modeParam->getValue();
-        if (initVal == "A")       mode.store(0);
-        else if (initVal == "B")  mode.store(1);
-        else                      mode.store(2);
 
         defaultAParam->informNodeOfChange = [this]() {
             latestA.store(defaultAParam->getValue());
@@ -37,12 +58,17 @@ public:
         defaultBParam->informNodeOfChange = [this]() {
             latestB.store(defaultBParam->getValue());
         };
-        modeParam->informNodeOfChange = [this]() {
-            const auto& value = modeParam->getValue();
-            if (value == "A")       mode.store(0);
-            else if (value == "B")  mode.store(1);
-            else                    mode.store(2);
+        modeParam->informNodeOfChange = [this, modeToInt]() {
+            mode.store(modeToInt(modeParam->getValue()));
         };
+    }
+
+    json getSerializedNode() override
+    {
+        nodeCreationData["hot"] = mode.load();
+        nodeCreationData["defaultA"] = latestA.load();
+        nodeCreationData["defaultB"] = latestB.load();
+        return nodeCreationData;
     }
 
     void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
