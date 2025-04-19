@@ -31,13 +31,13 @@ public:
         return {objects, conns};
     }
 
-    void unloadActivePatch()
+    bool unloadActivePatch()
     {
         // TODO: Allow empty patch state in future (with welcome panel?)
         const int activePatches = static_cast<int>(std::ranges::count_if(graphManagersUI, [](const auto& gm) { return !gm->flaggedForDeletion.load(); }));
 
         if (activePatches <= 1)
-            return; // Don’t allow unloading the last remaining patch
+            return false; // Don’t allow unloading the last remaining patch
 
         int indexToRemove = -1;
 
@@ -60,7 +60,7 @@ public:
                 {
                     activeGraph = graphManagersUI[i].get();
                     graphListNeedsSwap.store(true, std::memory_order_release);
-                    return;
+                    return true;
                 }
             }
 
@@ -71,14 +71,11 @@ public:
                 {
                     activeGraph = graphManagersUI[i].get();
                     graphListNeedsSwap.store(true, std::memory_order_release);
-                    return;
+                    return true;
                 }
             }
         }
-
-        // If none found
-        activeGraph = nullptr;
-        graphListNeedsSwap.store(true, std::memory_order_release);
+        return false;
     }
 
     bool graphSwapPending() const

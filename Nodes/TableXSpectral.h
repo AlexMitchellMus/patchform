@@ -143,21 +143,20 @@ public:
         int countA = 0, countB = 0;
         extractPeaks(fftA, peaksA, countA, 128);
         extractPeaks(fftB, peaksB, countB, 128);
-        size_t count = std::min(countA, countB);
+        const size_t count = std::min(countA, countB);
 
-        std::fill(fftOut, fftOut + defaultTableSize, 0.0f);
+        std::fill_n(fftOut, defaultTableSize, 0.0f);
 
         for (size_t i = 0; i < count; ++i)
         {
-            float bin = (1.0f - binBlend) * peaksA[i].bin + binBlend * peaksB[i].bin;
-            float mag = std::sqrt((1.0f - blendCurve) * peaksA[i].mag * peaksA[i].mag +
-                blendCurve * peaksB[i].mag * peaksB[i].mag);
-            float phase = (1.0f - phaseBlend) * peaksA[i].phase + phaseBlend * peaksB[i].phase;
+            const float bin = (1.0f - binBlend) * peaksA[i].bin + binBlend * peaksB[i].bin;
+            const float mag = std::sqrt(fma(1.0f - blendCurve, peaksA[i].mag * peaksA[i].mag, blendCurve * peaksB[i].mag * peaksB[i].mag));
+            const float phase = (1.0f - phaseBlend) * peaksA[i].phase + phaseBlend * peaksB[i].phase;
 
-            int binLo = (int)std::floor(bin);
-            float frac = bin - binLo;
-            float re = mag * std::cos(phase);
-            float im = mag * std::sin(phase);
+            const int binLo = static_cast<int>(std::floor(bin));
+            const float frac = bin - binLo;
+            const float re = mag * std::cos(phase);
+            const float im = mag * std::sin(phase);
 
             if (binLo >= 1 && binLo < (defaultTableSize / 2) - 1)
             {

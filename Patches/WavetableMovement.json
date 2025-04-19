@@ -67,12 +67,6 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "21",
-            "sourcePort": 0,
-            "targetNode": "20",
-            "targetPort": 1
-        },
-        {
             "sourceNode": "19_6",
             "sourcePort": 0,
             "targetNode": "21",
@@ -124,12 +118,6 @@
             "sourceNode": "28",
             "sourcePort": 0,
             "targetNode": "29",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "22",
-            "sourcePort": 0,
-            "targetNode": "26",
             "targetPort": 0
         },
         {
@@ -193,12 +181,6 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "21_3",
-            "sourcePort": 0,
-            "targetNode": "20",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "19_6",
             "sourcePort": 0,
             "targetNode": "21_3",
@@ -214,12 +196,6 @@
             "sourceNode": "35",
             "sourcePort": 0,
             "targetNode": "36_1",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "44",
-            "sourcePort": 0,
-            "targetNode": "47",
             "targetPort": 0
         },
         {
@@ -373,12 +349,6 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "26",
-            "sourcePort": 0,
-            "targetNode": "27",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "23_5",
             "sourcePort": 0,
             "targetNode": "3_16",
@@ -443,12 +413,6 @@
             "sourcePort": 0,
             "targetNode": "19_1",
             "targetPort": 0
-        },
-        {
-            "sourceNode": "21_4",
-            "sourcePort": 0,
-            "targetNode": "20_1",
-            "targetPort": 1
         },
         {
             "sourceNode": "19_9",
@@ -535,12 +499,6 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "21_7",
-            "sourcePort": 0,
-            "targetNode": "20_1",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "19_9",
             "sourcePort": 0,
             "targetNode": "21_7",
@@ -607,33 +565,9 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "43_2",
-            "sourcePort": 0,
-            "targetNode": "31_2",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "31_2",
-            "sourcePort": 0,
-            "targetNode": "26_2",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "43_2",
-            "sourcePort": 0,
-            "targetNode": "60_1",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "60_1",
             "sourcePort": 0,
             "targetNode": "31_3",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "31_3",
-            "sourcePort": 0,
-            "targetNode": "26_2",
             "targetPort": 0
         },
         {
@@ -667,27 +601,9 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "45_1",
-            "sourcePort": 0,
-            "targetNode": "43_2",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "50_3",
             "sourcePort": 0,
             "targetNode": "50_2",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "35_1",
-            "sourcePort": 0,
-            "targetNode": "91_1",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "35_1",
-            "sourcePort": 0,
-            "targetNode": "91",
             "targetPort": 0
         },
         {
@@ -713,18 +629,6 @@
             "sourcePort": 0,
             "targetNode": "127",
             "targetPort": 1
-        },
-        {
-            "sourceNode": "26_2",
-            "sourcePort": 0,
-            "targetNode": "127",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "127",
-            "sourcePort": 0,
-            "targetNode": "27_1",
-            "targetPort": 0
         },
         {
             "sourceNode": "91",
@@ -797,6 +701,126 @@
             "sourcePort": 0,
             "targetNode": "23_6",
             "targetPort": 1
+        },
+        {
+            "sourceNode": "26_2",
+            "sourcePort": 0,
+            "targetNode": "45_4",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "31_2",
+            "sourcePort": 0,
+            "targetNode": "26_2",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "31_3",
+            "sourcePort": 0,
+            "targetNode": "26_2",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "45_3",
+            "sourcePort": 0,
+            "targetNode": "43_2",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "26",
+            "sourcePort": 0,
+            "targetNode": "124",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "44",
+            "sourcePort": 0,
+            "targetNode": "47",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "43",
+            "sourcePort": 0,
+            "targetNode": "27",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127",
+            "sourcePort": 0,
+            "targetNode": "27_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127",
+            "sourcePort": 0,
+            "targetNode": "31_2",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "43_2",
+            "sourcePort": 0,
+            "targetNode": "127",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127",
+            "sourcePort": 0,
+            "targetNode": "60_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "35_1",
+            "sourcePort": 0,
+            "targetNode": "21_5",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21_5",
+            "sourcePort": 0,
+            "targetNode": "91",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21_5",
+            "sourcePort": 0,
+            "targetNode": "91_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21_7",
+            "sourcePort": 0,
+            "targetNode": "126",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "126",
+            "sourcePort": 0,
+            "targetNode": "20_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "126_1",
+            "sourcePort": 0,
+            "targetNode": "20_1",
+            "targetPort": 1
+        },
+        {
+            "sourceNode": "21_4",
+            "sourcePort": 0,
+            "targetNode": "126_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21",
+            "sourcePort": 0,
+            "targetNode": "126_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21_3",
+            "sourcePort": 0,
+            "targetNode": "126",
+            "targetPort": 0
         }
     ],
     "nodes": [
@@ -2924,7 +2948,7 @@
             ]
         },
         {
-            "hz": 19.0,
+            "hz": 17.0,
             "id": "11",
             "obj": "Metro",
             "pos": [
@@ -2983,14 +3007,6 @@
             "pos": [
                 1220.98046875,
                 1505.5078125
-            ]
-        },
-        {
-            "id": "20",
-            "obj": "aout",
-            "pos": [
-                1031.85546875,
-                1998.3046875
             ]
         },
         {
@@ -5121,14 +5137,14 @@
                 2032.0234375,
                 1341.421875
             ],
-            "selectedNote": 68
+            "selectedNote": 60
         },
         {
             "id": "27",
             "obj": "mtof",
             "pos": [
-                2032.8671875,
-                1474.0625
+                1820.8515625,
+                1526.46875
             ]
         },
         {
@@ -7221,8 +7237,8 @@
             "id": "22",
             "obj": "notein",
             "pos": [
-                2032.421875,
-                1286.23046875
+                1795.5390625,
+                1192.76953125
             ]
         },
         {
@@ -11684,7 +11700,7 @@
             ]
         },
         {
-            "hz": 19.0,
+            "hz": 17.0,
             "id": "11_1",
             "obj": "Metro",
             "pos": [
@@ -11741,16 +11757,16 @@
             "id": "19_1",
             "obj": "tableosc",
             "pos": [
-                3795.640625,
-                1497.828125
+                3276.0,
+                1501.875
             ]
         },
         {
             "id": "20_1",
             "obj": "aout",
             "pos": [
-                3606.515625,
-                1990.6171875
+                2588.1875,
+                2482.265625
             ]
         },
         {
@@ -11762,7 +11778,7 @@
             ]
         },
         {
-            "default": 0.44999977946281433,
+            "default": 0.15500080585479736,
             "emitOnLoad": true,
             "id": "19_9",
             "max": 1.0,
@@ -11770,7 +11786,7 @@
             "obj": "dial",
             "pos": [
                 3841.265625,
-                1923.0
+                1928.4609375
             ],
             "value": 0.5800004601478577
         },
@@ -13878,17 +13894,17 @@
             "id": "26_2",
             "obj": "keyboard",
             "pos": [
-                4495.9609375,
-                1402.625
+                4464.875,
+                1621.421875
             ],
-            "selectedNote": 60
+            "selectedNote": 49
         },
         {
             "id": "27_1",
             "obj": "mtof",
             "pos": [
-                4499.4453125,
-                1628.765625
+                3848.84375,
+                1450.66796875
             ]
         },
         {
@@ -15973,8 +15989,8 @@
             "id": "22_1",
             "obj": "notein",
             "pos": [
-                4498.90625,
-                1348.80078125
+                4439.8203125,
+                1526.58203125
             ]
         },
         {
@@ -16002,8 +16018,8 @@
             "mode": 0,
             "obj": "drive",
             "pos": [
-                3802.859375,
-                1573.5234375
+                3268.265625,
+                1550.546875
             ]
         },
         {
@@ -16012,16 +16028,6 @@
             "pos": [
                 3531.953125,
                 1884.296875
-            ]
-        },
-        {
-            "emitOnLoad": true,
-            "id": "45_1",
-            "list": "60, 61",
-            "obj": "listbox",
-            "pos": [
-                4708.6171875,
-                1079.73828125
             ]
         },
         {
@@ -16077,8 +16083,8 @@
             "id": "50_3",
             "obj": "tag",
             "pos": [
-                4669.3203125,
-                1016.06640625
+                4488.2265625,
+                1025.52734375
             ],
             "symbol": "get"
         },
@@ -16094,7 +16100,7 @@
         },
         {
             "id": "47_5",
-            "max": 1,
+            "max": 3,
             "min": 0,
             "obj": "count",
             "pos": [
@@ -16146,8 +16152,8 @@
             "id": "31_2",
             "obj": "tag",
             "pos": [
-                4599.609375,
-                1245.171875
+                4568.5234375,
+                1463.953125
             ],
             "symbol": "note-on"
         },
@@ -16155,8 +16161,8 @@
             "id": "31_3",
             "obj": "tag",
             "pos": [
-                4787.0234375,
-                1247.6015625
+                4755.9375,
+                1466.3828125
             ],
             "symbol": "note-off"
         },
@@ -16165,8 +16171,8 @@
             "ms": 100.0,
             "obj": "evdelay",
             "pos": [
-                4790.453125,
-                1187.125
+                4759.3671875,
+                1405.90625
             ]
         },
         {
@@ -16178,7 +16184,7 @@
             ]
         },
         {
-            "default": 0.3599998354911804,
+            "default": 0.6449995636940002,
             "emitOnLoad": true,
             "id": "19_11",
             "max": 1.0,
@@ -18271,8 +18277,8 @@
             "id": "91_1",
             "obj": "chorus",
             "pos": [
-                3870.578125,
-                1673.875
+                3781.390625,
+                1695.5
             ]
         },
         {
@@ -18281,19 +18287,19 @@
             "list": "12",
             "obj": "listbox",
             "pos": [
-                4740.03125,
-                1535.3046875
+                4653.53125,
+                1199.1484375
             ]
         },
         {
-            "defaultA": 60.0,
+            "defaultA": 61.0,
             "defaultB": 12.0,
             "hot": 0,
             "id": "127",
             "obj": "Subtract",
             "pos": [
-                4500.578125,
-                1578.9296875
+                4408.6328125,
+                1244.078125
             ]
         },
         {
@@ -26575,6 +26581,61 @@
             ],
             "saveOnClose": false,
             "size": 2048
+        },
+        {
+            "emitOnLoad": true,
+            "id": "45_3",
+            "list": "61, 58, 56, 54",
+            "obj": "listbox",
+            "pos": [
+                4591.8515625,
+                1088.140625
+            ]
+        },
+        {
+            "emitOnLoad": true,
+            "id": "45_4",
+            "list": "61, 58, ",
+            "obj": "listbox",
+            "pos": [
+                4463.9921875,
+                1749.8828125
+            ]
+        },
+        {
+            "id": "124",
+            "obj": "filtertag",
+            "pos": [
+                2032.2578125,
+                1476.84765625
+            ],
+            "tag": "note-on"
+        },
+        {
+            "id": "21_5",
+            "obj": "multitapdelay",
+            "pos": [
+                3283.015625,
+                1613.09375
+            ]
+        },
+        {
+            "id": "126",
+            "obj": "limiter",
+            "pos": [
+                2403.9609375,
+                2381.8671875
+            ],
+            "threshold": 0.5
+        },
+        {
+            "id": "126_1",
+            "obj": "limiter",
+            "pos": [
+                2658.59375,
+                2381.234375
+            ],
+            "threshold": 0.5
         }
     ]
 }

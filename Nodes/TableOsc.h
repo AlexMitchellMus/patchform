@@ -43,6 +43,11 @@ public:
 
     void processAudio(const float*, float*, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
+        const auto& freqEvents = inputPortBuffers[1]->getEvents();
+        for (const auto* e : freqEvents)
+            if (e->data && e->data->type == DataAtom::DataType::Float)
+                freq = e->data->data.atom;
+
         const auto& waveformEvents = inputPortBuffers[0]->getEvents();
         if (!waveformEvents.empty() && waveformEvents[0]->data->type == DataAtom::DataType::Sample) {
             const auto& sample = waveformEvents[0]->data->data.sample;
@@ -57,11 +62,6 @@ public:
 
         const float* waveform = internalWaveform.data();
         const size_t tableSize = internalWaveform.size();
-
-        const auto& freqEvents = inputPortBuffers[1]->getEvents();
-        for (const auto* e : freqEvents)
-            if (e->data && e->data->type == DataAtom::DataType::Float)
-                freq = e->data->data.atom;
 
         const float phaseIncrement = freq / context->sampleRate;
 

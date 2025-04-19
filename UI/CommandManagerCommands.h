@@ -29,7 +29,8 @@ public:
     ClosePatchCommand(Editor* editor) : ed(editor) {}
     void invoke() override
     {
-        ed->graphSystem->unloadActivePatch();
+        if (!ed->graphSystem->unloadActivePatch())
+            return;
 
         // We have to wait until the old graph has been swapped out to the active graph
         // We can't just get the active graph right away
