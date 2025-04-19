@@ -5,6 +5,7 @@
 !define INSTALL_DIR "$PROGRAMFILES64\${APP_NAME}"
 !define MUI_ICON patchformicon.ico
 !define MUI_UNICON patchformicon.ico
+!define MUI_WELCOMEFINISHPAGE_BITMAP "patchformside.bmp"
 
 OutFile "PatchformStandaloneInstaller.exe"
 InstallDir "${INSTALL_DIR}"
@@ -18,7 +19,9 @@ Icon patchformicon.ico
 Var SHORTCUT_STARTMENU
 Var SHORTCUT_DESKTOP
 
-; Define license pages
+; Define welcome image page
+!insertmacro MUI_PAGE_WELCOME
+; Define license page
 !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 ; Define installer pages
 !insertmacro MUI_PAGE_DIRECTORY
@@ -36,6 +39,7 @@ Section "Install"
     SetOutPath "$INSTDIR"
     File "${OUTPUT_DIR}\PatchformStandalone.exe"
     File "patchformicon.ico"
+    File "patchformside.bmp"
 
     SetOutPath "$INSTDIR\Patches"
     File "${PATCH_DIR}\count.json5"
