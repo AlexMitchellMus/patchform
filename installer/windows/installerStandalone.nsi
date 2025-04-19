@@ -3,21 +3,23 @@
 !define APP_NAME "PatchformStandalone"
 !define APP_VERSION "1.0"
 !define INSTALL_DIR "$PROGRAMFILES64\${APP_NAME}"
-!define MUI_ICON plugpatchicon.ico
-!define MUI_UNICON plugpatchicon.ico
+!define MUI_ICON patchformicon.ico
+!define MUI_UNICON patchformicon.ico
 
 OutFile "PatchformStandaloneInstaller.exe"
 InstallDir "${INSTALL_DIR}"
 
-Name "PlugPatch"
+Name "Patchform"
 
 ; Set the icon for the installer
-Icon plugpatchicon.ico
+Icon patchformicon.ico
 
 ; Variables for user choices
 Var SHORTCUT_STARTMENU
 Var SHORTCUT_DESKTOP
 
+; Define license pages
+!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 ; Define installer pages
 !insertmacro MUI_PAGE_DIRECTORY
 Page custom CustomOptions CustomOptionsLeave
@@ -33,7 +35,7 @@ Page custom CustomOptions CustomOptionsLeave
 Section "Install"
     SetOutPath "$INSTDIR"
     File "${OUTPUT_DIR}\PatchformStandalone.exe"
-    File "plugpatchicon.ico"
+    File "patchformicon.ico"
 
     SetOutPath "$INSTDIR\Patches"
     File "${PATCH_DIR}\count.json5"
@@ -59,18 +61,18 @@ Section "Install"
 
     ; Create shortcuts based on user selections
     StrCmp $SHORTCUT_STARTMENU "1" 0 +2
-        CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\PatchformStandalone.exe" "" "$INSTDIR\plugpatchicon.ico" 0
+        CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\PatchformStandalone.exe" "" "$INSTDIR\patchformicon.ico" 0
 
     StrCmp $SHORTCUT_DESKTOP "1" 0 +2
-        CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\PatchformStandalone.exe" "" "$INSTDIR\plugpatchicon.ico" 0
+        CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\PatchformStandalone.exe" "" "$INSTDIR\patchformicon.ico" 0
 
     ; Create Start Menu uninstaller shortcut
-    CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall ${APP_NAME}.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\plugpatchicon.ico" 0
+    CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall ${APP_NAME}.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\patchformicon.ico" 0
 SectionEnd
 
 Section "Uninstall"
     Delete "$INSTDIR\PatchformStandalone.exe"
-    Delete "$INSTDIR\plugpatchicon.ico"
+    Delete "$INSTDIR\patchformicon.ico"
     Delete "$INSTDIR\uninstall.exe"
 
     ; Delete patch files

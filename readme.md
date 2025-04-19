@@ -41,6 +41,11 @@ To package the application for Windows using the provided build system:
 
 1. Install **NSIS (Nullsoft Scriptable Install System)**  
    → https://nsis.sourceforge.io/
+   Install from terminal:
+   1. scoop:
+   `scoop install nsis`
+   2. winget:
+   `winget install NSIS.NSIS`
 
 2. Ensure `makensis` is available in your system's `PATH`.
 

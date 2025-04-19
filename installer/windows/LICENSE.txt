@@ -1,0 +1,75 @@
+Patchform - Copyright (c) 2024-2025 Alex Mitchell
+
+Patchform is dual-licensed:
+
+1. Under the GNU General Public License (GPL) version 3 (or later) for open-source use.
+2. Under a commercial license for proprietary or closed-source use.
+
+To obtain a commercial license, please contact the author directly.
+
+---
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+This project includes the following third-party libraries:
+
+- moodycamel ConcurrentQueue (Lockfree queue)
+  Cameron Desrochers - Simplified BSD License
+  https://github.com/cameron314/concurrentqueue
+
+- readerwriterqueue (Fast single-producer/consumer lock-free queue)
+  Cameron Desrochers - Simplified BSD License
+  https://github.com/cameron314/readerwriterqueue
+
+- nlohmann/json (JSON file parsing)
+  Niels Lohmann - MIT License
+  https://github.com/nlohmann/json
+
+- libsamplerate (Sample Rate Conversion Library)
+  Erik de Castro Lopo - 2-Clause BSD License
+  https://github.com/libsndfile/libsamplerate
+
+- PortAudio (Standalone Audio I/O)
+  PortAudio Team - MIT License
+  https://github.com/PortAudio/portaudio
+
+- NanoVG (Vector Graphics Rendering)
+  Mikko Mononen / Timothy Schoen - Zlib License
+  https://github.com/timothyschoen/nanovg
+
+- PFFFT (Fast Fourier Transform)
+  Julien Pommier - BSD-like License
+  https://bitbucket.org/jpommier/pffft/src/master/
+
+- SDL2 (Simple DirectMedia Layer)
+  SDL Team - zlib License
+  https://github.com/libsdl-org/SDL
+
+- unordered_dense (High-performance hash map)
+  Martin Ankerl - MIT License
+  https://github.com/martinus/unordered_dense
+
+- glaze (Fast JSON and interface library)
+  Stephen Berry - MIT License
+  https://github.com/stephenberry/glaze
+
+- RtMidi (Realtime MIDI I/O)
+  Gary P. Scavone - MIT License
+  https://www.music.mcgill.ca/~gary/rtmidi/
+
+- SIMDe (SIMD Everywhere - portable SIMD support)
+  Evan Nemerson and contributors - MIT License
+  https://github.com/simd-everywhere/simde
