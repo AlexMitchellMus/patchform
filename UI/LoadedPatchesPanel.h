@@ -13,16 +13,18 @@ struct PatchInfo {
     std::function<void()> onClose;
     bool isDirty = false;
 
-    PatchInfo(const std::string& path, std::function<void()> close, const bool isDirty)
+    PatchInfo(const std::string& path, std::function<void()> close, const bool inDirtyState)
         : fullPath(path)
         , onClose(std::move(close))
-        , isDirty(isDirty)
+        , isDirty(inDirtyState)
     {
         size_t slash = path.find_last_of("/\\");
         std::string base = (slash != std::string::npos) ? path.substr(slash + 1) : path;
 
         size_t dot = base.find_last_of('.');
         fileName = (dot != std::string::npos) ? base.substr(0, dot) : base;
+
+        isDirty = path.find("virtual") != std::string::npos ? true : isDirty;
     }
 };
 

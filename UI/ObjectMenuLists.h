@@ -99,6 +99,7 @@ namespace ObjectMenuDefs
         {R"({"obj": "limiter" })", "", "Limiter"},
         {R"({"obj": "chorus" })", "", "Chorus"},
         {R"({"obj": "dcblock" })", "", "DC Blocker"},
+        {R"({"obj": "bpf" })", "", "Bandpass filter"},
     };
 
     // Spectral

@@ -273,6 +273,8 @@ public:
             auto* kb = reinterpret_cast<Keyboard*>(audioNode);
             const auto white = nvgRGB(200, 200, 200);
 
+            const auto selectedNoteCol = nvgRGB(36, 130, 210);
+
             nvgDrawRoundedRect(vg, 1, 1, getWidth() - 2, getHeight() - 2, white, white, 5);
 
             int whiteCount = getWhiteKeyCount();
@@ -305,7 +307,7 @@ public:
                     {
                         nvgRect(vg, 0, y, w, h - 2);
                     }
-                    nvgFillColor(vg, nvgRGB(100, 100, 100));
+                    nvgFillColor(vg, selectedNoteCol);
                     nvgFill(vg);
                 }
                 whiteIndex++;
@@ -349,8 +351,9 @@ public:
                 float y = whiteIndex * keyHeightAdjusted - (keyHeightAdjusted / 4.0f);
                 float h = keyHeightAdjusted * 0.5f;
                 float w = getWidth() * 0.6f;
-                NVGcolor col = (midiNote == kb->selectedNote.load()) ? nvgRGB(50, 50, 50) : nvgRGB(0, 0, 0);
-                nvgDrawRoundedRect(vg, 0, y, w, h, col, col, 0);
+                NVGcolor col = (midiNote == kb->selectedNote.load()) ? selectedNoteCol : nvgRGB(5, 5, 5);
+                NVGcolor outline = nvgRGB(0, 0, 0);
+                nvgDrawRoundedRect(vg, 0, y, w, h, col, outline, 0);
             }
         }
 
@@ -359,6 +362,8 @@ public:
             int whiteIndex = 0;
 
             const auto white = nvgRGB(200, 200, 200);
+            const auto whiteSelCol = nvgRGB(36, 130, 210);
+            const auto blackSelCol = nvgRGB(whiteSelCol.r / 2, whiteSelCol.g / 2, whiteSelCol.b / 2);
 
             nvgDrawRoundedRect(vg, 1, 1, getWidth() - 2, getHeight() - 2, white, white, 5);
 
@@ -390,7 +395,7 @@ public:
                     {
                         nvgRect(vg, x, 1, keyWidth, keyHeight - 2);
                     }
-                    nvgFillColor(vg, nvgRGB(100, 100, 100));
+                    nvgFillColor(vg, whiteSelCol);
                     nvgFill(vg);
                 }
 
@@ -430,8 +435,9 @@ public:
                 }
 
                 int x = whiteIndex * keyWidth - (keyWidth / 4);
-                NVGcolor col = noteState[midiNote] ? nvgRGB(50, 50, 50) : nvgRGB(0, 0, 0);
-                nvgDrawRoundedRect(vg, x, 1, keyWidth * 0.5f, keyHeight * 0.6f, col, col, 0);
+                const auto blackCol = nvgRGB(0, 0, 0);
+                const auto col = noteState[midiNote] ? blackSelCol : nvgRGB(0, 0, 0);
+                nvgDrawRoundedRect(vg, x, 1, keyWidth * 0.5f, keyHeight * 0.6f, col, blackCol, 0);
             }
         }
 
