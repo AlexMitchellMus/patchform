@@ -39,7 +39,6 @@ PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
 
 PatchformApp::~PatchformApp()
 {
-    shutdown();
 }
 
 bool PatchformApp::initialize()
