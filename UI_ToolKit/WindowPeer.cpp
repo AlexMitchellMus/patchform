@@ -2,7 +2,7 @@
 #include "../Glad/gl.h"
 #include <iostream>
 
-WindowPeer::WindowPeer(const std::string &title, int width, int height)
+WindowPeer::WindowPeer(const std::string &title, int width, int height, const bool isFullScreen)
     : window(nullptr), glContext(nullptr)
 {
     if (SDL_Init(SDL_INIT_VIDEO) == 0) {
@@ -16,7 +16,7 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | (isFullScreen ? SDL_WINDOW_MAXIMIZED : 0));
     if (!window) {
         throw std::runtime_error(SDL_GetError());
     }
@@ -49,6 +49,11 @@ WindowPeer::~WindowPeer() {
         window = nullptr;
     }
     SDL_Quit();
+}
+
+bool WindowPeer::isFullscreen() const {
+    Uint32 flags = SDL_GetWindowFlags(window);
+    return (flags & SDL_WINDOW_FULLSCREEN) != 0;
 }
 
 SDL_Window* WindowPeer::getSDLWindow() const {

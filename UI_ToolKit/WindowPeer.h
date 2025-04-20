@@ -7,7 +7,7 @@
 class WindowPeer {
 public:
     // Constructs the window with a title, width, and height.
-    WindowPeer(const std::string &title, int width, int height);
+    WindowPeer(const std::string &title, int width, int height, bool isFullScreen);
     ~WindowPeer();
 
     // Accessor for the underlying SDL_Window (if needed for low-level operations).
@@ -18,6 +18,8 @@ public:
 
     // Set the window title.
     void setTitle(const std::string &title);
+
+    bool isFullscreen() const;
 
     // Set the window size.
     void setSize(int width, int height);

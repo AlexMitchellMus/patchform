@@ -31,8 +31,6 @@ PatchformApp* PatchformApp::instance = nullptr;
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     : sampleRate(sampleRate)
     , frameCount(frameCount)
-    , windowWidth(1000)
-    , windowHeight(700)
 {
     instance = this;
 }
@@ -73,6 +71,12 @@ void PatchformApp::shutdown()
     settings.selectedApiIndex = getSelectedApiIndex();
     settings.selectedInputDeviceIndex = getSelectedInputDeviceIndex();
     settings.selectedOutputDeviceIndex = getSelectedOutputDeviceIndex();
+
+    settings.windowWidth = windowWidth;
+    settings.windowHeight = windowHeight;
+    settings.windowIsFullscreen = window->isFullscreen();
+
+    std::cout << "saving width: " << windowWidth << " height: " << windowHeight << std::endl;
 
     shutdownAudio();
 
@@ -492,7 +496,17 @@ void PatchformApp::shutdownMidi()
 
 bool PatchformApp::initUI()
 {
-    window = std::make_unique<WindowPeer>("Patchform", windowWidth, windowHeight);
+    newWidth = windowWidth = settings.windowWidth;
+    newHeight = windowHeight = settings.windowHeight;
+    isFullscreen = settings.windowIsFullscreen;
+
+    if (newWidth == -1 || newHeight == -1)
+    {
+        newWidth = windowWidth = 1000;
+        newHeight = windowHeight = 700;
+    }
+
+    window = std::make_unique<WindowPeer>("Patchform", windowWidth, windowHeight, isFullscreen);
     if (!window) return false;
 
     nvg = nvgCreateContext(0);

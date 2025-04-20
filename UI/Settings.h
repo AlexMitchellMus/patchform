@@ -7,6 +7,11 @@ public:
     int selectedInputDeviceIndex = -1;
     int selectedOutputDeviceIndex = -1;
 
+    int windowWidth = -1;
+    int windowHeight = -1;
+
+    bool windowIsFullscreen = false;
+
     bool load();
     void save() const;
 };

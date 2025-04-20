@@ -30,8 +30,8 @@ namespace pptk
             if (controlBlock)
             {
                 controlBlock->invalidate(); // Mark as invalid before destroying
-                controlBlock.reset();
             }
+            controlBlock.reset();
         }
 
         std::shared_ptr<SafeControlBlock>  getControlBlock() const
@@ -131,8 +131,23 @@ namespace pptk
 
         T* get() const
         {
-            // Check if we have a valid control block before returning the pointer
-            return (block && block->isValid()) ? ptr : nullptr;
+            if (!block)
+                return nullptr;
+
+            if (!block->isValid())
+                return nullptr;
+
+            return ptr;
+        }
+
+        bool operator==(T* other) const noexcept {
+            if (!block || !block->isValid()) return false;
+            return ptr == other;
+        }
+
+        bool operator!=(const T* other) const noexcept
+        {
+            return !(*this == other);
         }
 
         T* operator->() const

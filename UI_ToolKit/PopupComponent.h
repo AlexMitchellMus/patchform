@@ -32,8 +32,6 @@ namespace pptk
             if (auto toggle = dynamic_cast<ToggleButton*>(button.get()))
                 toggle->setActive(false);
 
-            unregisterGlobalMouseListener();
-
             if (button)
                 button->repaint();
         }

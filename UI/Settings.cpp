@@ -40,6 +40,11 @@ bool Settings::load()
     selectedInputDeviceIndex = a.value("selectedInputDeviceIndex", selectedInputDeviceIndex);
     selectedOutputDeviceIndex = a.value("selectedOutputDeviceIndex", selectedOutputDeviceIndex);
 
+    const auto& ui = j["UI"];
+    windowWidth = ui.value("windowWidth", windowWidth);
+    windowHeight = ui.value("windowHeight", windowHeight);
+    windowIsFullscreen = ui.value("windowIsFullscreen", windowIsFullscreen);
+
     return true;
 }
 
@@ -53,7 +58,13 @@ void Settings::save() const
     j["audio"] = {
         {"selectedApiIndex", selectedApiIndex},
         {"selectedInputDeviceIndex", selectedInputDeviceIndex},
-        {"selectedOutputDeviceIndex", selectedOutputDeviceIndex}
+        {"selectedOutputDeviceIndex", selectedOutputDeviceIndex},
+    };
+
+    j["UI"] = {
+        {"windowWidth", windowWidth},
+        {"windowHeight", windowHeight},
+        {"windowIsFullScreen", windowIsFullscreen}
     };
 
     std::ofstream out(path);

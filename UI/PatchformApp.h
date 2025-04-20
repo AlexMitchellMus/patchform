@@ -80,8 +80,10 @@ private:
 
     int windowWidth;
     int windowHeight;
-    int newWidth = 1000;
-    int newHeight = 700;
+    int newWidth;
+    int newHeight;
+
+    bool isFullscreen = false;
 
     int regularFont = -1;
     int semiBoldFont = -1;

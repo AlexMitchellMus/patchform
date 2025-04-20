@@ -127,17 +127,15 @@ namespace pptk
 
         void unregisterGlobalMouse(Component* component)
         {
-            {
-                // Remove all tuples whose first element (Component*) equals cPtr
-                globalMouseHandlers.erase(
-                    std::ranges::remove_if(globalMouseHandlers,
-                                           [component](auto& tup)
-                                           {
-                                               return std::get<0>(tup).get() == component;
-                                           }).begin(),
-                    globalMouseHandlers.end()
-                );
-            }
+            globalMouseHandlers.erase(
+                std::ranges::remove_if(globalMouseHandlers,
+                    [component](auto& tup)
+                    {
+                        const auto& safePtr = std::get<0>(tup);
+                        return !safePtr || safePtr == component;
+                    }).begin(),
+                globalMouseHandlers.end()
+            );
         }
 
         std::unique_ptr<PopupComponent> popupWindow;
