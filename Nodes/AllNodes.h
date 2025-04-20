@@ -50,6 +50,7 @@
 #include "MultiTapDelay.h"
 #include "Limiter.h"
 #include "Chorus.h"
+#include "DCBlocker.h"
 
 // Oscillators
 #include "Oscillator.h"

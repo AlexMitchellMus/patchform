@@ -98,6 +98,7 @@ namespace ObjectMenuDefs
         {R"({"obj": "multitapdelay" })", "", "Multitap Delay"},
         {R"({"obj": "limiter" })", "", "Limiter"},
         {R"({"obj": "chorus" })", "", "Chorus"},
+        {R"({"obj": "dcblock" })", "", "DC Blocker"},
     };
 
     // Spectral

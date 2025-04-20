@@ -39,6 +39,7 @@ public:
         for (unsigned long i = 0; i < frameCount; ++i)
         {
             float x = input[i] * driveAmount.load();
+            //output[i] = x / (1.0f + std::abs(x));
             output[i] = std::tanh(x); // Soft clipping
         }
     }

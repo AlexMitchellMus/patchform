@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <vector>
 #include "AudioNodeBase.h"
+#include "simde/x86/sse.h"
 
 class TableXSpectral : public AudioNode
 {
@@ -63,7 +64,7 @@ public:
         float phase;
     };
 
-    static void extractPeaks(const float* fft, Peak* peaks, int& count, int maxPeaks)
+    void extractPeaks(const float* fft, Peak* peaks, int& count, int maxPeaks)
     {
         count = 0;
         for (int i = 1; i < (defaultTableSize / 2) - 1; ++i)
@@ -118,6 +119,12 @@ public:
 
         if (samplesUpdated)
         {
+            const float* a = sampleA.get()->samples.data();
+            const float* b = sampleB.get()->samples.data();
+
+            pffft_transform_ordered(setup, a, fftA, nullptr, PFFFT_FORWARD);
+            pffft_transform_ordered(setup, b, fftB, nullptr, PFFFT_FORWARD);
+
             constexpr float updateBoost = 2.0f;
             remainingFrames = static_cast<int>(
                 updateBoost * std::ceil(std::log(convergenceEpsilon) / std::log(1.0f - smoothingAlpha))
@@ -129,15 +136,9 @@ public:
 
         --remainingFrames;
 
-        const float* a = sampleA.get()->samples.data();
-        const float* b = sampleB.get()->samples.data();
-
         float blendCurve = targetBlend * targetBlend;
         float phaseBlend = std::sqrt(targetBlend);
         float binBlend = 0.5f * (1.0f - SpectralHelpers::constexprCos(targetBlend * M_PI));
-
-        pffft_transform_ordered(setup, a, fftA, nullptr, PFFFT_FORWARD);
-        pffft_transform_ordered(setup, b, fftB, nullptr, PFFFT_FORWARD);
 
         Peak peaksA[128], peaksB[128];
         int countA = 0, countB = 0;

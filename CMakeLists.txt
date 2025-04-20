@@ -84,6 +84,13 @@ target_include_directories(moodycamel_readerwriterqueue INTERFACE "${CMAKE_SOURC
 add_library(pffft STATIC external/pffft/pffft.c)
 target_include_directories(pffft PUBLIC external/pffft)
 
+target_compile_options(pffft PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:
+        $<$<CONFIG:Release>:/Ox /arch:AVX2 /fp:fast /Ob3 /GL /DNDEBUG>
+        $<$<CONFIG:Debug>:/Od /Zi>
+        >
+)
+
 add_library(glad STATIC Glad/glad.cpp)
 target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/Glad")
 
@@ -178,7 +185,7 @@ if (MSVC)
                 /std:c++latest
                 /Zc:preprocessor
                 $<$<CONFIG:Debug>:/Od /Zi /RTC1 /bigobj /Zc:__cplusplus>
-                $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast /bigobj>
+                $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast /bigobj /DNDEBUG>
                 $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL /bigobj>
         )
         add_link_options($<$<CONFIG:Debug>:/DEBUG>)
