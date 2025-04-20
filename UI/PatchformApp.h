@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 
-#include "SDL3/SDL.h"
 #include "portaudio.h"
 #include "rtmidi.h"
 
@@ -81,8 +80,8 @@ private:
 
     int windowWidth;
     int windowHeight;
-    int newWidth = 1920;
-    int newHeight = 1080;
+    int newWidth = 800;
+    int newHeight = 600;
 
     int regularFont = -1;
     int semiBoldFont = -1;

@@ -227,8 +227,7 @@ void Canvas::keyPressed(pptk::CompEvent& e)
 {
     auto modKey = e.sdlEvent.key.mod;
     bool ctrlPressed = (modKey & SDL_KMOD_CTRL) != 0;
-    bool onlyCtrl = (modKey & ~SDL_KMOD_CTRL) == 0;
-    if (ctrlPressed && onlyCtrl)
+    if (ctrlPressed)
     {
         switch (e.sdlEvent.key.scancode)
         {
@@ -254,6 +253,7 @@ void Canvas::keyPressed(pptk::CompEvent& e)
             break;
         case SDL_SCANCODE_E:
             {
+                // Toggle canvas lock / edit mode
                 if (auto* ed = findParentOfClass<Editor>())
                 {
                     auto newState = mode == DisplayMode::Edit ? DisplayMode::Lock : DisplayMode::Edit;

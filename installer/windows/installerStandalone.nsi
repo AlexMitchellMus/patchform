@@ -1,3 +1,5 @@
+!define MUI_BGCOLOR "SYSCLR:Window"
+!define MUI_TEXTCOLOR "SYSCLR:WindowText"
 !include "MUI2.nsh"
 
 !define APP_NAME "PatchformStandalone"

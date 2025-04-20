@@ -31,8 +31,8 @@ PatchformApp* PatchformApp::instance = nullptr;
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     : sampleRate(sampleRate)
     , frameCount(frameCount)
-    ,windowWidth(1920)
-    , windowHeight(1080)
+    , windowWidth(800)
+    , windowHeight(600)
 {
     instance = this;
 }
@@ -490,7 +490,8 @@ void PatchformApp::shutdownMidi()
     }
 }
 
-bool PatchformApp::initUI() {
+bool PatchformApp::initUI()
+{
     window = std::make_unique<WindowPeer>("Patchform", windowWidth, windowHeight);
     if (!window) return false;
 
