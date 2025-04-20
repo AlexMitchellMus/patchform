@@ -46,14 +46,23 @@ else()
     set(glaze_ENABLE_AVX2 ON CACHE BOOL "Enable AVX2 for Glaze in non-Debug modes" FORCE)
 endif()
 
-set(PA_USE_ASIO ON CACHE BOOL "Enable ASIO support" FORCE)
-
 # External dependencies
+set(PA_USE_ASIO ON CACHE BOOL "Enable ASIO support" FORCE)
 add_subdirectory(external/portaudio)
 add_subdirectory(external/json)
 add_subdirectory(external/linenoise-ng)
 add_subdirectory(external/unordered_dense)
 add_subdirectory(external/glaze)
+
+set(SDL_SHARED OFF CACHE BOOL "Disable SDL shared library" FORCE)
+set(SDL_STATIC ON CACHE BOOL "Enable SDL static library" FORCE)
+set(SDL_AUDIO OFF CACHE BOOL "Disable SDL audio support" FORCE)
+set(SDL_JOYSTICK OFF CACHE BOOL "Disable SDL joystick support" FORCE)
+set(SDL_HAPTIC OFF CACHE BOOL "Disable SDL haptic support" FORCE)
+set(SDL_SENSOR OFF CACHE BOOL "Disable SDL sensor support" FORCE)
+set(SDL_POWER OFF CACHE BOOL "Disable SDL power support" FORCE)
+set(SDL_RENDER OFF CACHE BOOL "Disable SDL renderer support" FORCE)
+set(SDL_RENDER_GPU OFF CACHE BOOL "Disable GPU rendering support" FORCE)
 add_subdirectory(external/SDL2)
 add_subdirectory(external/nanovg)
 add_subdirectory(external/rtmidi)
@@ -63,15 +72,6 @@ if (ENABLE_ASAN AND MSVC)
     target_compile_options(nanovg PRIVATE /fsanitize=address)
     target_compile_options(rtmidi PRIVATE /fsanitize=address)
 endif()
-
-# Enable static SDL2 build
-#set(SDL_SHARED OFF CACHE BOOL "Disable SDL shared library" FORCE)
-#set(SDL_STATIC ON CACHE BOOL "Enable SDL static library" FORCE)
-#set(SDL_AUDIO OFF CACHE BOOL "Disable SDL audio support" FORCE)
-#set(SDL_JOYSTICK OFF CACHE BOOL "Disable SDL joystick support" FORCE)
-#set(SDL_HAPTIC OFF CACHE BOOL "Disable SDL haptic support" FORCE)
-#set(SDL_RENDER OFF CACHE BOOL "Disable SDL renderer support" FORCE)
-#set(SDL_RENDER_GPU ON CACHE BOOL "Enable GPU support" FORCE)
 
 # Add moodycamel concurrentqueue
 add_library(moodycamel_concurrentqueue INTERFACE)

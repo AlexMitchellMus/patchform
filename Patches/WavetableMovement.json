@@ -733,12 +733,6 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "21_5",
-            "sourcePort": 0,
-            "targetNode": "91_1",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "126",
             "sourcePort": 0,
             "targetNode": "20_1",
@@ -971,6 +965,42 @@
             "sourcePort": 0,
             "targetNode": "25_2",
             "targetPort": 1
+        },
+        {
+            "sourceNode": "21_4",
+            "sourcePort": 0,
+            "targetNode": "28_3",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21_7",
+            "sourcePort": 0,
+            "targetNode": "28_3",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21_3",
+            "sourcePort": 0,
+            "targetNode": "28_3",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21",
+            "sourcePort": 0,
+            "targetNode": "28_3",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "21_6",
+            "sourcePort": 0,
+            "targetNode": "91_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "134_1",
+            "sourcePort": 0,
+            "targetNode": "21_6",
+            "targetPort": 0
         }
     ],
     "nodes": [
@@ -3168,15 +3198,15 @@
             ]
         },
         {
-            "default": 0.1550000011920929,
+            "default": 0.10000001639127731,
             "emitOnLoad": true,
             "id": "19_6",
             "max": 1.0,
             "min": 0.0,
             "obj": "dial",
             "pos": [
-                1271.52734375,
-                1923.3046875
+                1272.62109375,
+                1926.0390625
             ],
             "value": 0.5800004601478577
         },
@@ -11920,7 +11950,7 @@
             ]
         },
         {
-            "default": 0.12000002712011337,
+            "default": 0.07999999821186066,
             "emitOnLoad": true,
             "id": "19_9",
             "max": 1.0,
@@ -14039,7 +14069,7 @@
                 4464.875,
                 1621.421875
             ],
-            "selectedNote": 46
+            "selectedNote": 37
         },
         {
             "id": "27_1",
@@ -18392,10 +18422,10 @@
             "size": 2048
         },
         {
-            "Delay": 25.0,
-            "Depth": 4.0,
-            "Feedback": 0.0,
-            "Rate": 1.0,
+            "Delay": 6.0,
+            "Depth": 3.0,
+            "Feedback": 0.5,
+            "Rate": 0.4000000059604645,
             "id": "91",
             "obj": "chorus",
             "pos": [
@@ -18404,10 +18434,10 @@
             ]
         },
         {
-            "Delay": 6.0,
+            "Delay": 30.0,
             "Depth": 2.0,
-            "Feedback": 0.0,
-            "Rate": 2.0,
+            "Feedback": 0.5,
+            "Rate": 0.5,
             "id": "91_1",
             "obj": "chorus",
             "pos": [
@@ -18418,7 +18448,7 @@
         {
             "emitOnLoad": true,
             "id": "45_2",
-            "list": "12",
+            "list": "24",
             "obj": "listbox",
             "pos": [
                 4873.6484375,
@@ -18426,8 +18456,8 @@
             ]
         },
         {
-            "defaultA": 58.0,
-            "defaultB": 12.0,
+            "defaultA": 61.0,
+            "defaultB": 24.0,
             "hot": 0,
             "id": "127",
             "obj": "Subtract",
@@ -26749,7 +26779,7 @@
             "id": "21_5",
             "obj": "multitapdelay",
             "pos": [
-                3279.515625,
+                3292.515625,
                 1640.5546875
             ]
         },
@@ -26812,7 +26842,7 @@
             ]
         },
         {
-            "default": 0.8500000834465027,
+            "default": 0.3500003218650818,
             "emitOnLoad": true,
             "id": "19_12",
             "max": 10.0,
@@ -27004,6 +27034,22 @@
             "pos": [
                 4370.1015625,
                 600.30859375
+            ]
+        },
+        {
+            "id": "28_3",
+            "obj": "scope",
+            "pos": [
+                2967.265625,
+                2890.0625
+            ]
+        },
+        {
+            "id": "21_6",
+            "obj": "multitapdelay",
+            "pos": [
+                3840.515625,
+                1635.5546875
             ]
         }
     ]
