@@ -32,16 +32,19 @@ public:
     }
 
     Command* operator[](const std::string& id) {
-        auto it = commands.find(id);
+        const auto it = commands.find(id);
         return it != commands.end() ? it->second.get() : nullptr;
     }
 
-    void invokeByKey(SDL_Keycode key, SDL_Keymod mod) {
-        KeyCombo combo{ key, normalizeMod(mod) };
-        auto it = keyBindings.find(combo);
-        if (it != keyBindings.end()) {
-            if (auto* cmd = (*this)[it->second])
-                cmd->invoke();
+    void invokeByKey(const SDL_Keycode key, const SDL_Keymod mod) {
+        const SDL_Keymod normMod = normalizeMod(mod);
+
+        for (const auto& [combo, cmdID] : keyBindings) {
+            if (combo.first == key && (normMod & combo.second) == combo.second) {
+                if (auto* cmd = (*this)[cmdID])
+                    cmd->invoke();
+                return;
+            }
         }
     }
 
