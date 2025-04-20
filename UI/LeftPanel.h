@@ -25,7 +25,7 @@ public:
 
     void resized() override;
 
-    void updateTabs(std::vector<std::string> tabs);
+    void updateTabs(std::vector<std::tuple<std::string, bool>> tabs);
 
     void updateSelectedTab() const;
 

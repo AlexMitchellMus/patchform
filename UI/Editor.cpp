@@ -47,13 +47,19 @@ void Editor::init(GraphSystem* gm)
 
     graphSystem->onPatchLoaded = [this](GraphSystem::Graphs& loadedGraphs)
     {
-        std::vector<std::string> tabs;
+        // Set up dirty-change callbacks
         for (const auto& graph : loadedGraphs)
         {
-            tabs.push_back(graph->getPatchFile());
+            graph->graphModifiedCallback = [this]()
+            {
+                // Rebuild full tab list when any graph is modified
+                auto tabs = graphSystem->getLoadedPatches();
+                leftPanel->updateTabs(tabs);
+            };
         }
 
-        leftPanel->updateTabs(tabs);
+        // Initial full tab update when patches are loaded
+        leftPanel->updateTabs(graphSystem->getLoadedPatches());
     };
 
     rightPanel = std::make_unique<RightPanel>(canvas.get());
@@ -143,7 +149,9 @@ std::string Editor::generateUniqueUntitledName() const
 
         const auto& loaded = graphSystem->getLoadedPatches();
         bool exists = std::any_of(loaded.begin(), loaded.end(),
-            [&](const std::string& path) { return path == virtualPath; });
+            [&](const std::tuple<std::string, bool>& tup) {
+                return std::get<0>(tup) == virtualPath;
+            });
 
         if (!exists)
             return virtualPath;
@@ -165,7 +173,7 @@ void Editor::loadFile(const std::string& fileName) const
     std::string absPath = normalizePath(fileName);
 
     // If the patch is already loaded, load it into the canvas, and make it active
-    for (const std::string& path : graphSystem->getLoadedPatches()) {
+    for (const auto& [ path , isDirty ]: graphSystem->getLoadedPatches()) {
         if (path == absPath || FilesystemHelpers::getStem(path) == FilesystemHelpers::getStem(absPath)) {
             if (canvas->getPatchName() == FilesystemHelpers::getStem(path))
                 return;

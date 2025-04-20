@@ -325,7 +325,7 @@ class ObjectsListViewport : public pptk::ComponentViewport
 
 void LeftPanel::updateSelectedTab() const
 {
-    loadedPatchesPanel->setSelected(cnv->getPatchName());
+    loadedPatchesPanel->setPatchSelected(cnv->getPatchName());
 }
 
 LeftPanel::LeftPanel(Editor* ed) : cnv(ed->getCanvas())
@@ -370,7 +370,7 @@ void LeftPanel::resetScroll()
     objectsList->resetViewport();
 }
 
-void LeftPanel::updateTabs(std::vector<std::string> tabs)
+void LeftPanel::updateTabs(std::vector<std::tuple<std::string, bool>> tabs)
 {
     loadedPatchesPanel->updateTabs(tabs);
 }

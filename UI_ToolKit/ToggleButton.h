@@ -25,6 +25,15 @@ public:
         repaint();
     }
 
+    void setState(const bool newState)
+    {
+        if (state != newState)
+        {
+            state = newState;
+            repaint();
+        }
+    }
+
     bool getState()
     {
         return state;

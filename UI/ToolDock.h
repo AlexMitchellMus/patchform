@@ -142,6 +142,14 @@ public:
         ToolDock::resized();
     };
 
+    void setToggleButtonState(const bool state)
+    {
+        if (editButton)
+        {
+            editButton->setState(state);
+        }
+    }
+
     void resized() override
     {
         int offset = 15;

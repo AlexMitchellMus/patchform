@@ -7,7 +7,7 @@ PatchItem::PatchItem(const PatchInfo& info)
     : patchInfo(info)
     , patchName(info.fileName)
 {
-    label = std::make_unique<pptk::Label>(patchName, true);
+    label = std::make_unique<pptk::Label>(patchName + std::string(info.isDirty ? " *" : ""), true);
     addComponent(label.get());
     label->setInterceptsMouseClicks(false, false);
 }
@@ -60,12 +60,12 @@ LoadedPatchesPanel::LoadedPatchesPanel(Editor* ed) : editor(ed)
 {
 }
 
-void LoadedPatchesPanel::updateTabs(const std::vector<std::string>& tabs)
+void LoadedPatchesPanel::updateTabs(const std::vector<std::tuple<std::string, bool>>& tabs)
 {
     std::vector<PatchInfo> patchList;
-    for (auto& name : tabs)
+    for (auto& [ name, isDirty ]: tabs)
     {
-        patchList.push_back({ name, []() {} });
+        patchList.emplace_back( name, []() {}, isDirty );
     }
     setPatches(patchList);
 }
@@ -75,28 +75,34 @@ void LoadedPatchesPanel::setPatches(const std::vector<PatchInfo>& patches)
     removeAllChildren();
     patchItems.clear();
 
-    for (const auto& p : patches) {
+    for (const auto& p : patches)
+    {
         auto item = std::make_unique<PatchItem>(p);
         addComponent(item.get());
+
         item->onClick = [rawItem = item.get(), this]()
         {
             editor->loadFile(rawItem->getPatchPath());
-            setSelected(rawItem->getPatchName());
+            setPatchSelected(rawItem->getPatchName());
         };
+
         patchItems.push_back(std::move(item));
     }
+
+    // Apply selection after all items are created
+    setPatchSelected(currentlySelectedPatch);
 
     resized();
     repaint();
 }
 
-void LoadedPatchesPanel::setSelected(const std::string& selectedPatch)
+void LoadedPatchesPanel::setPatchSelected(const std::string& selectedPatch)
 {
     for (auto& item : patchItems)
-    {
-        item->isSelected = item->getPatchName() == selectedPatch;
-        repaint();
-    }
+        item->isSelected = (item->getPatchName() == selectedPatch);
+
+    currentlySelectedPatch = selectedPatch;
+    repaint();
 }
 
 void LoadedPatchesPanel::resized()

@@ -151,9 +151,14 @@ public:
         repaint();
     }
 
-    void updateTabs(const std::vector<std::string>& tabs) const
+    void updateTabs(const std::vector<std::tuple<std::string, bool>>& tabs) const
     {
         leftPanel->updateTabs(tabs);
+    }
+
+    void updateTooldockModeButton(const bool state) const
+    {
+        toolDock->setToggleButtonState(state);
     }
 
     GraphSystem* graphSystem;

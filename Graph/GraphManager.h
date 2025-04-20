@@ -32,9 +32,10 @@ public:
     ~GraphManager()
     {
     }
-
+/*
     AudioNode* addObject(const std::string& objName, bool addToGraph = true)
     {
+
         if (!activeGraph)
         {
             activeGraph = std::make_unique<GraphHolder>(ctx);
@@ -42,10 +43,13 @@ public:
 
         // TODO: Lock the graph, or communicate via a queue
 
+        isGraphDirty = true;
+
         json object;
         object["obj"] = objName;
         return activeGraph->createObject(object, addToGraph);
     }
+*/
 
     AudioNode* addObject(const json& jsonObj)
     {
@@ -60,6 +64,9 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
 
         auto newNode = transitioningGraph->createObject(jsonObj);
+
+        setDirty(true);
+
         updateAndFinalizeGraph();
 
         // Mark the transitioning graph as ready to replace the active graph
@@ -76,6 +83,9 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
 
         transitioningGraph->removeObject(id);
+
+        setDirty(true);
+
         updateAndFinalizeGraph();
 
         auto connectionState = transitioningGraph->getConnections();
@@ -102,6 +112,8 @@ public:
         {
             transitioningGraph->removeEdge(edgeHash);
         }
+
+        setDirty(true);
 
         updateAndFinalizeGraph();
 
@@ -142,6 +154,8 @@ public:
             return activeGraph->getConnections();
         }
 
+        setDirty(true);
+
         updateAndFinalizeGraph();
 
         auto allConnections = transitioningGraph->getConnections();
@@ -158,6 +172,8 @@ public:
             std::cerr << "No active graph available to disconnect connection." << std::endl;
             return false;
         }
+
+        setDirty(true);
 
         transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
         // Add the connection to the transitioning graph
@@ -238,6 +254,8 @@ public:
             return {};
         }
 
+        setDirty(false);
+
         filePath = patchPath;
 
         transitioningGraph = std::make_shared<GraphHolder>(ctx);
@@ -314,6 +332,7 @@ public:
 
     json graphToJSON()
     {
+        setDirty(false);
         return activeGraph->graphToJSON();
     }
 
@@ -575,7 +594,6 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 
     }
 
-
     void setFilePath(const std::string& newPath)
     {
         filePath = newPath;
@@ -585,6 +603,23 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 
     // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
     moodycamel::ConcurrentQueue<std::vector<float>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::vector<float>>(100);
+
+    std::function<void()> graphModifiedCallback;
+
+    bool getIsGraphDirty() const
+    {
+        return isGraphDirty;
+    }
+
+    void setDirty(const bool shouldBeDirty)
+    {
+        if (isGraphDirty != shouldBeDirty)
+        {
+            isGraphDirty = shouldBeDirty;
+            if (graphModifiedCallback)
+                graphModifiedCallback();
+        }
+    }
 
 private:
     // Take the average peak and send it to the GUI
@@ -609,6 +644,8 @@ private:
 
 protected:
     std::string filePath;
+
+    bool isGraphDirty = false;
 
     std::shared_ptr<NodeContext> ctx;
 

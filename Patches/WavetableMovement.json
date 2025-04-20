@@ -151,12 +151,6 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "36",
-            "sourcePort": 0,
-            "targetNode": "21",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "35",
             "sourcePort": 0,
             "targetNode": "21_1",
@@ -185,12 +179,6 @@
             "sourcePort": 0,
             "targetNode": "21_3",
             "targetPort": 1
-        },
-        {
-            "sourceNode": "36_1",
-            "sourcePort": 0,
-            "targetNode": "21_3",
-            "targetPort": 0
         },
         {
             "sourceNode": "35",
@@ -607,18 +595,6 @@
             "targetPort": 0
         },
         {
-            "sourceNode": "91",
-            "sourcePort": 0,
-            "targetNode": "21_7",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "91_1",
-            "sourcePort": 0,
-            "targetNode": "21_4",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "44",
             "sourcePort": 0,
             "targetNode": "47_3",
@@ -631,12 +607,6 @@
             "targetPort": 1
         },
         {
-            "sourceNode": "91",
-            "sourcePort": 0,
-            "targetNode": "122",
-            "targetPort": 0
-        },
-        {
             "sourceNode": "122",
             "sourcePort": 0,
             "targetNode": "21_7",
@@ -646,12 +616,6 @@
             "sourceNode": "122_1",
             "sourcePort": 0,
             "targetNode": "21_4",
-            "targetPort": 0
-        },
-        {
-            "sourceNode": "91_1",
-            "sourcePort": 0,
-            "targetNode": "122_1",
             "targetPort": 0
         },
         {
@@ -820,6 +784,66 @@
             "sourceNode": "21_3",
             "sourcePort": 0,
             "targetNode": "126",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "91",
+            "sourcePort": 0,
+            "targetNode": "127_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127_1",
+            "sourcePort": 0,
+            "targetNode": "122",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127_2",
+            "sourcePort": 0,
+            "targetNode": "122_1",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "91_1",
+            "sourcePort": 0,
+            "targetNode": "127_2",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127_2",
+            "sourcePort": 0,
+            "targetNode": "21_4",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127_1",
+            "sourcePort": 0,
+            "targetNode": "21_7",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "36_1",
+            "sourcePort": 0,
+            "targetNode": "127_3",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127_3",
+            "sourcePort": 0,
+            "targetNode": "21_3",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "36",
+            "sourcePort": 0,
+            "targetNode": "127_4",
+            "targetPort": 0
+        },
+        {
+            "sourceNode": "127_4",
+            "sourcePort": 0,
+            "targetNode": "21",
             "targetPort": 0
         }
     ],
@@ -5085,8 +5109,8 @@
             "id": "3_10",
             "obj": "table",
             "pos": [
-                797.97265625,
-                642.16015625
+                779.97265625,
+                647.16015625
             ],
             "saveOnClose": false,
             "size": 2048
@@ -5137,7 +5161,7 @@
                 2032.0234375,
                 1341.421875
             ],
-            "selectedNote": 60
+            "selectedNote": 63
         },
         {
             "id": "27",
@@ -7256,8 +7280,8 @@
             "id": "9_5",
             "obj": "ping",
             "pos": [
-                797.35546875,
-                582.19921875
+                782.35546875,
+                571.19921875
             ],
             "width": 60
         },
@@ -7308,8 +7332,8 @@
             "id": "36_1",
             "obj": "chorus",
             "pos": [
-                774.78515625,
-                1748.8046875
+                802.78515625,
+                1757.8046875
             ]
         },
         {
@@ -7433,8 +7457,8 @@
             "list": "",
             "obj": "listbox",
             "pos": [
-                2283.9375,
-                1041.171875
+                2304.2734375,
+                1017.11328125
             ]
         },
         {
@@ -11773,8 +11797,8 @@
             "id": "21_4",
             "obj": "gain",
             "pos": [
-                3690.5,
-                1897.6953125
+                3659.5,
+                1917.6953125
             ]
         },
         {
@@ -11785,8 +11809,8 @@
             "min": 0.0,
             "obj": "dial",
             "pos": [
-                3841.265625,
-                1928.4609375
+                3804.265625,
+                1793.4609375
             ],
             "value": 0.5800004601478577
         },
@@ -13855,8 +13879,8 @@
             "id": "3_1",
             "obj": "scope",
             "pos": [
-                3954.9453125,
-                1916.7578125
+                3846.9453125,
+                2126.7578125
             ]
         },
         {
@@ -13884,8 +13908,8 @@
             "id": "24_1",
             "obj": "spec",
             "pos": [
-                3955.4296875,
-                1811.4375
+                3847.4296875,
+                2021.4375
             ]
         },
         {
@@ -13897,7 +13921,7 @@
                 4464.875,
                 1621.421875
             ],
-            "selectedNote": 49
+            "selectedNote": 44
         },
         {
             "id": "27_1",
@@ -16026,8 +16050,8 @@
             "id": "21_7",
             "obj": "gain",
             "pos": [
-                3531.953125,
-                1884.296875
+                3513.953125,
+                1901.296875
             ]
         },
         {
@@ -18292,7 +18316,7 @@
             ]
         },
         {
-            "defaultA": 61.0,
+            "defaultA": 56.0,
             "defaultB": 12.0,
             "hot": 0,
             "id": "127",
@@ -18306,16 +18330,16 @@
             "id": "122",
             "obj": "fdn",
             "pos": [
-                3547.9296875,
-                1786.15625
+                3573.9296875,
+                1823.15625
             ]
         },
         {
             "id": "122_1",
             "obj": "fdn",
             "pos": [
-                3658.328125,
-                1786.1171875
+                3710.328125,
+                1819.1171875
             ]
         },
         {
@@ -26636,6 +26660,74 @@
                 2381.234375
             ],
             "threshold": 0.5
+        },
+        {
+            "id": "127_1",
+            "obj": "dcblock",
+            "pos": [
+                3534.671875,
+                1755.75
+            ]
+        },
+        {
+            "id": "127_2",
+            "obj": "dcblock",
+            "pos": [
+                3653.671875,
+                1750.75
+            ]
+        },
+        {
+            "id": "127_3",
+            "obj": "dcblock",
+            "pos": [
+                958.30078125,
+                1821.234375
+            ]
+        },
+        {
+            "id": "127_4",
+            "obj": "dcblock",
+            "pos": [
+                1077.30078125,
+                1816.234375
+            ]
+        },
+        {
+            "id": "131",
+            "if": 0.0,
+            "mode": "==",
+            "obj": "IfElse",
+            "pos": [
+                821.109375,
+                1079.0
+            ]
+        },
+        {
+            "id": "131_1",
+            "if": 0.0,
+            "mode": "==",
+            "obj": "IfElse",
+            "pos": [
+                877.109375,
+                1141.0
+            ]
+        },
+        {
+            "id": "133",
+            "obj": "mul",
+            "pos": [
+                1043.53125,
+                1198.0
+            ]
+        },
+        {
+            "id": "134",
+            "obj": "aout",
+            "pos": [
+                579.63671875,
+                378.0
+            ]
         }
     ]
 }

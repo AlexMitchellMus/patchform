@@ -17,6 +17,7 @@
 #include <glaze/core/common.hpp>
 #include <Graph/GraphSystem.h>
 
+#include "Editor.h"
 #include "Object.h"
 #include "Connection.h"
 #include "Lasso.h"
@@ -89,14 +90,15 @@ void Canvas::mouseButtonDown(pptk::CompEvent& e)
     // TODO: Lets clear for now if clicked on empty space, however we will load canvas (patch) parameter when clicked on
     clearSelection();
 
-    // Only allow lasso select in edit mode
-    if (mode != DisplayMode::Edit)
-        return;
-
-    if (e.sdlEvent.button.button == SDL_BUTTON_LEFT)
+    // If ctrl is down and single click on graph, toggle graph edit/lock mode
+    if ((SDL_GetModState() & SDL_KMOD_CTRL) != 0 && e.sdlEvent.button.button == SDL_BUTTON_LEFT)
     {
-        lasso = std::make_unique<Lasso>(pptk::Point(e.sdlEvent.button.x, e.sdlEvent.button.y));
-        addComponent(lasso.get());
+        if (auto* ed = findParentOfClass<Editor>())
+        {
+            auto newState = mode == DisplayMode::Edit ? DisplayMode::Lock : DisplayMode::Edit;
+            ed->updateTooldockModeButton(newState == DisplayMode::Lock);
+            setMode(newState);
+        }
     }
 }
 
@@ -108,6 +110,11 @@ void Canvas::mouseButtonUp(pptk::CompEvent& e)
 
 void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button)
 {
+    if (!lasso && button == pptk::Button::LEFT)
+    {
+        lasso = std::make_unique<Lasso>(position);
+        addComponent(lasso.get());
+    }
     if (isDragging || button == pptk::Button::MIDDLE)
     {
         dragCanvas(delta);
@@ -245,6 +252,16 @@ void Canvas::keyPressed(pptk::CompEvent& e)
                 duplicateSelection();
             }
             break;
+        case SDL_SCANCODE_E:
+            {
+                if (auto* ed = findParentOfClass<Editor>())
+                {
+                    auto newState = mode == DisplayMode::Edit ? DisplayMode::Lock : DisplayMode::Edit;
+                    ed->updateTooldockModeButton(newState == DisplayMode::Lock);
+                    setMode(newState);
+                }
+            }
+            break;
         default:
             break;
         }
@@ -375,7 +392,6 @@ void Canvas::removeFromSelection(Object* obj)
     {
         obj->setSelected(false);
         selected.erase(it);
-
         callObjectChangedListeners();
     }
 
@@ -392,11 +408,15 @@ void Canvas::setMultiObjectPosition(pptk::Point pos)
     if (isInLockedMode())
         return;
 
-    for (auto& cnvItem : selected)
+    for (const auto& cnvItem : selected)
     {
         auto newPosition = cnvItem->getPosition() + pos;
         cnvItem->setPosition(newPosition);
-        if (auto* objObject = dynamic_cast<Object*>(cnvItem))
+
+        if (const auto activeGraph = graphSystem->getActiveGraph())
+            activeGraph->setDirty(true);
+
+        if (const auto* objObject = dynamic_cast<Object*>(cnvItem))
         {
             objObject->audioNode->canvasPos = newPosition - pptk::Point(canvasOrigin, canvasOrigin);
         }
@@ -440,7 +460,7 @@ void Canvas::clearSelection()
     repaint();
 }
 
-void Canvas::setMode(DisplayMode newMode)
+void Canvas::setMode(const DisplayMode newMode)
 {
     if (mode != newMode)
     {
@@ -520,7 +540,7 @@ void Canvas::updateFrameBuffer(NVGcontext* nvg)
 
         nvgBeginPath(nvg);
         nvgRect(nvg, 0, 0, tileSize, tileSize);
-        nvgFillColor(nvg, nvgRGBA(20, 20, 20, 255));
+        nvgFillColor(nvg, nvgRGBA(18, 18, 18, 255));
         nvgFill(nvg);
 
         nvgBeginPath(nvg);
@@ -547,7 +567,7 @@ void Canvas::updateFrameBuffer(NVGcontext* nvg)
         nvgStroke(nvg);
 
         // Draw major grid lines (thicker)
-        nvgStrokeColor(nvg, nvgRGBA(26, 26, 26, 255)); // Lighter gray for major grid
+        nvgStrokeColor(nvg, nvgRGBA(30, 30, 30, 255)); // Lighter gray for major grid
         nvgStrokeWidth(nvg, scaledStroke);
         nvgBeginPath(nvg);
         for (int x = 0; x <= tileSize; x += majorSpacing) {

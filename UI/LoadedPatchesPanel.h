@@ -11,9 +11,12 @@ struct PatchInfo {
     std::string fullPath;
     std::string fileName;
     std::function<void()> onClose;
+    bool isDirty = false;
 
-    PatchInfo(const std::string& path, std::function<void()> close)
-        : fullPath(path), onClose(std::move(close))
+    PatchInfo(const std::string& path, std::function<void()> close, const bool isDirty)
+        : fullPath(path)
+        , onClose(std::move(close))
+        , isDirty(isDirty)
     {
         size_t slash = path.find_last_of("/\\");
         std::string base = (slash != std::string::npos) ? path.substr(slash + 1) : path;
@@ -53,14 +56,16 @@ class LoadedPatchesPanel : public pptk::Component {
 public:
     explicit LoadedPatchesPanel(Editor* ed);
 
-    void updateTabs(const std::vector<std::string>& tabs);
+    void updateTabs(const std::vector<std::tuple<std::string, bool>>& tabs);
 
     void setPatches(const std::vector<PatchInfo>& patches);
     void resized() override;
 
-    void setSelected(const std::string& selectedPatch);
+    void setPatchSelected(const std::string& selectedPatch);
 
 private:
     std::vector<std::unique_ptr<PatchItem>> patchItems;
     Editor* editor;
+
+    std::string currentlySelectedPatch;
 };

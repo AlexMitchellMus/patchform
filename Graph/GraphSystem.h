@@ -113,13 +113,15 @@ public:
 
     std::function<void(Graphs&)> onPatchLoaded = [](Graphs&) {};
 
-    std::vector<std::string> getLoadedPatches() const
+    std::vector<std::tuple<std::string, bool>> getLoadedPatches() const
     {
-        std::vector<std::string> paths;
+        std::vector<std::tuple<std::string, bool>> paths;
         for (const auto& mgr : graphManagersUI)
         {
             if (!mgr->flaggedForDeletion.load())
-                paths.push_back(mgr->getPatchFile());
+            {
+                paths.emplace_back(mgr->getPatchFile(), mgr->getIsGraphDirty());
+            }
         }
         return paths;
     }
