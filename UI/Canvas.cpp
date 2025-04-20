@@ -225,9 +225,8 @@ void Canvas::resetScale()
 
 void Canvas::keyPressed(pptk::CompEvent& e)
 {
-    auto modKey = e.sdlEvent.key.mod;
-    bool ctrlPressed = (modKey & SDL_KMOD_CTRL) != 0;
-    if (ctrlPressed)
+    const auto modKey = e.sdlEvent.key.mod;
+    if ((modKey & SDL_KMOD_CTRL) != 0)
     {
         switch (e.sdlEvent.key.scancode)
         {

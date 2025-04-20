@@ -31,8 +31,8 @@ PatchformApp* PatchformApp::instance = nullptr;
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     : sampleRate(sampleRate)
     , frameCount(frameCount)
-    , windowWidth(800)
-    , windowHeight(600)
+    , windowWidth(1000)
+    , windowHeight(700)
 {
     instance = this;
 }
