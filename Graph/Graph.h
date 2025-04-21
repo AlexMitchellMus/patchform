@@ -276,21 +276,18 @@ public:
 #endif
     }
 
+void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
+{
+    std::function<void(Graph&)> msg;
+    while (context->messageQueue.try_dequeue(msg))
+        msg(*this);
 
-    void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
-    {
-#define SKIP_PROCESSING
-#ifdef SKIP_PROCESSING
-        std::function<void(Graph&)> msg;
-        while (context->messageQueue.try_dequeue(msg))
-            msg(*this);
-
+    // Clear input buffers of active nodes only
         unsigned i = 0;
-
         while (i < objectsSorted.size())
         {
-            size_t word = i >> 6; // i / 64
-            const size_t bit = i & 63; // i & 64
+            size_t word = i >> 6;
+            const size_t bit = i & 63;
 
             if (const uint64_t combined = (activeEventNodes[word] | activeAudioNodes[word]) >> bit)
             {
@@ -300,32 +297,32 @@ public:
                 if (i >= objectsSorted.size())
                     break;
 
-                objectsSorted[i]->process(inBuffer, buffer, midiMessage, frameCount, *this, i);
+                auto* node = objectsSorted[i];
 
-                activeEventNodes[i >> 6] &= ~(1ULL << (i & 63)); // i / 64, i % 64
+                node->process(inBuffer, buffer, midiMessage, frameCount, *this, i);
+
+                // Now clear input buffers — AFTER processing
+                for (auto& input : node->inputPortBuffers)
+                {
+                    if (input->isSignal())
+                        std::fill_n(input->getAudioBuffer(), input->getAudioBufferSize(), 0.0f);
+                }
+
+                activeEventNodes[word] &= ~(1ULL << (i & 63));
                 ++i;
             }
             else
             {
-                // Skip to next word with set bits
                 ++word;
                 while (word < activeAudioNodes.size() && (activeEventNodes[word] | activeAudioNodes[word]) == 0)
-                {
                     ++word;
-                }
 
-                i = word << 6; // word * 64
+                i = word << 6;
             }
         }
-#else
-        // simple loop (everything gets processed)
-        for (size_t i = 0; i < objectsSorted.size(); i++)
-        {
-            objectsSorted[i]->process(buffer, frameCount, *this, i);
-        }
-#endif
-        context->eventPool.releaseAllEvents();
-    }
+    context->eventPool.releaseAllEvents();
+}
+
 
     bool flagForDeletion = false;
 

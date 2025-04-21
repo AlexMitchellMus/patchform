@@ -244,21 +244,39 @@ public:
                 DownstreamPortGroup group;
                 group.outputPortNumber = static_cast<uint8_t>(outPort);
 
+                auto* sourcePort = node->getOutputPort(static_cast<int>(outPort));
+                bool isSignalSource = sourcePort && sourcePort->isSignal();
+
                 // Iterate over all connections in the graph.
                 for (const auto& conn : connections)
                 {
-                    // Check if this connection originates from this node and the current output port.
                     if (conn->getoNode() == nodeID && conn->getoPort() == static_cast<int>(outPort))
                     {
                         int targetID = conn->getiNode();
-                        // Use objectIDtoSortedIndex to find the target node's sorted index.
-                        if (objectIDtoSortedIndex.find(targetID) != objectIDtoSortedIndex.end())
+                        if (objectIDtoSortedIndex.contains(targetID))
                         {
                             size_t targetSortedIndex = objectIDtoSortedIndex[targetID];
                             AudioNode* targetNode = graph->objectsSorted[targetSortedIndex];
                             int targetPort = conn->getiPort();
-                            group.downstreamConnections.emplace_back(targetNode, targetPort);
-                            group.targetIndices.push_back(static_cast<uint32_t>(targetSortedIndex));
+
+                            auto* inputPort = targetNode->getInputPort(targetPort);
+                            if (!inputPort) continue;
+
+                            if (auto* outputPort = node->getOutputPort(outPort))
+                            {
+                                group.downstreamConnections.push_back({
+                                    .src = outputPort->getAudioBuffer(),
+                                    .dst = inputPort->getAudioBuffer(),
+                                    .bufferSize = outputPort->getAudioBufferSize(),
+                                    .node = targetNode,
+                                    .inputPort = inputPort,
+                                    .inputPortIndex = targetPort,
+                                    .targetIndex = static_cast<uint32_t>(targetSortedIndex)
+                                });
+
+                                if (outputPort->isSignal())
+                                    inputPort->isAnyConnectedPortSignal = true;
+                            }
                         }
                     }
                 }
@@ -552,55 +570,39 @@ public:
             });
         };
 
-        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& runningGraph, const int index)
+        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, int index)
         {
-            const auto& groups = runningGraph.downstreamPortMap[index];
+            const auto& groups = graph.downstreamPortMap[index];
 
-            for (const auto& [outputPortNumber, downstreamConnections, targetIndices] : groups)
+            for (const auto& group : groups)
             {
-                const auto& events = outputPorts[outputPortNumber]->getEvents();
+                if (group.outputPortNumber >= outputPorts.size())
+                    continue;
+
+                const auto& events = outputPorts[group.outputPortNumber]->getEvents();
                 if (events.empty()) continue;
 
-                for (size_t i = 0; i < downstreamConnections.size(); ++i)
+                for (const auto& conn : group.downstreamConnections)
                 {
-                    auto* target = downstreamConnections[i].first;
-                    int targetPort = downstreamConnections[i].second;
-
                     for (Event* event : events)
-                        target->pushEvent(targetPort, event);
-                }
+                        conn.node->pushEvent(conn.inputPortIndex, event);
 
-                // Bitfield update after all pushes
-                for (uint32_t targetIndex : targetIndices)
-                {
-                    if (targetIndex != UINT32_MAX)
-                        runningGraph.activeEventNodes[targetIndex >> 6] |= (1ULL << (targetIndex & 63));
+                    graph.activeEventNodes[conn.targetIndex >> 6] |= (1ULL << (conn.targetIndex & 63));
                 }
             }
         };
 
-        node->sumInputBuffers = [](const std::vector<std::unique_ptr<AudioPort>>&, const Graph& runningGraph, const int index)
+
+        node->pushOutputAudio = [](const std::vector<std::unique_ptr<AudioPort>>&, const Graph& graph, int index)
         {
-            const auto& caches = runningGraph.cachedInputSumsPerNode[index];
+            const auto& groups = graph.downstreamPortMap[index];
 
-            for (const auto& cache : caches)
+            for (const auto& group : groups)
             {
-                auto* port = cache.inputPort;
-                port->isAnyConnectedPortSignal = !cache.signalInputs.empty();
-
-                if (!port->isSignal()) continue;
-
-                float* dst = port->getAudioBuffer();
-                std::fill_n(dst, cache.bufferSize, 0.0f);
-
-                for (size_t i = 0; i < cache.signalInputs.size(); ++i)
+                for (const auto& conn : group.downstreamConnections)
                 {
-                    const float* src = cache.signalInputs[i];
-                    if (i == 0)
-                        std::copy_n(src, cache.bufferSize, dst);
-                    else
-                        for (size_t j = 0; j < cache.bufferSize; ++j)
-                            dst[j] += src[j];
+                    for (size_t i = 0; i < conn.bufferSize; ++i)
+                        conn.dst[i] += conn.src[i];
                 }
             }
         };

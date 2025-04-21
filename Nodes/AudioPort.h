@@ -51,10 +51,19 @@ struct SampleHandle
 */
 
 struct DownstreamPortGroup {
-    uint8_t outputPortNumber;  // The source output port number on the current node.
-    // Each pair holds a pointer to the downstream node and its corresponding input port.
-    std::vector<std::pair<AudioNode*, int>> downstreamConnections;
-    std::vector<uint32_t> targetIndices; // parallel to downstreamConnections
+    uint8_t outputPortNumber;
+
+    struct DownstreamConnection {
+        const float* src = nullptr;
+        float* dst = nullptr;
+        size_t bufferSize = 0;
+        AudioNode* node;         // needed for pushEvent
+        AudioPort* inputPort;    // needed for audio buffer
+        int inputPortIndex;      // needed for pushEvent
+        uint32_t targetIndex;    // for bitfield tagging
+    };
+
+    std::vector<DownstreamConnection> downstreamConnections;
 };
 
 using OutputPortMap = std::vector<std::vector<PortGroup>>;

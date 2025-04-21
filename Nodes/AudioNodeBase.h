@@ -221,7 +221,7 @@ public:
 
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, Graph&, const int)> pushOutputEvents;
 
-    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, const Graph&, const int)> sumInputBuffers;
+    std::function<void(const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, int index)> pushOutputAudio;
 
     // Sets the bit field mask for this node in the context, where the current running graph will
     // then process this in the next skip
@@ -266,12 +266,9 @@ private:
             return;
         }
 
-        for (int i = 0; i < outputPortBuffers.size(); ++i)
-            getOutputPort(i)->zero();
-
-        sumInputBuffers(inputPortBuffers, runningGraph, index);
-
         processAudio(inBuffer, buffer, frameCount, midiMessage);
+
+        pushOutputAudio(outputPortBuffers, runningGraph, index);
 
         if (hasEvents)
         {
