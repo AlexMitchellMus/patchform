@@ -6,16 +6,14 @@
 
 #pragma once
 
-#include "AudioNodeBase.h"
-
-// Simple DC blocker using 1st-order high-pass filter
 class DCBlock : public AudioNode {
     DEFINE_AND_REGISTER_NODE("DCBlock", "dcblock", true);
     DEFINE_NODE_ALIASES("dcblock");
 
-    float prevInput = 0.0f;
-    float prevOutput = 0.0f;
-    const float R = 0.995f; // High-pass coefficient
+    static constexpr int windowSize = 1024;
+    float history[windowSize]{};
+    int index = 0;
+    float sum = 0.0f;
 
 public:
     DCBlock(NodeContext* context, const json& objParams)
@@ -24,18 +22,19 @@ public:
         addInputPort("In", AudioPort::PortType::Signal);
     }
 
-    void processAudio(const float* in, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
+    void processAudio(const float* in, float* buffer, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
-        const auto* input = inputPortBuffers[0]->getAudioBuffer();
         auto* output = outputPortBuffers[0]->getAudioBuffer();
+        const float* input = inputPortBuffers[0]->getAudioBuffer();
 
         for (unsigned long i = 0; i < frameCount; ++i)
         {
+            float old = history[index];
             float x = input[i];
-            float y = x - prevInput + R * prevOutput;
-            prevInput = x;
-            prevOutput = y;
-            output[i] = y;
+            sum += x - old;
+            history[index] = x;
+            index = (index + 1) & (windowSize - 1); // faster- bitmask version of: index = (index + 1) % windowSize;
+            output[i] = x - sum / windowSize;
         }
     }
 };

@@ -28,7 +28,7 @@ public:
         addInputPort("waveform", AudioPort::PortType::Data);
         addInputPort("frequency", AudioPort::PortType::Data);
         internalWaveform.assign(2048, 0.0f);
-        srcState = src_new(SRC_LINEAR, 1, nullptr);
+        srcState = src_new(SRC_SINC_FASTEST, 1, nullptr);
 
         upLen = context->frameCount * oversampleFactor;  // safety margin
         oversampled.resize(upLen, 0.0f);
