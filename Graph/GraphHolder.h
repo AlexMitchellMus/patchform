@@ -276,6 +276,8 @@ public:
 
                                 if (outputPort->isSignal())
                                     inputPort->isAnyConnectedPortSignal = true;
+                                else
+                                    inputPort->isAnyConnectedPortSignal = false;
                             }
                         }
                     }
