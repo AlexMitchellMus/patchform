@@ -24,6 +24,24 @@ namespace SpectralHelpers {
             + (x2 * x2 * x2 * x2) / 40320.0f;
     }
 
+    constexpr float constexprSqrt(float x, int iterations = 10) {
+        if (x <= 0.0f) return 0.0f;
+        float guess = x > 1.0f ? x : 1.0f;
+        for (int i = 0; i < iterations; ++i)
+            guess = 0.5f * (guess + x / guess);
+        return guess;
+    }
+
+    constexpr float constexprSin(float x) {
+        x = wrapPi(x);
+        float x2 = x * x;
+        return x
+             - (x * x2) / 6.0f
+             + (x * x2 * x2) / 120.0f
+             - (x * x2 * x2 * x2) / 5040.0f
+             + (x * x2 * x2 * x2 * x2) / 362880.0f;
+    }
+
     // Faster, but less precise constexpr cosine approximation using Taylor series (centered at 0)
     constexpr float fastCos(float x)
     {

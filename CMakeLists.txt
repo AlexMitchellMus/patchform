@@ -145,6 +145,7 @@ target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/rtmidi"
         "${CMAKE_SOURCE_DIR}/external/simde"
         "${CMAKE_SOURCE_DIR}/external/libsamplerate/include"
+        "${CMAKE_SOURCE_DIR}/external/SignalsmithDSP/include"
 )
 target_link_libraries(PatchformStandalone PRIVATE
         SDL3::SDL3-static

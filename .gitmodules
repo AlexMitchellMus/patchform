@@ -40,3 +40,6 @@
 [submodule "external/libsamplerate"]
 	path = external/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate
+[submodule "external/SignalsmithDSP"]
+	path = external/SignalsmithDSP
+	url = https://github.com/Signalsmith-Audio/dsp

@@ -41,9 +41,12 @@ bool Settings::load()
     selectedOutputDeviceIndex = a.value("selectedOutputDeviceIndex", selectedOutputDeviceIndex);
 
     const auto& ui = j["UI"];
-    windowWidth = ui.value("windowWidth", windowWidth);
-    windowHeight = ui.value("windowHeight", windowHeight);
-    windowIsFullscreen = ui.value("windowIsFullscreen", windowIsFullscreen);
+    if (ui.size() == 3)
+    {
+        windowWidth = ui.value("windowWidth", windowWidth);
+        windowHeight = ui.value("windowHeight", windowHeight);
+        windowIsFullscreen = ui.value("windowIsFullscreen", windowIsFullscreen);
+    }
 
     return true;
 }
