@@ -51,6 +51,7 @@
 #include "Limiter.h"
 #include "Chorus.h"
 #include "DCBlocker.h"
+#include "Feedback.h"
 
 // Oscillators
 #include "Oscillator.h"

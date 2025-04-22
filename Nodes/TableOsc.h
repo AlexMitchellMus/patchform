@@ -2,8 +2,6 @@
 #pragma once
 
 #include "AudioNodeBase.h"
-
-#define SAMPLERATE_STATIC
 #include "samplerate.h"
 
 class TableOsc : public AudioNode {

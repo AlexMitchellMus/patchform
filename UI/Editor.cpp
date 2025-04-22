@@ -221,18 +221,15 @@ void Editor::updateObjectsFromDSP() const
 {
     canvas->updateGraphValuesIfNeeded();
 
-    std::vector<float> peaks;
+    std::array<float, 2> peaks{};
     float sumL = 0.0f, sumR = 0.0f;
     int count = 0;
 
     while (graphSystem->volumeMeterQueue.try_dequeue(peaks))
     {
-        if (peaks.size() == 2)
-        {
             sumL += peaks[0];
             sumR += peaks[1];
             count++;
-        }
     }
 
     if (count > 0)

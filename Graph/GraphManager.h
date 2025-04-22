@@ -602,7 +602,7 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
     std::atomic<bool> flaggedForDeletion = false;
 
     // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
-    moodycamel::ConcurrentQueue<std::vector<float>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::vector<float>>(100);
+    moodycamel::ConcurrentQueue<std::array<float, 2>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::array<float, 2>>(100);
 
     std::function<void()> graphModifiedCallback;
 
@@ -637,13 +637,15 @@ private:
         if (++peakFrameCounter >= kUpdateInterval)
         {
             peakFrameCounter = 0;
-            volumeMeterQueue.enqueue(std::vector<float>{accumulatedPeakL, accumulatedPeakR});
+            volumeMeterQueue.enqueue({accumulatedPeakL, accumulatedPeakR});
             accumulatedPeakL = accumulatedPeakR = 0.0f;
         }
     }
 
 protected:
     std::string filePath;
+
+
 
     bool isGraphDirty = false;
 

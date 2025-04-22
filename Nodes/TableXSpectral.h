@@ -64,7 +64,7 @@ public:
         float phase;
     };
 
-    void extractPeaks(const float* fft, Peak* peaks, int& count, int maxPeaks)
+    static void extractPeaks(const float* fft, Peak* peaks, int& count, int maxPeaks)
     {
         count = 0;
         for (int i = 1; i < (defaultTableSize / 2) - 1; ++i)

@@ -8,7 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
-if (ENABLE_ASAN)
+if (ENABLE_ASAN AND MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL" CACHE STRING "" FORCE)
 else()
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
@@ -68,7 +68,7 @@ add_subdirectory(external/nanovg)
 add_subdirectory(external/rtmidi)
 add_subdirectory(external/libsamplerate)
 
-if (ENABLE_ASAN AND MSVC)
+if (ENABLE_ASAN AND MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(nanovg PRIVATE /fsanitize=address)
     target_compile_options(rtmidi PRIVATE /fsanitize=address)
 endif()
@@ -129,6 +129,10 @@ file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}
 # PlugPatchStandalone target - use WIN32 to hide terminal
 add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
 
+set_target_properties(PatchformStandalone PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
+)
+
 target_compile_definitions(PatchformStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
 target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"
@@ -166,7 +170,7 @@ target_compile_definitions(PatchformStandalone PRIVATE
         SAMPLERATE_STATIC
 )
 if (MSVC)
-    if (ENABLE_ASAN)
+    if (ENABLE_ASAN AND CMAKE_BUILD_TYPE STREQUAL "Debug")
         message(STATUS "Building with MSVC ASAN")
 
         # Path to ASAN libs
@@ -193,7 +197,7 @@ if (MSVC)
     endif()
 endif()
 
-if (ENABLE_ASAN AND MSVC)
+if (ENABLE_ASAN AND MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(ASAN_DLL_PATH "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/clang_rt.asan_dynamic-x86_64.dll")
 
     if (EXISTS "${ASAN_DLL_PATH}")

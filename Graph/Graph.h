@@ -146,7 +146,9 @@ public:
                 int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
                 if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
                 {
-                    ++inDegree[downstreamNodeIndex];
+                    // Allow feedback node to create cycles
+                    if (!dynamic_cast<Feedback*>(objectsListCopy[downstreamNodeIndex]))
+                        ++inDegree[downstreamNodeIndex];
                 }
             }
         }
@@ -276,52 +278,40 @@ public:
 #endif
     }
 
-void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
-{
-    std::function<void(Graph&)> msg;
-    while (context->messageQueue.try_dequeue(msg))
-        msg(*this);
+    void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
+    {
+        std::function<void(Graph&)> msg;
+        while (context->messageQueue.try_dequeue(msg))
+            msg(*this);
 
-    // Clear input buffers of active nodes only
+        const size_t total = objectsSorted.size();
         unsigned i = 0;
-        while (i < objectsSorted.size())
+
+        while (i < total)
         {
-            size_t word = i >> 6;
-            const size_t bit = i & 63;
+            const size_t word = i >> 6;
+            const uint64_t combined = (activeEventNodes[word] | activeAudioNodes[word]) >> (i & 63);
 
-            if (const uint64_t combined = (activeEventNodes[word] | activeAudioNodes[word]) >> bit)
+            if (!combined)
             {
-                const auto offset = std::countr_zero(combined);
-                i += offset;
-
-                if (i >= objectsSorted.size())
-                    break;
-
-                auto* node = objectsSorted[i];
-
-                node->process(inBuffer, buffer, midiMessage, frameCount, *this, i);
-
-                // Now clear input buffers — AFTER processing
-                for (auto& input : node->inputPortBuffers)
-                {
-                    if (input->isSignal())
-                        std::fill_n(input->getAudioBuffer(), input->getAudioBufferSize(), 0.0f);
-                }
-
-                activeEventNodes[word] &= ~(1ULL << (i & 63));
-                ++i;
+                i = (word + 1) << 6;
+                continue;
             }
-            else
-            {
-                ++word;
-                while (word < activeAudioNodes.size() && (activeEventNodes[word] | activeAudioNodes[word]) == 0)
-                    ++word;
 
-                i = word << 6;
-            }
+            const unsigned offset = std::countr_zero(combined);
+            i += offset;
+
+            if (i >= total)
+                break;
+
+            objectsSorted[i]->process(inBuffer, buffer, midiMessage, frameCount, *this, i);
+
+            activeEventNodes[i >> 6] &= ~(1ULL << (i & 63));
+            ++i;
         }
-    context->eventPool.releaseAllEvents();
-}
+
+        context->eventPool.releaseAllEvents();
+    }
 
 
     bool flagForDeletion = false;
@@ -357,14 +347,5 @@ void process(const float* inBuffer, float* buffer, unsigned long frameCount, std
     AdjacencyMap adjacencyMap;
     std::shared_ptr<NodeContext> context;
 
-    struct CachedInputSum {
-        AudioPort* inputPort = nullptr;
-        std::vector<float*> signalInputs;
-        AudioPort* sampleSource = nullptr;
-        size_t bufferSize = 0;
-    };
-
     std::vector<AudioNode*> objectsToCleanup;
-
-    std::vector<std::vector<CachedInputSum>> cachedInputSumsPerNode;
 };

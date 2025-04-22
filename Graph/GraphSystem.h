@@ -162,10 +162,10 @@ public:
         return dspTimer.getCpuUsage();
     }
 
-    moodycamel::ConcurrentQueue<std::vector<float>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::vector<float>>(100);
+    moodycamel::ConcurrentQueue<std::array<float, 2>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::array<float, 2>>(100);
 
 private:
-    void processPeak(const float* buffer, unsigned long frameCount)
+    void processPeak(const float* buffer, const unsigned long frameCount)
     {
         constexpr int kUpdateInterval = 4;
         const float* right = buffer + frameCount;

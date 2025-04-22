@@ -221,7 +221,7 @@ public:
 
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, Graph&, const int)> pushOutputEvents;
 
-    std::function<void(const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, int index)> pushOutputAudio;
+    std::function<void(Graph& graph, int index)> pushOutputAudio;
 
     // Sets the bit field mask for this node in the context, where the current running graph will
     // then process this in the next skip
@@ -259,29 +259,30 @@ private:
 
     bool hasEvents = false;
 
-    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& runningGraph, const int index)
+    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, int index)
     {
         if (!shouldProcess(frameCount))
-        {
             return;
-        }
 
         processAudio(inBuffer, buffer, frameCount, midiMessage);
 
-        pushOutputAudio(outputPortBuffers, runningGraph, index);
+        pushOutputAudio(g, index);
 
         if (hasEvents)
         {
-            pushOutputEvents(outputPortBuffers, runningGraph, index);
+            pushOutputEvents(outputPortBuffers, g, index);
             hasEvents = false;
         }
 
-        for (int i = 0; i < outputPortBuffers.size(); ++i)
-            getOutputPort(i)->clearEvents();
+        for (auto& port : outputPortBuffers)
+            port->clearEvents();
 
-        for (int i = 0; i < inputPortBuffers.size(); ++i)
-            getInputPort(i)->clearEvents();
-
+        for (auto& port : inputPortBuffers)
+        {
+            if (port->isSignal())
+                port->clear(frameCount);
+            port->clearEvents();
+        }
     }
 #ifdef PATCHFORM_WITH_GUI
     std::unique_ptr<UI> ui = nullptr;

@@ -11,11 +11,11 @@ class Table final : public AudioNode {
     std::vector<float> bufferA;
     std::vector<float> bufferB;
 
-    std::atomic<bool> bufferReady{false};
-
     SampleHandle waveformData;
 
     std::atomic<bool> isDirty;
+    std::atomic<bool> bufferRequest{false};
+    std::atomic<bool> bufferReady{false};
 
     BoolParameter* emitOnLoadParam = nullptr;
     BoolParameter* saveTableOnClose = nullptr;
@@ -37,7 +37,8 @@ public:
         explicit UI(AudioNode* node) : AudioNode::UI(node) {
             setSize(300, 100);
             auto* tableNode = reinterpret_cast<Table*>(audioNode);
-            values = tableNode->bufferA;
+            tableNode->bufferRequest.store(true, std::memory_order_release);
+            tableNode->setNodeDirty();
         }
 
         void drawGUI(NVGcontext* nvg) override {
@@ -228,6 +229,11 @@ public:
     void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
     {
         auto& events = inputPortBuffers[0]->getEvents();
+
+        if (bufferRequest.exchange(false, std::memory_order_acquire)) {
+            bufferB = bufferA; // safe snapshot
+            bufferReady.store(true, std::memory_order_release);
+        }
 
         for (auto* event : events)
         {

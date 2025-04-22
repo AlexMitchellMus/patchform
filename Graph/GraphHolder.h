@@ -23,6 +23,7 @@ using json = nlohmann::json;
 #include "AdjacencyMap.h"
 #include "Edge.h"
 #include "../Nodes/NodeRegistry.h"
+#include <simde/x86/avx2.h>
 
 #undef max
 
@@ -244,9 +245,6 @@ public:
                 DownstreamPortGroup group;
                 group.outputPortNumber = static_cast<uint8_t>(outPort);
 
-                auto* sourcePort = node->getOutputPort(static_cast<int>(outPort));
-                bool isSignalSource = sourcePort && sourcePort->isSignal();
-
                 // Iterate over all connections in the graph.
                 for (const auto& conn : connections)
                 {
@@ -264,6 +262,8 @@ public:
 
                             if (auto* outputPort = node->getOutputPort(outPort))
                             {
+                                float* dst = inputPort->getAudioBuffer();
+
                                 group.downstreamConnections.push_back({
                                     .src = outputPort->getAudioBuffer(),
                                     .dst = inputPort->getAudioBuffer(),
@@ -271,13 +271,10 @@ public:
                                     .node = targetNode,
                                     .inputPort = inputPort,
                                     .inputPortIndex = targetPort,
-                                    .targetIndex = static_cast<uint32_t>(targetSortedIndex)
+                                    .targetIndex = static_cast<uint32_t>(targetSortedIndex),
                                 });
 
-                                if (outputPort->isSignal())
-                                    inputPort->isAnyConnectedPortSignal = true;
-                                else
-                                    inputPort->isAnyConnectedPortSignal = false;
+                                inputPort->isAnyConnectedPortSignal = outputPort->isSignal();
                             }
                         }
                     }
@@ -289,33 +286,6 @@ public:
                 }
             }
         }
-
-        graph->cachedInputSumsPerNode.resize(graph->outputInputPortMap.size());
-
-        for (size_t i = 0; i < graph->outputInputPortMap.size(); ++i)
-        {
-            auto& inputCache = graph->cachedInputSumsPerNode[i];
-            auto& portGroups = graph->outputInputPortMap[i];
-            auto* node = graph->objectsSorted[i];
-
-            inputCache.resize(portGroups.size());
-
-            for (size_t j = 0; j < portGroups.size(); ++j)
-            {
-                auto& cache = inputCache[j];
-                cache.inputPort = node->getInputPort(portGroups[j].inputPortNumber);
-                cache.bufferSize = cache.inputPort->getAudioBufferSize();
-
-                for (auto* conn : portGroups[j].connectedPorts)
-                {
-                    if (conn->isSignal())
-                        cache.signalInputs.push_back(conn->getAudioBuffer());
-                    else if (conn->isSampleBuffer() && !cache.sampleSource)
-                        cache.sampleSource = conn;
-                }
-            }
-        }
-
 
         //auto end = std::chrono::high_resolution_clock::now();
         //auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
@@ -572,7 +542,7 @@ public:
             });
         };
 
-        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, int index)
+        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, const int index)
         {
             const auto& groups = graph.downstreamPortMap[index];
 
@@ -594,17 +564,29 @@ public:
             }
         };
 
-
-        node->pushOutputAudio = [](const std::vector<std::unique_ptr<AudioPort>>&, const Graph& graph, int index)
+        node->pushOutputAudio = [](Graph& graph, const int index)
         {
-            const auto& groups = graph.downstreamPortMap[index];
+            auto& groups = graph.downstreamPortMap[index];
 
-            for (const auto& group : groups)
+            for (auto& group : groups)
             {
-                for (const auto& conn : group.downstreamConnections)
+                for (auto& conn : group.downstreamConnections)
                 {
-                    for (size_t i = 0; i < conn.bufferSize; ++i)
-                        conn.dst[i] += conn.src[i];
+                    float* __restrict conDest = conn.dst;
+                    const float* __restrict conSrc = conn.src;
+                    size_t n = conn.bufferSize;
+
+                    size_t i = 0;
+                    for (; i + 8 <= n; i += 8)
+                    {
+                        simde__m256 dstVec = simde_mm256_load_ps(conDest + i);   // aligned
+                        simde__m256 srcVec = simde_mm256_load_ps(conSrc + i);   // aligned
+                        dstVec = simde_mm256_add_ps(dstVec, srcVec);
+                        simde_mm256_store_ps(conDest + i, dstVec);              // aligned
+                    }
+
+                    for (; i < n; ++i)
+                        conDest[i] += conSrc[i];
                 }
             }
         };
