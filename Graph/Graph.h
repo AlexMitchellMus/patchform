@@ -309,7 +309,7 @@ public:
             << elapsedNs << " ns" << std::endl;
 #endif
 
-#define DEBUG_SORT
+//#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : objectsListCopy)

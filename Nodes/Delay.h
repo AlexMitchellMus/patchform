@@ -19,6 +19,7 @@ public:
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("In", AudioPort::PortType::Signal);
+        addInputPort("DelayTime", AudioPort::PortType::Signal);
 
         sampleRate = context->sampleRate;
         maxDelayMs = objParams.value("maxDelayMs", 1000.0f);
@@ -46,14 +47,15 @@ public:
     void processAudio(const float*, float*, unsigned long frameCount, std::vector<MidiMessage>&) override
     {
         const float* in = inputPortBuffers[0]->getAudioBuffer();
+        const float* delayIn = inputPortBuffers[1]->getAudioBuffer();
         float* out = outputPortBuffers[0]->getAudioBuffer();
-
-        float delayMs = delayMsVal.load();
-        float delaySamples = (delayMs / 1000.0f) * sampleRate;
 
         for (unsigned long i = 0; i < frameCount; ++i)
         {
             buffer[writePos] = in[i];
+
+            float delayMs = std::clamp(delayIn[i], 0.0f, maxDelayMs);
+            float delaySamples = (delayMs / 1000.0f) * sampleRate;
 
             float readPos = writePos - delaySamples;
             if (readPos < 0) readPos += bufferSize;
@@ -62,7 +64,6 @@ public:
             size_t i1 = (i0 + 1) % bufferSize;
             float frac = readPos - static_cast<float>(i0);
 
-            // Linear interpolation
             float delayed = buffer[i0] * (1.0f - frac) + buffer[i1] * frac;
             out[i] = delayed;
 
