@@ -40,13 +40,17 @@ public:
         float* output = outputPortBuffers[0]->getAudioBuffer();
 
         float amount = amountVal.load();
+        float smoothed = lastSample;
 
         for (unsigned long i = 0; i < frameCount; ++i) {
-            float avg = 0.5f * (lastSample + feedbackBuffer[i]);
-            output[i] = amount * avg + (1.0f - amount) * feedbackBuffer[i];
-            lastSample = feedbackBuffer[i];
+            float raw = feedbackBuffer[i];
+            if (amount == 0.0f)
+                smoothed = raw;
+            else
+                smoothed += amount * (raw - smoothed);
+            output[i] = smoothed;
         }
-
+        lastSample = smoothed;
         std::copy_n(input, frameCount, feedbackBuffer.begin());
     }
 };

@@ -101,6 +101,7 @@ namespace ObjectMenuDefs
         {R"({"obj": "dcblock" })", "", "DC Blocker"},
         {R"({"obj": "bpf" })", "", "Bandpass filter"},
         {R"({"obj": "feedback" })", "", "Feedback"},
+        {R"({"obj": "delay", "maxDelayMs": 1000 })", "", "Delay 1sec"},
     };
 
     // Spectral

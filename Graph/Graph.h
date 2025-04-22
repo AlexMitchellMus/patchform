@@ -147,7 +147,10 @@ public:
                 if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
                 {
                     // Allow feedback node to create cycles
-                    if (!objectsListCopy[downstreamNodeIndex]->canFeedback())
+                    const int sourceNodeIndex = AdjacencyMap::getNodeID(sourceKey);
+                    AudioNode* srcNode = objectsListCopy[sourceNodeIndex];
+
+                    if (!srcNode->canFeedback())
                         ++inDegree[downstreamNodeIndex];
                 }
             }
@@ -164,37 +167,79 @@ public:
 
         // Process nodes in topological order.
         size_t processIndex = 0;
-        while (processIndex < zeroInDegreeNodes.size())
-        {
-            const auto currentIndex = zeroInDegreeNodes[processIndex++];
-            sortedNodes.push_back(objectsListCopy[currentIndex]);
 
-            // For every outgoing edge from currentIndex (from any port),
-            // find all downstream nodes and decrement their in-degree.
-            for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward())
-            {
-                if (AdjacencyMap::getNodeID(sourceKey) == static_cast<int>(currentIndex))
-                {
-                    for (const auto& downstreamKey : downstreamKeys)
-                    {
-                        int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
-                        if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
-                        {
-                            if (--inDegree[downstreamNodeIndex] == 0)
-                            {
-                                zeroInDegreeNodes.push_back(downstreamNodeIndex);
-                            }
+        ankerl::unordered_dense::set<AudioNode*> insertedFeedbacks;
+
+        while (processIndex < zeroInDegreeNodes.size()) {
+            const auto currentIndex = zeroInDegreeNodes[processIndex++];
+            AudioNode* currentNode = objectsListCopy[currentIndex];
+
+            // Inject any upstream feedback nodes first
+            for (const auto& [inputKey, sources] : adjacencyMap.getBackward()) {
+                if (AdjacencyMap::getNodeID(inputKey) != currentIndex)
+                    continue;
+
+                for (const auto& sourceKey : sources) {
+                    const int srcIndex = AdjacencyMap::getNodeID(sourceKey);
+                    AudioNode* srcNode = objectsListCopy[srcIndex];
+
+                    if (srcNode->canFeedback() && !insertedFeedbacks.contains(srcNode)) {
+                        sortedNodes.push_back(srcNode);
+                        insertedFeedbacks.insert(srcNode);
+                    }
+                }
+            }
+
+            // Now add the current node
+            sortedNodes.push_back(currentNode);
+
+            // Normal dependency decrement
+            for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward()) {
+                if (AdjacencyMap::getNodeID(sourceKey) != static_cast<int>(currentIndex))
+                    continue;
+
+                for (const auto& downstreamKey : downstreamKeys) {
+                    int downstreamNodeIndex = AdjacencyMap::getNodeID(downstreamKey);
+                    if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount) {
+                        if (--inDegree[downstreamNodeIndex] == 0) {
+                            zeroInDegreeNodes.push_back(downstreamNodeIndex);
                         }
                     }
                 }
             }
         }
 
+
         // If we haven't processed every node, there's a cycle.
-        if (sortedNodes.size() != nodeCount)
-        {
-            sortedNodes.clear();
-            std::cout << "Cycle detected, clearing graph" << std::endl;
+        if (sortedNodes.size() != nodeCount) {
+            std::cout << "Topological sort incomplete. Checking for intentional feedback...\n";
+
+            bool allFeedbackOK = true;
+            for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward()) {
+                int srcIdx = AdjacencyMap::getNodeID(sourceKey);
+                AudioNode* src = objectsListCopy[srcIdx];
+
+                for (const auto& dstKey : downstreamKeys) {
+                    int dstIdx = AdjacencyMap::getNodeID(dstKey);
+                    if (std::ranges::find(sortedNodes, objectsListCopy[dstIdx]) == sortedNodes.end()) {
+                        if (!src->canFeedback()) {
+                            allFeedbackOK = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!allFeedbackOK)
+                {
+                    std::cout << "Graph using intentional feedback nodes, all OK!\n";
+                    break;
+                }
+            }
+
+            if (!allFeedbackOK) {
+                sortedNodes.clear();
+                std::cout << "Unresolvable cycle — graph cleared\n";
+            }
         }
     }
 
@@ -264,7 +309,7 @@ public:
             << elapsedNs << " ns" << std::endl;
 #endif
 
-//#define DEBUG_SORT
+#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         for (auto& node : objectsListCopy)

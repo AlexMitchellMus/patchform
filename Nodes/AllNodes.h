@@ -52,6 +52,7 @@
 #include "Chorus.h"
 #include "DCBlocker.h"
 #include "Feedback.h"
+#include "Delay.h"
 
 // Oscillators
 #include "Oscillator.h"
