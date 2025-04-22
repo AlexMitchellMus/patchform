@@ -163,44 +163,57 @@ void Canvas::focusLost()
 
 void Canvas::mouseWheel(pptk::CompEvent& e)
 {
-    float mouseX, mouseY;
-    SDL_GetMouseState(&mouseX, &mouseY);
+    // Get current mouse position
+    SDL_GetMouseState(&zoomMouseX, &zoomMouseY);
 
-    // Translate mouse position to canvas coordinates
-    float canvasMouseX = (mouseX - x) / scale;
-    float canvasMouseY = (mouseY - y) / scale;
-
-    // Use logarithmic scaling so scaling feels consistent to user
-    // ie: It doesn't feel like scaling > 1.0f is slow, while < 1.0f is super fast
-    float logScale = std::log(scale);
+    // Update logTarget cumulatively for smooth zoom steps
     float logDelta = e.sdlEvent.wheel.y * 0.3f;
-    float newScale = std::exp(logScale + logDelta);
+    logTarget += logDelta;
 
-    // Clamp the new scale between 0.1f and 3.0f
-    newScale = std::min(std::max(newScale, 0.1f), 3.0f);
+    // Clamp log scale to avoid zoom extremes
+    logTarget = std::clamp(logTarget, std::log(0.1f), std::log(3.0f));
 
-    // If scrolling crosses 1.0 from either side, snap exactly to 1.0f
-    // We use this to always allow users to scroll to 100% regardless of the last increment
-    if ((scale < 1.0f && newScale > 1.0f) || (scale > 1.0f && newScale < 1.0f))
-    {
-        newScale = 1.0f;
+    float currentScale = std::exp(logTarget - logDelta); // previous target before this scroll
+    float newScale = std::exp(logTarget);
+
+    // If we crossed 1.0 in either direction and the difference is small, snap
+    if ((currentScale < 1.0f && newScale > 1.0f) || (currentScale > 1.0f && newScale < 1.0f)) {
+        if (std::abs(newScale - 1.0f) < 0.2f)
+            logTarget = 0.0f;
     }
 
-    // Apply the new scale
-    if (scale != newScale)
-    {
-        // Adjust canvas offset to scale around the mouse point
-        x -= canvasMouseX * (newScale - scale);
-        y -= canvasMouseY * (newScale - scale);
+    // Set anchor based on current scale
+    zoomAnchor = {(zoomMouseX - x) / scale, (zoomMouseY - y) / scale};
 
-        // TODO: Canvas should be in a viewport! We will not need to keep both x and offset then!
-        canvasOffset.x = x + canvasOrigin * newScale;
-        canvasOffset.y = y + canvasOrigin * newScale;
+    zooming = true;
 
-        scale = newScale;
-        onScaleChange(scale);
-        repaint();
-        frameBufferRepaint = true;
+    if (!frameTimerRunning) {
+        frameTimerRunning = true;
+        startFrameTimer([this](uint32_t, uint32_t) {
+            if (!zooming) return;
+
+            float target = std::exp(logTarget);
+            float delta = target - scale;
+
+            scale += delta * 0.15f;
+
+            if (std::abs(delta) < 0.001f) {
+                scale = target;
+                zooming = false;
+                frameTimerRunning = false;
+                stopFrameTimer();
+            }
+
+            x = zoomMouseX - zoomAnchor.x * scale;
+            y = zoomMouseY - zoomAnchor.y * scale;
+
+            canvasOffset.x = x + canvasOrigin * scale;
+            canvasOffset.y = y + canvasOrigin * scale;
+
+            onScaleChange(scale);
+            repaint();
+            frameBufferRepaint = true;
+        });
     }
 }
 

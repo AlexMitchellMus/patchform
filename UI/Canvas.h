@@ -111,6 +111,14 @@ public:
     Port* findPort(int x, int y, Port::Direction direction);
 
 private:
+    float targetScale = 1.0f;
+    bool zooming = false;
+    pptk::Point zoomAnchor = {0, 0};
+    bool frameTimerRunning = false;
+    float zoomMouseX;
+    float zoomMouseY;
+    float logTarget = std::log(1.0f);
+
     void dragCanvas(const pptk::Point&);
     pptk::Point getMousePositionOnCanvas();
 
