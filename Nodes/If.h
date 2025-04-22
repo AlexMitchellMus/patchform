@@ -30,7 +30,7 @@ public:
         coldValueReturn = objParams.value("return", 0.0f);
 
         ifParam = addParameter<IntParameter>("if", coldValueIf, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-        retParam = addParameter<FloatParameter>("return", coldValueReturn, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+        retParam = addParameter<FloatParameter>("return", coldValueReturn, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
         ifParam->informNodeOfChange = [this]()
         {

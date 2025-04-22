@@ -245,6 +245,11 @@ public:
 
     virtual void cleanupAudio(){};
 
+    virtual bool canFeedback()
+    {
+        return false;
+    }
+
 private:
 
     bool isClean = false;

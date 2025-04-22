@@ -147,7 +147,7 @@ public:
                 if (downstreamNodeIndex >= 0 && downstreamNodeIndex < nodeCount)
                 {
                     // Allow feedback node to create cycles
-                    if (!dynamic_cast<Feedback*>(objectsListCopy[downstreamNodeIndex]))
+                    if (!objectsListCopy[downstreamNodeIndex]->canFeedback())
                         ++inDegree[downstreamNodeIndex];
                 }
             }
