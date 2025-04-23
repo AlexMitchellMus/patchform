@@ -1,6 +1,8 @@
 #pragma once
 
 #include "GraphManager.h"
+#include "Utility/LinearSmoother.h"
+
 #include "DSPTimer.h"
 #include <filesystem>
 #include <atomic>
@@ -10,6 +12,11 @@ class GraphSystem
 {
 public:
     using Graphs = std::vector<std::shared_ptr<GraphManager>>;
+
+    GraphSystem()
+    {
+        setSampleRateAndBlockSize(44100, 64);
+    }
 
     std::tuple<std::vector<Object*>, std::vector<Edge*>> loadPatch(const std::string& path, const json& patch, bool logVerbose)
     {
@@ -107,6 +114,25 @@ public:
                 mgr->process(inBuffer, outBuffer, frameCount, midi);
         }
 
+        const auto currentVolume = mainVolume.load(std::memory_order_relaxed);
+        // Check if we're already at target and not smoothing
+        constexpr float epsilon = 1e-4f;
+        if (std::abs(mainVolumeSmoothed.current() - currentVolume) < epsilon) {
+            // Volume is static — skip smoothing and gainBuffer
+            for (int i = 0; i < frameCount; ++i) {
+                outBuffer[i] *= currentVolume;
+                outBuffer[i + frameCount] *= currentVolume;
+            }
+        } else {
+            std::ranges::fill(gainBuffer, currentVolume);
+            mainVolumeSmoothed.process(gainBuffer.data(), gainBuffer.data(), frameCount, false);
+
+            for (int i = 0; i < frameCount; ++i) {
+                outBuffer[i] *= gainBuffer[i];
+                outBuffer[i + frameCount] *= gainBuffer[i];
+            }
+        }
+
         dspTimer.end(frameCount, sampleRate);
         processPeak(outBuffer, frameCount);
     }
@@ -142,6 +168,11 @@ public:
     {
         sampleRate = sr;
         frameCount = bs;
+
+        mainVolumeSmoothed.setSampleRate(sr);
+        mainVolumeSmoothed.setSmoothTime(0.01f);
+        gainBuffer.assign(bs, 0.0f);
+        mainVolumeSmoothed.clear(1.0f);
     }
 
     void setActiveGraph(const std::string& path)
@@ -164,7 +195,12 @@ public:
 
     moodycamel::ConcurrentQueue<std::array<float, 2>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::array<float, 2>>(100);
 
+    std::atomic<float> mainVolume = 1.0f;
+
 private:
+    LinearSmoother mainVolumeSmoothed;
+    std::vector<float, AlignedAllocator<float, 16>> gainBuffer;
+
     void processPeak(const float* buffer, const unsigned long frameCount)
     {
         constexpr int kUpdateInterval = 4;

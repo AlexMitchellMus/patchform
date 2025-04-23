@@ -155,6 +155,24 @@ TopBar::TopBar(Editor* ed)
     volumeMeter = std::make_unique<MainVolumeMeter>();
     addComponent(volumeMeter.get());
 
+    volumeMeter->onVolumeChange = [ed](const float sliderValue)
+    {
+        float gain = 0.0f;
+
+        if (sliderValue <= 0.75f) {
+            // Normalize 0.0 → 0.75 to 0.0 → 1.0
+            const float norm = sliderValue / 0.75f;
+            gain = std::pow(norm, 1.5f); // perceptual taper
+        } else {
+            // From 0.75 → 1.0 map to 1.0 → maxBoost
+            constexpr float maxBoost = 1.995262f; // std::pow(10.0f, 6.0f / 20.0f)
+            float t = (sliderValue - 0.75f) / 0.25f; // 0 → 1
+            gain = 1.0f + t * (maxBoost - 1.0f);
+        }
+
+        ed->graphSystem->mainVolume.store(gain, std::memory_order_relaxed);
+    };
+
     hideSidePanelsToggle = std::make_unique<ToggleButton>("D", "D");
     hideSidePanelsToggle->setName("HidePanels");
     addComponent(hideSidePanelsToggle.get());

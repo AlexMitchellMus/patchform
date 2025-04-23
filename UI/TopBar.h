@@ -10,76 +10,10 @@
 #include "../UI_ToolKit/PopupComponent.h"
 #include "../UI_ToolKit/ToggleButton.h"
 
+#include "MainVolumeMeter.h"
+
 #include "SDL3/SDL.h"
 
-class MainVolumeMeter : public pptk::Component
-{
-public:
-    MainVolumeMeter() = default;
-
-    void setValue(float left, float right)
-    {
-        left = std::clamp(left, 1e-6f, 1.0f);
-        right = std::clamp(right, 1e-6f, 1.0f);
-
-        leftMeterPeakVal = 20.0f * std::log10(left);
-        rightMeterPeakVal = 20.0f * std::log10(right);
-
-        constexpr float dbRange = 40.0f;
-        float meterLeft = std::clamp((leftMeterPeakVal + dbRange) / dbRange, 0.0f, 1.0f);
-        float meterRight = std::clamp((rightMeterPeakVal + dbRange) / dbRange, 0.0f, 1.0f);
-
-        float meterWidth = width - (height * 2) * getAccumulatedScale();
-        int newPos = static_cast<int>((meterLeft + meterRight) * 0.5f * meterWidth * 2);
-
-        if (peakMeterPos != newPos)
-        {
-            peakMeterPos = newPos;
-            repaint();
-        }
-
-        meterLeftNorm = meterLeft;
-        meterRightNorm = meterRight;
-    }
-
-    float getLeftVal() { return meterLeftNorm; }
-    float getRightVal() { return meterRightNorm; }
-
-    void render(NVGcontext* nvg, const pptk::Theme& theme) override
-    {
-        nvgBeginPath(nvg);
-        auto bgColor = nvgRGBA(33, 33, 33, 255);
-        float halfHeight = getHeight() * 0.5f;
-
-        nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bgColor, bgColor, halfHeight);
-
-        float meterWidth = width - (halfHeight * 2);
-        float meterX = halfHeight;
-        float meterY = height * 0.25f;
-        float meterH = height * 0.2f;
-
-        // Left channel
-        auto meterBgCol = nvgRGBA(40, 40, 40, 255);
-        nvgDrawRoundedRect(nvg, meterX, meterY, meterWidth, meterH, meterBgCol, meterBgCol, 0);
-        float leftX = meterWidth * meterLeftNorm;
-        auto colL = meterLeftNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
-        nvgDrawRoundedRect(nvg, meterX, meterY, leftX, meterH, colL, colL, 0);
-
-        // Right channel
-        meterY = height * 0.55f;
-        nvgDrawRoundedRect(nvg, meterX, meterY, meterWidth, meterH, meterBgCol, meterBgCol, 0);
-        float rightX = meterWidth * meterRightNorm;
-        auto colR = meterRightNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
-        nvgDrawRoundedRect(nvg, meterX, meterY, rightX, meterH, colR, colR, 0);
-    }
-
-private:
-    float leftMeterPeakVal = 0.0f;
-    float rightMeterPeakVal = 0.0f;
-    float meterLeftNorm = 0.0f;
-    float meterRightNorm = 0.0f;
-    int peakMeterPos = 0;
-};
 
 class Editor;
 class MainMenu : public pptk::PopupComponent
@@ -306,8 +240,10 @@ public:
         offset += 50;
         textOffset = offset;
 
-        auto volCentreY = (getHeight() / 2) - (32 * 0.5f);
-        volumeMeter->setBounds(getWidth() - 50 - 180, volCentreY, 150, 32);
+        constexpr int volMeterH = 24;
+        constexpr int volMeterW = 120;
+        auto volCentreY = (getHeight() / 2) - (volMeterH * 0.5f);
+        volumeMeter->setBounds(getWidth() - 65 - volMeterW, volCentreY, volMeterW, volMeterH);
 
         hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, buttonW);
 
@@ -336,7 +272,7 @@ public:
         nvgText(nvg, textOffset, height / 2, loadedPatch.c_str(), nullptr);
 
         // DSP CPU %
-        nvgText(nvg, getWidth() - 300, height / 2, dspPercent.c_str(), nullptr);
+        nvgText(nvg, getWidth() - 250, height / 2, dspPercent.c_str(), nullptr);
 
         nvgRestore(nvg);
     }
