@@ -2,23 +2,24 @@
 
 #include "AudioNodeBase.h"
 #include "readerwriterqueue.h"
+#include "Utility/ScopedSwapBuffer.h"
 
 class Table final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Table", "table", false);
     DEFINE_NODE_ALIASES("table");
 
     int numValues = defaultTableSize;  // hardcoded for now
-    std::vector<float> bufferA;
-    std::vector<float> bufferB;
+    std::vector<float> mainBuffer;  // persistent audio buffer
+    ScopedSwapBuffer scopedSwap;  // audio->UI buffer
 
     SampleHandle waveformData;
 
     std::atomic<bool> isDirty;
-    std::atomic<bool> bufferRequest{false};
-    std::atomic<bool> bufferReady{false};
 
     BoolParameter* emitOnLoadParam = nullptr;
     BoolParameter* saveTableOnClose = nullptr;
+
+    bool saveContents = false;
 
 public:
 #ifdef PATCHFORM_WITH_GUI
@@ -34,11 +35,11 @@ public:
         int hoveredOver = -1;
 
     public:
-        explicit UI(AudioNode* node) : AudioNode::UI(node) {
+        explicit UI(AudioNode* node) : AudioNode::UI(node)
+        {
             setSize(300, 100);
             auto* tableNode = reinterpret_cast<Table*>(audioNode);
-            tableNode->bufferRequest.store(true, std::memory_order_release);
-            tableNode->setNodeDirty();
+            tableNode->isDirty.store(true);
         }
 
         void drawGUI(NVGcontext* nvg) override {
@@ -84,14 +85,13 @@ public:
             }
         }
 
-        void updateGraphValues() override {
+        void updateGraphValues() override
+        {
             auto* tableNode = reinterpret_cast<Table*>(audioNode);
-            if (tableNode->bufferReady.exchange(false)) {
-                tableNode->bufferB = tableNode->bufferA;  // snapshot
-                values = tableNode->bufferB;
-                repaint();
-            } else if (tableNode->isDirty.exchange(false)) {
-                values = tableNode->bufferB;
+            if (tableNode->isDirty.exchange(false))
+            {
+                auto reader = tableNode->scopedSwap.acquireScopedReader();
+                values.assign(reader.data, reader.data + tableNode->numValues);
                 repaint();
             }
         }
@@ -184,115 +184,102 @@ public:
     }
 #endif
 
-    Table(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
-    {
-        bufferA.resize(numValues, 0.0f);
-        bufferB.resize(numValues, 0.0f);
+    Table(NodeContext* context, const json& objParams)
+        : AudioNode(context, AudioPort::PortType::Data, objParams) {
+        mainBuffer.resize(numValues, 0.0f);
+        scopedSwap.resize(numValues);
 
-        auto bufferFromFile = objParams.value("data", bufferA);
+        auto bufferFromFile = objParams.value("data", mainBuffer);
 
-        if (bufferA.size() != bufferFromFile.size()) {
+        if (mainBuffer.size() != bufferFromFile.size())
+        {
             std::vector<float> resampled(defaultTableSize);
             for (size_t i = 0; i < defaultTableSize; ++i) {
                 float phase = (float)i / defaultTableSize;
-                float srcIndex = phase * bufferA.size();
-                int idx0 = (int)std::floor(srcIndex) % bufferA.size();
-                int idx1 = (idx0 + 1) % bufferA.size();
+                float srcIndex = phase * mainBuffer.size();
+                int idx0 = (int)std::floor(srcIndex) % mainBuffer.size();
+                int idx1 = (idx0 + 1) % mainBuffer.size();
                 float frac = srcIndex - idx0;
-                resampled[i] = bufferA[idx0] * (1.0f - frac) + bufferA[idx1] * frac;
+                resampled[i] = mainBuffer[idx0] * (1.0f - frac) + mainBuffer[idx1] * frac;
             }
-            bufferA = std::move(resampled);
-        } else
-            bufferA = bufferFromFile;
+            mainBuffer = std::move(resampled);
+        } else {
+            mainBuffer = bufferFromFile;
+        }
+
+        {
+             auto writer = scopedSwap.acquireScopedWriter();
+             std::ranges::copy(mainBuffer, writer.data);
+             isDirty.store(true);
+        }
 
         addInputPort("control", AudioPort::Data);
-
         waveformData = SampleHandle::makeSampleHandle(numValues);
+        std::copy(mainBuffer.begin(), mainBuffer.end(), waveformData.sample->samples.begin());
 
-        // Populate the waveform buffer with samples from bufferA
-        // FIXME: Are we sure we can do this from the UI thread!?
-        auto& samples = waveformData.sample->samples;
-        for (unsigned long i = 0; i < bufferA.size(); ++i) {
-            samples[i] = bufferA[i];
-        }
-        bufferReady.store(true, std::memory_order_release);
-
-        bool emitOnLoad = objParams.value("emitOnLoad", false);
-        emitOnLoadParam   = addParameter<BoolParameter>("emitOnLoad", emitOnLoad);
-
-        bool saveOnClose = objParams.value("saveOnClose", false);
-        saveTableOnClose = addParameter<BoolParameter>("saveTableOnClose", saveOnClose);
-
-        eventOnLoad = emitOnLoad;
+        emitOnLoadParam = addParameter<BoolParameter>("emitOnLoad", objParams.value("emitOnLoad", false));
+        saveContents = objParams.value("saveContents", false);
+        saveTableOnClose = addParameter<BoolParameter>("saveContents", saveContents);
+        saveTableOnClose->onParameterChanged = [this]() {
+            saveContents = saveTableOnClose->getValue();
+        };
+        eventOnLoad = emitOnLoadParam->getValue();
     }
 
-    void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override
-    {
+
+    void processAudio(const float*, float*, unsigned long, std::vector<MidiMessage>&) override {
         auto& events = inputPortBuffers[0]->getEvents();
+        bool newData = false;
 
-        if (bufferRequest.exchange(false, std::memory_order_acquire)) {
-            bufferB = bufferA; // safe snapshot
-            bufferReady.store(true, std::memory_order_release);
-        }
-
-        for (auto* event : events)
-        {
+        for (auto* event : events) {
             if (event->data && event->data->type == DataAtom::DataType::Sample) {
                 auto incoming = event->data->data.sample;
                 if (incoming.isValid()) {
                     const auto& incomingSamples = incoming.sample->samples;
-                    bufferA = incomingSamples;
-                    bufferReady.store(true, std::memory_order_release);
-                    waveformData = incoming;  // reuse handle
-                    isDirty.store(true);
+                    mainBuffer = incomingSamples;
+                    waveformData = incoming;
+                    newData = true;
                 }
             }
         }
+
 #ifdef PATCHFORM_WITH_GUI
         std::pair<int, float> msg;
         while (eventQueue.try_dequeue(msg)) {
-            int index = msg.first;
-            float val = msg.second;
-            if (index >= 0 && index < (int)bufferA.size())
-                bufferA[index] = val;
+            if (msg.first >= 0 && msg.first < (int)mainBuffer.size())
+                mainBuffer[msg.first] = msg.second;
+            newData = true;
         }
-        bufferReady.store(true, std::memory_order_release);
 #endif
 
-        if (!waveformData.isValid())
-            return;
-
-        auto& samples = waveformData.sample->samples;
-
-        for (unsigned long i = 0; i < bufferA.size(); ++i) {
-            samples[i] = bufferA[i];
+        if (newData) {
+            auto writer = scopedSwap.acquireScopedWriter();
+            std::copy(mainBuffer.begin(), mainBuffer.end(), writer.data);
+            isDirty.store(true);
         }
 
-        if (auto* e = context->eventPool.getFreeEvent())
-        {
+        if (!waveformData.isValid()) return;
+        auto& samples = waveformData.sample->samples;
+        std::copy(mainBuffer.begin(), mainBuffer.end(), samples.begin());
+
+        if (auto* e = context->eventPool.getFreeEvent()) {
             auto* dataAtom = context->eventPool.allocateDataAtom();
             dataAtom->type = DataAtom::DataType::Sample;
-            // Placement new
             new(&dataAtom->data.sample) SampleHandle(waveformData);
             e->data = dataAtom;
             addEvent(0, e);
         }
     }
 
-    json getSerializedNode() override
-    {
-        auto saveData = saveTableOnClose->getValue();
-        nodeCreationData["saveOnClose"] = saveTableOnClose->getValue();
-        if (saveData)
-        {
-            if (bufferReady.exchange(false, std::memory_order_acquire))
-            {
-                bufferB = bufferA;
-            }
-            nodeCreationData["size"] = static_cast<int>(bufferB.size());
-            nodeCreationData["data"] = bufferB;
+    json getSerializedNode() override {
+        nodeCreationData["saveContents"] = saveContents;
+        if (saveContents) {
+            auto reader = scopedSwap.acquireScopedReader();
+            std::vector<float> values(reader.data, reader.data + scopedSwap.size());
+            nodeCreationData["data"] = values;
+        } else {
+            nodeCreationData.erase("data");
         }
-
         nodeCreationData["emitOnLoad"] = emitOnLoadParam->getValue();
         return nodeCreationData;
     }
