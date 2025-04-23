@@ -1,0 +1,37 @@
+#include <windows.h>
+#include "winver.h"
+
+IDI_ICON1 ICON "@PATCHFORM_ICON_PATH@"
+
+#define FILEVER        @PATCHFORM_VERSION_COMMA@
+#define PRODUCTVER     @PATCHFORM_VERSION_COMMA@
+#define STRFILEVER     "@PATCHFORM_VERSION_STRING@"
+#define STRPRODUCTVER  "@PATCHFORM_VERSION_STRING@"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION     FILEVER
+ PRODUCTVERSION  PRODUCTVER
+ FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+ FILEFLAGS       0
+ FILEOS          VOS__WINDOWS32
+ FILETYPE        VFT_APP
+ FILESUBTYPE     0x0L
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName",      "Patchform"
+      VALUE "FileDescription",  "Patchform Standalone"
+      VALUE "FileVersion",      STRFILEVER
+      VALUE "InternalName",     "PatchformStandalone.exe"
+      VALUE "ProductName",      "Patchform"
+      VALUE "ProductVersion",   STRPRODUCTVER
+      VALUE "LegalCopyright",   "2025 Alexander Mitchell"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1200
+  END
+END

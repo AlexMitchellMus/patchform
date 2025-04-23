@@ -3,13 +3,14 @@
 !include "MUI2.nsh"
 
 !define APP_NAME "PatchformStandalone"
-!define APP_VERSION "1.0"
 !define INSTALL_DIR "$PROGRAMFILES64\${APP_NAME}"
 !define MUI_ICON patchformicon.ico
 !define MUI_UNICON patchformicon.ico
 !define MUI_WELCOMEFINISHPAGE_BITMAP "patchformside.bmp"
 
-OutFile "PatchformStandaloneInstaller.exe"
+OutFile "PatchformInstaller-${APP_VERSION}.exe"
+BrandingText "Patchform ${APP_VERSION}"
+
 InstallDir "${INSTALL_DIR}"
 
 Name "Patchform"

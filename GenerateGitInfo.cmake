@@ -21,6 +21,9 @@ execute_process(
 
 string(REGEX REPLACE "-g[0-9a-f]+$" "" GIT_VERSION "${GIT_DESC}")
 
+# Write file for cmake to use in application / installer exe name
+file(WRITE "${GIT_VERSION_FILE}" "${GIT_VERSION}\n")
+
 # Write the generated file.
 file(WRITE "${OUTPUT_FILE}" "#include \"GitInfo.h\"\n")
 file(APPEND "${OUTPUT_FILE}" "const char* const patchform_git_version = \"${GIT_VERSION}\";\n")

@@ -29,15 +29,59 @@ else()
     set(GIT_REF_FILE "${CMAKE_SOURCE_DIR}/.git/HEAD")
 endif()
 
+set(GIT_VERSION_FILE "${CMAKE_BINARY_DIR}/GitVersion.txt")
+
 add_custom_command(
         OUTPUT ${BUILDINFO_CPP}
-        COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${BUILDINFO_CPP} -P ${CMAKE_SOURCE_DIR}/GenerateGitInfo.cmake
-        DEPENDS ${CMAKE_SOURCE_DIR}/.git/HEAD ${GIT_REF_FILE}  # Now depends on the ref file as well.
+        COMMAND ${CMAKE_COMMAND}
+        -DOUTPUT_FILE=${BUILDINFO_CPP}
+        -DGIT_VERSION_FILE=${GIT_VERSION_FILE}
+        -P ${CMAKE_SOURCE_DIR}/GenerateGitInfo.cmake
+        DEPENDS ${CMAKE_SOURCE_DIR}/.git/HEAD ${GIT_REF_FILE}
         COMMENT "Generating buildinfo.cpp with updated Git info"
         VERBATIM
 )
 
 add_custom_target(update_git_version ALL DEPENDS ${BUILDINFO_CPP})
+
+if (EXISTS "${CMAKE_BINARY_DIR}/GitVersion.txt")
+    file(READ "${CMAKE_BINARY_DIR}/GitVersion.txt" PATCHFORM_VERSION_STRING)
+    string(STRIP "${PATCHFORM_VERSION_STRING}" PATCHFORM_VERSION_STRING)
+else()
+    set(PATCHFORM_VERSION_STRING "dev")
+endif()
+
+message(STATUS "Detected version: ${PATCHFORM_VERSION_STRING}")
+
+if (EXISTS "${GIT_VERSION_FILE}")
+    file(READ "${GIT_VERSION_FILE}" PATCHFORM_VERSION_STRING)
+    string(STRIP "${PATCHFORM_VERSION_STRING}" PATCHFORM_VERSION_STRING)
+else()
+    set(PATCHFORM_VERSION_STRING "dev")
+endif()
+
+# Strip leading 'v' and extra stuff (e.g., "-alpha-17")
+string(REGEX REPLACE "^v([0-9]+)\\.([0-9]+)\\.([0-9]+).*" "\\1,\\2,\\3,0" PATCHFORM_VERSION_COMMA "${PATCHFORM_VERSION_STRING}")
+
+
+add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/patchformicon.ico"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/installer/windows/patchformicon.ico"
+        "${CMAKE_BINARY_DIR}/patchformicon.ico"
+        DEPENDS "${CMAKE_SOURCE_DIR}/installer/windows/patchformicon.ico"
+        COMMENT "Copying patchformicon.ico"
+)
+
+add_custom_target(copy_icon ALL DEPENDS "${CMAKE_BINARY_DIR}/patchformicon.ico")
+
+set(PATCHFORM_ICON_PATH "${CMAKE_BINARY_DIR}/patchformicon.ico")
+
+configure_file(
+        ${CMAKE_SOURCE_DIR}/installer/windows/resources.rc.in
+        ${CMAKE_BINARY_DIR}/version.rc
+        @ONLY
+)
 
 # Toggle AVX2 for Glaze based on build type
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -231,9 +275,7 @@ endif()
 # ======================== RESOURCE SETUP ========================
 
 if (WIN32)
-    # Add Windows-specific resources
-    set(APP_ICON_RESOURCE "installer/windows/resources.rc")
-    target_sources(PatchformStandalone PRIVATE ${APP_ICON_RESOURCE})
+    target_sources(PatchformStandalone PRIVATE ${CMAKE_BINARY_DIR}/version.rc)
 endif ()
 
 # files to copy
@@ -268,7 +310,7 @@ add_custom_target(copy_fonts
 
 # Add dependencies to ensure the directory is copied whenever these targets are built
 add_dependencies(PlugPatchCLI copy_patches)
-add_dependencies(PatchformStandalone copy_patches copy_fonts update_git_version)
+add_dependencies(PatchformStandalone copy_patches copy_fonts update_git_version copy_icon)
 
 # Installer configuration for CLI
 #TODO NOT WORKING ONLY FOR RELEASE for some reason! :-(
@@ -299,7 +341,11 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 
     add_custom_target(PackageInstallerStandalone
             COMMAND ${CMAKE_COMMAND} -E echo "Creating NSIS installer..."
-            COMMAND makensis.exe /DOUTPUT_DIR=$<TARGET_FILE_DIR:PatchformStandalone> /DAPPLICATION_BINARY=${APPLICATION_BINARY_STANDALONE} ${NSIS_SCRIPT}
+            COMMAND makensis.exe
+                /DOUTPUT_DIR=$<TARGET_FILE_DIR:PatchformStandalone>
+                /DAPPLICATION_BINARY=${APPLICATION_BINARY_STANDALONE}
+                /DAPP_VERSION=${PATCHFORM_VERSION_STRING}
+                ${NSIS_SCRIPT}
             WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
             COMMENT "Packaging installer with NSIS"
             VERBATIM
