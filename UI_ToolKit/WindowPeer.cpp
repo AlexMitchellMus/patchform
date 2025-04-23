@@ -2,12 +2,14 @@
 #include "../Glad/gl.h"
 #include <iostream>
 
-WindowPeer::WindowPeer(const std::string &title, int width, int height, const bool isFullScreen)
+WindowPeer::WindowPeer(const std::string &title, int width, int height, const bool isMaximized)
     : window(nullptr), glContext(nullptr)
 {
     if (SDL_Init(SDL_INIT_VIDEO) == 0) {
         throw std::runtime_error(SDL_GetError());
     }
+
+    isWindowMaximized = isMaximized;
 
     // Set attributes for an OpenGL context (adjust as needed)
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
@@ -16,17 +18,12 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
+    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | (isWindowMaximized ? SDL_WINDOW_MAXIMIZED : 0));
     if (!window) {
         throw std::runtime_error(SDL_GetError());
     }
 
     SDL_SetWindowMinimumSize(window, 800, 600);
-
-    if (isFullScreen) {
-        isWindowMaximized = true;
-        SDL_MaximizeWindow(window);
-    }
 
     setUserSize(width, height);
 

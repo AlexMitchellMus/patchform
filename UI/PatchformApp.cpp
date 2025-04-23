@@ -72,7 +72,7 @@ void PatchformApp::shutdown()
     settings.selectedInputDeviceIndex = getSelectedInputDeviceIndex();
     settings.selectedOutputDeviceIndex = getSelectedOutputDeviceIndex();
 
-    settings.windowIsFullscreen = window->isMaximized();
+    settings.windowIsMaximized = window->isMaximized();
     window->getUserSize(settings.windowWidth, settings.windowHeight);
 
     shutdownAudio();
@@ -507,7 +507,7 @@ bool PatchformApp::initUI()
 {
     newWidth = windowWidth = settings.windowWidth;
     newHeight = windowHeight = settings.windowHeight;
-    isFullscreen = settings.windowIsFullscreen;
+    isFullscreen = settings.windowIsMaximized;
 
     if (newWidth == -1 || newHeight == -1)
     {

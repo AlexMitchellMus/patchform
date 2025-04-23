@@ -10,7 +10,7 @@ public:
     int windowWidth = -1;
     int windowHeight = -1;
 
-    bool windowIsFullscreen = false;
+    bool windowIsMaximized = false;
 
     bool load();
     void save() const;

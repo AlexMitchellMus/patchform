@@ -1,3 +1,9 @@
+Version 0.1.4-alpha
+    * Fix window size settings restore (both size and maximized)
+    * Implement push-based audio summing
+    * Implement [feedback] node and system (delay 1 buffer and allow [feedback] nodes to create a cycle)
+    * Add multiple objects ([delay] [feedback] etc )
+
 Version 0.1.3-alpha
     * Improve safe-object system
     * Add more nodes
@@ -5,7 +11,7 @@ Version 0.1.3-alpha
     * Improve add-object menu
 
 Version 0.1.2-alpha
-    * Make sure librarys are all statically included
+    * Make sure libraries are all statically included
     * Improve audio IO auto-selection
 
 Version 0.1.1-alpha

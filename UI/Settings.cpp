@@ -45,7 +45,7 @@ bool Settings::load()
     const auto& ui = j["UI"];
     windowWidth = ui.value("windowWidth", windowWidth);
     windowHeight = ui.value("windowHeight", windowHeight);
-    windowIsFullscreen = ui.value("windowIsFullscreen", windowIsFullscreen);
+    windowIsMaximized = ui.value("windowIsMaximized", windowIsMaximized);
 
     return true;
 }
@@ -66,7 +66,7 @@ void Settings::save() const
     j["UI"] = {
         {"windowWidth", windowWidth},
         {"windowHeight", windowHeight},
-        {"windowIsFullscreen", windowIsFullscreen}
+        {"windowIsMaximized", windowIsMaximized}
     };
 
     std::ofstream out(path);
