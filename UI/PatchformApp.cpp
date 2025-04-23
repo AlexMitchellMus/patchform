@@ -72,11 +72,8 @@ void PatchformApp::shutdown()
     settings.selectedInputDeviceIndex = getSelectedInputDeviceIndex();
     settings.selectedOutputDeviceIndex = getSelectedOutputDeviceIndex();
 
-    settings.windowWidth = windowWidth;
-    settings.windowHeight = windowHeight;
-    settings.windowIsFullscreen = window->isFullscreen();
-
-    std::cout << "saving width: " << windowWidth << " height: " << windowHeight << std::endl;
+    settings.windowIsFullscreen = window->isMaximized();
+    window->getUserSize(settings.windowWidth, settings.windowHeight);
 
     shutdownAudio();
 
@@ -149,9 +146,21 @@ void PatchformApp::run()
                     eventManager->handleKeyUp(event);
                     break;
                 case SDL_EVENT_WINDOW_RESIZED:
-                    newWidth = event.window.data1;
-                    newHeight = event.window.data2;
-                    editor->setBounds(0, 0, newWidth, newHeight);
+                    {
+                        newWidth = event.window.data1;
+                        newHeight = event.window.data2;
+                        editor->setBounds(0, 0, newWidth, newHeight);
+                        Uint32 flags = SDL_GetWindowFlags(window->getSDLWindow());
+                        if ((flags & SDL_WINDOW_MAXIMIZED) == 0 && !window->getIsProgrammaticResize()) {
+                            window->setUserSize(newWidth, newHeight); // user resize only
+                        }
+                    }
+                    break;
+                case SDL_EVENT_WINDOW_MAXIMIZED:
+                    window->setMaximized(true);
+                    break;
+                case SDL_EVENT_WINDOW_RESTORED:
+                    window->setMaximized(false);
                     break;
                 case SDL_EVENT_WINDOW_MOVED:
                     // If editor was moved from outside screen bound the framebuffer will not repaint

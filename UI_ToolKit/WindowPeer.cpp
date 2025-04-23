@@ -16,12 +16,19 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | (isFullScreen ? SDL_WINDOW_MAXIMIZED : 0));
+    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
     if (!window) {
         throw std::runtime_error(SDL_GetError());
     }
 
     SDL_SetWindowMinimumSize(window, 800, 600);
+
+    if (isFullScreen) {
+        isWindowMaximized = true;
+        SDL_MaximizeWindow(window);
+    }
+
+    setUserSize(width, height);
 
     glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
@@ -51,9 +58,9 @@ WindowPeer::~WindowPeer() {
     SDL_Quit();
 }
 
-bool WindowPeer::isFullscreen() const {
-    Uint32 flags = SDL_GetWindowFlags(window);
-    return (flags & SDL_WINDOW_FULLSCREEN) != 0;
+bool WindowPeer::isMaximized() const
+{
+    return isWindowMaximized;
 }
 
 SDL_Window* WindowPeer::getSDLWindow() const {
@@ -68,10 +75,18 @@ void WindowPeer::setTitle(const std::string &title) {
     SDL_SetWindowTitle(window, title.c_str());
 }
 
-void WindowPeer::setSize(int width, int height) {
+void WindowPeer::setSize(const int width, const int height) {
     SDL_SetWindowSize(window, width, height);
+    setUserSize(width, height);
 }
 
-void WindowPeer::getSize(int &width, int &height) const {
-    SDL_GetWindowSize(window, &width, &height);
+void WindowPeer::setUserSize(const int width, const int height)
+{
+    windowUserWidth = width;
+    windowUserHeight = height;
+}
+void WindowPeer::getUserSize(int &width, int &height) const
+{
+    width = windowUserWidth;
+    height = windowUserHeight;
 }

@@ -19,15 +19,33 @@ public:
     // Set the window title.
     void setTitle(const std::string &title);
 
-    bool isFullscreen() const;
+    bool isMaximized() const;
+    void setMaximized(const bool isMaximized)
+    {
+        isHandlingProgrammaticResize = true;
+        isWindowMaximized = isMaximized;
+    };
+
+    void setUserSize(int width, int height);
+    void getUserSize(int &width, int &height) const;
 
     // Set the window size.
     void setSize(int width, int height);
 
-    // Retrieve window dimensions.
-    void getSize(int &width, int &height) const;
+    bool getIsProgrammaticResize()
+    {
+        const bool wasProgrammatic = isHandlingProgrammaticResize;
+        isHandlingProgrammaticResize = false;
+        return wasProgrammatic;
+    }
 
 private:
     SDL_Window* window;
     SDL_GLContext glContext;
+
+    int windowUserWidth = -1;
+    int windowUserHeight = -1;
+    bool isWindowMaximized = false;
+
+    bool isHandlingProgrammaticResize = false;
 };

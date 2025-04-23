@@ -40,13 +40,12 @@ bool Settings::load()
     selectedInputDeviceIndex = a.value("selectedInputDeviceIndex", selectedInputDeviceIndex);
     selectedOutputDeviceIndex = a.value("selectedOutputDeviceIndex", selectedOutputDeviceIndex);
 
+    if (!j.contains("UI")) return false;
+
     const auto& ui = j["UI"];
-    if (ui.size() == 3)
-    {
-        windowWidth = ui.value("windowWidth", windowWidth);
-        windowHeight = ui.value("windowHeight", windowHeight);
-        windowIsFullscreen = ui.value("windowIsFullscreen", windowIsFullscreen);
-    }
+    windowWidth = ui.value("windowWidth", windowWidth);
+    windowHeight = ui.value("windowHeight", windowHeight);
+    windowIsFullscreen = ui.value("windowIsFullscreen", windowIsFullscreen);
 
     return true;
 }
@@ -67,7 +66,7 @@ void Settings::save() const
     j["UI"] = {
         {"windowWidth", windowWidth},
         {"windowHeight", windowHeight},
-        {"windowIsFullScreen", windowIsFullscreen}
+        {"windowIsFullscreen", windowIsFullscreen}
     };
 
     std::ofstream out(path);
