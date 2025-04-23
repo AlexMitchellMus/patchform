@@ -6,12 +6,16 @@
 #include <cstddef>
 #include <functional>
 
-class ScopedSwapBuffer {
-    static constexpr size_t NumBuffers = 4;
+// SPSC-only lock-free triple buffer (3-slot, bitmasked)
+// One producer (writer) and one consumer (reader) thread safe
+// Not safe for multiple readers or writers
+
+class ScopedTrippleBuffer {
+    static constexpr size_t NumBuffers = 3;
     static constexpr int Mask = NumBuffers - 1;
 
 public:
-    explicit ScopedSwapBuffer(size_t size = 0) {
+    explicit ScopedTrippleBuffer(size_t size = 0) {
         resize(size);
     }
 
@@ -62,11 +66,8 @@ public:
             // Branchless 3-slot scan (guaranteed free slot)
             int c1 = (w + 1) & Mask;
             int c2 = (w + 2) & Mask;
-            int c3 = (w + 3) & Mask;
 
-            int next = (c1 != r && c1 != w) ? c1 :
-                       (c2 != r && c2 != w) ? c2 : c3;
-
+            int next = (c1 != r && c1 != w) ? c1 : c2;
             writeIndex.store(next, std::memory_order_release);
         });
     }

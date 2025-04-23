@@ -2,7 +2,7 @@
 
 #include "AudioNodeBase.h"
 #include "readerwriterqueue.h"
-#include "Utility/ScopedSwapBuffer.h"
+#include "Utility/ScopedTrippleBuffer.h"
 
 class Table final : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Table", "table", false);
@@ -10,7 +10,7 @@ class Table final : public AudioNode {
 
     int numValues = defaultTableSize;  // hardcoded for now
     std::vector<float> mainBuffer;  // persistent audio buffer
-    ScopedSwapBuffer scopedSwap;  // audio->UI buffer
+    ScopedTrippleBuffer scopedSwap;  // audio->UI buffer
 
     SampleHandle waveformData;
 
@@ -90,8 +90,10 @@ public:
             auto* tableNode = reinterpret_cast<Table*>(audioNode);
             if (tableNode->isDirty.exchange(false))
             {
-                auto reader = tableNode->scopedSwap.acquireScopedReader();
-                values.assign(reader.data, reader.data + tableNode->numValues);
+                {
+                    const auto reader = tableNode->scopedSwap.acquireScopedReader();
+                    values.assign(reader.data, reader.data + tableNode->numValues);
+                }
                 repaint();
             }
         }
@@ -124,9 +126,8 @@ public:
                     tableNode->setNodeDirty();
 
                     repaint();
-                } else {
-                    AudioNode::UI::mouseButtonDown(e);
                 }
+                AudioNode::UI::mouseButtonDown(e);
             }
         }
 
@@ -253,14 +254,14 @@ public:
 #endif
 
         if (newData) {
-            auto writer = scopedSwap.acquireScopedWriter();
-            std::copy(mainBuffer.begin(), mainBuffer.end(), writer.data);
+            const auto writer = scopedSwap.acquireScopedWriter();
+            std::ranges::copy(mainBuffer, writer.data);
             isDirty.store(true);
         }
 
         if (!waveformData.isValid()) return;
         auto& samples = waveformData.sample->samples;
-        std::copy(mainBuffer.begin(), mainBuffer.end(), samples.begin());
+        std::ranges::copy(mainBuffer, samples.begin());
 
         if (auto* e = context->eventPool.getFreeEvent()) {
             auto* dataAtom = context->eventPool.allocateDataAtom();
@@ -273,11 +274,13 @@ public:
 
     json getSerializedNode() override {
         nodeCreationData["saveContents"] = saveContents;
-        if (saveContents) {
+        if (saveContents)
+        {
             auto reader = scopedSwap.acquireScopedReader();
             std::vector<float> values(reader.data, reader.data + scopedSwap.size());
             nodeCreationData["data"] = values;
-        } else {
+        } else
+        {
             nodeCreationData.erase("data");
         }
         nodeCreationData["emitOnLoad"] = emitOnLoadParam->getValue();
