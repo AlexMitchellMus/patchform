@@ -80,7 +80,7 @@ Project Goals
 * [ ] Theme system
 * [ ] Canvas inside viewport
 * [ ] Plugin view
-* [ ] Selected connections via lasso
+* [ ] Select connections via lasso
 * [x] Select multiple objects
 * [ ] Select multiple connections with shift-click
 * [x] Basic focus system (We need to think more about this - 
