@@ -39,17 +39,28 @@ public:
         const float* input = inputPortBuffers[0]->getAudioBuffer();
         float* output = outputPortBuffers[0]->getAudioBuffer();
 
-        float amount = amountVal.load();
-        float smoothed = lastSample;
+        float amount = std::clamp(amountVal.load(), 0.0f, 0.999f); // Clamp to prevent runaway
+        float smoothed = std::isfinite(lastSample) ? lastSample : 0.0f;
 
         for (unsigned long i = 0; i < frameCount; ++i) {
             float raw = feedbackBuffer[i];
+
+            // guard against overflow nan
+            if (!std::isfinite(raw))
+                raw = 0.0f;
+
             if (amount == 0.0f)
                 smoothed = raw;
             else
                 smoothed += amount * (raw - smoothed);
+
+            // guard against overflow nan
+            if (!std::isfinite(smoothed))
+                smoothed = 0.0f;
+
             output[i] = smoothed;
         }
+
         lastSample = smoothed;
         std::copy_n(input, frameCount, feedbackBuffer.begin());
     }

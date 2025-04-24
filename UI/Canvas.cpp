@@ -195,7 +195,7 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
             float target = std::exp(logTarget);
             float delta = target - scale;
 
-            scale += delta * 0.15f;
+            scale += delta * 0.25f;
 
             if (std::abs(delta) < 0.001f) {
                 scale = target;

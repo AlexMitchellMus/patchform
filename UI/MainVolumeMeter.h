@@ -24,13 +24,14 @@ public:
         holdLeftNorm = std::clamp((holdDbL + dbRange) / dbRange, 0.0f, 1.0f);
         holdRightNorm = std::clamp((holdDbR + dbRange) / dbRange, 0.0f, 1.0f);
 
-        // Envelope-style decay: instant attack, slow release
-        constexpr float releaseFactor = 0.96f;
-        meterLeftNorm = (targetLeft > meterLeftNorm) ? targetLeft : meterLeftNorm * releaseFactor;
-        meterRightNorm = (targetRight > meterRightNorm) ? targetRight : meterRightNorm * releaseFactor;
+        // Envelope-style decay: very fast attack, slow release
+        constexpr float attackFactor = 0.99f;  // fast attack
+        constexpr float releaseFactor = 0.07f; // slow release
+        meterLeftNorm += (targetLeft - meterLeftNorm) * ((targetLeft > meterLeftNorm) ? attackFactor : releaseFactor);
+        meterRightNorm += (targetRight - meterRightNorm) * ((targetRight > meterRightNorm) ? attackFactor : releaseFactor);
 
         float meterWidth = width - (height * 2) * getAccumulatedScale();
-        float newPos = (meterLeftNorm + meterRightNorm + holdLeftNorm + holdRightNorm) * 0.5f * meterWidth;
+        float newPos = (meterLeftNorm + meterRightNorm + holdLeftNorm + holdRightNorm) * 0.25f * meterWidth;
 
         if (std::abs(newPos - peakMeterPos) > 0.5f) { // half a pixel increments
             peakMeterPos = newPos;
@@ -82,25 +83,25 @@ public:
 
         nvgDrawRoundedRect(nvg, 0, 0, getWidth(), getHeight(), bgColor, bgColor, halfHeight);
 
-        float meterWidth = width - (halfHeight * 2);
-        float meterX = halfHeight;
-        float meterH = height * 0.2f;
-        auto meterBgCol = nvgRGBA(40, 40, 40, 255);
+        const float meterWidth = width - (halfHeight * 2);
+        const float meterX = halfHeight;
+        const float meterH = height * 0.2f;
+        const auto meterBgCol = nvgRGBA(40, 40, 40, 255);
 
-        float leftX = meterWidth * meterLeftNorm;
-        float rightX = meterWidth * meterRightNorm;
-        float holdLeftX = meterWidth * holdLeftNorm;
-        float holdRightX = meterWidth * holdRightNorm;
+        const float leftX = meterWidth * meterLeftNorm;
+        const float rightX = meterWidth * meterRightNorm;
+        const float holdLeftX = meterWidth * holdLeftNorm;
+        const float holdRightX = meterWidth * holdRightNorm;
 
         // === Left Channel ===
         float meterY = height * 0.25f;
         nvgDrawRoundedRect(nvg, meterX, meterY, meterWidth, meterH, meterBgCol, meterBgCol, 0);
         {
-            uint8_t alphaL = static_cast<uint8_t>(std::clamp(holdLeftNorm * 80.0f, 0.0f, 80.0f));
-            auto holdColL = nvgRGBA(180, 180, 180, alphaL);
+            const uint8_t alphaL = static_cast<uint8_t>(std::clamp(holdLeftNorm * 80.0f, 0.0f, 80.0f));
+            const auto holdColL = nvgRGBA(180, 180, 180, alphaL);
             nvgDrawRoundedRect(nvg, meterX + holdLeftX - 1, meterY, 2, meterH, holdColL, holdColL, 0);
 
-            auto colL = meterLeftNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
+            const auto colL = meterLeftNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
             nvgDrawRoundedRect(nvg, meterX, meterY, leftX, meterH, colL, colL, 0);
         }
 
@@ -108,11 +109,11 @@ public:
         meterY = height * 0.55f;
         nvgDrawRoundedRect(nvg, meterX, meterY, meterWidth, meterH, meterBgCol, meterBgCol, 0);
         {
-            uint8_t alphaR = static_cast<uint8_t>(std::clamp(holdRightNorm * 80.0f, 0.0f, 80.0f));
-            auto holdColR = nvgRGBA(180, 180, 180, alphaR);
+            const uint8_t alphaR = static_cast<uint8_t>(std::clamp(holdRightNorm * 80.0f, 0.0f, 80.0f));
+            const auto holdColR = nvgRGBA(180, 180, 180, alphaR);
             nvgDrawRoundedRect(nvg, meterX + holdRightX - 1, meterY, 2, meterH, holdColR, holdColR, 0);
 
-            auto colR = meterRightNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
+            const auto colR = meterRightNorm > 0.99f ? nvgRGB(255, 0, 0) : nvgRGBA(28, 73, 119, 180);
             nvgDrawRoundedRect(nvg, meterX, meterY, rightX, meterH, colR, colR, 0);
         }
 
