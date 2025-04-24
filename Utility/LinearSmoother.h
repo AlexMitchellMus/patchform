@@ -55,6 +55,8 @@ public:
 private:
     void updateParameters();
 
+    bool needsSmoothing() const;
+
 private:
     float current_ = 0.0;
     float target_ = 0.0;
@@ -62,4 +64,6 @@ private:
     int smoothFrames_ = 0;
     float smoothTime_ = 0;
     float sampleRate_ = 0;
+
+    float epsilon = 1e-6f; // Used for float comparisons
 };

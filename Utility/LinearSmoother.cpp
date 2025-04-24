@@ -5,6 +5,8 @@
 // If not, contact the sfizz maintainers at https://github.com/sfztools/sfizz
 
 #include "LinearSmoother.h"
+#include <iostream>
+
 #include "../external/simde/simde/simde-features.h"
 #if SIMDE_NATURAL_VECTOR_SIZE_GE(128)
 #include "../external/simde/simde/x86/sse.h"
@@ -46,7 +48,7 @@ void LinearSmoother::process(const float *input, float *output, unsigned count, 
     float target = target_;
     const int smoothFrames = smoothFrames_;
 
-    if (smoothFrames < 2 || (canShortcut && current == target && current == input[0])) {
+    if (!needsSmoothing() && canShortcut && std::abs(current - input[0]) < epsilon) {
         if (input != output)
             std::copy_n(input, count, output);
         clear(input[count - 1]);
@@ -146,6 +148,11 @@ void LinearSmoother::process(const float *input, float *output, unsigned count, 
     current_ = current;
     target_ = target;
     step_ = step;
+}
+
+bool LinearSmoother::needsSmoothing() const
+{
+    return std::abs(current_ - target_) > epsilon && smoothFrames_ > 1;
 }
 
 void LinearSmoother::updateParameters()

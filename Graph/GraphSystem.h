@@ -116,23 +116,14 @@ public:
                 mgr->process(inBuffer, outBuffer, frameCount, midi);
         }
 
-        const auto currentVolume = mainVolume.load(std::memory_order_relaxed);
-        // Check if we're already at target and not smoothing
-        constexpr float epsilon = 1e-4f;
-        if (std::abs(mainVolumeSmoothed.current() - currentVolume) < epsilon) {
-            // Volume is static — skip smoothing and gainBuffer
-            for (int i = 0; i < frameCount; ++i) {
-                outBuffer[i] *= currentVolume;
-                outBuffer[i + frameCount] *= currentVolume;
-            }
-        } else {
-            std::ranges::fill(gainBuffer, currentVolume);
-            mainVolumeSmoothed.process(gainBuffer.data(), gainBuffer.data(), frameCount, false);
+        const float currentVolume = mainVolume.load(std::memory_order_relaxed);
+        std::ranges::fill(gainBuffer, currentVolume);
 
-            for (int i = 0; i < frameCount; ++i) {
-                outBuffer[i] *= gainBuffer[i];
-                outBuffer[i + frameCount] *= gainBuffer[i];
-            }
+        mainVolumeControlSmoothed.process(gainBuffer.data(), gainBuffer.data(), frameCount, true);
+
+        for (int i = 0; i < frameCount; ++i) {
+            outBuffer[i] *= gainBuffer[i];
+            outBuffer[i + frameCount] *= gainBuffer[i];
         }
 
         dspTimer.end(frameCount, sampleRate);
@@ -171,10 +162,10 @@ public:
         sampleRate = sr;
         frameCount = bs;
 
-        mainVolumeSmoothed.setSampleRate(sr);
-        mainVolumeSmoothed.setSmoothTime(0.01f);
+        mainVolumeControlSmoothed.setSampleRate(sr);
+        mainVolumeControlSmoothed.setSmoothTime(0.03f);
         gainBuffer.assign(bs, 0.0f);
-        mainVolumeSmoothed.clear(1.0f);
+        mainVolumeControlSmoothed.clear(1.0f);
 
         mainGraphVolumeMeter->updateFrameSize(sr, bs, 2);
     }
@@ -203,7 +194,7 @@ public:
     std::atomic<float> mainVolume = 1.0f;
 
 private:
-    LinearSmoother mainVolumeSmoothed;
+    LinearSmoother mainVolumeControlSmoothed;
     std::vector<float, AlignedAllocator<float, 16>> gainBuffer;
 
     std::unique_ptr<VolumeMeter> mainGraphVolumeMeter;
