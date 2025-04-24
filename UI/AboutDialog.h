@@ -19,7 +19,8 @@ public:
         int height = 20;
         for (auto lib : libraries)
         {
-            height += std::ranges::count(lib, '\n') * 20 + 30;
+            const int numLines = std::ranges::count(lib, '\n') + 1;
+            height += numLines * 20 + 30; // match the +30 yPos bump after drawing
         }
         return height;
     }
@@ -119,10 +120,11 @@ Martin Ankerl
 MIT License
 https://github.com/martinus/unordered_dense)"},
 
-{R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
-Stephen Berry
-MIT License
-https://github.com/stephenberry/glaze)"},
+// We are not using glaze yet
+//{R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
+//Stephen Berry
+//MIT License
+//https://github.com/stephenberry/glaze)"},
 
 {R"(RTMidi (Realtime MIDI I/O library for cross‐platform MIDI support)
 Gary P. Scavone
