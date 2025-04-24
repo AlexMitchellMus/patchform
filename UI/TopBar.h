@@ -204,10 +204,10 @@ public:
         repaint();
     }
 
-    void setVolumeMeterValue(float left, float right)
+    void setVolumeMeterValue(float peakL, float peakR, float holdL, float holdR)
     {
         if (volumeMeter)
-            volumeMeter->setValue(left, right);
+            volumeMeter->setValue(peakL, peakR, holdL, holdR);
     }
 
     float getVolumeMeterLeft()

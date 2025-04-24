@@ -2,6 +2,7 @@
 
 #include "GraphManager.h"
 #include "Utility/LinearSmoother.h"
+#include "VolumeMeter.h"
 
 #include "DSPTimer.h"
 #include <filesystem>
@@ -15,6 +16,7 @@ public:
 
     GraphSystem()
     {
+        mainGraphVolumeMeter = std::make_unique<VolumeMeter>(44100, 64, 2);
         setSampleRateAndBlockSize(44100, 64);
     }
 
@@ -173,6 +175,8 @@ public:
         mainVolumeSmoothed.setSmoothTime(0.01f);
         gainBuffer.assign(bs, 0.0f);
         mainVolumeSmoothed.clear(1.0f);
+
+        mainGraphVolumeMeter->updateFrameSize(sr, bs, 2);
     }
 
     void setActiveGraph(const std::string& path)
@@ -193,7 +197,8 @@ public:
         return dspTimer.getCpuUsage();
     }
 
-    moodycamel::ConcurrentQueue<std::array<float, 2>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::array<float, 2>>(100);
+    // rmsL, peakL, peakHoldL, rmsR, peakR, peakHoldR
+    moodycamel::ConcurrentQueue<std::array<float, 6>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::array<float, 6>>(100);
 
     std::atomic<float> mainVolume = 1.0f;
 
@@ -201,30 +206,25 @@ private:
     LinearSmoother mainVolumeSmoothed;
     std::vector<float, AlignedAllocator<float, 16>> gainBuffer;
 
+    std::unique_ptr<VolumeMeter> mainGraphVolumeMeter;
+
     void processPeak(const float* buffer, const unsigned long frameCount)
     {
-        constexpr int kUpdateInterval = 4;
-        const float* right = buffer + frameCount;
+        mainGraphVolumeMeter->process(buffer, frameCount);
 
-        for (unsigned long i = 0; i < frameCount; ++i)
+        if (mainGraphVolumeMeter->shouldEmit())
         {
-            accumulatedPeakL = std::max(accumulatedPeakL, std::abs(buffer[i]));
-            accumulatedPeakR = std::max(accumulatedPeakR, std::abs(right[i]));
-        }
+            float rmsL, peakL, peakHoldL, rmsR, peakR, peakHoldR;
+            mainGraphVolumeMeter->getAllValues(rmsL, peakL, peakHoldL, rmsR, peakR, peakHoldR);
+            volumeMeterQueue.enqueue({rmsL, peakL, peakHoldL, rmsR, peakR, peakHoldR});
 
-        if (++peakFrameCounter >= kUpdateInterval)
-        {
-            peakFrameCounter = 0;
-            volumeMeterQueue.enqueue({accumulatedPeakL, accumulatedPeakR});
-            accumulatedPeakL = accumulatedPeakR = 0.0f;
+            mainGraphVolumeMeter->resetEmit();
         }
     }
 
     DspTimer dspTimer;
 
     int peakFrameCounter = 0;
-    float accumulatedPeakL = 0.0f;
-    float accumulatedPeakR = 0.0f;
 
     Graphs graphManagersUI;
     std::shared_ptr<const Graphs> graphManagersAudio = std::make_shared<Graphs>();

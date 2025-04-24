@@ -221,35 +221,24 @@ void Editor::updateObjectsFromDSP() const
 {
     canvas->updateGraphValuesIfNeeded();
 
-    std::array<float, 2> peaks{};
-    float sumL = 0.0f, sumR = 0.0f;
-    int count = 0;
+    std::array<float, 6> values{};
+    float peakL = 0.0f, peakR = 0.0f;
+    float holdL = 0.0f, holdR = 0.0f;
 
-    while (graphSystem->volumeMeterQueue.try_dequeue(peaks))
+    bool haveValues = false;
+
+    while (graphSystem->volumeMeterQueue.try_dequeue(values))
     {
-            sumL += peaks[0];
-            sumR += peaks[1];
-            count++;
+        // Only update if the incoming values are > 0
+        if (values[1] > 0.0f) peakL = std::max(peakL, values[1]);
+        if (values[4] > 0.0f) peakR = std::max(peakR, values[4]);
+        if (values[2] > 0.0f) holdL = std::max(holdL, values[2]);
+        if (values[5] > 0.0f) holdR = std::max(holdR, values[5]);
+
+        haveValues = true;
     }
-
-    if (count > 0)
-    {
-        float avgL = sumL / count;
-        float avgR = sumR / count;
-
-        float lastL = topBar->getVolumeMeterLeft();
-        float lastR = topBar->getVolumeMeterRight();
-
-        constexpr float PEAK_THRESHOLD = 0.0001f;
-
-        if (std::abs(avgL - lastL) > PEAK_THRESHOLD)
-            lastL = avgL;
-
-        if (std::abs(avgR - lastR) > PEAK_THRESHOLD)
-            lastR = avgR;
-
-        topBar->setVolumeMeterValue(lastL, lastR);
-    }
+    if (haveValues)
+        topBar->setVolumeMeterValue(peakL, peakR, holdL, holdR);
 
     topBar->setDSPValue(graphSystem->getDspTiming());
 }
