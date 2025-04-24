@@ -16,82 +16,85 @@ Project Goals
 [ PROJECT ROADMAP ]
 
 [ V 0.1 ] Core Application & Basic Editor:
-        * Platform:
-            * SDL3 standalone application for MS Windows
-        * Engine:
-            * Event's with data pool (linked list of data atoms for RT safe transmutation)
-        * Basic Functionality:
-            * Save, Load, and Save-as for patches
-            * Basic undo/redo support
-        * Editing Essentials:
-            * Simple set of objects
-            * Copy/Paste functionality (using JSON as the interchange format)
-            * DnD to make new objects
-            * All object params to be saved in patch
-        * User Interface:
-            * Central nested popup window for settings / about
-            * Theme support
-            * Initial Plugin View
-            * Non-modal open/save system dialog
-        * I/O Capabilities:
-            * MIDI in/out
-            * Audio in/out
-            * Multichannel Audio in/out
+* Platform:
+      * SDL3 standalone application for MS Windows
+* Engine:
+    * Event's with data pool (linked list of data atoms for RT safe transmutation)
+    * Feedback loops (audio buffer sent to next cycle of graph)
+    * Type in object names in canvas editor
+* Basic Functionality:
+    * Save, Load, and Save-as for patches
+    * Basic undo/redo support
+* Editing Essentials:
+    * Simple set of objects
+    * Copy/Paste functionality (using JSON as the interchange format)
+    * DnD to make new objects
+    * All object params to be saved in patch
+* User Interface:
+    * Central nested popup window for settings / about
+    * Theme support
+    * Initial Plugin View
+    * Non-modal open/save system dialog
+    * Tabbed editor (Load multiple patches) - not split-view
+* I/O Capabilities:
+    * MIDI in/out
+    * Audio in/out
+    * Multichannel Audio in/out
 
 [ V 0.2 ]
-        * Make cross-platform: macOS, Linux, Windows
+* Make cross-platform: macOS, Linux, Windows
 
 [ V 0.3 ]
-        * CLAP plugin port
-        
-[ V 0.4 ]
-        * Type in object names in canvas editor
-        * Feedback loops (audio buffer sent to next cycle of graph)
-        * Per-patch state (sample-rate & buffer-size)
-        
-[ v 0.5 ]
-        * Sub-patches
-        * Patch Abstractions
+* CLAP plugin port
+
+[ v 0.4 ]
+* Sub-patches
+* Patch Abstractions
+
+[ V 0.5 ]
+* Compiled Abstractions
         
 [ V 0.6 ]
-        * Tabbed editor (Load multiple patches) - not split-view
+* Per-patch state (sample-rate & buffer-size)
 
 [ V 0.7 ]
-        * Compiled Abstractions
-        
+* Refine plugin support (parameters etc)
+
 [ V 0.8 ]
-        * Support more plugin formats via CLAP wrapper
+* Support more plugin formats via CLAP wrapper
         
 [ V 0.9 ]
-        * Refine plugin support (parameters etc)
-
-
-
+* Bug fixes, fix what is needed for release
 
 [UI TODO]
 
-*        Ping (Bang object) doesn't register mouse button down sometimes - (intermittent)
-* [DONE] correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)
-* [DONE] scale / position canvas - make a way for the canvas to have a viewport - per component scaling
-*        scrollbars - needed for canavs and side panels etc
-* [DONE] Icons - simple icons to start with
-* [DONE] Load patch etc
-*        Desktop scale etc
-*        Text entry (for object/nodes mainly)
-*        Selected connections via lasso
-*        Select multiple objects/connections with shift-click
-* [DONE] Basic focus system (We need to think more about this - 
-         what it means to gain focus? We still need to hover scroll components- but they wont have focus??)
-         -- MAYBE?? 
-         * We use a temporary focus system.
-         * When there is a scroll event, we look at the current component's ancestors, and find who wants focus
-         * If we don't find who wants focus we do nothing.
-         * We also have an assignable focus system, which is what happens on mouse down - or when components request it.
+* [x] Ping (Bang object) doesn't register mouse button down sometimes - (intermittent)
+* [x] correctly delete - make a system to have a focused component, currently using the clicked component (which is not the same)
+* [x] scale / position canvas - make a way for the canvas to have a viewport - per component scaling
+* [ ] scrollbars - needed for canavs and side panels etc
+* [x] Icons - simple icons to start with
+* [x] Load patch etc
+* [ ] Desktop scale etc
+* [ ] Text entry (for object/nodes mainly)
+* [ ] Undo / Redo
+* [ ] Theme system
+* [ ] Canvas inside viewport
+* [ ] Plugin view
+* [ ] Selected connections via lasso
+* [x] Select multiple objects
+* [ ] Select multiple connections with shift-click
+* [x] Basic focus system (We need to think more about this - 
+  what it means to gain focus? We still need to hover scroll components- but they wont have focus??)
+    -- MAYBE?? 
+  * We use a temporary focus system.
+  * When there is a scroll event, we look at the current component's ancestors, and find who wants focus
+  * If we don't find who wants focus we do nothing.
+    * We also have an assignable focus system, which is what happens on mouse down - or when components request it.
 
 
-[DSP TODO]
-*        Improve oscillator for Triangle and Square. We need to use eblep (but with custom setup for each waveform)  
-*        Square oscillator needs to be able to change duty cycle, need to allow for this... wavetables?
+[ENGINE TODO]
+* [ ] Improve oscillator for Triangle and Square. We need to use eblep (but with custom setup for each waveform)  
+* [ ] Square oscillator needs to be able to change duty cycle, need to allow for this... wavetables?
 
 
 
@@ -106,8 +109,8 @@ https://fluenticons.co/outlined/
 [BUILD]
 
 adding WIN32 will make the app build without terminal (for debugging)
-# PlugPatchStandalone target - use WIN32 to hide terminal
-add_executable(PlugPatchStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
+# PlugPatchStandalone target - use WIN32 to hide terminal (this is an SDL3 thing)
+add_executable(PlugPatchStandalone WIN32 PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
 
 
 
