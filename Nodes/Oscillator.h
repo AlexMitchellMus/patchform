@@ -291,7 +291,7 @@ public:
                 }
 
                 if (useSignalFreq)
-                    freq = freqIn[1];
+                    freq = std::clamp(freqIn[i], 0.01f, 20000.0f);
 
                 // --- Advance phase ---
                 // Compute the normalized phase increment (one cycle = 1.0).

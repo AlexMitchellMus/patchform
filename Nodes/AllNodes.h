@@ -39,7 +39,7 @@
 #include "AudioIn.h"
 #include "AudioOut.h"
 #include "Value.h"
-#include "Add_Audio.h"
+#include "AudioMaths.h"
 #include "Envelope.h"
 #include "LFO.h"
 #include "Gain.h"
@@ -53,6 +53,7 @@
 #include "DCBlocker.h"
 #include "Feedback.h"
 #include "Delay.h"
+#include "AudioMaths.h"
 
 // Oscillators
 #include "Oscillator.h"
@@ -79,6 +80,7 @@
 #include "Table.h"
 #include "Keyboard.h"
 #include "Pad.h"
+#include "Slider.h"
 
 // Wavetable
 #include "TableXFade.h"

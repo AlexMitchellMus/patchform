@@ -56,6 +56,7 @@ namespace ObjectMenuDefs
     static constexpr ObjectDef UIItems[] = {
         {R"({"obj": "ping", "width": 60, "height": 60})", "", "Ping"},
         {R"({"obj": "dial", "min": 0, "max": 10, "value": 3})", ICONS::Dial, "Dial"},
+        {R"({"obj": "slider" })", "", "Slider"},
         {R"({"obj": "keyboard" })", "", "Piano Keyboard"},
         {R"({"obj": "radiobox"})", "", "Radio Box"},
         {R"({"obj": "floatbox"})", "", "Float Box"},
@@ -119,6 +120,19 @@ namespace ObjectMenuDefs
         {R"({"obj": "tablexspectral" })", "", "Table X Spectral"},
     };
 
+    // Audio Maths
+    static constexpr ObjectDef audioMathsItems[] = {
+        {R"({"obj": "audio_add"})",    ICONS::MathBinary, "Add"},
+        {R"({"obj": "audio_sub"})",    ICONS::MathBinary, "Subtract"},
+        {R"({"obj": "audio_mul"})",    ICONS::MathBinary, "Multiply"},
+        {R"({"obj": "audio_div"})",    ICONS::MathBinary, "Divide"},
+        {R"({"obj": "audio_min"})",    ICONS::MathBinary, "Min"},
+        {R"({"obj": "audio_max"})",    ICONS::MathBinary, "Max"},
+        {R"({"obj": "audio_pow"})",    ICONS::MathBinary, "Power"},
+        {R"({"obj": "audio_atan2"})",  ICONS::MathBinary, "Atan2"},
+        {R"({"obj": "audio_hypot"})",  ICONS::MathBinary, "Hypot"},
+    };
+
     // Maths
     static constexpr ObjectDef MathsItems[] = {
         {R"({"obj": "Add"})", ICONS::MathBinary, "Add"},
@@ -148,6 +162,7 @@ namespace ObjectMenuDefs
         {"Control", ControlItems, COUNT_OF(ControlItems), {220, 200, 60}},
         {"IO", IOItems, COUNT_OF(IOItems), {220, 100, 100}},
         {"Logic", LogicItems, COUNT_OF(LogicItems), {120, 160, 220}},
+        {"Audio Maths", audioMathsItems, COUNT_OF(audioMathsItems), {180, 80, 200}},
         {"Maths", MathsItems, COUNT_OF(MathsItems), {240, 150, 50}},
         {"Maths Unary", MathsUnaryItems, COUNT_OF(MathsUnaryItems), {240, 150, 50}},
         {"Oscillator", OscillatorItems, COUNT_OF(OscillatorItems), {80, 220, 220}},

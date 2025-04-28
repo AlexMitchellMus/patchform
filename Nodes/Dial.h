@@ -80,7 +80,7 @@ public:
             NVGcolor baseColor = nvgRGBA(50, 50, 50, 255);
             nvgDrawRoundedRect(nvg, knobX, knobY, knobSize, knobSize, baseColor, baseColor, radius);
 
-            // Dot
+            // Thumb dot
             float dotRadius = radius * 0.2f;
             float dotX = centre + (radius - dotRadius - 10) * cosf(angle) - dotRadius;
             float dotY = centre + (radius - dotRadius - 10) * sinf(angle) - dotRadius;
