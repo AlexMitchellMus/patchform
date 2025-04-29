@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "BreadcrumbBar.h"
 #include "../UI_ToolKit/CompEvent.h"
 #include "../UI_ToolKit/PopupComponent.h"
 #include "../UI_ToolKit/ToggleButton.h"
@@ -16,7 +17,7 @@
 
 
 class Editor;
-class MainMenu : public pptk::PopupComponent
+class MainMenu final : public pptk::PopupComponent
 {
 public:
     class MenuItem : public Component
@@ -182,6 +183,7 @@ private:
 };
 
 class Editor;
+class BreadcrumbBar;
 class TopBar : public pptk::Component {
 public:
     std::function<void(bool)> hideShowPanels = [](bool){};
@@ -202,6 +204,11 @@ public:
     {
         loadedPatch = patchName;
         repaint();
+    }
+
+    void setBreadcrumbGraph(GraphManager* graphManager) const
+    {
+        breadcrumbBar->setViewedGraph(graphManager);
     }
 
     void setVolumeMeterValue(float peakL, float peakR, float holdL, float holdR)
@@ -226,28 +233,7 @@ public:
         return 0.0f;
     }
 
-    void resized() override
-    {
-        constexpr int buttonW = 35;
-        auto centreY = (getHeight() / 2) - (buttonW * 0.5f);
-        int offset = 16;
-        mainMenuButton->setBounds(offset, centreY, buttonW, buttonW);
-        offset += 50;
-
-        undo->setBounds(offset, centreY, buttonW, buttonW);
-        offset += 50;
-        redo->setBounds(offset, centreY, buttonW, buttonW);
-        offset += 50;
-        textOffset = offset;
-
-        constexpr int volMeterH = 24;
-        constexpr int volMeterW = 120;
-        auto volCentreY = (getHeight() / 2) - (volMeterH * 0.5f);
-        volumeMeter->setBounds(getWidth() - 65 - volMeterW, volCentreY, volMeterW, volMeterH);
-
-        hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, buttonW);
-
-    }
+    void resized() override;
 
     void render(NVGcontext* nvg, const pptk::Theme& theme) override {
         nvgBeginPath(nvg);
@@ -268,8 +254,6 @@ public:
         nvgFontFace(nvg, "Regular");
         nvgFontSize(nvg, 14.0f);
         nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        // Patch name text
-        nvgText(nvg, textOffset, height / 2, loadedPatch.c_str(), nullptr);
 
         // DSP CPU %
         nvgText(nvg, getWidth() - 250, height / 2, dspPercent.c_str(), nullptr);
@@ -301,6 +285,8 @@ private:
 
     std::unique_ptr<ToggleButton> undo;
     std::unique_ptr<ToggleButton> redo;
+
+    std::unique_ptr<BreadcrumbBar> breadcrumbBar;
 
     std::unique_ptr<MainVolumeMeter> volumeMeter;
 

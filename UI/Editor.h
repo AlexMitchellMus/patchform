@@ -96,6 +96,11 @@ public:
         toolDock->setBounds(toolDockOffset, toolDockPosY, toolDockWidth, 45);
     }
 
+    void loadGraph(GraphManager* graph) const
+    {
+        canvas->loadGraph(graph);
+    }
+
     void resized() override
     {
         //std::cout << "resizing editor" << std::endl;

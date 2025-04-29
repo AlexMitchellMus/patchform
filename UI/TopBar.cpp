@@ -9,6 +9,7 @@
 #include "../Graph/GraphSystem.h"
 #include "../UI_ToolKit/PlatformHelpers.h"
 #include "FilesystemHelpers.h"
+#include "BreadcrumbBar.h"
 
 MainMenu::MainMenu(Editor* ed)
 {
@@ -152,6 +153,12 @@ TopBar::TopBar(Editor* ed)
     redo->setName("Redo");
     addComponent(redo.get());
 
+    breadcrumbBar = std::make_unique<BreadcrumbBar>();
+    breadcrumbBar->onClick = [ed](GraphManager* g) {
+        ed->loadGraph(g);
+    };
+    addComponent(breadcrumbBar.get());
+
     volumeMeter = std::make_unique<MainVolumeMeter>();
     addComponent(volumeMeter.get());
 
@@ -183,4 +190,28 @@ TopBar::TopBar(Editor* ed)
     };
 
     TopBar::resized();
+}
+
+void TopBar::resized()
+{
+    constexpr int buttonW = 35;
+    auto centreY = (getHeight() / 2) - (buttonW * 0.5f);
+    int offset = 16;
+    mainMenuButton->setBounds(offset, centreY, buttonW, buttonW);
+    offset += 50;
+
+    undo->setBounds(offset, centreY, buttonW, buttonW);
+    offset += 50;
+    redo->setBounds(offset, centreY, buttonW, buttonW);
+    offset += 50;
+    textOffset = offset;
+
+    breadcrumbBar->setPosition(offset, centreY);
+
+    constexpr int volMeterH = 24;
+    constexpr int volMeterW = 120;
+    auto volCentreY = (getHeight() / 2) - (volMeterH * 0.5f);
+    volumeMeter->setBounds(getWidth() - 65 - volMeterW, volCentreY, volMeterW, volMeterH);
+
+    hideSidePanelsToggle->setBounds(getWidth() - 50, centreY, 35, buttonW);
 }

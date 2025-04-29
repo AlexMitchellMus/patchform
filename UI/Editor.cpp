@@ -41,7 +41,7 @@ void Editor::init(GraphSystem* gm)
 
     canvas->onPatchChanged = [this]()
     {
-        topBar->setPatchName(canvas->getPatchName());
+        topBar->setBreadcrumbGraph(graphSystem->getActiveGraph());
         leftPanel->updateSelectedTab();
     };
 
@@ -180,6 +180,7 @@ void Editor::loadFile(const std::string& fileName) const
 
             auto [graphObjects, connEdges] = graphSystem->getGraphDump(path);
             graphSystem->setActiveGraph(path);
+
             canvas->setPatchName(FilesystemHelpers::getStem(path));
             canvas->reloadAllCanvasObjects(graphObjects);
             canvas->reloadConnections(connEdges);

@@ -16,7 +16,7 @@ Subpatch::Subpatch(std::shared_ptr<NodeContext> context, const json& creationDat
 
 void Subpatch::setupSubgraph(const json& subpatchJson)
 {
-    auto [objects, edges] = subManager->loadGraph("internal_subpatch", subpatchJson, false, [this](std::shared_ptr<GraphHolder>& g)
+    auto [objects, edges] = subManager->loadGraph("subpatch", subpatchJson, false, [this](std::shared_ptr<GraphHolder>& g)
         {
             rebuildPortsFromGraph(*g);
         }

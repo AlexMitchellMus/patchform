@@ -723,12 +723,37 @@ void Canvas::addObject(Object* toAdd, pptk::Point position)
     callObjectChangedListeners();
 }
 
+std::vector<GraphManager*> getBreadcrumbTrail(GraphManager* mgr) {
+    std::vector<GraphManager*> trail;
+    while (mgr) {
+        trail.push_back(mgr);
+        mgr = mgr->parentGraph;
+    }
+    std::ranges::reverse(trail);
+    return trail;
+}
+
+std::string makeBreadcrumbName(const std::vector<GraphManager*>& trail) {
+    std::string out;
+    for (size_t i = 0; i < trail.size(); ++i) {
+        std::string name = std::filesystem::path(trail[i]->getPatchFile()).stem().string();
+        out += name;
+        if (i + 1 < trail.size())
+            out += "  →  ";
+    }
+    return out;
+}
+
 void Canvas::loadGraph(GraphManager* newGraph)
 {
     if (!newGraph)
         return;
 
     graphSystem->setActiveGraph(newGraph); // <-- Mark he new GraphManager as active
+
+    auto patchChain = getBreadcrumbTrail(newGraph);
+
+    setPatchName(makeBreadcrumbName(patchChain));
 
     auto* activeGraph = newGraph->getActiveGraph();
 
