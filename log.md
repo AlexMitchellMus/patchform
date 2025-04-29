@@ -74,6 +74,8 @@ Project Goals
 * [ ] scrollbars - needed for canavs and side panels etc
 * [x] Icons - simple icons to start with
 * [x] Load patch etc
+* [ ] Subpatches (in main JSON file - single use)
+* [ ] Subpatches (from external files - abstractions)
 * [ ] Desktop scale etc
 * [ ] Text entry (for object/nodes mainly)
 * [ ] Undo / Redo
