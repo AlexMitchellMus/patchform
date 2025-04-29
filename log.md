@@ -102,6 +102,10 @@ Project Goals
 
 NOTES
 
+BUG!
+Duplicating / copying subpatches does not set the subpatches parent. We use a different code path here.
+So unify this system somehow to keep track of subpatch parents.
+
 [UI]
 make delete work from a key pressed listener on the canvas itself
 
