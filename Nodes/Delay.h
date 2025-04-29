@@ -52,21 +52,30 @@ public:
 
         for (unsigned long i = 0; i < frameCount; ++i)
         {
+            // Write input sample into the delay buffer
             buffer[writePos] = in[i];
 
+            // Read requested delay
             float delayMs = std::clamp(delayIn[i], 0.0f, maxDelayMs);
-            float delaySamples = (delayMs / 1000.0f) * sampleRate;
+            float delaySamples = (delayMs * sampleRate) / 1000.0f;
 
-            float readPos = writePos - delaySamples;
-            if (readPos < 0) readPos += bufferSize;
+            // Calculate fractional read position
+            float readPos = static_cast<float>(writePos) - delaySamples;
+            if (readPos < 0.0f)
+                readPos += static_cast<float>(bufferSize);
 
-            size_t i0 = static_cast<size_t>(readPos);
+            // Get integer positions
+            size_t i0 = static_cast<size_t>(readPos) % bufferSize;
             size_t i1 = (i0 + 1) % bufferSize;
             float frac = readPos - static_cast<float>(i0);
 
-            float delayed = buffer[i0] * (1.0f - frac) + buffer[i1] * frac;
+            // Safe lerp between two adjacent samples
+            float delayed = (1.0f - frac) * buffer[i0] + frac * buffer[i1];
+
+            // Output the delayed sample
             out[i] = delayed;
 
+            // Advance write position
             writePos = (writePos + 1) % bufferSize;
         }
     }
