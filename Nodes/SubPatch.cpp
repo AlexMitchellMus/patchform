@@ -62,6 +62,7 @@ void Subpatch::process(const float* inBuffer, float* outBuffer, std::vector<Midi
     }
 
     // Process internal graph
+    // TODO: For different buffersize / samplerate we will need to convert to the correct in/out buffer
     subManager->process(inBuffer, outBuffer, frames, midi);
 
     // Pull output buffers
