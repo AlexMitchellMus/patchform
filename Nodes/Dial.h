@@ -103,7 +103,7 @@ public:
 
 #endif
 
-    Dial(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Dial(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         float minV = objParams.value("min", 0.0f);
         float maxV = objParams.value("max", 1.0f);

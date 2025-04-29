@@ -11,7 +11,7 @@ class TableXPhase : public AudioNode {
     SampleHandle waveformData;
 
 public:
-    TableXPhase(NodeContext* context, const json& objParams)
+    TableXPhase(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("a", AudioPort::Data);

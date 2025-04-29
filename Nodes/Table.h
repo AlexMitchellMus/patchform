@@ -185,7 +185,7 @@ public:
     }
 #endif
 
-    Table(NodeContext* context, const json& objParams)
+    Table(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams) {
         mainBuffer.resize(numValues, 0.0f);
         scopedSwap.resize(numValues);

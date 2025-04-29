@@ -94,7 +94,7 @@ public:
     }
 #endif
 
-    Pad(NodeContext* context, const json& j) : AudioNode(context, AudioPort::PortType::Data, j) {
+    Pad(std::shared_ptr<NodeContext> context, const json& j) : AudioNode(context, AudioPort::PortType::Data, j) {
         eventOnLoad = true;
 
         float xmin = j.value("x-min", -1.0f);

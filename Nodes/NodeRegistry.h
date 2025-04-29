@@ -19,7 +19,7 @@ public:
         nodeNames.push_back(name);
     }
 
-    using FactoryFn = std::function<AudioNode*(NodeContext*, const json&)>;
+    using FactoryFn = std::function<AudioNode*(std::shared_ptr<NodeContext>, const json&)>;
 
     void registerAlias(const std::vector<std::string>& aliases, FactoryFn fn) {
         for (const auto& alias : aliases)
@@ -30,7 +30,7 @@ public:
         return nodeNames;
     }
 
-    AudioNode* createNode(const std::string& alias, NodeContext* ctx, const json& j) const {
+    AudioNode* createNode(const std::string& alias, std::shared_ptr<NodeContext> ctx, const json& j) const {
         auto it = factories.find(alias);
         if (it != factories.end())
             return it->second(ctx, j);

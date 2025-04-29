@@ -17,7 +17,7 @@ class Strip : public AudioNode {
     int atomNumber;
 
 public:
-    Strip(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Strip(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data);
     }

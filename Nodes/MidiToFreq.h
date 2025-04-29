@@ -21,7 +21,7 @@ class MidiToFreq : public AudioNode
     int tuningCount = 0; // Number of ratios provided
 
 public:
-    MidiToFreq(NodeContext* context, const json& objParams)
+    MidiToFreq(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("MIDI Note", AudioPort::PortType::Data);

@@ -20,7 +20,7 @@ class Comment final : public AudioNode
     StringParameter* commentTextParameter;
 
 public:
-    Comment(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
+    Comment(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         commentText = objParams.value("text", "comment");
 

@@ -16,7 +16,7 @@ class DCBlock : public AudioNode {
     float sum = 0.0f;
 
 public:
-    DCBlock(NodeContext* context, const json& objParams)
+    DCBlock(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("In", AudioPort::PortType::Signal);

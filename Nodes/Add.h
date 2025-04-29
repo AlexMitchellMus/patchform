@@ -15,7 +15,7 @@ class Add : public AudioNode {
 
     float coldValue;
 public:
-    explicit Add(NodeContext* context, const json& objParams)
+    explicit Add(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port

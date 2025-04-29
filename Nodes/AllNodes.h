@@ -8,6 +8,12 @@
 
 #include "AudioNodeBase.h"
 
+// Subpatch
+#include "SubpatchInletOutlet.h"
+#include "Subpatch.h"
+//#include "Poly.h"
+//#include "Iterator.h"
+
 // Data
 #include "Metronome.h"
 #include "Print.h"

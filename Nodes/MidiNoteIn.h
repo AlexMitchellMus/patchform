@@ -13,7 +13,7 @@ class MidiNoteIn : public AudioNode
     DEFINE_NODE_ALIASES("midinotein", "notein");
 
 public:
-    MidiNoteIn(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    MidiNoteIn(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
     }
 

@@ -15,7 +15,7 @@ public:
     static constexpr size_t FFT_SIZE = 512;
     static constexpr size_t FREQ_BINS = FFT_SIZE / 2;
 
-    SpecIFFT(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
+    SpecIFFT(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("real", AudioPort::Spectral);
         addInputPort("imaginary", AudioPort::Spectral);

@@ -13,7 +13,7 @@ class AudioIn : public AudioNode {
     DEFINE_AND_REGISTER_NODE("AudioIn", "ain", true);
     DEFINE_NODE_ALIASES("ain", "audioin");
 public:
-    AudioIn(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::None, objParams)
+    AudioIn(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::None, objParams)
     {
         addOutputPort("Left", AudioPort::Signal);
         addOutputPort("Right", AudioPort::Signal);

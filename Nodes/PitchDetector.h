@@ -25,7 +25,7 @@ class PitchDetector final : public AudioNode {
     static constexpr int PROCESS_INTERVAL = 8;
 
 public:
-    PitchDetector(NodeContext* context, const json& objParams)
+    PitchDetector(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams) {
         addInputPort("in", AudioPort::Signal);
     }

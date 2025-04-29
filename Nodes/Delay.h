@@ -15,7 +15,7 @@ class Delay : public AudioNode {
     float sampleRate = 44100.0f;
 
 public:
-    Delay(NodeContext* context, const json& objParams)
+    Delay(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("In", AudioPort::PortType::Signal);

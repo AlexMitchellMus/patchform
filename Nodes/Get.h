@@ -23,7 +23,7 @@ class Get : public AudioNode
     DataAtom* savedData = nullptr;
 
 public:
-    Get(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Get(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
 

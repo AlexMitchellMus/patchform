@@ -50,6 +50,9 @@ namespace ObjectMenuDefs
         {R"({"obj": "unpack", "values": 5 })", "", "UnPack"},
         {R"({"obj": "strip"})", "", "Strip"},
         {R"({"obj": "zerox" })", "", "Zero Crossings"},
+        {R"({"obj": "subpatch" })", "", "Subpatch"},
+        {R"({"obj": "inlet" })", "", "Inlet"},
+        {R"({"obj": "outlet" })", "", "Outlet"},
     };
 
     // UI

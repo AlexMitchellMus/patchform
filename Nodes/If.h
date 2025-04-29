@@ -20,7 +20,7 @@ class If : public AudioNode {
     float coldValueReturn;
 
 public:
-    If(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    If(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
         addInputPort("B", AudioPort::PortType::Data); // cold port

@@ -13,7 +13,7 @@ class Subtract : public AudioNode {
     FloatParameter* defaultBParam = nullptr;
 
 public:
-    explicit Subtract(NodeContext* context, const json& objParams)
+    explicit Subtract(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data);

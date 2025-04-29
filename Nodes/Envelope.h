@@ -32,7 +32,7 @@ class Envelope final : public AudioNode
     float port1val = 0.0f;
 
 public:
-    Envelope(NodeContext* context, const json& objParams)
+    Envelope(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("Events", AudioPort::PortType::Data);

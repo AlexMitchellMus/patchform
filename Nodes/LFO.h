@@ -19,7 +19,7 @@ class LFO : public AudioNode {
     float phase = 0.0f;
 
 public:
-    LFO(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
+    LFO(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         auto const freq = objParams.value("rate", 1.0f);
 

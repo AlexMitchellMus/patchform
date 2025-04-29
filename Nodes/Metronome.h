@@ -28,7 +28,7 @@ class Metronome : public AudioNode
 #endif
 
 public:
-    Metronome(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Metronome(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         hzValue.store(objParams.value("hz", 1.0f));
 

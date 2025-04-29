@@ -264,7 +264,7 @@ public:
 #endif
 
 public:
-    ListBox(NodeContext* context, const json& objParams): AudioNode(context, AudioPort::PortType::Data, objParams)
+    ListBox(std::shared_ptr<NodeContext> context, const json& objParams): AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("Value_input", AudioPort::PortType::Data);
 

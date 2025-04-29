@@ -21,7 +21,7 @@ class Limiter : public AudioNode {
     float releaseCoef = 0.001f;
 
 public:
-    Limiter(NodeContext* context, const json& objParams)
+    Limiter(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("In", AudioPort::PortType::Signal);

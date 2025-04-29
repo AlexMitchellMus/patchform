@@ -20,7 +20,7 @@ class Pack : public AudioNode
     std::vector<DataAtom*> outputAtoms;
 
 public:
-    Pack(NodeContext* context, const json& objParams)
+    Pack(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         packNum = objParams.value("values", 0);

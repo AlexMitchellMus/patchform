@@ -18,7 +18,7 @@ class Drive : public AudioNode {
     FloatParameter* driveAmountParameter;
 
 public:
-    Drive(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
+    Drive(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("In", AudioPort::PortType::Signal);
 

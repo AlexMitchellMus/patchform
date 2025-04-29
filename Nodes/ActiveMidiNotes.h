@@ -15,7 +15,7 @@ class ActiveMidiNotes : public AudioNode
     std::vector<float> activeNotes;
 
 public:
-    ActiveMidiNotes(NodeContext* context, const json& objParams)
+    ActiveMidiNotes(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("In", AudioPort::PortType::Data);

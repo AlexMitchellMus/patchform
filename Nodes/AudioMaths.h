@@ -14,7 +14,7 @@ class CLASS : public AudioNode { \
 DEFINE_AND_REGISTER_NODE(NAME, NAME, true); \
 DEFINE_NODE_ALIASES(NAME); \
 public: \
-explicit CLASS(NodeContext* context, const json& objParams) \
+explicit CLASS(std::shared_ptr<NodeContext> context, const json& objParams) \
 : AudioNode(context, AudioPort::PortType::Signal, objParams) \
 { \
 addInputPort("A", AudioPort::PortType::Signal); \

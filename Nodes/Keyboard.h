@@ -492,7 +492,7 @@ public:
     }
 #endif
 
-    Keyboard(NodeContext* context, const json& objParams)
+    Keyboard(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         isVertical = objParams.value("Vertical", false);

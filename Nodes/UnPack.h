@@ -8,7 +8,7 @@ class UnPack final : public AudioNode {
     std::vector<DataAtom*> outputAtoms;
 
 public:
-    UnPack(NodeContext* context, const json& objParams)
+    UnPack(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         unpackNum = objParams.value("values", 0);

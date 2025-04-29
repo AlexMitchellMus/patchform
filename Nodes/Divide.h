@@ -11,7 +11,7 @@ class Divide : public AudioNode {
     float coldValue;
 
 public:
-    explicit Divide(NodeContext* context, const json& objParams)
+    explicit Divide(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot

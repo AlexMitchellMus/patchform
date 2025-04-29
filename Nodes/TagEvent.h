@@ -18,7 +18,7 @@ class TagEvent : public AudioNode
     StringParameter* tagParameter;
 
 public:
-    TagEvent(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    TagEvent(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         tag = objParams.value("symbol", "");
         tagParameter = addParameter<StringParameter>("symbol", tag);

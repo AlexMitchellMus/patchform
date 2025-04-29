@@ -280,7 +280,7 @@ public:
         }
     }
 
-    RadioBox(NodeContext* context, const json& objParams)
+    RadioBox(std::shared_ptr<NodeContext> context, const json& objParams)
     : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         radioCount = objParams.value("numOptions", 8);

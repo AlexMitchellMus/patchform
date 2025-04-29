@@ -21,7 +21,7 @@ class Count : public AudioNode {
     int maxCount;
 
 public:
-    Count(NodeContext* context, const json& objParams)
+    Count(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port

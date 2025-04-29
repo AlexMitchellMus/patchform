@@ -9,7 +9,7 @@ class Multiply : public AudioNode {
     float coldValue;
 
 public:
-    explicit Multiply(NodeContext* context, const json& objParams)
+    explicit Multiply(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot

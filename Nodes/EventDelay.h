@@ -23,7 +23,7 @@ class EventDelay : public AudioNode
     std::vector<DelayedEvent> queue;
 
 public:
-    EventDelay(NodeContext* context, const json& objParams)
+    EventDelay(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("in", AudioPort::PortType::Data);

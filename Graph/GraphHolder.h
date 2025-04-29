@@ -11,6 +11,7 @@
 #include <iostream>
 #include <xutility>
 #include <set>
+#include <regex>
 
 #include <filesystem>
 
@@ -700,7 +701,7 @@ public:
         }
 
         //  Use the static NodeRegistry for reflection-based lookup of node names and aliases
-        auto* nodePtr = NodeRegistry::getInstance().createNode(object.str(), context.get(), node);
+        auto* nodePtr = NodeRegistry::getInstance().createNode(object.str(), context, node);
         if (!nodePtr) {
             std::cerr << "Unknown node type: " << object << "\n";
             return nullptr;

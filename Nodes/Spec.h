@@ -106,7 +106,7 @@ public:
     }
 #endif
 
-    Spec(NodeContext* context, const json& objParams)
+    Spec(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         addInputPort("audioIn", AudioPort::Signal);

@@ -16,7 +16,7 @@ class Changed : public AudioNode
     float lastValue = std::numeric_limits<float>::quiet_NaN();
 
 public:
-    Changed(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Changed(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("Input", AudioPort::PortType::Data);
     }

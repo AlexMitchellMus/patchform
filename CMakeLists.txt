@@ -139,7 +139,7 @@ add_library(glad STATIC Glad/glad.cpp)
 target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/Glad")
 
 # Collect common source files
-file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp" "${CMAKE_SOURCE_DIR}/Utility/*.cpp")
+file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp" "${CMAKE_SOURCE_DIR}/Utility/*.cpp" "${CMAKE_SOURCE_DIR}/Nodes/*.cpp")
 
 # PlugPatchCLI target
 add_executable(PlugPatchCLI PlugPatchCLI.cpp ${GRAPH_SOURCES})

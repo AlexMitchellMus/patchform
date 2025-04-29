@@ -27,7 +27,7 @@ class Chorus : public AudioNode {
     float smoothedDelayMs = 6.0f;
 
 public:
-    Chorus(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::Signal, objParams)
+    Chorus(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::Signal, objParams)
     {
         addInputPort("In", AudioPort::Signal);
 

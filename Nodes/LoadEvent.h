@@ -17,7 +17,7 @@ class LoadEvent final : public AudioNode
 
 public:
 
-    LoadEvent(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    LoadEvent(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         eventOnLoad = true;
     }

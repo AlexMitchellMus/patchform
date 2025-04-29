@@ -244,7 +244,7 @@ public:
     }
 
     std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch,
-                                                                        const bool logVerbose)
+                                                                        const bool logVerbose, std::function<void(std::shared_ptr<GraphHolder>&)> populateInletOutlets = [](std::shared_ptr<GraphHolder>&){})
     {
         patchLoadSuccess = false;
 
@@ -273,6 +273,8 @@ public:
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
         transitioningGraph->updateOutputInputPortMap();
+
+        populateInletOutlets(transitioningGraph);
 
         if (logVerbose)
         {

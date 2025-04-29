@@ -11,7 +11,7 @@ class PolyNoteOut : public AudioNode {
     int nextIndex = 0;
 
 public:
-    PolyNoteOut(NodeContext* context, const json& objParams)
+    PolyNoteOut(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         int numVoices = objParams.value("voices", 8);

@@ -35,7 +35,7 @@ class IfElse : public AudioNode {
     }
 
 public:
-    IfElse(NodeContext* context, const json& objParams)
+    IfElse(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("input", AudioPort::PortType::Data);

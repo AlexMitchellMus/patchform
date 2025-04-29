@@ -39,23 +39,23 @@ public:                                                                      \
 public:                                                                                     \
     static inline const std::vector<std::string> aliases = { __VA_ARGS__ };                 \
 
-#define REGISTER(className)                                                                                 \
-    static inline const bool _##className##_registered = [] {                                               \
-        NodeRegistry::getInstance().registerNode(className::name);                                          \
-        NodeRegistry::getInstance().registerAlias(className::aliases, [](NodeContext* ctx, const json& j) { \
-            return new className(ctx, j);                                                                   \
-        });                                                                                                 \
-        return true;                                                                                        \
+#define REGISTER(className)                                                                                                 \
+    static inline const bool _##className##_registered = [] {                                                               \
+        NodeRegistry::getInstance().registerNode(className::name);                                                          \
+        NodeRegistry::getInstance().registerAlias(className::aliases, [](std::shared_ptr<NodeContext> ctx, const json& j) { \
+            return new className(std::move(ctx), j);                                                                                   \
+        });                                                                                                                 \
+        return true;                                                                                                        \
     }();
 
-#define REGISTER_PLUGIN(className)																			\
-    static AudioNode* create_##className(NodeContext* ctx, const json& j) {									\
-        return new className(ctx, j);																		\
-    }																										\
-    extern "C" __declspec(dllexport) void registerPatchformNodes() {										\
-        NodeRegistry::getInstance().registerNode(className::name);											\
-        NodeRegistry::getInstance().registerAlias(className::aliases, create_##className);					\
-    }										                                                                \
+#define REGISTER_PLUGIN(className)																			                \
+    static AudioNode* create_##className(std::shared_ptr<NodeContext> ctx, const json& j) {									\
+        return new className(std::move(ctx), j);																		                \
+    }																										                \
+    extern "C" __declspec(dllexport) void registerPatchformNodes() {										                \
+        NodeRegistry::getInstance().registerNode(className::name);											                \
+        NodeRegistry::getInstance().registerAlias(className::aliases, create_##className);					                \
+    }										                                                                                \
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -85,14 +85,14 @@ public:
     std::vector<std::unique_ptr<AudioPort>> inputPortBuffers;
 
     std::vector<std::unique_ptr<AudioPort>> outputPortBuffers;
-    NodeContext* context;
+    std::shared_ptr<NodeContext> context;
 
     json nodeCreationData;
 
     virtual json getSerializedNode() { return nodeCreationData; };
 
-    AudioNode(NodeContext* context, AudioPort::PortType type, const json& creationData)
-        : context(context)
+    AudioNode(std::shared_ptr<NodeContext> context, AudioPort::PortType type, const json& creationData)
+        : context(std::move(context))
         //, outputPort(this, "output", type)
         , nodeCreationData(std::move(creationData))
     {
@@ -264,7 +264,7 @@ private:
 
     bool hasEvents = false;
 
-    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, int index)
+    virtual void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, int index)
     {
         if (!shouldProcess(frameCount))
             return;

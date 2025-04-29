@@ -164,7 +164,7 @@ public:
     }
 #endif
 
-    Slider(NodeContext* context, const json& objParams)
+    Slider(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         float minV = objParams.value("min", 0.0f);

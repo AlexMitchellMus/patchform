@@ -34,7 +34,7 @@ class BandPassFilter : public AudioNode {
     float q = 1.0f;
 
 public:
-    BandPassFilter(NodeContext* context, const json& objParams)
+    BandPassFilter(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("Audio", AudioPort::PortType::Signal);

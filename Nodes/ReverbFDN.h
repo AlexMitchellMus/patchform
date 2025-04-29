@@ -26,7 +26,7 @@ class ReverbFDN : public AudioNode {
     float mix = 0.90f; // Less wet signal for better clarity
 
 public:
-    ReverbFDN(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
+    ReverbFDN(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("Input", AudioPort::PortType::Signal);
 

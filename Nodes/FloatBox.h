@@ -84,7 +84,7 @@ public:
         return std::make_unique<UI>(this);
     };
 #endif
-    FloatBox(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    FloatBox(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("Value_input", AudioPort::PortType::Data);
     }

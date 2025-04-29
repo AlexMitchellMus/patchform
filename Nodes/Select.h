@@ -7,7 +7,7 @@ class Select : public AudioNode {
     DEFINE_NODE_ALIASES("sel", "select");
 
 public:
-    Select(NodeContext* context, const json& objParams)
+    Select(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         addInputPort("input", AudioPort::PortType::Data);

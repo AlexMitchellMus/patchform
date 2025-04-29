@@ -14,7 +14,7 @@ class Value : public AudioNode {
     FloatParameter* smoothingTimeParam;
 
 public:
-    Value(NodeContext* context, const json& objParams)
+    Value(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         float initial = objParams.value("value", 0.0f);

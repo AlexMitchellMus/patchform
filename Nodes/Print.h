@@ -14,7 +14,7 @@ class Print : public AudioNode {
     DEFINE_NODE_ALIASES("print");
 
 public:
-    Print(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
+    Print(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot port
     }

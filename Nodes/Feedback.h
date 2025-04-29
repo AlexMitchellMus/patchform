@@ -12,7 +12,7 @@ class Feedback : public AudioNode {
 public:
     bool canFeedback() override { return true; };
 
-    Feedback(NodeContext* context, const json& objParams)
+    Feedback(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("In", AudioPort::PortType::Signal);

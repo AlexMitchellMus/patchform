@@ -12,7 +12,7 @@ class FilterTag : public AudioNode
     StringParameter* tagParameter;
 
 public:
-    FilterTag(NodeContext* context, const json& objParams)
+    FilterTag(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         tag = objParams.value("tag", "");

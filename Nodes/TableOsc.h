@@ -20,7 +20,7 @@ class TableOsc : public AudioNode {
     int oversampleFactor = 4;
 
 public:
-    TableOsc(NodeContext* context, const json& objParams)
+    TableOsc(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("waveform", AudioPort::PortType::Data);

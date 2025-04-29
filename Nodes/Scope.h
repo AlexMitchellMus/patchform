@@ -217,7 +217,7 @@ public:
     }
 #endif
 
-    Scope(NodeContext* context, const json& objParams)
+    Scope(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         // Add an input port named "audioIn" expecting signal data.

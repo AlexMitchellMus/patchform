@@ -11,7 +11,7 @@ class TableXFade : public AudioNode {
     SampleHandle waveformData;
 
 public:
-    TableXFade(NodeContext* context, const json& objParams)
+    TableXFade(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("a", AudioPort::Data);

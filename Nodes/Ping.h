@@ -116,7 +116,7 @@ public:
     float width = 40;
     float height = 40;
 
-    Ping(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Ping(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         width = objParams.value("width", 40);
         height = objParams.value("height", 40);

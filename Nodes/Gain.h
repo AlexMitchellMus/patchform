@@ -17,7 +17,7 @@ class Gain : public AudioNode {
     float eventVal2 = 0.0f;
 
 public:
-    Gain(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
+    Gain(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("A", AudioPort::PortType::Signal);
         addInputPort("B", AudioPort::PortType::Signal);

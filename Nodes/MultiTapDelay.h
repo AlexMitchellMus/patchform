@@ -34,7 +34,7 @@ class MultiTapDelay : public AudioNode {
     std::atomic<size_t> d1Samples, d2Samples;
 
 public:
-    MultiTapDelay(NodeContext* context, const json& objParams)
+    MultiTapDelay(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("In", AudioPort::PortType::Signal);

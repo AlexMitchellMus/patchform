@@ -37,7 +37,7 @@ class Intify : public AudioNode
     }
 
 public:
-    Intify(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    Intify(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("in", AudioPort::PortType::Data);
 

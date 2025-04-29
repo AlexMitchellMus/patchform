@@ -9,7 +9,7 @@ class Zerox final : public AudioNode {
     DEFINE_NODE_ALIASES("zerox");
 
 public:
-    explicit Zerox(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
+    explicit Zerox(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("audioin", AudioPort::PortType::Signal);
     }

@@ -13,7 +13,7 @@ class AudioOut : public AudioNode {
     DEFINE_AND_REGISTER_NODE("AudioOut", "aout", true);
     DEFINE_NODE_ALIASES("aout", "audioout");
 public:
-    AudioOut(NodeContext* context, const json& objParams) : AudioNode(context, AudioPort::None, objParams)
+    AudioOut(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::None, objParams)
     {
         addInputPort("Left", AudioPort::Signal);
         addInputPort("Right", AudioPort::Signal);

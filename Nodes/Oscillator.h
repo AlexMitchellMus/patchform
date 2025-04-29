@@ -205,7 +205,7 @@ protected:
     }
 
 public:
-    Oscillator(NodeContext* context, const json& objParams)
+    Oscillator(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("phase", AudioPort::PortType::Data);

@@ -13,7 +13,7 @@ class TableIndexOsc : public AudioNode {
     bool hasIndex = false;
 
 public:
-    TableIndexOsc(NodeContext* context, const json& objParams)
+    TableIndexOsc(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Signal, objParams)
     {
         addInputPort("waveform", AudioPort::PortType::Data);   // SampleHandle

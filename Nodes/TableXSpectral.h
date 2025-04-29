@@ -31,7 +31,7 @@ class TableXSpectral : public AudioNode
     float targetBlend = 0.0f;
 
 public:
-    TableXSpectral(NodeContext* context, const json& objParams)
+    TableXSpectral(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("a", AudioPort::Data);

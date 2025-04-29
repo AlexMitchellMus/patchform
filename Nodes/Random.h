@@ -12,7 +12,7 @@ class Random : public AudioNode
     FloatParameter* maxParam;
 
 public:
-    Random(NodeContext* context, const json& objParams)
+    Random(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         float minVal = objParams.value("min", 0.0f);
