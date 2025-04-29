@@ -7,6 +7,8 @@
 #include "Canvas.h"
 #include "Object.h"
 #include "../Nodes/AudioNodeBase.h"
+#include "../Graph/GraphManager.h"
+#include "../Nodes/Subpatch.h"
 
 #include <glaze/reflection/get_name.hpp>
 
@@ -173,6 +175,23 @@ void Object::mouseButtonDown(pptk::CompEvent& e)
 {
     if (auto cnv = findParentOfClass<Canvas>())
     {
+        if (e.sdlEvent.button.clicks == 2)
+        {
+            if (auto* subpatchNode = dynamic_cast<Subpatch*>(audioNode))
+            {
+                if (auto* subgraphManager = subpatchNode->getSubgraph())
+                {
+                    if (auto* cnv = findParentOfClass<Canvas>())
+                    {
+                        cnv->loadGraph(subgraphManager);
+                        // VERY important, do not continue if entering into a subgraph!
+                        // Because we will set this object selected futher down
+                        // And it won't exist (so it makes sense to just not set it selected)
+                        return;
+                    }
+                }
+            }
+        }
         const SDL_Keymod mods = SDL_GetModState();
         if (mods & SDL_KMOD_SHIFT)
         {

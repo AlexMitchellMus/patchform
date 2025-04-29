@@ -723,6 +723,48 @@ void Canvas::addObject(Object* toAdd, pptk::Point position)
     callObjectChangedListeners();
 }
 
+void Canvas::loadGraph(GraphManager* newGraph)
+{
+    if (!newGraph)
+        return;
+
+    graphSystem->setActiveGraph(newGraph); // <-- Mark he new GraphManager as active
+
+    auto* activeGraph = newGraph->getActiveGraph();
+
+    clearSelection();
+
+    // Clear old UI
+    for (auto* obj : objects)
+    {
+        obj->audioNode->destroyUI();
+    }
+    objects.clear();
+
+    // Rebuild UI
+    auto nodes = activeGraph->getObjects();
+    for (auto* node : nodes)
+    {
+        if (auto* obj = node->getOrCreateUI())
+        {
+            obj->updateCanvasMode(mode);
+            objects.push_back(obj);
+            objectsLayer.addComponent(obj);
+            obj->setPosition(pptk::Point(node->canvasPos.x + canvasOrigin, node->canvasPos.y + canvasOrigin));
+        }
+    }
+
+    // Connections
+    reloadConnections(activeGraph->getConnections());
+
+    selected.clear();
+
+    callObjectChangedListeners();
+    repaint();
+}
+
+
+
 void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
 {
     // Clear both objects and selected as selected could contain (if they were selected) dead objects
@@ -746,7 +788,7 @@ void Canvas::reloadAllCanvasObjects(std::vector<Object*> newObjects)
     repaint();
 }
 
-void Canvas::reloadConnections(std::vector<Edge*>& edges)
+void Canvas::reloadConnections(const std::vector<Edge*>& edges)
 {
     connections.clear();
 

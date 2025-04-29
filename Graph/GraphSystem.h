@@ -170,6 +170,14 @@ public:
         mainGraphVolumeMeter->updateFrameSize(sr, bs, 2);
     }
 
+    void setActiveGraph(GraphManager* manager)
+    {
+        if (!manager)
+            return;
+
+        activeGraph = manager;
+    }
+
     void setActiveGraph(const std::string& path)
     {
         for (const auto& mgr : graphManagersUI)

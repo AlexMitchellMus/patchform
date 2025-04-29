@@ -322,6 +322,11 @@ public:
         return objects;
     }
 
+    GraphHolder* getActiveGraph()
+    {
+        return activeGraph.get();
+    }
+
     std::vector<Edge*> getConnections() const
     {
         return activeGraph ? activeGraph->getConnections() : std::vector<Edge*>{};

@@ -22,6 +22,11 @@ public:
     void process(const float* inBuffer, float* outBuffer, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index) override;
 
     json getSerializedNode() override;
+
+    GraphManager* getSubgraph() const
+    {
+        return subManager.get();
+    }
 };
 
 REGISTER(Subpatch);
