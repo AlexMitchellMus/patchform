@@ -62,7 +62,7 @@ void Subpatch::process(const float* inBuffer, float* outBuffer, std::vector<Midi
     }
 
     // Process internal graph
-    subManager->process(nullptr, nullptr, frames, midi);
+    subManager->process(inBuffer, outBuffer, frames, midi);
 
     // Pull output buffers
     for (size_t i = 0; i < subOutputs.size(); ++i) {
