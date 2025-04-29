@@ -5,7 +5,9 @@
 
 class GraphManager;
 class GraphHolder;
-class Subpatch final : public AudioNode {
+class Subpatch final : public AudioNode
+{
+
 public:
     DEFINE_AND_REGISTER_NODE("Subpatch", "subpatch", true);
     DEFINE_NODE_ALIASES("subpatch");

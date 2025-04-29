@@ -73,7 +73,7 @@ public:
     SaveAsCommand(Editor* editor) : ed(editor) {}
     void invoke() override
     {
-        if (auto graphManager = ed->graphSystem->getActiveGraph())
+        if (auto graphManager = ed->graphSystem->getActiveRootGraph())
         {
             std::string fullPath;
             std::string existingPath = graphManager->getPatchFile();
@@ -119,7 +119,8 @@ public:
     SaveCommand(Editor* editor) : ed(editor) {}
     void invoke() override
     {
-        auto graphMananger = ed->graphSystem->getActiveGraph();
+        auto graphMananger = ed->graphSystem->getActiveRootGraph();
+
         auto filePath = graphMananger->getPatchFile();
         if (filePath.empty())
             return;

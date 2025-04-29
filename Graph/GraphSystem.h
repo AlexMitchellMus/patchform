@@ -27,7 +27,7 @@ public:
         auto manager = std::make_shared<GraphManager>(sampleRate, frameCount);
         auto* ptr = manager.get();
 
-        const auto [objects, conns] = ptr->setActiveGraph(path, patch, logVerbose);
+        const auto [objects, conns] = ptr->loadGraph(path, patch, logVerbose);
         if (!ptr->wasPatchLoadSuccessful())
             return {};
 
@@ -52,7 +52,7 @@ public:
 
         for (size_t i = 0; i < graphManagersUI.size(); ++i)
         {
-            if (graphManagersUI[i].get() == activeGraph)
+            if (graphManagersUI[i].get() == getActiveRootGraph())
             {
                 graphManagersUI[i]->flaggedForDeletion.store(true);
                 indexToRemove = static_cast<int>(i);
@@ -146,6 +146,17 @@ public:
     }
 
     GraphManager* getActiveGraph() const { return activeGraph; }
+
+    GraphManager* getActiveRootGraph()
+    {
+        auto graphMananger = activeGraph;
+
+        while (graphMananger->parentGraph)
+            graphMananger = graphMananger->parentGraph;
+
+        return graphMananger;
+
+    }
 
     std::tuple<std::vector<Object*>, std::vector<Edge*>> getGraphDump(const std::string& path)
     {

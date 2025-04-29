@@ -32,24 +32,6 @@ public:
     ~GraphManager()
     {
     }
-/*
-    AudioNode* addObject(const std::string& objName, bool addToGraph = true)
-    {
-
-        if (!activeGraph)
-        {
-            activeGraph = std::make_unique<GraphHolder>(ctx);
-        }
-
-        // TODO: Lock the graph, or communicate via a queue
-
-        isGraphDirty = true;
-
-        json object;
-        object["obj"] = objName;
-        return activeGraph->createObject(object, addToGraph);
-    }
-*/
 
     AudioNode* addObject(const json& jsonObj)
     {
@@ -64,6 +46,9 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
 
         auto newNode = transitioningGraph->createObject(jsonObj);
+
+        if (auto* subpatch = dynamic_cast<Subpatch*>(newNode))
+            subpatch->subManager->parentGraph = this;
 
         setDirty(true);
 
@@ -243,7 +228,7 @@ public:
         activeGraph->printGraph();
     }
 
-    std::tuple<std::vector<Object*>, std::vector<Edge*>> setActiveGraph(const std::string& patchPath, const json& patch,
+    std::tuple<std::vector<Object*>, std::vector<Edge*>> loadGraph(const std::string& patchPath, const json& patch,
                                                                         const bool logVerbose, std::function<void(std::shared_ptr<GraphHolder>&)> populateInletOutlets = [](std::shared_ptr<GraphHolder>&){})
     {
         patchLoadSuccess = false;
@@ -265,6 +250,12 @@ public:
             transitioningGraph.reset();
             std::cerr << "Corrupt patch, failed to load." << std::endl;
             return {};
+        }
+
+        for (auto* node : transitioningGraph->getObjects())
+        {
+            if (auto* sp = dynamic_cast<Subpatch*>(node))
+                sp->subManager->parentGraph = this;
         }
 
         prepareObjectsToCleanup();
@@ -628,6 +619,8 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
         }
     }
 
+    GraphManager* parentGraph = nullptr;
+
 private:
     // Take the average peak and send it to the GUI
     void processPeak(const float* buffer, unsigned long frameCount)
@@ -651,8 +644,6 @@ private:
 
 protected:
     std::string filePath;
-
-
 
     bool isGraphDirty = false;
 
