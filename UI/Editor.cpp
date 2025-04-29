@@ -95,28 +95,26 @@ void Editor::init(GraphSystem* gm)
 
 void Editor::initCommands()
 {
-    using KC = CommandIDManager::KeyCombo;
-
     commandIDManager.registerCommand("NewPatch", std::make_unique<NewPatchCommand>(this));
-    commandIDManager.bindKey(KC{SDLK_N, SDL_KMOD_CTRL}, "NewPatch");
+    commandIDManager.bindKey(SDLK_N, SDL_KMOD_CTRL, "NewPatch");
 
     commandIDManager.registerCommand("OpenPatch", std::make_unique<OpenCommand>(this));
-    commandIDManager.bindKey(KC{SDLK_O, SDL_KMOD_CTRL}, "OpenPatch");
+    commandIDManager.bindKey(SDLK_O, SDL_KMOD_CTRL, "OpenPatch");
 
     commandIDManager.registerCommand("SavePatch", std::make_unique<SaveCommand>(this));
-    commandIDManager.bindKey(KC{SDLK_S, SDL_KMOD_CTRL}, "SavePatch");
+    commandIDManager.bindKey(SDLK_S, SDL_KMOD_CTRL, "SavePatch", true);
 
     commandIDManager.registerCommand("SavePatchAs", std::make_unique<SaveAsCommand>(this));
-    commandIDManager.bindKey(KC{SDLK_S, SDL_KMOD_CTRL | SDL_KMOD_SHIFT}, "SavePatchAs");
+    commandIDManager.bindKey(SDLK_S, SDL_KMOD_CTRL | SDL_KMOD_SHIFT, "SavePatchAs", true);
 
     commandIDManager.registerCommand("ClosePatch", std::make_unique<ClosePatchCommand>(this));
-    commandIDManager.bindKey(KC{SDLK_W, SDL_KMOD_CTRL}, "ClosePatch");
+    commandIDManager.bindKey(SDLK_W, SDL_KMOD_CTRL, "ClosePatch");
 
     commandIDManager.registerCommand("ShowSettingsDialog", std::make_unique<ShowSettingsCommand>(this));
-    commandIDManager.bindKey(KC{SDLK_COMMA, SDL_KMOD_CTRL}, "ShowSettingsDialog");
+    commandIDManager.bindKey(SDLK_COMMA, SDL_KMOD_CTRL, "ShowSettingsDialog");
 
     commandIDManager.registerCommand("ShowAboutDialog", std::make_unique<ShowAboutCommand>(this));
-    commandIDManager.bindKey(KC{SDLK_F1, SDL_KMOD_NONE}, "ShowAboutDialog");
+    commandIDManager.bindKey(SDLK_F1, SDL_KMOD_NONE, "ShowAboutDialog");
 }
 
 

@@ -122,8 +122,14 @@ public:
         auto graphMananger = ed->graphSystem->getActiveRootGraph();
 
         auto filePath = graphMananger->getPatchFile();
-        if (filePath.empty())
+
+        if (filePath.empty() || filePath.find("virtual") != std::string::npos)
+        {
+            if (auto* saveAsCmd = ed->commandIDManager["SavePatchAs"])
+                saveAsCmd->invoke();
+
             return;
+        }
 
         auto jsonData = graphMananger->graphToJSON();
 
