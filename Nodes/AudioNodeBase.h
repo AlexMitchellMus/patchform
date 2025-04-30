@@ -255,6 +255,7 @@ public:
 
 private:
 
+    // Used for subpatch IO: audio/data inlet/outlet
     bool isIoNodeFlag = false;
 
     bool isClean = false;
