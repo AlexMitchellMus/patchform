@@ -350,7 +350,7 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
     // Ensure we have an active graph.
     if (!activeGraph)
     {
-        activeGraph = std::make_unique<GraphHolder>(ctx);
+        activeGraph = std::make_shared<GraphHolder>(ctx);
     }
 
     // Create a transitioning graph from the active graph.
