@@ -630,7 +630,7 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
     // Queue size would be largest 8 if 64 buffrer size at 44100 hz and a video refresh rate of 120 hz
     moodycamel::ConcurrentQueue<std::array<float, 2>> volumeMeterQueue = moodycamel::ConcurrentQueue<std::array<float, 2>>(100);
 
-    std::function<void()> graphModifiedCallback;
+    std::function<void()> graphModifiedCallback = [](){};
 
     bool getIsGraphDirty() const
     {

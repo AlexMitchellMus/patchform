@@ -3,20 +3,6 @@
 #include "AudioNodeBase.h"
 
 // ====================================
-// Inlet/Outlet Helpers
-// ====================================
-
-class InletOutletHelpers {
-public:
-    static void copyAudioBuffers(const AudioNode* node, const unsigned long frames)
-    {
-        if (node && node->inputPortBuffers.size() > 0 && node->outputPortBuffers.size() > 0) {
-            std::memcpy(node->outputPortBuffers[0]->getAudioBuffer(), node->inputPortBuffers[0]->getAudioBuffer(), frames * sizeof(float));
-        }
-    }
-};
-
-// ====================================
 // Inlet Node
 // ====================================
 
@@ -27,11 +13,6 @@ public:
     Inlet(std::shared_ptr<NodeContext> ctx, const json& objParams)
         : AudioNode(ctx, AudioPort::Signal, objParams)
     {
-    }
-
-    void processAudio(const float*, float*, unsigned long frames, std::vector<MidiMessage>&) override
-    {
-        InletOutletHelpers::copyAudioBuffers(this, frames);
     }
 };
 
