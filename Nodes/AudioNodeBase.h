@@ -110,7 +110,6 @@ public:
         if (type != AudioPort::None)
         {
             addOutputPort("main output", type);
-            //outputPort.setSize(context->frameCount);
         }
     }
 
@@ -198,14 +197,11 @@ public:
     {
         if (getNumOutputs() >= maxPortNumber)
         {
-            std::cerr << "Error: Exceeded max input ports (255)." << std::endl;
+            std::cerr << "Error: Exceeded max output ports (255)." << std::endl;
             return;
         }
 
         outputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
-
-        if (portType == AudioPort::PortType::Signal)
-            outputPortBuffers.back()->setSize(context->frameCount);
     }
 
     // Virtual method for processing the audio buffer
