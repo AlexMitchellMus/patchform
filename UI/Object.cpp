@@ -77,12 +77,18 @@ Object::Object(AudioNode* node)
 
     for (int i = 0; i < node->inputPortBuffers.size(); ++i)
     {
+        if (!node->inputPortVisibility().test(i))
+            continue;
+
         inPorts.push_back(std::make_unique<Port>(i, convertPortType(node->inputPortBuffers[i]->getPortType())));
         addComponent(inPorts.back().get());
     }
 
     for (int i = 0; i < node->outputPortBuffers.size(); ++i)
     {
+        if (!node->outputPortVisibility().test(i))
+            continue;
+
         outPorts.push_back(std::make_unique<Port>(i, convertPortType(node->outputPortBuffers[i]->getPortType()), Port::Direction::Output));
         addComponent(outPorts.back().get());
     }

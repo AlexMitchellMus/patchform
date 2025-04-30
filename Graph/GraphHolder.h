@@ -437,6 +437,39 @@ public:
         removeEdge(toRemove);
     }
 
+    void removeInvalidConnections()
+    {
+        std::erase_if(connections, [&](const std::shared_ptr<Edge>& conn)
+        {
+            const auto* outNode = getNodeByID(conn->getoNode());
+            const auto* inNode  = getNodeByID(conn->getiNode());
+
+            if (!outNode || conn->getoPort() >= outNode->getNumOutputs())
+                return true;
+
+            if (!inNode || conn->getiPort() >= inNode->getNumInputs())
+                return true;
+
+            // Visibility check
+            if (!outNode->outputPortVisibility().test(conn->getoPort()))
+                return true;
+
+            if (!inNode->inputPortVisibility().test(conn->getiPort()))
+                return true;
+
+            return false;
+        });
+    }
+
+    AudioNode* getNodeByID(uint32_t id) const
+    {
+        auto it = graph->objectIDtoIndex.find(id);
+        if (it != graph->objectIDtoIndex.end())
+            return objects[it->second].get();
+
+        return nullptr;
+    }
+
     void removeObject(unsigned int nodeID)
     {
         std::cout << "removing an object: " << nodeID << std::endl;

@@ -31,30 +31,46 @@ void Subpatch::setupSubgraph(const json& subpatchJson)
 
 void Subpatch::rebuildPortsFromGraph(GraphHolder& graph)
 {
-    inputPortBuffers.clear();
-    outputPortBuffers.clear();
+    visibleInputBits.reset();
+    visibleOutputBits.reset();
+
     graph.subInputs.clear();
     graph.subOutputs.clear();
-
-    SDL_Delay(1000);
 
     int inputCounter = 0;
     int outputCounter = 0;
 
+    // Gather Inlet/Outlet internal ports
     for (auto* node : graph.getObjects())
     {
         if (auto* inlet = dynamic_cast<Inlet*>(node))
         {
             graph.subInputs.push_back(inlet->getOutputPort(0));
-            addInputPort("in_" + std::to_string(inputCounter++), AudioPort::PortType::Signal);
+
+            if (inputCounter >= getNumInputs())
+                addInputPort("in_" + std::to_string(inputCounter), AudioPort::Signal);
+
+            visibleInputBits.set(inputCounter);
+            ++inputCounter;
         }
         else if (auto* outlet = dynamic_cast<Outlet*>(node))
         {
             graph.subOutputs.push_back(outlet->getInputPort(0));
-            addOutputPort("out_" + std::to_string(outputCounter++), AudioPort::PortType::Signal);
+
+            if (outputCounter >= getNumOutputs())
+                addOutputPort("out_" + std::to_string(outputCounter), AudioPort::Signal);
+
+            visibleOutputBits.set(outputCounter);
+            ++outputCounter;
         }
     }
+
+
+
+    // DO NOT clear inputPortBuffers or outputPortBuffers
 }
+
+
 
 void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index)
 {

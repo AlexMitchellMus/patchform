@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.30)
 project(PlugPatch LANGUAGES CXX)
 
-option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 option(RUN_TESTS "Build and run tests" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

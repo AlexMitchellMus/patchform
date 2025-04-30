@@ -225,13 +225,16 @@ public:
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
         transitioningGraph->updateOutputInputPortMap();
+        transitioningGraph->removeInvalidConnections();
 
         if (owningSubpatch)
         {
             owningSubpatch->rebuildPortsFromGraph(*transitioningGraph);
 
             if (parentGraph)
+            {
                 parentGraph->regenerateGraph();
+            }
         }
     }
 

@@ -95,6 +95,15 @@ public:
         : context(std::move(context))
         , nodeCreationData(std::move(creationData))
     {
+        // Reset port visibility to fully visible for all ports
+        // This is used for subpatch objects so we can limit which ports are visible
+        // We need to do this as subpatch can dynamically change it's IO ports
+        // So we only ever grow the vector of ports, and reuse them
+        // Which means we need to limit the visibility of them to the UI
+        // Internally they stick around, but don't get processed
+        visibleInputBits.set();
+        visibleOutputBits.set();
+
         // Needs to be done after member initialization!
         // This happens outside the audio thread
         // TODO: We need to allow ports to define larger than the frameCount - for wavetable / large audio buffer ports
@@ -169,18 +178,30 @@ public:
         return true;
     }
 
-    int getNumOutputs() { return 1; };
+    int getNumOutputs() const { return outputPortBuffers.size(); };
 
-    int getNumInputs() { return inputPortBuffers.size(); };
+    int getNumInputs() const { return inputPortBuffers.size(); };
 
     // Add an input port (for dependency)
     void addInputPort(std::string portName, AudioPort::PortType portType)
     {
+        if (getNumInputs() >= maxPortNumber)
+        {
+            std::cerr << "Error: Exceeded max input ports (255)." << std::endl;
+            return;
+        }
+
         inputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
     }
 
     void addOutputPort(std::string portName, AudioPort::PortType portType)
     {
+        if (getNumOutputs() >= maxPortNumber)
+        {
+            std::cerr << "Error: Exceeded max input ports (255)." << std::endl;
+            return;
+        }
+
         outputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
 
         if (portType == AudioPort::PortType::Signal)
@@ -256,6 +277,11 @@ public:
         graphManagerParent = gm;
     }
 
+    // Used to limit visibility of real ports in graph system
+    // We don't (ATM) delete ports, we simply add to them so the pointers stay alive
+    const std::bitset<256>& inputPortVisibility() const { return visibleInputBits; }
+    const std::bitset<256>& outputPortVisibility() const { return visibleOutputBits; }
+
 private:
     bool isClean = false;
 
@@ -300,6 +326,9 @@ private:
     friend class Graph;
 
 protected:
+    std::bitset<256> visibleInputBits;
+    std::bitset<256> visibleOutputBits;
+
     GraphManager* graphManagerParent = nullptr;
 
     std::vector<std::unique_ptr<Parameter>> parameters;

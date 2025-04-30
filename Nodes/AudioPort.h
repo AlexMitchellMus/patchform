@@ -13,6 +13,7 @@ class AudioPort;
 class AudioNode;
 
 constexpr int defaultTableSize = 2048;
+constexpr int maxPortNumber = 255;
 
 struct PortGroup {
     uint8_t inputPortNumber;
