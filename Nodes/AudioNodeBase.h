@@ -43,14 +43,14 @@ public:                                                                         
     static inline const bool _##className##_registered = [] {                                                               \
         NodeRegistry::getInstance().registerNode(className::name);                                                          \
         NodeRegistry::getInstance().registerAlias(className::aliases, [](std::shared_ptr<NodeContext> ctx, const json& j) { \
-            return new className(std::move(ctx), j);                                                                                   \
+            return new className(std::move(ctx), j);                                                                        \
         });                                                                                                                 \
         return true;                                                                                                        \
     }();
 
 #define REGISTER_PLUGIN(className)																			                \
     static AudioNode* create_##className(std::shared_ptr<NodeContext> ctx, const json& j) {									\
-        return new className(std::move(ctx), j);																		                \
+        return new className(std::move(ctx), j);																		    \
     }																										                \
     extern "C" __declspec(dllexport) void registerPatchformNodes() {										                \
         NodeRegistry::getInstance().registerNode(className::name);											                \
@@ -250,7 +250,12 @@ public:
         return false;
     }
 
+    void setIsIoNode(const bool b) { isIoNodeFlag = b; }
+    bool isIoNode() const { return isIoNodeFlag; }
+
 private:
+
+    bool isIoNodeFlag = false;
 
     bool isClean = false;
 
