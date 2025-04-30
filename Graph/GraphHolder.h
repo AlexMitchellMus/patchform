@@ -728,6 +728,9 @@ public:
 
     GraphManager* parentGraph = nullptr;
 
+    std::vector<AudioPort*> subInputs;
+    std::vector<AudioPort*> subOutputs;
+
 private:
     std::vector<std::shared_ptr<Edge>> connections;
     std::vector<std::shared_ptr<AudioNode>> objects;

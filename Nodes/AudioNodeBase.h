@@ -83,8 +83,8 @@ public:
 #endif
 
     std::vector<std::unique_ptr<AudioPort>> inputPortBuffers;
-
     std::vector<std::unique_ptr<AudioPort>> outputPortBuffers;
+
     std::shared_ptr<NodeContext> context;
 
     json nodeCreationData;
@@ -251,18 +251,12 @@ public:
         return false;
     }
 
-    void setIsIoNode(const bool b) { isIoNodeFlag = b; }
-    bool isIoNode() const { return isIoNodeFlag; }
-
     void setGraphManagerParent(GraphManager* gm)
     {
         graphManagerParent = gm;
     }
 
 private:
-    // Used for subpatch IO: audio/data inlet/outlet
-    bool isIoNodeFlag = false;
-
     bool isClean = false;
 
     void runCleanup()

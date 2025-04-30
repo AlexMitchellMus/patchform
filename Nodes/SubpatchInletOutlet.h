@@ -27,7 +27,6 @@ public:
     Inlet(std::shared_ptr<NodeContext> ctx, const json& objParams)
         : AudioNode(ctx, AudioPort::Signal, objParams)
     {
-        setIsIoNode(true);
     }
 
     void processAudio(const float*, float*, unsigned long frames, std::vector<MidiMessage>&) override
@@ -49,8 +48,6 @@ public:
     Outlet(std::shared_ptr<NodeContext> ctx, const json& objParams)
         : AudioNode(ctx, AudioPort::None, objParams)
     {
-        setIsIoNode(true);
-
         addInputPort("in", AudioPort::Signal);
     }
 

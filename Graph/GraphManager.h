@@ -202,12 +202,37 @@ public:
         }
     }
 
+    void regenerateGraph()
+    {
+        if (!activeGraph)
+            return;
+
+        transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
+
+        setDirty(true);
+
+        updateAndFinalizeGraph();
+
+        graphModifiedCallback();
+
+        // Mark the transitioning graph as ready to replace the active graph
+        swapGraph.store(true, std::memory_order_release);
+    }
+
     void updateAndFinalizeGraph()
     {
         prepareObjectsToCleanup();
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
         transitioningGraph->updateOutputInputPortMap();
+
+        if (owningSubpatch)
+        {
+            owningSubpatch->rebuildPortsFromGraph(*transitioningGraph);
+
+            if (parentGraph)
+                parentGraph->regenerateGraph();
+        }
     }
 
     void printAdjacencyList()
@@ -448,6 +473,20 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
     return { pastedObjects, loadedObjects, connections };
 }
 
+    void swapGraphState()
+    {
+        if (swapGraph.load(std::memory_order_acquire))
+        {
+            if (activeGraph)
+                activeGraph->processCleanup();
+
+            // Perform the swap on the audio thread
+            activeGraph.swap(transitioningGraph);
+
+            swapGraph.store(false, std::memory_order_release);
+        }
+    }
+
 
     void process(const float* inBuffer, float* outBuffer, unsigned long frameCount, std::vector<MidiMessage>& message)
     {
@@ -569,25 +608,13 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 
     std::cout << std::endl;
 #endif
-        if (swapGraph.load(std::memory_order_acquire))
-        {
-            if (activeGraph)
-                activeGraph->processCleanup();
-
-            // Perform the swap on the audio thread
-            activeGraph.swap(transitioningGraph);
-
-            swapGraph.store(false, std::memory_order_release);
-        }
+        swapGraphState();
 
         // Process the current graph
         if (activeGraph)
         {
             activeGraph->process(inBuffer, outBuffer, frameCount, message);
         }
-
-        //processPeak(outBuffer, frameCount);
-
     }
 
     void setFilePath(const std::string& newPath)
@@ -656,4 +683,7 @@ protected:
     int peakFrameCounter = 0;
     float accumulatedPeakL = 0.0f;
     float accumulatedPeakR = 0.0f;
+
+    friend class Subpatch;
+    Subpatch* owningSubpatch = nullptr;
 };

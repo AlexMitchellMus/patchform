@@ -13,6 +13,7 @@ Subpatch::Subpatch(std::shared_ptr<NodeContext> context, const json& creationDat
 void Subpatch::postCreate()
 {
     subManager = std::make_shared<GraphManager>(graphManagerParent);
+    subManager->owningSubpatch = this;
 
     static const json emptySubpatch = {{"nodes", json::array()}, {"connections", json::array()}};
 
@@ -28,11 +29,14 @@ void Subpatch::setupSubgraph(const json& subpatchJson)
     );
 }
 
-void Subpatch::rebuildPortsFromGraph(const GraphHolder& graph) {
+void Subpatch::rebuildPortsFromGraph(GraphHolder& graph)
+{
     inputPortBuffers.clear();
     outputPortBuffers.clear();
-    subInputs.clear();
-    subOutputs.clear();
+    graph.subInputs.clear();
+    graph.subOutputs.clear();
+
+    SDL_Delay(1000);
 
     int inputCounter = 0;
     int outputCounter = 0;
@@ -41,72 +45,80 @@ void Subpatch::rebuildPortsFromGraph(const GraphHolder& graph) {
     {
         if (auto* inlet = dynamic_cast<Inlet*>(node))
         {
-            subInputs.push_back(inlet->getOutputPort(0));
+            graph.subInputs.push_back(inlet->getOutputPort(0));
             addInputPort("in_" + std::to_string(inputCounter++), AudioPort::PortType::Signal);
         }
         else if (auto* outlet = dynamic_cast<Outlet*>(node))
         {
-            subOutputs.push_back(outlet->getInputPort(0));
+            graph.subOutputs.push_back(outlet->getInputPort(0));
             addOutputPort("out_" + std::to_string(outputCounter++), AudioPort::PortType::Signal);
         }
     }
 }
 
-void Subpatch::process(const float* inBuffer, float* outBuffer, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index)
+void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index)
 {
     if (!subManager)
-    {
         return;
-    }
 
-    // Push input buffers
-    for (size_t i = 0; i < subInputs.size(); ++i) {
-        if (i < inputPortBuffers.size()) {
-            std::memcpy(subInputs[i]->getAudioBuffer(), inputPortBuffers[i]->getAudioBuffer(), frames * sizeof(float));
-        }
-    }
+    subManager->swapGraphState();
 
-    // Process internal graph
-    // TODO: For different buffersize / samplerate we will need to convert to the correct in/out buffer
-    subManager->process(inBuffer, outBuffer, frames, midi);
+    auto* subGraph = subManager->getActiveGraph();
+    auto& subInputs = subGraph->subInputs;
+    auto& subOutputs = subGraph->subOutputs;
 
-    // Pull output buffers
-    for (size_t i = 0; i < subOutputs.size(); ++i) {
-        if (i < outputPortBuffers.size()) {
-            std::memcpy(outputPortBuffers[i]->getAudioBuffer(), subOutputs[i]->getAudioBuffer(), frames * sizeof(float));
-        }
-    }
-
-    pushOutputAudio(g, index);
-
-//#define DEBUG_SUB_PORTS
-#ifdef DEBUG_SUB_PORTS
-    if (subInputs.size() > 0) {
-        std::cout << "Inlet output sample: " << subInputs[0]->getAudioBuffer()[0] << std::endl;
-    }
-    if (subOutputs.size() > 0) {
-        std::cout << "Outlet input sample: " << subOutputs[0]->getAudioBuffer()[0] << std::endl;
-    }
-#endif
-
-    for (auto& port : outputPortBuffers)
-        port->clearEvents();
-
-    for (auto& port : inputPortBuffers)
+    // Pull input from parent via graph's port map
+    const auto& upstream = g.outputInputPortMap[index];
+    for (size_t i = 0; i < subInputs.size() && i < upstream.size(); ++i)
     {
-        if (port->isSignal())
-            port->clear(frames);
+        float* dst = subInputs[i]->getAudioBuffer();
+        const auto& group = upstream[i];
+
+        for (auto* src : group.connectedPorts)
+        {
+            const float* srcBuf = src->getAudioBuffer();
+            for (unsigned s = 0; s < frames; ++s)
+                dst[s] += srcBuf[s];
+        }
+    }
+
+    // Process subgraph
+    subManager->process(nullptr, nullptr, frames, midi);
+
+    // Push output to parent using downstream port map
+    const auto& downstream = g.downstreamPortMap[index];
+    for (const auto& group : downstream)
+    {
+        uint8_t portIndex = group.outputPortNumber;
+        if (portIndex >= subOutputs.size())
+            continue;
+
+        const float* src = subOutputs[portIndex]->getAudioBuffer();
+
+        for (const auto& conn : group.downstreamConnections)
+        {
+            float* dst = conn.dst;
+            size_t n = conn.bufferSize;
+
+            for (size_t s = 0; s < n; ++s)
+                dst[s] += src[s];
+        }
+    }
+
+    // Clear subgraph ports
+    for (auto* port : subInputs)
+    {
+        if (port->isSignal()) port->clear(frames);
         port->clearEvents();
     }
 
-    // ALSO clear subOutputs (Outlet inputPorts we pulled from)
     for (auto* port : subOutputs)
     {
-        if (port && port->isSignal())
-            port->clear(frames);
+        if (port->isSignal()) port->clear(frames);
         port->clearEvents();
     }
 }
+
 
 json Subpatch::getSerializedNode()
 {

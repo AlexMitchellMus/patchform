@@ -13,15 +13,13 @@ public:
     DEFINE_NODE_ALIASES("subpatch");
 
     std::shared_ptr<GraphManager> subManager;
-    std::vector<AudioPort*> subInputs;
-    std::vector<AudioPort*> subOutputs;
 
     Subpatch(std::shared_ptr<NodeContext> context, const json& creationData);
 
     void postCreate() override;
 
     void setupSubgraph(const json& subpatchJson);
-    void rebuildPortsFromGraph(const GraphHolder& graph);
+    void rebuildPortsFromGraph(GraphHolder& graph);
 
     void process(const float* inBuffer, float* outBuffer, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index) override;
 
