@@ -29,6 +29,13 @@ public:
     {
     }
 
+    explicit GraphManager(GraphManager* otherGM)
+        : parentGraph(otherGM)
+    {
+        assert(otherGM && "GraphManager* cannot be nullptr");
+        ctx = std::make_shared<NodeContext>(otherGM->ctx->sampleRate, otherGM->ctx->frameCount);
+    }
+
     ~GraphManager()
     {
     }
@@ -38,7 +45,7 @@ public:
         std::cout << "adding object" << std::endl;
         if (!activeGraph)
         {
-            activeGraph = std::make_shared<GraphHolder>(ctx);
+            activeGraph = std::make_shared<GraphHolder>(ctx, this);
         }
 
         // TODO: Lock the graph, or communicate via a queue
@@ -46,9 +53,6 @@ public:
         transitioningGraph = std::make_shared<GraphHolder>(*activeGraph);
 
         auto newNode = transitioningGraph->createObject(jsonObj);
-
-        if (auto* subpatch = dynamic_cast<Subpatch*>(newNode))
-            subpatch->subManager->parentGraph = this;
 
         setDirty(true);
 
@@ -243,19 +247,13 @@ public:
 
         filePath = patchPath;
 
-        transitioningGraph = std::make_shared<GraphHolder>(ctx);
+        transitioningGraph = std::make_shared<GraphHolder>(ctx, this);
 
         if (!transitioningGraph->loadPatch(patch, logVerbose))
         {
             transitioningGraph.reset();
             std::cerr << "Corrupt patch, failed to load." << std::endl;
             return {};
-        }
-
-        for (auto* node : transitioningGraph->getObjects())
-        {
-            if (auto* sp = dynamic_cast<Subpatch*>(node))
-                sp->subManager->parentGraph = this;
         }
 
         prepareObjectsToCleanup();
@@ -350,7 +348,7 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
     // Ensure we have an active graph.
     if (!activeGraph)
     {
-        activeGraph = std::make_shared<GraphHolder>(ctx);
+        activeGraph = std::make_shared<GraphHolder>(ctx, this);
     }
 
     // Create a transitioning graph from the active graph.

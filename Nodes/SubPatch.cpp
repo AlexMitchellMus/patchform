@@ -7,11 +7,16 @@
 Subpatch::Subpatch(std::shared_ptr<NodeContext> context, const json& creationData)
     : AudioNode(context, AudioPort::None, creationData)
 {
-    subManager = std::make_shared<GraphManager>(context->sampleRate, context->frameCount);
+    nodeCreationData = creationData;
+}
+
+void Subpatch::postCreate()
+{
+    subManager = std::make_shared<GraphManager>(graphManagerParent);
 
     static const json emptySubpatch = {{"nodes", json::array()}, {"connections", json::array()}};
 
-    setupSubgraph(creationData.value("subpatch", emptySubpatch));
+    setupSubgraph(nodeCreationData.value("subpatch", emptySubpatch));
 }
 
 void Subpatch::setupSubgraph(const json& subpatchJson)

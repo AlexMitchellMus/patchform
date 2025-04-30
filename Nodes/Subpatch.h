@@ -18,6 +18,8 @@ public:
 
     Subpatch(std::shared_ptr<NodeContext> context, const json& creationData);
 
+    void postCreate() override;
+
     void setupSubgraph(const json& subpatchJson);
     void rebuildPortsFromGraph(const GraphHolder& graph);
 

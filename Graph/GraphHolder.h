@@ -34,18 +34,20 @@ class GraphHolder
 {
 
 public:
-    GraphHolder(std::shared_ptr<NodeContext> ctx)
-        : context(std::move(ctx))
+    GraphHolder(std::shared_ptr<NodeContext> ctx, GraphManager* parent)
+        : parentGraph(parent)
+        , context(std::move(ctx))
     {
         graph = std::make_unique<Graph>(context);
     };
 
     GraphHolder(const GraphHolder& other)
-    : context(other.context)
+    : graph(std::make_unique<Graph>(other.context))
+    , parentGraph(other.parentGraph)
+    , connections(other.connections)
     , objects(other.objects)
     , objectIDMap(other.objectIDMap)
-    , connections(other.connections)
-    , graph(std::make_unique<Graph>(other.context))
+    , context(other.context)
     {}
 
     Graph* getGraph() const
@@ -636,7 +638,7 @@ public:
         return idCounter;
     }
 
-    AudioNode* createObject(json node, bool addToGraph = true)
+    AudioNode* createObject(json node)
     {
         if (node.is_null())
             return nullptr;
@@ -702,7 +704,12 @@ public:
 
         //  Use the static NodeRegistry for reflection-based lookup of node names and aliases
         auto* nodePtr = NodeRegistry::getInstance().createNode(object.str(), context, node);
-        if (!nodePtr) {
+        if (nodePtr)
+        {
+            nodePtr->setGraphManagerParent(parentGraph);
+            nodePtr->postCreate();
+        } else
+        {
             std::cerr << "Unknown node type: " << object << "\n";
             return nullptr;
         }
@@ -718,6 +725,8 @@ public:
     }
 
     std::unique_ptr<Graph> graph;
+
+    GraphManager* parentGraph = nullptr;
 
 private:
     std::vector<std::shared_ptr<Edge>> connections;

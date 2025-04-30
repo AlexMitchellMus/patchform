@@ -8,6 +8,10 @@
 
 using json = nlohmann::json;
 
+class AudioNode;
+class NodeContext;
+class GraphManager;
+
 class NodeRegistry {
 public:
     static NodeRegistry& getInstance() {

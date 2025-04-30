@@ -93,7 +93,6 @@ public:
 
     AudioNode(std::shared_ptr<NodeContext> context, AudioPort::PortType type, const json& creationData)
         : context(std::move(context))
-        //, outputPort(this, "output", type)
         , nodeCreationData(std::move(creationData))
     {
         // Needs to be done after member initialization!
@@ -110,6 +109,8 @@ public:
     {
         //std::cout << "destorying audio node: " << nodeID << std::endl;
     }
+
+    virtual void postCreate() { };
 
     virtual bool isGuiOnly() const
     {
@@ -253,8 +254,12 @@ public:
     void setIsIoNode(const bool b) { isIoNodeFlag = b; }
     bool isIoNode() const { return isIoNodeFlag; }
 
-private:
+    void setGraphManagerParent(GraphManager* gm)
+    {
+        graphManagerParent = gm;
+    }
 
+private:
     // Used for subpatch IO: audio/data inlet/outlet
     bool isIoNodeFlag = false;
 
@@ -301,5 +306,7 @@ private:
     friend class Graph;
 
 protected:
+    GraphManager* graphManagerParent = nullptr;
+
     std::vector<std::unique_ptr<Parameter>> parameters;
 };
