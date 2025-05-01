@@ -29,6 +29,9 @@ public:
     {
         return subManager.get();
     }
+private:
+    AudioPort* getInputPortSafe(int index, AudioPort::PortType type);
+    void ensureOutputPort(int index, AudioPort::PortType type);
 };
 
 REGISTER(Subpatch);

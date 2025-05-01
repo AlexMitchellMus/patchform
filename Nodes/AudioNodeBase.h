@@ -238,6 +238,7 @@ public:
     }
 
     std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, Graph&, const int)> pushOutputEvents;
+    std::function<void(const std::vector<AudioPort*>&, Graph&, int)> pushOutputEventsFromPointers;
 
     std::function<void(Graph& graph, int index)> pushOutputAudio;
 
@@ -300,11 +301,11 @@ private:
 
         pushOutputAudio(g, index);
 
-        if (hasEvents)
-        {
+        //if (hasEvents)
+        //{
             pushOutputEvents(outputPortBuffers, g, index);
-            hasEvents = false;
-        }
+         //   hasEvents = false;
+        //}
 
         for (auto& port : outputPortBuffers)
             port->clearEvents();

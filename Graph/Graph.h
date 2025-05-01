@@ -354,8 +354,6 @@ public:
             activeEventNodes[i >> 6] &= ~(1ULL << (i & 63));
             ++i;
         }
-
-        context->eventPool.releaseAllEvents();
     }
 
 

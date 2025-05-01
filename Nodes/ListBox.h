@@ -65,7 +65,6 @@ public:
         std::unique_ptr<pptk::TextEditor> textEditor;
 
         std::string uiText;
-
     public:
         std::atomic<bool> shouldRepaint = false;
 
@@ -197,48 +196,44 @@ public:
         }
 
         // In updateGraphValues, we check for DSP events that update the list.
-        void updateGraphValues() override
-        {
+        void updateGraphValues() override {
             auto listBox = reinterpret_cast<ListBox*>(audioNode);
-            if (listBox->listChanged.load())
-            {
+
+            if (listBox->listChanged.load()) {
                 listBox->listChanged.store(false);
                 listBox->triggerSendFromAudio.store(true);
                 listBox->setNodeDirty();
             }
 
-            if (!shouldRepaint.load() && isInit)
+            bool updated = false;
+            std::string buffer;
+
+            if (!textEditor->getIsInteractable()) {
+                while (listBox->queueFromDSP.try_dequeue(buffer))
+                    updated = true;
+
+                if (updated) {
+                    uiText = unformatSymbols(buffer);
+                } else if (listBox->savedData && !isInit) {
+                    listBox->savedData->toString(buffer);
+                    uiText = unformatSymbols(buffer);
+                }
+            }
+
+            if (!shouldRepaint.exchange(false) && !updated && isInit)
                 return;
 
-            if (!isInit)
-            {
+            if (!isInit) {
                 isInit = true;
                 updateWidth();
+                repaint();
             }
 
-            shouldRepaint.store(false);
-
-            // Only update if the user is not actively editing.
-            if (!textEditor->getIsInteractable())
-            {
-                std::string buffer;
-                bool updated = false;
-                // Dequeue DSP events; the last event replaces all values.
-                while (listBox->queueFromDSP.try_dequeue(buffer))
-                {
-                    updated = true;
-                }
-                if (updated)
-                {
-                    uiText = unformatSymbols(buffer);
-                    //std::cout << "buffer: " << buffer << " unformat: " << uiText << std::endl;
-                    // Update the text editor to reflect DSP changes.
-                    textEditor->setText(uiText);
-                    updateWidth();
-                    repaint();
-                }
-            }
+            textEditor->setText(uiText);
+            updateWidth();
+            repaint();
         }
+
 
         void updateWidth()
         {
@@ -259,7 +254,9 @@ public:
 
     std::unique_ptr<AudioNode::UI> makeUI() override
     {
-        return std::make_unique<UI>(this);
+        auto ui = std::make_unique<UI>(this);
+        triggerSendFromAudio.store(true);
+        return ui;
     }
 #endif
 
@@ -470,22 +467,19 @@ public:
             listChanged.store(true);
         }
 
-        if (triggerSendFromAudio.load())
+        if (triggerSendFromAudio.exchange(false))
         {
-            triggerSendFromAudio.store(false);
-
             savedData->getAtom(0)->toString(newTextBuffer);
 
-            if (newTextBuffer != textBuffer) // Only update if content changed
-            {
-                textBuffer = newTextBuffer;
+            textBuffer = newTextBuffer;
 
-                if (queueFromDSP.try_enqueue(textBuffer))
+            if (queueFromDSP.try_enqueue(textBuffer))
+            {
+                auto listBoxUI = reinterpret_cast<ListBox::UI*>(getUI());
+                if (listBoxUI)
                 {
-                    auto listBoxUI = reinterpret_cast<ListBox::UI*>(getOrCreateUI());
-                    if (listBoxUI && !listBoxUI->shouldRepaint.exchange(true)) {
-                        updateUI(); // Only trigger if not already dirty
-                    }
+                    listBoxUI->shouldRepaint.store(true);
+                    updateUI();
                 }
             }
         }

@@ -31,46 +31,89 @@ void Subpatch::setupSubgraph(const json& subpatchJson)
 
 void Subpatch::rebuildPortsFromGraph(GraphHolder& graph)
 {
+    std::cout << "rebuilding inlet outlet map for subpatch" << std::endl;
+
     visibleInputBits.reset();
     visibleOutputBits.reset();
 
     graph.subInputs.clear();
     graph.subOutputs.clear();
+    graph.subInputOuterPorts.clear();
+    graph.subInputSortedIndices.clear();
+    graph.subInputNodes.clear();
 
-    int inputCounter = 0;
-    int outputCounter = 0;
+    int inputIndex = 0;
+    int outputIndex = 0;
 
-    // Gather Inlet/Outlet internal ports
-    for (auto* node : graph.getObjects())
+    for (size_t sortedIndex = 0; sortedIndex < graph.graph->objectsSorted.size(); ++sortedIndex)
     {
+        auto* node = graph.graph->objectsSorted[sortedIndex];
+        if (!node) continue;
+
         if (auto* inlet = dynamic_cast<Inlet*>(node))
         {
             graph.subInputs.push_back(inlet->getOutputPort(0));
-
-            if (inputCounter >= getNumInputs())
-                addInputPort("in_" + std::to_string(inputCounter), AudioPort::Signal);
-
-            visibleInputBits.set(inputCounter);
-            ++inputCounter;
+            auto* outer = getInputPortSafe(inputIndex, AudioPort::Signal);
+            graph.subInputOuterPorts.push_back(outer);
+            graph.subInputSortedIndices.push_back(static_cast<int>(sortedIndex));
+            graph.subInputNodes.push_back(inlet);
+            visibleInputBits.set(inputIndex++);
+        }
+        else if (auto* dataInlet = dynamic_cast<DataInlet*>(node))
+        {
+            graph.subInputs.push_back(dataInlet->getOutputPort(0));
+            auto* outer = getInputPortSafe(inputIndex, AudioPort::Data);
+            graph.subInputOuterPorts.push_back(outer);
+            graph.subInputSortedIndices.push_back(static_cast<int>(sortedIndex));
+            graph.subInputNodes.push_back(dataInlet);
+            visibleInputBits.set(inputIndex++);
         }
         else if (auto* outlet = dynamic_cast<Outlet*>(node))
         {
             graph.subOutputs.push_back(outlet->getInputPort(0));
-
-            if (outputCounter >= getNumOutputs())
-                addOutputPort("out_" + std::to_string(outputCounter), AudioPort::Signal);
-
-            visibleOutputBits.set(outputCounter);
-            ++outputCounter;
+            ensureOutputPort(outputIndex, AudioPort::Signal);
+            graph.subOutputOuterPorts.push_back(getOutputPort(outputIndex));
+            visibleOutputBits.set(outputIndex++);
+        }
+        else if (auto* dataOutlet = dynamic_cast<DataOutlet*>(node))
+        {
+            graph.subOutputs.push_back(dataOutlet->getInputPort(0));
+            ensureOutputPort(outputIndex, AudioPort::Data);
+            graph.subOutputOuterPorts.push_back(getOutputPort(outputIndex));
+            visibleOutputBits.set(outputIndex++);
         }
     }
 
-
-
-    // DO NOT clear inputPortBuffers or outputPortBuffers
+//#define DEBUG_SUBPATCH_PORT_SORT
+#ifdef DEBUG_SUBPATCH_PORT_SORT
+    std::cout << "SubInputOuterPorts:" << std::endl;
+    for (size_t i = 0; i < graph.subInputOuterPorts.size(); ++i)
+    {
+        auto* port = graph.subInputOuterPorts[i];
+        std::cout << "  [" << i << "]: " << (port->isSignal() ? "Signal" : "Data")
+                  << " port, owner = " << (port->getParentNode() ? port->getParentNode()->getShortName() : "null")
+                  << ", sortedIndex = " << graph.subInputSortedIndices[i] << std::endl;
+    }
+#endif
 }
 
+AudioPort* Subpatch::getInputPortSafe(int index, AudioPort::PortType type)
+{
+    if (index >= getNumInputs())
+        addInputPort("in_" + std::to_string(index), AudioPort::Signal);
 
+    auto* port = getInputPort(index);
+    port->changePortType(type);
+    return port;
+}
+
+void Subpatch::ensureOutputPort(int index, AudioPort::PortType type)
+{
+    if (index >= getNumOutputs())
+        addOutputPort("out_" + std::to_string(index), AudioPort::Signal);
+
+    getOutputPort(index)->changePortType(type);
+}
 
 void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index)
 {
@@ -83,7 +126,10 @@ void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, uns
     auto& subInputs = subGraph->subInputs;
     auto& subOutputs = subGraph->subOutputs;
 
+    // ===========================
     // Pull input from parent via graph's port map
+    // ===========================
+
     const auto& upstream = g.outputInputPortMap[index];
     for (size_t i = 0; i < subInputs.size() && i < upstream.size(); ++i)
     {
@@ -98,10 +144,33 @@ void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, uns
         }
     }
 
+    for (int i = 0; i < subInputs.size(); ++i)
+    {
+        auto* outerBuf = subGraph->subInputOuterPorts[i];
+        if (!outerBuf) continue;
+
+        auto& events = outerBuf->getEvents();
+
+        for (const auto& ev : events)
+        {
+            subInputs[i]->addEvent(ev);
+            const int sortedIndex = subGraph->subInputSortedIndices[i];
+            subGraph->getGraph()->activeEventNodes[sortedIndex >> 6] |= (1ULL << (sortedIndex & 63));
+        }
+
+        outerBuf->clearEvents();
+    }
+
+    // ===========================
     // Process subgraph
+    // ===========================
+
     subManager->process(nullptr, nullptr, frames, midi);
 
+    // ===========================
     // Push output to parent using downstream port map
+    // ===========================
+
     const auto& downstream = g.downstreamPortMap[index];
     for (const auto& group : downstream)
     {
@@ -121,16 +190,40 @@ void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, uns
         }
     }
 
+    for (size_t i = 0; i < subGraph->subOutputs.size(); ++i)
+    {
+        auto* innerPort = subGraph->subOutputs[i];
+        if (innerPort->getEvents().size())
+            std::cout << "Output port " << i << " events: " << innerPort->getEvents().size() << std::endl;
+
+        //if (innerPort->isSignal())
+        //    continue;
+
+        auto* outerPort = subGraph->subOutputOuterPorts[i];
+        for (auto& ev : innerPort->getEvents())
+            outerPort->addEvent(ev);
+    }
+
+    pushOutputEventsFromPointers(subGraph->subOutputOuterPorts, g, index);
+
+    for (auto* port : subGraph->subOutputOuterPorts) {
+        if (!port) continue;
+        if (!port->isSignal())
+            port->clearEvents(); // required to avoid crosstalk
+    }
+
     // Clear subgraph ports
     for (auto* port : subInputs)
     {
-        if (port->isSignal()) port->clear(frames);
+        if (port->isSignal())
+            port->clear(frames);
         port->clearEvents();
     }
 
     for (auto* port : subOutputs)
     {
-        if (port->isSignal()) port->clear(frames);
+        if (port->isSignal())
+            port->clear(frames);
         port->clearEvents();
     }
 }

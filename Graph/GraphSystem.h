@@ -113,7 +113,9 @@ public:
         {
             // FIXME: We don't want to check each graph if it's valid, however it's only for a small amount of loaded patches (hopefully)
             if (!mgr->flaggedForDeletion.load())
+            {
                 mgr->process(inBuffer, outBuffer, frameCount, midi);
+            }
         }
 
         const float currentVolume = mainVolume.load(std::memory_order_relaxed);

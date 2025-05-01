@@ -53,6 +53,8 @@ namespace ObjectMenuDefs
         {R"({"obj": "subpatch" })", "", "Subpatch"},
         {R"({"obj": "inlet" })", "", "Inlet"},
         {R"({"obj": "outlet" })", "", "Outlet"},
+        {R"({"obj": "d.inlet" })", "", "Data Inlet"},
+        {R"({"obj": "d.outlet" })", "", "Data Outlet"},
     };
 
     // UI

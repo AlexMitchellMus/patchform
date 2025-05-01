@@ -41,3 +41,40 @@ public:
 };
 
 REGISTER(Outlet);
+
+// ====================================
+// Data Inlet Node
+// ====================================
+
+class DataInlet : public AudioNode {
+    DEFINE_AND_REGISTER_NODE("d.inlet", "d.inlet", false);
+    DEFINE_NODE_ALIASES("d.inlet");
+public:
+    DataInlet(std::shared_ptr<NodeContext> ctx, const json& objParams) : AudioNode(ctx, AudioPort::Data, objParams)
+    {
+    }
+};
+
+REGISTER(DataInlet);
+
+// ====================================
+// Data Outlet Node
+// ====================================
+
+class DataOutlet : public AudioNode {
+    DEFINE_AND_REGISTER_NODE("d.outlet", "d.outlet", false);
+    DEFINE_NODE_ALIASES("d.outlet");
+public:
+    DataOutlet(std::shared_ptr<NodeContext> ctx, const json& objParams)
+        : AudioNode(ctx, AudioPort::None, objParams)
+    {
+        addInputPort("in", AudioPort::Data);
+    }
+
+    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, int index) override
+    {
+        // Totally bypass clearing events from the input as we forward them inside the subpatch
+    }
+};
+
+REGISTER(DataOutlet);

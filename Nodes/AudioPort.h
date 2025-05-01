@@ -90,6 +90,11 @@ public:
             audioBuffer.assign(size, 0.0f);
     }
 
+    void changePortType(PortType t)
+    {
+        portType = t;
+    }
+
     void zero() { clear(bufferSize); }
 
     void setSize(size_t size) {

@@ -36,7 +36,7 @@ class GraphHolder
 public:
     GraphHolder(std::shared_ptr<NodeContext> ctx, GraphManager* parent)
         : parentGraph(parent)
-        , context(std::move(ctx))
+        , context(ctx)
     {
         graph = std::make_unique<Graph>(context);
     };
@@ -578,6 +578,35 @@ public:
             });
         };
 
+        node->pushOutputEventsFromPointers = [](const std::vector<AudioPort*>& outputPorts, Graph& graph, int index) {
+            const auto& downstream = graph.downstreamPortMap[index];
+            for (const auto& group : downstream) {
+                uint8_t portIndex = group.outputPortNumber;
+                if (portIndex >= outputPorts.size())
+                    continue;
+
+                auto* outerPort = outputPorts[portIndex];
+                if (!outerPort) continue;
+
+                if (outerPort->isSignal()) {
+                    const float* src = outerPort->getAudioBuffer();
+                    for (const auto& conn : group.downstreamConnections) {
+                        float* dst = conn.dst;
+                        size_t n = conn.bufferSize;
+                        for (size_t s = 0; s < n; ++s)
+                            dst[s] += src[s];
+                    }
+                } else {
+                    for (const auto& conn : group.downstreamConnections) {
+                        for (const auto& ev : outerPort->getEvents()) {
+                            conn.inputPort->addEvent(ev);
+                        }
+                        graph.activeEventNodes[conn.targetIndex >> 6] |= (1ULL << (conn.targetIndex & 63));
+                    }
+                }
+            }
+        };
+
         node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, const int index)
         {
             const auto& groups = graph.downstreamPortMap[index];
@@ -641,7 +670,7 @@ public:
             );
         }
 
-        uint32_t nodeID = generateID();
+        uint32_t nodeID = generateID();  //generateGlobalID();
         node->nodeID = nodeID;
         node->nodeIDString = finalID;
         objectIDMap[finalID] = nodeID;
@@ -651,6 +680,8 @@ public:
 
         return node;
     }
+
+    uint32_t generateGlobalID() const;
 
     // Generate a unique node ID (integer)
     uint32_t generateID() const
@@ -763,6 +794,11 @@ public:
 
     std::vector<AudioPort*> subInputs;
     std::vector<AudioPort*> subOutputs;
+
+    std::vector<AudioPort*> subInputOuterPorts;
+    std::vector<AudioPort*> subOutputOuterPorts;
+    std::vector<int> subInputSortedIndices;
+    std::vector<AudioNode*> subInputNodes;
 
 private:
     std::vector<std::shared_ptr<Edge>> connections;

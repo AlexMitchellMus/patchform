@@ -31,9 +31,9 @@ public:
 
     explicit GraphManager(GraphManager* otherGM)
         : parentGraph(otherGM)
+        , ctx(otherGM->ctx)
     {
         assert(otherGM && "GraphManager* cannot be nullptr");
-        ctx = std::make_shared<NodeContext>(otherGM->ctx->sampleRate, otherGM->ctx->frameCount);
     }
 
     ~GraphManager()
@@ -230,11 +230,11 @@ public:
         if (owningSubpatch)
         {
             owningSubpatch->rebuildPortsFromGraph(*transitioningGraph);
+        }
 
-            if (parentGraph)
-            {
-                parentGraph->regenerateGraph();
-            }
+        if (parentGraph)
+        {
+            parentGraph->regenerateGraph();
         }
     }
 
@@ -618,6 +618,8 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
         {
             activeGraph->process(inBuffer, outBuffer, frameCount, message);
         }
+        if (parentGraph == nullptr)
+            ctx->eventPool.releaseAllEvents();
     }
 
     void setFilePath(const std::string& newPath)
@@ -687,6 +689,7 @@ protected:
     float accumulatedPeakL = 0.0f;
     float accumulatedPeakR = 0.0f;
 
+    friend class GraphHolder;
     friend class Subpatch;
     Subpatch* owningSubpatch = nullptr;
 };
