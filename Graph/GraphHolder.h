@@ -146,26 +146,30 @@ public:
         // Create nodes
         for (const auto& node : patch["nodes"])
         {
-            createObject(node);
+            auto nodePtr = createObject(node);
+
+            if (nodePtr)
+                objectIDMap[node["id"].get<std::string>()] = nodePtr->nodeID;
+
+            std::cerr << "Creating: " << node["id"] << " (" << node["obj"] << ")\n";
         }
 
         // Create connections
         for (const auto& connection : patch["connections"])
         {
-            if ((connection["sourceNode"].is_string() && connection["sourceNode"].get<std::string>().empty()) ||
-                (connection["targetNode"].is_string() && connection["targetNode"].get<std::string>().empty()))
-                return false;
-            // source and target ID needs to be set in the file format
-            uint32_t source = connection["sourceNode"].is_string()
-                                  ? objectIDMap[connection["sourceNode"].get<std::string>()]
-                                  : objectIDMap[std::to_string(connection["sourceNode"].get<int>())];
-            uint32_t target = connection["targetNode"].is_string()
-                                  ? objectIDMap[connection["targetNode"].get<std::string>()]
-                                  : objectIDMap[std::to_string(connection["targetNode"].get<int>())];
+            std::string srcKey = connection["sourceNode"];
+            std::string dstKey = connection["targetNode"];
 
-            // connections use unique ID's for nodes
-            // FIXME: Is this really correct? we use the overloaded connect to connect with the stringID
-            connect(objects[source]->nodeID, connection["sourcePort"], objects[target]->nodeID, connection["targetPort"]);
+            if (!objectIDMap.contains(srcKey) || !objectIDMap.contains(dstKey)) {
+                std::cerr << "Missing ID: " << srcKey << " -> " << dstKey << "\n";
+                continue;
+            }
+
+            uint32_t srcID = objectIDMap[srcKey];
+            uint32_t dstID = objectIDMap[dstKey];
+
+            connectObjIndex(srcID, connection["sourcePort"], dstID, connection["targetPort"]);
+            std::cerr << "Connecting: " << srcKey << ":" << connection["sourcePort"] << " ->" << dstKey << ":" << connection["targetPort"] << "\n";
         }
         return true;
     }
@@ -337,20 +341,29 @@ public:
 
     void updateConnections()
     {
-        graph->objectIDtoIndex.reserve(objects.size());
-        graph->objectIDtoIndex.clear();
+        for (const auto& [id, idx] : graph->objectIDtoIndex)
+            std::cerr << "ID " << id << " -> index " << idx << "\n";
 
-        for (size_t i = 0; i < objects.size(); i++)
-        {
-            graph->objectIDtoIndex[objects[i]->nodeID] = i;
-        }
+        // Must rebuild objectIDtoIndex mapping before using it
+        graph->objectIDtoIndex.clear();
+        for (size_t i = 0; i < objects.size(); ++i)
+            graph->objectIDtoIndex[objects[i]->nodeID] = static_cast<uint32_t>(i);
 
         graph->adjacencyMap.clear();
 
         for (const auto& conn : connections)
         {
-            graph->addAdjacency(graph->objectIDtoIndex[conn->getoNode()], conn->getoPort(),
-                                graph->objectIDtoIndex[conn->getiNode()], conn->getiPort());
+            auto oIt = graph->objectIDtoIndex.find(conn->getoNode());
+            auto iIt = graph->objectIDtoIndex.find(conn->getiNode());
+
+            if (oIt != graph->objectIDtoIndex.end() && iIt != graph->objectIDtoIndex.end())
+            {
+                graph->addAdjacency(oIt->second, conn->getoPort(), iIt->second, conn->getiPort());
+            }
+            else
+            {
+                std::cerr << "Missing nodeID in objectIDtoIndex: " << conn->getoNode() << " -> " << conn->getiNode() << "\n";
+            }
         }
     }
 
@@ -367,47 +380,19 @@ public:
 
     bool connect(int oNode, int oPort, int iNode, int iPort)
     {
-        //std::cout << "connecting: (" << oNode << " : " << oPort <<  " -> " << iNode << " : " << iPort << ")" << std::endl;
-
-        ankerl::unordered_dense::map<uint32_t, std::string> invertedMap;
-
-        //std::cout << "=========== objectIDMap ==========" << std::endl;
-        for (const auto& [name, id] : objectIDMap)
-        {
-            //std::cout << "id: " << id << " name: " << name << std::endl;
-            invertedMap[id] = name;
-        }
-
-        //std::cout << invertedMap.contains(oNode) << " " << invertedMap.contains(iNode) << std::endl;
-
-        if (invertedMap.contains(oNode) && invertedMap.contains(iNode))
-        {
-            //std::cout << "connecting oNode " << oNode << " -> " << iNode << std::endl;
-            connect(invertedMap[oNode], oPort, invertedMap[iNode], iPort);
-            return true;
-        }
-
-        std::cerr << "issue connectiong: " << "connecting oNode " << oNode << " -> " << iNode << std::endl;
-        return false;
+        connectObjIndex(oNode, oPort, iNode, iPort);
+        return true;
     }
 
     // Create connections with the object index
-    void connectObjIndex(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
+    void connectObjIndex(uint32_t oNode, uint32_t oPort, uint32_t iNode, uint32_t iPort)
     {
-        auto newConnection = std::make_shared<Edge>(oNode, oPort, iNode, iPort);
-
-        // Check if the connection already exists
+        uint64_t hash = Edge::encodeHash(oNode, oPort, iNode, iPort);
         for (const auto& conn : connections)
-        {
-            if (conn->getHash() == newConnection->getHash())
-            {
-                std::cerr << "Warning: Connection already exists, not adding duplicate." << std::endl;
-                return;
-            }
-        }
+            if (conn->getHash() == hash) return;
 
-        // Add the new connection
-        connections.push_back(newConnection);
+        connections.push_back(std::make_shared<Edge>(oNode, oPort, iNode, iPort));
+        std::cerr << "Adding connection: " << oNode << ":" << oPort << " -> " << iNode << ":" << iPort << "\n";
     }
 
     // Remove connections from idString:port pairs
@@ -517,44 +502,74 @@ public:
 
     void sortNodes()
     {
+        std::cerr << "=== Connections in memory ===\n";
+        for (const auto& conn : connections)
+        {
+            std::cerr << "Conn: " << conn->getoNode() << ":" << conn->getoPort()
+                      << " -> " << conn->getiNode() << ":" << conn->getiPort() << "\n";
+        }
+
         graph->sortNodes(objects);
 
-        if (graph->objectsSorted.empty())
+        if (!graph->objectsSorted.empty())
+            return;
+
+        std::cerr << "Cycle detected, attempting to remove invalid connections..." << std::endl;
+
+        std::vector<std::shared_ptr<Edge>> validConnections;
+        ankerl::unordered_dense::set<uint64_t> seenHashes;
+
+        for (const auto& conn : connections)
         {
-            std::cerr << "Cycle detected, attempting to remove invalid connections..." << std::endl;
+            uint64_t hash = conn->getHash();
+            if (seenHashes.contains(hash))
+                continue;
 
-            std::vector<std::shared_ptr<Edge>> validConnections;
+            seenHashes.insert(hash);
+            validConnections.push_back(conn);
 
-            for (const auto& conn : connections)
+            // Rebuild objectIDtoIndex before each test
+            graph->objectIDtoIndex.clear();
+            for (size_t i = 0; i < objects.size(); i++)
+                graph->objectIDtoIndex[objects[i]->nodeID] = static_cast<uint32_t>(i);
+
+            // Clear and rebuild adjacency
+            graph->adjacencyMap.clear();
+            for (const auto& c : validConnections)
             {
-                validConnections.push_back(conn);
-
-                // Temporarily assign and test
-                graph->adjacencyMap.clear();
-                for (const auto& c : validConnections)
-                {
-                    graph->addAdjacency(graph->objectIDtoIndex[c->getoNode()], c->getoPort(),
-                                        graph->objectIDtoIndex[c->getiNode()], c->getiPort());
-                }
-
-                graph->sortNodes(objects);
-
-                if (graph->objectsSorted.empty())
-                {
-                    std::cerr << "Removed cycle-causing connection: "
-                              << conn->getoNode() << ":" << conn->getoPort()
-                              << " -> " << conn->getiNode() << ":" << conn->getiPort() << std::endl;
-
-                    validConnections.pop_back();
-                }
+                auto oIt = graph->objectIDtoIndex.find(c->getoNode());
+                auto iIt = graph->objectIDtoIndex.find(c->getiNode());
+                if (oIt != graph->objectIDtoIndex.end() && iIt != graph->objectIDtoIndex.end())
+                    graph->addAdjacency(oIt->second, c->getoPort(), iIt->second, c->getiPort());
             }
 
-            // Apply final valid connections
-            connections = validConnections;
-            updateConnections();
             graph->sortNodes(objects);
+
+            if (graph->objectsSorted.empty())
+            {
+                std::cerr << "Removed cycle-causing connection: "
+                          << conn->getoNode() << ":" << conn->getoPort()
+                          << " -> " << conn->getiNode() << ":" << conn->getiPort() << std::endl;
+
+                validConnections.pop_back();
+                seenHashes.erase(hash);
+            }
         }
+
+        // Apply cleaned connection list
+        connections = std::move(validConnections);
+        updateConnections();
+        graph->sortNodes(objects);
+
+        std::cerr << "=== objectIDtoIndex ===\n";
+        for (auto& [id, idx] : graph->objectIDtoIndex)
+            std::cerr << "ID " << id << " -> index " << idx << "\n";
+
+        std::cerr << "=== Sorted objects ===\n";
+        for (auto* node : graph->objectsSorted)
+            std::cerr << "Node: " << node->nodeID << " (" << node->getShortName() << ")\n";
     }
+
 
 
     void printAdjacencyList()
@@ -670,16 +685,21 @@ public:
             );
         }
 
-        uint32_t nodeID = generateID();  //generateGlobalID();
+        uint32_t nodeID = generateGlobalID();
         node->nodeID = nodeID;
         node->nodeIDString = finalID;
+
         objectIDMap[finalID] = nodeID;
 
+        auto index = static_cast<uint32_t>(objects.size());
+        graph->objectIDtoIndex[nodeID] = index; // ✅ <<< THIS is required
+
         setSummingFunctionForNode(node);
-        objects.push_back(std::unique_ptr<AudioNode>(node));  // take ownership
+        objects.push_back(std::unique_ptr<AudioNode>(node));
 
         return node;
     }
+
 
     uint32_t generateGlobalID() const;
 

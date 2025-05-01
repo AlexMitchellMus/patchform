@@ -193,8 +193,6 @@ void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, uns
     for (size_t i = 0; i < subGraph->subOutputs.size(); ++i)
     {
         auto* innerPort = subGraph->subOutputs[i];
-        if (innerPort->getEvents().size())
-            std::cout << "Output port " << i << " events: " << innerPort->getEvents().size() << std::endl;
 
         //if (innerPort->isSignal())
         //    continue;

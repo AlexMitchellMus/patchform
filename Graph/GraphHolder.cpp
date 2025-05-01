@@ -4,33 +4,45 @@
 #include "GraphHolder.h"
 #include "GraphManager.h"
 
-uint32_t GraphHolder::generateGlobalID() const {
-    std::set<unsigned int> usedIDs;
+uint32_t GraphHolder::generateGlobalID() const
+{
+    std::set<uint32_t> usedIDs;
 
-    // Traverse to the root graph
-    GraphManager* root = parentGraph;
-    while (root->parentGraph)
-        root = root->parentGraph;
+    std::function<void(GraphHolder*)> collectIDsFromHolder = [&](GraphHolder* holder) {
+        if (!holder) return;
 
-    // Collect all node IDs in all subgraphs
-    std::function<void(GraphManager*)> collectIDs = [&](GraphManager* gm) {
-        if (!gm || !gm->getActiveGraph())
-            return;
-
-        for (auto* obj : gm->getActiveGraph()->getObjects())
+        for (auto* obj : holder->getObjects())
             usedIDs.insert(obj->nodeID);
 
-        for (auto& obj : gm->getActiveGraph()->getObjects()) {
+        for (auto* obj : holder->getObjects()) {
             if (auto* sub = dynamic_cast<Subpatch*>(obj)) {
-                collectIDs(sub->getSubgraph());
+                if (auto* subgraph = sub->getSubgraph()) {
+                    auto* nestedHolder = subgraph->transitioningGraph ? subgraph->transitioningGraph.get()
+                                                                      : subgraph->activeGraph.get();
+                    collectIDsFromHolder(nestedHolder);
+                }
             }
         }
     };
-    collectIDs(root);
+
+    if (parentGraph) {
+        GraphManager* root = parentGraph;
+        while (root->parentGraph)
+            root = root->parentGraph;
+
+        auto* rootHolder = root->transitioningGraph ? root->transitioningGraph.get()
+                                                    : root->activeGraph.get();
+        collectIDsFromHolder(rootHolder);
+    }
+
+    // Always collect local
+    collectIDsFromHolder(const_cast<GraphHolder*>(this));
 
     uint32_t idCounter = 0;
     while (usedIDs.contains(idCounter))
         ++idCounter;
 
+    std::cout << "parent graph: " << parentGraph << " new ID is: " << idCounter << std::endl;
     return idCounter;
 }
+

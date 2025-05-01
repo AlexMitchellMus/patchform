@@ -34,11 +34,17 @@ public:
     {
     }
 
-    static uint64_t encodeHash(unsigned int oNode, unsigned int oPort, unsigned int iNode, unsigned int iPort)
+    // New bit layout:
+    // upper 32 bits = oNode (32)
+    // next 8 bits   = oPort (8)
+    // next 16 bits  = iNode (16)
+    // next 8 bits   = iPort (8)
+    static uint64_t encodeHash(uint32_t oNode, uint32_t oPort, uint32_t iNode, uint32_t iPort)
     {
-        // Encode the values into a 64-bit hash
-        return (static_cast<uint64_t>(oNode) << 48) | (static_cast<uint64_t>(oPort) << 40) |
-            (static_cast<uint64_t>(iNode) << 24) | (static_cast<uint64_t>(iPort) << 16);
+        return  (static_cast<uint64_t>(oNode) << 32) |
+                (static_cast<uint64_t>(oPort) << 24) |
+                (static_cast<uint64_t>(iNode) << 8)  |
+                (static_cast<uint64_t>(iPort));
     }
 
     uint64_t getHash() const
