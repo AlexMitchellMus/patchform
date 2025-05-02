@@ -502,12 +502,15 @@ public:
 
     void sortNodes()
     {
+//#define DEBUG_CONN
+#ifdef DEBUG_CONN
         std::cerr << "=== Connections in memory ===\n";
         for (const auto& conn : connections)
         {
             std::cerr << "Conn: " << conn->getoNode() << ":" << conn->getoPort()
                       << " -> " << conn->getiNode() << ":" << conn->getiPort() << "\n";
         }
+#endif
 
         graph->sortNodes(objects);
 
@@ -561,6 +564,7 @@ public:
         updateConnections();
         graph->sortNodes(objects);
 
+#ifdef DEBUG_CONN
         std::cerr << "=== objectIDtoIndex ===\n";
         for (auto& [id, idx] : graph->objectIDtoIndex)
             std::cerr << "ID " << id << " -> index " << idx << "\n";
@@ -568,6 +572,7 @@ public:
         std::cerr << "=== Sorted objects ===\n";
         for (auto* node : graph->objectsSorted)
             std::cerr << "Node: " << node->nodeID << " (" << node->getShortName() << ")\n";
+#endif
     }
 
 
@@ -699,6 +704,8 @@ public:
 
         return node;
     }
+
+    void removeGlobalID(uint32_t id);
 
 
     uint32_t generateGlobalID() const;

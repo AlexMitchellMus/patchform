@@ -180,8 +180,14 @@ public:
         return true;
     }
 
-    void prepareObjectsToCleanup() const
+    void prepareObjectsToCleanup()
     {
+        // Remove the previous pending deleted ID's
+        for (uint32_t id : pendingDeletedIDs)
+            usedGlobalIDs.erase(id);
+
+        pendingDeletedIDs.clear();
+
         if (!activeGraph || !transitioningGraph)
             return;
 
@@ -193,12 +199,17 @@ public:
             newNodes.insert(node);
 
         auto* graph = activeGraph->getGraph();
+
         graph->objectsToCleanup.clear();
 
         for (auto* node : oldObjs)
         {
             if (!newNodes.contains(node))
+            {
                 graph->objectsToCleanup.push_back(node);
+                // Insert the ID's into the pending stack, will be cleared NEXT UI interaction cycle
+                pendingDeletedIDs.insert(node->nodeID);
+            }
         }
     }
 
@@ -676,6 +687,9 @@ protected:
     std::string filePath;
 
     bool isGraphDirty = false;
+
+    std::set<uint32_t> usedGlobalIDs;
+    std::set<uint32_t> pendingDeletedIDs;
 
     std::shared_ptr<NodeContext> ctx;
 

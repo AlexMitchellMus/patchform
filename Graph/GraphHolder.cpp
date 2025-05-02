@@ -6,43 +6,17 @@
 
 uint32_t GraphHolder::generateGlobalID() const
 {
-    std::set<uint32_t> usedIDs;
+    uint32_t id = 0;
 
-    std::function<void(GraphHolder*)> collectIDsFromHolder = [&](GraphHolder* holder) {
-        if (!holder) return;
+    auto root = parentGraph;
+    while (root->parentGraph) root = root->parentGraph;
 
-        for (auto* obj : holder->getObjects())
-            usedIDs.insert(obj->nodeID);
+    while (root->usedGlobalIDs.contains(id)) ++id;
 
-        for (auto* obj : holder->getObjects()) {
-            if (auto* sub = dynamic_cast<Subpatch*>(obj)) {
-                if (auto* subgraph = sub->getSubgraph()) {
-                    auto* nestedHolder = subgraph->transitioningGraph ? subgraph->transitioningGraph.get()
-                                                                      : subgraph->activeGraph.get();
-                    collectIDsFromHolder(nestedHolder);
-                }
-            }
-        }
-    };
+    root->usedGlobalIDs.insert(id);
 
-    if (parentGraph) {
-        GraphManager* root = parentGraph;
-        while (root->parentGraph)
-            root = root->parentGraph;
+    std::cout << "parent graph: " << root << " new ID is: " << id << std::endl;
 
-        auto* rootHolder = root->transitioningGraph ? root->transitioningGraph.get()
-                                                    : root->activeGraph.get();
-        collectIDsFromHolder(rootHolder);
-    }
-
-    // Always collect local
-    collectIDsFromHolder(const_cast<GraphHolder*>(this));
-
-    uint32_t idCounter = 0;
-    while (usedIDs.contains(idCounter))
-        ++idCounter;
-
-    std::cout << "parent graph: " << parentGraph << " new ID is: " << idCounter << std::endl;
-    return idCounter;
+    return id;
 }
 
