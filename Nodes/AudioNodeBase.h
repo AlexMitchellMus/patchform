@@ -190,7 +190,7 @@ public:
             return;
         }
 
-        inputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType));
+        inputPortBuffers.push_back(make_unique<AudioPort>(this, portName, portType, true));
     }
 
     void addOutputPort(std::string portName, AudioPort::PortType portType)
@@ -237,7 +237,7 @@ public:
         hasEvents = true;
     }
 
-    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, Graph&, const int)> pushOutputEvents;
+    std::function<void(const std::vector<std::unique_ptr<AudioPort>>&, Graph&, const int, AudioNode* _this)> pushOutputEvents;
     std::function<void(const std::vector<AudioPort*>&, Graph&, int)> pushOutputEventsFromPointers;
 
     std::function<void(Graph& graph, int index)> pushOutputAudio;
@@ -303,8 +303,8 @@ private:
 
         //if (hasEvents)
         //{
-            pushOutputEvents(outputPortBuffers, g, index);
-         //   hasEvents = false;
+            pushOutputEvents(outputPortBuffers, g, index, this);
+        //    hasEvents = false;
         //}
 
         for (auto& port : outputPortBuffers)

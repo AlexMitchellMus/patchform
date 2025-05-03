@@ -403,7 +403,6 @@ public:
         context->makeDataPersistent(savedData, false, nodeID);
     }
 
-
     // processAudio receives DSP events that replace the list values.
     void processAudio(const float* in, float* out, const unsigned long frameCount, std::vector<MidiMessage>& midiMessage) override
     {
@@ -469,7 +468,8 @@ public:
 
         if (triggerSendFromAudio.exchange(false))
         {
-            savedData->getAtom(0)->toString(newTextBuffer);
+            if (savedData)
+                savedData->getAtom(0)->toString(newTextBuffer);
 
             textBuffer = newTextBuffer;
 

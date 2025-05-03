@@ -52,10 +52,16 @@ public:
         Data      = 1 << 4
     };
 
+    bool isInput = false;
+
     AudioPort() = default;
 
-    AudioPort(AudioNode* parent, const std::string& portName, PortType type)
-        : node(parent), name(std::move(portName)), portType(type) {
+    AudioPort(AudioNode* parent, const std::string& portName, PortType type, bool isInput = false)
+        : node(parent)
+        , name(std::move(portName))
+        , portType(type)
+        , isInput(isInput)
+    {
         events.reserve(1024);
 
         if (type == PortType::Signal)

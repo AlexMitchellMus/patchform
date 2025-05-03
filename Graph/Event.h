@@ -12,7 +12,9 @@
 class Tag
 {
 public:
-    hash32 tagHash;
+    hash32 tagHash = 0;
+
+    Tag() = default;
 
     Tag(const std::string& tag) : tagHash(hash(tag)) {}
 
@@ -103,16 +105,5 @@ public:
     {
         timeStamp = timestamp;
         return *this;
-    }
-
-    // Resets the linked list pointers and the used count.
-    // The atomPool remains allocated, so the DataAtoms can be reused.
-    void resetAtoms()
-    {
-        data = nullptr;
-        tail = nullptr;
-        tag = Tag(hash("trigger"));
-        timeStamp = 0;
-        numAtoms = 0;
     }
 };

@@ -174,158 +174,31 @@ public:
         return true;
     }
 
-    void updateOutputInputPortMap()
+    void updateOutputInputPortMap();
+
+    void printConnectionTable()
     {
-        //auto start = std::chrono::high_resolution_clock::now();
-
-        // Reserve and clear the upstream map.
-        graph->outputInputPortMap.clear();
-        graph->outputInputPortMap.reserve(objects.size());
-
-        // Also clear and resize the downstream map.
-        graph->downstreamPortMap.clear();
-        graph->downstreamPortMap.resize(graph->objectsSorted.size());
-
-        // Create a mapping from original object IDs to their indices in `objects`
-        ankerl::unordered_dense::map<int, size_t> objectIDtoOriginalIndex;
-        for (size_t i = 0; i < objects.size(); ++i)
+        std::cerr << "=== Connection Table ===\n";
+        for (const auto& conn : connections)
         {
-            objectIDtoOriginalIndex[objects[i]->nodeID] = i;
+            std::cerr << "Conn: " << conn->getoNode()
+                      << ":" << conn->getoPort()
+                      << " -> " << conn->getiNode()
+                      << ":" << conn->getiPort() << "\n";
         }
 
-        // Create a mapping from original object IDs to their indices in `objectsSorted`
-        ankerl::unordered_dense::map<int, size_t> objectIDtoSortedIndex;
-        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
+        std::cerr << "\n=== Adjacency Map (forward) ===\n";
+        for (const auto& [key, targets] : graph->adjacencyMap.getForward())
         {
-            objectIDtoSortedIndex[graph->objectsSorted[sortedIndex]->nodeID] = sortedIndex;
-        }
-
-        // Populate the upstream port map (for summing audio)
-        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
-        {
-            int objectID = graph->objectsSorted[sortedIndex]->nodeID;
-            if (objectIDtoOriginalIndex.find(objectID) == objectIDtoOriginalIndex.end())
+            auto [fromIndex, fromPort] = AdjacencyMap::unpackKey(key);
+            std::cerr << "From " << objects[fromIndex]->nodeID << ":" << fromPort << " -> ";
+            for (auto targetKey : targets)
             {
-                continue;
+                auto [toIndex, toPort] = AdjacencyMap::unpackKey(targetKey);
+                std::cerr << objects[toIndex]->nodeID << ":" << toPort << " ";
             }
-            size_t originalIndex = objectIDtoOriginalIndex[objectID];
-
-            // Add a new vector for this object's inputs.
-            graph->outputInputPortMap.emplace_back();
-
-            for (size_t j = 0; j < objects[originalIndex]->getNumInputs(); ++j)
-            {
-                std::vector<AudioPort*> upstreamPorts;
-
-                auto key = AdjacencyMap::packKey(originalIndex, j);
-                const auto& backwardConnections = graph->adjacencyMap.getBackward();
-
-                if (backwardConnections.find(key) != backwardConnections.end())
-                {
-                    for (const auto& outputPortUpstreamNode : backwardConnections.at(key))
-                    {
-                        auto connectedNode = AdjacencyMap::unpackKey(outputPortUpstreamNode);
-                        int connectedObjectID = objects[connectedNode.first]->nodeID;
-                        if (objectIDtoSortedIndex.find(connectedObjectID) != objectIDtoSortedIndex.end())
-                        {
-                            size_t connectedSortedIndex = objectIDtoSortedIndex[connectedObjectID];
-                            if (auto connectedPort = graph->objectsSorted[connectedSortedIndex]->getOutputPort(connectedNode.second))
-                                upstreamPorts.push_back(connectedPort);
-                        }
-                    }
-                }
-                graph->outputInputPortMap.back().emplace_back(PortGroup{
-                    static_cast<uint8_t>(j), std::move(upstreamPorts)
-                });
-            }
+            std::cerr << "\n";
         }
-
-        // --- Populate the downstream port map ---
-        // For each node in sorted order...
-        for (size_t sortedIndex = 0; sortedIndex < graph->objectsSorted.size(); ++sortedIndex)
-        {
-            AudioNode* node = graph->objectsSorted[sortedIndex];
-            int nodeID = node->nodeID;
-            // For each output port on the node...
-            for (size_t outPort = 0; outPort < node->outputPortBuffers.size(); ++outPort)
-            {
-                DownstreamPortGroup group;
-                group.outputPortNumber = static_cast<uint8_t>(outPort);
-
-                // Iterate over all connections in the graph.
-                for (const auto& conn : connections)
-                {
-                    if (conn->getoNode() == nodeID && conn->getoPort() == static_cast<int>(outPort))
-                    {
-                        int targetID = conn->getiNode();
-                        if (objectIDtoSortedIndex.contains(targetID))
-                        {
-                            size_t targetSortedIndex = objectIDtoSortedIndex[targetID];
-                            AudioNode* targetNode = graph->objectsSorted[targetSortedIndex];
-                            int targetPort = conn->getiPort();
-
-                            auto* inputPort = targetNode->getInputPort(targetPort);
-                            if (!inputPort) continue;
-
-                            if (auto* outputPort = node->getOutputPort(outPort))
-                            {
-                                float* dst = inputPort->getAudioBuffer();
-
-                                group.downstreamConnections.push_back({
-                                    .src = outputPort->getAudioBuffer(),
-                                    .dst = inputPort->getAudioBuffer(),
-                                    .bufferSize = outputPort->getAudioBufferSize(),
-                                    .node = targetNode,
-                                    .inputPort = inputPort,
-                                    .inputPortIndex = targetPort,
-                                    .targetIndex = static_cast<uint32_t>(targetSortedIndex),
-                                });
-
-                                inputPort->isAnyConnectedPortSignal = outputPort->isSignal();
-                            }
-                        }
-                    }
-                }
-                // Only add the group if it contains at least one connection.
-                if (!group.downstreamConnections.empty())
-                {
-                    graph->downstreamPortMap[sortedIndex].push_back(std::move(group));
-                }
-            }
-        }
-
-        //auto end = std::chrono::high_resolution_clock::now();
-        //auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-        //std::cout << "PortPointerMap took " << elapsedNs << " ns.\n";
-
-        //#define PORTPOINTER_DEBUG
-#ifdef PORTPOINTER_DEBUG
-        // Debug print
-        for (size_t i = 0; i < graph->outputInputPortMap.size(); ++i)
-        {
-            std::cout << "Object " << i << " input ports:" << std::endl;
-
-            for (const auto& portGroup : graph->outputInputPortMap[i])
-            {
-                std::cout << "  Input Port " << static_cast<int>(portGroup.inputPortNumber) << ":";
-
-                if (portGroup.connectedPorts.empty())
-                {
-                    std::cout << " No connections" << std::endl;
-                }
-                else
-                {
-                    for (const auto& port : portGroup.connectedPorts)
-                    {
-                        // Assuming `AudioPort` has a `toString` method or similar to print its details
-                        std::cout << " " << port; // Replace with `port->toString()` if such a method exists
-                    }
-                    std::cout << std::endl;
-                }
-            }
-        }
-#endif
     }
 
     std::vector<Edge*> getConnections() const
@@ -341,10 +214,6 @@ public:
 
     void updateConnections()
     {
-        for (const auto& [id, idx] : graph->objectIDtoIndex)
-            std::cerr << "ID " << id << " -> index " << idx << "\n";
-
-        // Must rebuild objectIDtoIndex mapping before using it
         graph->objectIDtoIndex.clear();
         for (size_t i = 0; i < objects.size(); ++i)
             graph->objectIDtoIndex[objects[i]->nodeID] = static_cast<uint32_t>(i);
@@ -362,7 +231,9 @@ public:
             }
             else
             {
-                std::cerr << "Missing nodeID in objectIDtoIndex: " << conn->getoNode() << " -> " << conn->getiNode() << "\n";
+                std::cerr << "Skipping invalid connection: "
+                          << conn->getoNode() << ":" << conn->getoPort()
+                          << " -> " << conn->getiNode() << ":" << conn->getiPort() << "\n";
             }
         }
     }
@@ -411,7 +282,14 @@ public:
     {
         std::erase_if(connections, [connEdgeHash](const auto& connection)
         {
-            return connection->getHash() == connEdgeHash; // Predicate to match the connection to remove
+            if (connection->getHash() == connEdgeHash) {
+                std::cout << "Removing connection: "
+                          << connection->getoNode() << ":" << connection->getoPort()
+                          << " -> " << connection->getiNode() << ":" << connection->getiPort()
+                          << "\n";
+                return true;
+            }
+            return false;
         });
     }
 
@@ -486,7 +364,14 @@ public:
         // 3) Remove any connections associated with this node.
         std::erase_if(connections, [nodeID](const auto& con)
         {
-            return con->getiNode() == nodeID || con->getoNode() == nodeID;
+            if (con->getiNode() == nodeID || con->getoNode() == nodeID)
+            {
+                std::cout << "Removing connection due to node removal: "
+                          << con->getoNode() << ":" << con->getoPort()
+                          << " -> " << con->getiNode() << ":" << con->getiPort() << "\n";
+                return true;
+            }
+            return false;
         });
     }
 
@@ -502,19 +387,17 @@ public:
 
     void sortNodes()
     {
-//#define DEBUG_CONN
-#ifdef DEBUG_CONN
-        std::cerr << "=== Connections in memory ===\n";
-        for (const auto& conn : connections)
+        graph->objectIDtoIndex.clear();
+        for (size_t i = 0; i < objects.size(); ++i)
+            graph->objectIDtoIndex[objects[i]->nodeID] = static_cast<uint32_t>(i);
+
+        graph->adjacencyMap.clear();
+        for (const auto& c : connections)
         {
-            std::cerr << "Conn: " << conn->getoNode() << ":" << conn->getoPort()
-                      << " -> " << conn->getiNode() << ":" << conn->getiPort() << "\n";
+            graph->addAdjacency(c->getoNode(), c->getoPort(), c->getiNode(), c->getiPort());
         }
-#endif
 
-        graph->sortNodes(objects);
-
-        if (!graph->objectsSorted.empty())
+        if (graph->sortNodes(objects))  // returns true if sort succeeded
             return;
 
         std::cerr << "Cycle detected, attempting to remove invalid connections..." << std::endl;
@@ -531,12 +414,10 @@ public:
             seenHashes.insert(hash);
             validConnections.push_back(conn);
 
-            // Rebuild objectIDtoIndex before each test
             graph->objectIDtoIndex.clear();
-            for (size_t i = 0; i < objects.size(); i++)
+            for (size_t i = 0; i < objects.size(); ++i)
                 graph->objectIDtoIndex[objects[i]->nodeID] = static_cast<uint32_t>(i);
 
-            // Clear and rebuild adjacency
             graph->adjacencyMap.clear();
             for (const auto& c : validConnections)
             {
@@ -546,9 +427,7 @@ public:
                     graph->addAdjacency(oIt->second, c->getoPort(), iIt->second, c->getiPort());
             }
 
-            graph->sortNodes(objects);
-
-            if (graph->objectsSorted.empty())
+            if (!graph->sortNodes(objects))
             {
                 std::cerr << "Removed cycle-causing connection: "
                           << conn->getoNode() << ":" << conn->getoPort()
@@ -559,22 +438,10 @@ public:
             }
         }
 
-        // Apply cleaned connection list
         connections = std::move(validConnections);
-        updateConnections();
-        graph->sortNodes(objects);
-
-#ifdef DEBUG_CONN
-        std::cerr << "=== objectIDtoIndex ===\n";
-        for (auto& [id, idx] : graph->objectIDtoIndex)
-            std::cerr << "ID " << id << " -> index " << idx << "\n";
-
-        std::cerr << "=== Sorted objects ===\n";
-        for (auto* node : graph->objectsSorted)
-            std::cerr << "Node: " << node->nodeID << " (" << node->getShortName() << ")\n";
-#endif
+        updateConnections(); // rebuild full adjacency
+        graph->sortNodes(objects); // final sort after full rebuild
     }
-
 
 
     void printAdjacencyList()
@@ -627,8 +494,10 @@ public:
             }
         };
 
-        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, const int index)
+        node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph, const int index, AudioNode* _this)
         {
+            assert(graph.objectsSorted[index] == _this);
+
             const auto& groups = graph.downstreamPortMap[index];
 
             for (const auto& group : groups)
@@ -636,11 +505,22 @@ public:
                 if (group.outputPortNumber >= outputPorts.size())
                     continue;
 
+                assert(group.outputPortNumber < outputPorts.size());
+                auto* port = outputPorts[group.outputPortNumber].get();
+                assert(port != nullptr && port->getParentNode() == _this);
+                assert(!port->isInput);
+                assert(_this->outputPortVisibility().test(group.outputPortNumber));
+
                 const auto& events = outputPorts[group.outputPortNumber]->getEvents();
                 if (events.empty()) continue;
 
                 for (const auto& conn : group.downstreamConnections)
                 {
+                    assert(conn.inputPort != nullptr);
+                    assert(conn.inputPort->isInput);
+                    assert(graph.objectsSorted[conn.targetIndex] == conn.node);
+                    assert(graph.objectsSorted[conn.targetIndex]->nodeID == conn.node->nodeID);
+
                     for (Event* event : events)
                         conn.node->pushEvent(conn.inputPortIndex, event);
 

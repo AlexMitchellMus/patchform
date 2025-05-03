@@ -10,6 +10,8 @@
 
 #include "SampleHandle.h"
 
+#include <cassert>
+
 class alignas(32) DataAtom
 {
 public:
@@ -327,6 +329,8 @@ private:
             else
                 removeOwnership(atom, nodeID, pool, flags, atomPool);
 
+            //debugPrintOwnership(atom, atomPool);
+
             if (atom->type == DataType::List)
                 makePersistent(atom->data.list, toBePersistent, nodeID, pool, flags, atomPool);
 
@@ -361,6 +365,7 @@ private:
         }
 
         flags.set(index);
+        assert((bit & (*ppBlock)->bits[wordIndex]) != 0 && "Ownership bit was not set correctly");
     }
 
     static void removeOwnership(DataAtom* atom, const int nodeID, OwnershipBlockPool& pool,
@@ -400,5 +405,25 @@ private:
 
         if (atom->ownerChain == nullptr)
             flags.clear(index);
+    }
+
+    static void debugPrintOwnership(const DataAtom* atom, const std::vector<DataAtom>& atomPool) {
+        while (atom) {
+            size_t index = static_cast<size_t>(atom - atomPool.data());
+            std::cout << "Atom[" << index << "] type " << static_cast<int>(atom->type) << " owners: ";
+            for (OwnershipBlock* block = atom->ownerChain; block; block = block->next) {
+                for (int w = 0; w < OwnershipBlockPool::kWordsPerBlock; ++w) {
+                    uint64_t bits = block->bits[w];
+                    for (int b = 0; bits; ++b, bits >>= 1) {
+                        if (bits & 1)
+                            std::cout << (block->blockIndex * 320 + w * 64 + b) << " ";
+                    }
+                }
+            }
+            std::cout << "\n";
+            if (atom->type == DataAtom::DataType::List)
+                debugPrintOwnership(atom->data.list, atomPool);
+            atom = atom->next;
+        }
     }
 };

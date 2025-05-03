@@ -14,6 +14,7 @@
 #include "../Utility/LockFreeHashMap.h"
 #include "PersistentAtomFlags.h"
 #include "DataAtom.h"
+#include "unordered_dense.h"
 
 class EventPool {
 public:
@@ -35,8 +36,19 @@ public:
 
         auto eventIndex = freeStack[--freestackPos];
         Event* evt = &events[eventIndex];
-        evt->resetAtoms();
+        reset(evt);
         return evt;
+    }
+
+    // Resets the linked list pointers and the used count.
+    // The atomPool remains allocated, so the DataAtoms can be reused.
+    void reset(Event* event)
+    {
+        event->data = nullptr;
+        event->tail = nullptr;
+        event->setTag("");
+        event->setTimeStamp(0);
+        event->numAtoms = 0;
     }
 
     void releaseAllEvents() {
@@ -113,6 +125,9 @@ public:
         freeList.pop_back();
         allocatedList.push_back(index);
         const auto atom = &sharedAtomPool[index];
+
+        assert(!persistentAtomsFlags.isSet(index) && "Allocating atom that's still marked persistent!");
+
         atom->type = DataAtom::DataType::Float;
         atom->data.atom = 0.0f;
         atom->next = nullptr;
@@ -159,7 +174,6 @@ private:
     std::vector<std::size_t> freeStack;
     size_t freestackPos = 0;
     size_t freestackSize = 0;
-
 
     std::vector<uint64_t> persistentAtoms;
     PersistentAtomFlags persistentAtomsFlags;

@@ -125,150 +125,144 @@ public:
 
 
     // Topological sort using the provided adjacency list
-    void topologicalSort(std::vector<AudioNode*>& sortedNodes)
+void topologicalSort(std::vector<AudioNode*>& sortedNodes)
 {
-    const unsigned int nodeCount = objectsListCopy.size();
+    std::cout << "SORTING, adjacnecy map size: " << adjacencyMap.getForward().size() << std::endl;
 
     sortedNodes.clear();
+    const size_t nodeCount = objectsListCopy.size();
+    if (nodeCount == 0) return;
     sortedNodes.reserve(nodeCount);
 
-    zeroInDegreeNodes.clear();
-    zeroInDegreeNodes.reserve(nodeCount);
-
-    inDegree.assign(nodeCount, 0);
-
-    // Build reverse lookup: nodeID → index
-    ankerl::unordered_dense::map<int, int> nodeIDToIndex;
-    for (int i = 0; i < static_cast<int>(objectsListCopy.size()); ++i)
-        nodeIDToIndex[objectsListCopy[i]->nodeID] = i;
+    std::vector<int> inDegree(nodeCount, 0);
+    std::vector<size_t> zeroInDegreeIndices;
+    zeroInDegreeIndices.reserve(nodeCount);
 
     // Compute in-degrees
-    for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward())
+    for (const auto& [inputKey, sources] : adjacencyMap.getBackward())
     {
-        int sourceNodeID = AdjacencyMap::getNodeID(sourceKey);
-        if (!nodeIDToIndex.contains(sourceNodeID)) continue;
-        int sourceIndex = nodeIDToIndex[sourceNodeID];
-
-        for (const auto& downstreamKey : downstreamKeys)
+        auto [dstIndex, dstPort] = AdjacencyMap::unpackKey(inputKey);
+        for (const auto& sourceKey : sources)
         {
-            int targetNodeID = AdjacencyMap::getNodeID(downstreamKey);
-            if (!nodeIDToIndex.contains(targetNodeID)) continue;
-            int targetIndex = nodeIDToIndex[targetNodeID];
-
-            if (!objectsListCopy[sourceIndex]->canFeedback())
-                ++inDegree[targetIndex];
+            auto [srcIndex, srcPort] = AdjacencyMap::unpackKey(sourceKey);
+            if (!objectsListCopy[srcIndex]->canFeedback())
+            {
+                ++inDegree[dstIndex];
+            }
         }
     }
 
-    // Collect all nodes with zero in-degree
-    for (int i = 0; i < static_cast<int>(nodeCount); ++i)
+    for (size_t i = 0; i < nodeCount; ++i)
     {
         if (inDegree[i] == 0)
-            zeroInDegreeNodes.push_back(i);
+            zeroInDegreeIndices.push_back(i);
     }
 
-    // Topological traversal
-    size_t processIndex = 0;
     ankerl::unordered_dense::set<AudioNode*> insertedFeedbacks;
+    size_t processIndex = 0;
 
-    while (processIndex < zeroInDegreeNodes.size()) {
-        const int currentIndex = zeroInDegreeNodes[processIndex++];
+    while (processIndex < zeroInDegreeIndices.size())
+    {
+        const size_t currentIndex = zeroInDegreeIndices[processIndex++];
         AudioNode* currentNode = objectsListCopy[currentIndex];
-
-        // Inject upstream feedback nodes first
-        for (const auto& [inputKey, sources] : adjacencyMap.getBackward()) {
-            int dstID = AdjacencyMap::getNodeID(inputKey);
-            if (!nodeIDToIndex.contains(dstID)) continue;
-            if (nodeIDToIndex[dstID] != currentIndex) continue;
-
-            for (const auto& sourceKey : sources) {
-                int srcID = AdjacencyMap::getNodeID(sourceKey);
-                if (!nodeIDToIndex.contains(srcID)) continue;
-                int srcIndex = nodeIDToIndex[srcID];
-                AudioNode* srcNode = objectsListCopy[srcIndex];
-
-                if (srcNode->canFeedback() && !insertedFeedbacks.contains(srcNode)) {
-                    sortedNodes.push_back(srcNode);
-                    insertedFeedbacks.insert(srcNode);
-                }
-            }
-        }
-
-        // Add the current node
         sortedNodes.push_back(currentNode);
 
-        // Decrement in-degree of downstream nodes
-        for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward()) {
-            int srcID = AdjacencyMap::getNodeID(sourceKey);
-            if (!nodeIDToIndex.contains(srcID)) continue;
-            if (nodeIDToIndex[srcID] != currentIndex) continue;
+        // Insert upstream feedback nodes
+        for (const auto& [inputKey, sources] : adjacencyMap.getBackward())
+        {
+            auto [inputIndex, inputPort] = AdjacencyMap::unpackKey(inputKey);
+            if (inputIndex != currentIndex) continue;
 
-            for (const auto& downstreamKey : downstreamKeys) {
-                int dstID = AdjacencyMap::getNodeID(downstreamKey);
-                if (!nodeIDToIndex.contains(dstID)) continue;
-                int dstIndex = nodeIDToIndex[dstID];
+            for (const auto& sourceKey : sources)
+            {
+                auto [srcIndex, srcPort] = AdjacencyMap::unpackKey(sourceKey);
+                AudioNode* src = objectsListCopy[srcIndex];
+                if (src->canFeedback() && !insertedFeedbacks.contains(src))
+                {
+                    sortedNodes.push_back(src);
+                    insertedFeedbacks.insert(src);
+                }
+            }
+        }
 
-                if (--inDegree[dstIndex] == 0) {
-                    zeroInDegreeNodes.push_back(dstIndex);
+        // Decrement downstream in-degrees
+        for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward())
+        {
+            auto [srcIndex, srcPort] = AdjacencyMap::unpackKey(sourceKey);
+            if (srcIndex != currentIndex) continue;
+
+            for (const auto& downstreamKey : downstreamKeys)
+            {
+                auto [dstIndex, dstPort] = AdjacencyMap::unpackKey(downstreamKey);
+                if (--inDegree[dstIndex] == 0)
+                {
+                    zeroInDegreeIndices.push_back(dstIndex);
+
                 }
             }
         }
     }
 
-    // Check for unresolvable cycles
-    if (sortedNodes.size() != nodeCount) {
-        std::cout << "Topological sort incomplete. Checking for intentional feedback...\n";
-
+    if (sortedNodes.size() != nodeCount)
+    {
         bool allFeedbackOK = true;
-        for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward()) {
-            int srcID = AdjacencyMap::getNodeID(sourceKey);
-            if (!nodeIDToIndex.contains(srcID)) continue;
-            int srcIndex = nodeIDToIndex[srcID];
+        for (const auto& [sourceKey, downstreamKeys] : adjacencyMap.getForward())
+        {
+            auto [srcIndex, srcPort] = AdjacencyMap::unpackKey(sourceKey);
             AudioNode* src = objectsListCopy[srcIndex];
 
-            for (const auto& dstKey : downstreamKeys) {
-                int dstID = AdjacencyMap::getNodeID(dstKey);
-                if (!nodeIDToIndex.contains(dstID)) continue;
-                int dstIndex = nodeIDToIndex[dstID];
+            for (const auto& dstKey : downstreamKeys)
+            {
+                auto [dstIndex, dstPort] = AdjacencyMap::unpackKey(dstKey);
+                AudioNode* dst = objectsListCopy[dstIndex];
 
-                if (std::ranges::find(sortedNodes, objectsListCopy[dstIndex]) == sortedNodes.end()) {
-                    if (!src->canFeedback()) {
+                if (std::find(sortedNodes.begin(), sortedNodes.end(), dst) == sortedNodes.end())
+                {
+                    if (!src->canFeedback())
+                    {
                         allFeedbackOK = false;
                         break;
                     }
                 }
             }
-
             if (!allFeedbackOK) break;
         }
 
-        if (!allFeedbackOK) {
+        if (!allFeedbackOK)
+        {
             sortedNodes.clear();
             std::cout << "Unresolvable cycle — graph cleared\n";
         }
+        else
+        {
+            std::cout << "All cycles involve feedback — graph valid\n";
+        }
+    }
+    else
+    {
+        std::cout << "Complete topological sort successful\n";
     }
 }
 
 
-    void sortNodes(const std::vector<std::shared_ptr<AudioNode>>& objectList)
+    bool sortNodes(const std::vector<std::shared_ptr<AudioNode>>& objectList)
     {
-//#define LOG_GRAPH_INFO
+        //#define LOG_GRAPH_INFO
 #ifdef LOG_GRAPH_INFO
-        auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 #endif
 
+        // Convert shared_ptr list to raw pointers for processing
         objectsListCopy.reserve(objectList.size());
         objectsListCopy.clear();
 
-        objectIDtoIndex.clear();
-
         for (size_t i = 0; i < objectList.size(); ++i)
         {
-            AudioNode* ptr = objectList[i].get();
-            objectIDtoIndex[ptr->nodeID] = static_cast<uint32_t>(i);
-            objectsListCopy.push_back(ptr);
+            if (objectList[i])
+                objectsListCopy.push_back(objectList[i].get());
         }
 
+        // Perform topological sort on the nodes
         topologicalSort(objectsSorted);
 
         // Build a word list of 64 bit words that hold a representation
@@ -304,34 +298,41 @@ public:
         }
 
 #ifdef DEBUG_AUDIO_NODES_BITFIELDS
-        std::cout << "=== Bit fields for active audio processes ===" << std::endl;
-        for (size_t i = 0; i < activeAudioNodes.size(); ++i)
-        {
-            std::bitset<64> bits(activeAudioNodes[i]);
-            std::cout << "Word " << i << ": \t" << bits << "\n";
-        }
+    std::cout << "=== Bit fields for active audio processes ===" << std::endl;
+    for (size_t i = 0; i < activeAudioNodes.size(); ++i)
+    {
+        std::bitset<64> bits(activeAudioNodes[i]);
+        std::cout << "Word " << i << ": \t" << bits << "\n";
+    }
 #endif
 
 #ifdef LOG_GRAPH_INFO
-        auto end = std::chrono::high_resolution_clock::now();
-        auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-        std::cout << objectList.size() << " objects in graph " << objectsSorted.size() << " objects sorted, sort took "
-            << elapsedNs << " ns" << std::endl;
+    std::cout << objectList.size() << " objects in graph " << objectsSorted.size() << " objects sorted, sort took "
+        << elapsedNs << " ns" << std::endl;
 #endif
 
-//#define DEBUG_SORT
+#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
+        int pos = 0;
         for (auto& node : objectsListCopy)
         {
-            std::cout << "node: " << node->getName() << std::endl;
+            std::cout << "node: " << node->getName() << " ID: " << node->nodeID << " index in objectsListCopy: " << pos << std::endl;
+            pos++;
         }
 
         std::cout << "======== sorted =======" << std::endl;
+        pos = 0;
         for (auto node : objectsSorted)
-            std::cout << "node graph: " << node->getName() << std::endl;
+        {
+            std::cout << "node graph: " << node->getName() << " ID: " << node->nodeID << " index in objectsSorted: " << pos << std::endl;
+            pos++;
+        }
 #endif
+        return !objectsSorted.empty();
     }
 
     void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
@@ -389,10 +390,26 @@ public:
     std::vector<unsigned int> zeroInDegreeNodes;
     std::vector<unsigned int> inDegree;
 
-    bool addAdjacency(const uint32_t oNode, const uint32_t oPort, const uint32_t iNode, const uint32_t iPort)
+    // Takes objectIDs, converts to vector indices, then stores adjacency using those indices
+    bool addAdjacency(int oNodeID, int oPort, int iNodeID, int iPort)
     {
-        auto outputKey = AdjacencyMap::packKey(oNode, oPort);
-        auto inputKey = AdjacencyMap::packKey(iNode, iPort);
+        auto oIt = objectIDtoIndex.find(oNodeID);
+        auto iIt = objectIDtoIndex.find(iNodeID);
+        if (oIt == objectIDtoIndex.end() || iIt == objectIDtoIndex.end())
+        {
+            //std::cerr << "FAILED addAdjacency: " << oNodeID << ":" << oPort << " -> " << iNodeID << ":" << iPort << "\n";
+            return false;
+        }
+
+        uint32_t oIndex = oIt->second;
+        uint32_t iIndex = iIt->second;
+
+        //std::cerr << "ADJ INSERT: ID "
+        //          << oNodeID << ":" << oPort << " (idx " << oIndex << ") -> "
+        //          << iNodeID << ":" << iPort << " (idx " << iIndex << ")\n";
+
+        auto outputKey = AdjacencyMap::packKey(oIndex, oPort);
+        auto inputKey = AdjacencyMap::packKey(iIndex, iPort);
 
         adjacencyMap.addAdjacency(inputKey, outputKey);
         return true;
