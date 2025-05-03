@@ -115,7 +115,7 @@ void Subpatch::ensureOutputPort(int index, AudioPort::PortType type)
     getOutputPort(index)->changePortType(type);
 }
 
-void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index)
+void Subpatch::process(const float* mainAudioIn, float* mainAudioOut, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index)
 {
     if (!subManager)
         return;
@@ -165,7 +165,7 @@ void Subpatch::process(const float*, float*, std::vector<MidiMessage>& midi, uns
     // Process subgraph
     // ===========================
 
-    subManager->process(nullptr, nullptr, frames, midi);
+    subManager->process(mainAudioIn, mainAudioOut, frames, midi);
 
     // ===========================
     // Push output to parent using downstream port map

@@ -332,15 +332,17 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
             pos++;
         }
 #endif
+        nodeIDToSortedIndex.clear();
+        for (size_t i = 0; i < objectsSorted.size(); ++i)
+            nodeIDToSortedIndex.emplace_back(objectsSorted[i]->nodeID, static_cast<uint32_t>(i));
+
+        std::ranges::sort(nodeIDToSortedIndex); // Sort by nodeID for binary search
+
         return !objectsSorted.empty();
     }
 
     void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
-        std::function<void(Graph&)> msg;
-        while (context->messageQueue.try_dequeue(msg))
-            msg(*this);
-
         const size_t total = objectsSorted.size();
         unsigned i = 0;
 
@@ -419,4 +421,7 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     std::shared_ptr<NodeContext> context;
 
     std::vector<AudioNode*> objectsToCleanup;
+
+    // Used for UI to trigger node to activate (for dial / slider / listbox etc)
+    std::vector<std::pair<uint32_t, uint32_t>> nodeIDToSortedIndex; // (nodeID, sortedIndex)
 };

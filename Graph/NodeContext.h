@@ -192,8 +192,6 @@ public:
 
     OwnershipBlockPool ownershipBlockPool;
 
-    moodycamel::ReaderWriterQueue<std::function<void(Graph& runningGraph)>> messageQueue;
-
     LockFreeHashMap stringMap;
 
     PersistentAtomFlags& persistentFlags;

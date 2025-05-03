@@ -221,3 +221,150 @@ void GraphHolder::updateOutputInputPortMap()
         }
 #endif
 }
+
+void GraphHolder::process(const float* inBuffer, float* buffer, unsigned long frameCount,
+                          std::vector<MidiMessage>& midiMessage)
+{
+    //#define DSP_FREE_ATOMS
+#ifdef DSP_FREE_ATOMS
+    std::cout << "--- free atoms: " << context->eventPool.getFreeListSize() << std::endl;
+#endif
+    std::function<void(Graph&)> msg;
+    while (parentGraph->messageQueue.try_dequeue(msg))
+        msg(*graph);
+
+    graph->process(inBuffer, buffer, frameCount, midiMessage);
+}
+
+
+void GraphHolder::setSummingFunctionForNode(AudioNode* node)
+{
+    // This will enqueue a message into the graph (or graph->supatch etc)
+    // The graph then will run that message, see the above ^ process function
+    node->setNodeDirty = [mgr = node->getGraphManagerParent(), nodeID = node->nodeID, nodePtr = node]()
+    {
+        mgr->messageQueue.enqueue(
+            [nodeID, nodePtr](Graph& runningGraph)
+            {
+                auto it = std::ranges::lower_bound(
+                    runningGraph.nodeIDToSortedIndex, nodeID,
+                    {}, [](const auto& pair) { return pair.first; });
+
+                if (it == runningGraph.nodeIDToSortedIndex.end() || it->first != nodeID)
+                {
+                    std::cerr << "error - nodeID not found in nodeIDToSortedIndex" << std::endl;
+                    return;
+                }
+
+                int index = it->second;
+
+                assert(index >= 0 && index < static_cast<int>(runningGraph.objectsSorted.size()));
+                assert(runningGraph.objectsSorted[index] != nullptr);
+                assert(runningGraph.objectsSorted[index]->nodeID == nodeID);
+                assert(runningGraph.objectsSorted[index] == nodePtr); // <- pointer match
+
+                // activeEventNodes are index from the sorted graph
+                runningGraph.activeEventNodes[index >> 6] |= (1ULL << (index & 63));
+            });
+    };
+
+    node->pushOutputEventsFromPointers = [](const std::vector<AudioPort*>& outputPorts, Graph& graph, int index)
+    {
+        const auto& downstream = graph.downstreamPortMap[index];
+        for (const auto& group : downstream)
+        {
+            uint8_t portIndex = group.outputPortNumber;
+            if (portIndex >= outputPorts.size())
+                continue;
+
+            auto* outerPort = outputPorts[portIndex];
+            if (!outerPort) continue;
+
+            if (outerPort->isSignal())
+            {
+                const float* src = outerPort->getAudioBuffer();
+                for (const auto& conn : group.downstreamConnections)
+                {
+                    float* dst = conn.dst;
+                    size_t n = conn.bufferSize;
+                    for (size_t s = 0; s < n; ++s)
+                        dst[s] += src[s];
+                }
+            }
+            else
+            {
+                for (const auto& conn : group.downstreamConnections)
+                {
+                    for (const auto& ev : outerPort->getEvents())
+                    {
+                        conn.inputPort->addEvent(ev);
+                    }
+                    graph.activeEventNodes[conn.targetIndex >> 6] |= (1ULL << (conn.targetIndex & 63));
+                }
+            }
+        }
+    };
+
+    node->pushOutputEvents = [](const std::vector<std::unique_ptr<AudioPort>>& outputPorts, Graph& graph,
+                                const int index, AudioNode* _this)
+    {
+        assert(graph.objectsSorted[index] == _this);
+
+        const auto& groups = graph.downstreamPortMap[index];
+
+        for (const auto& group : groups)
+        {
+            if (group.outputPortNumber >= outputPorts.size())
+                continue;
+
+            assert(group.outputPortNumber < outputPorts.size());
+            auto* port = outputPorts[group.outputPortNumber].get();
+            assert(port != nullptr && port->getParentNode() == _this);
+            assert(!port->isInput);
+            assert(_this->outputPortVisibility().test(group.outputPortNumber));
+
+            const auto& events = outputPorts[group.outputPortNumber]->getEvents();
+            if (events.empty()) continue;
+
+            for (const auto& conn : group.downstreamConnections)
+            {
+                assert(conn.inputPort != nullptr);
+                assert(conn.inputPort->isInput);
+                assert(graph.objectsSorted[conn.targetIndex] == conn.node);
+                assert(graph.objectsSorted[conn.targetIndex]->nodeID == conn.node->nodeID);
+
+                for (Event* event : events)
+                    conn.node->pushEvent(conn.inputPortIndex, event);
+
+                graph.activeEventNodes[conn.targetIndex >> 6] |= (1ULL << (conn.targetIndex & 63));
+            }
+        }
+    };
+
+    node->pushOutputAudio = [](Graph& graph, const int index)
+    {
+        auto& groups = graph.downstreamPortMap[index];
+
+        for (auto& group : groups)
+        {
+            for (auto& conn : group.downstreamConnections)
+            {
+                float* __restrict conDest = conn.dst;
+                const float* __restrict conSrc = conn.src;
+                size_t n = conn.bufferSize;
+
+                size_t i = 0;
+                for (; i + 8 <= n; i += 8)
+                {
+                    simde__m256 dstVec = simde_mm256_load_ps(conDest + i); // aligned
+                    simde__m256 srcVec = simde_mm256_load_ps(conSrc + i); // aligned
+                    dstVec = simde_mm256_add_ps(dstVec, srcVec);
+                    simde_mm256_store_ps(conDest + i, dstVec); // aligned
+                }
+
+                for (; i < n; ++i)
+                    conDest[i] += conSrc[i];
+            }
+        }
+    };
+}

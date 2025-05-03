@@ -662,6 +662,8 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
 
     GraphManager* parentGraph = nullptr;
 
+    moodycamel::ReaderWriterQueue<std::function<void(Graph& runningGraph)>> messageQueue;
+
 private:
     // Take the average peak and send it to the GUI
     void processPeak(const float* buffer, unsigned long frameCount)

@@ -274,6 +274,8 @@ public:
         graphManagerParent = gm;
     }
 
+    GraphManager* getGraphManagerParent() { return graphManagerParent; };
+
     // Used to limit visibility of real ports in graph system
     // We don't (ATM) delete ports, we simply add to them so the pointers stay alive
     const std::bitset<256>& inputPortVisibility() const { return visibleInputBits; }
