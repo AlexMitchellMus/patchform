@@ -318,8 +318,7 @@ void GraphHolder::setSummingFunctionForNode(AudioNode* node)
                 continue;
 
             assert(group.outputPortNumber < outputPorts.size());
-            auto* port = outputPorts[group.outputPortNumber].get();
-            assert(port != nullptr && port->getParentNode() == _this);
+            assert(outputPorts[group.outputPortNumber] != nullptr && outputPorts[group.outputPortNumber]->getParentNode() == _this);
             assert(!port->isInput);
             assert(_this->outputPortVisibility().test(group.outputPortNumber));
 
