@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <vector>
+#include <choc/containers/choc_SmallVector.h>
 #include <cstdint>
 
 /**
@@ -30,8 +30,8 @@
 
 struct ActiveNodeBitfields
 {
-    std::vector<uint64_t> activeAudioNodes;
-    std::vector<uint64_t> activeEventNodes;
+    choc::SmallVector<uint64_t, 16> activeAudioNodes;
+    choc::SmallVector<uint64_t, 16> activeEventNodes;
 
     /**
      * @brief Resets the bitfields by resizing and clearing them based on node count.
@@ -46,8 +46,14 @@ struct ActiveNodeBitfields
     void reset(const size_t nodeCount)
     {
         const size_t wordCount = (nodeCount + 63) >> 6;
-        activeAudioNodes.assign(wordCount, 0);
-        activeEventNodes.assign(wordCount, 0);
+
+        activeAudioNodes.clear();
+        activeAudioNodes.resize(wordCount);
+        std::ranges::fill(activeAudioNodes, 0);
+
+        activeEventNodes.clear();
+        activeEventNodes.resize(wordCount);
+        std::ranges::fill(activeEventNodes, 0);
     }
 
     /**

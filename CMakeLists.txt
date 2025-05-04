@@ -180,6 +180,7 @@ set_target_properties(PatchformStandalone PROPERTIES
 target_compile_definitions(PatchformStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
 target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"
+        "${CMAKE_SOURCE_DIR}/external"
         "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
         "${CMAKE_SOURCE_DIR}/external/readerwriterqueue"
         "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"

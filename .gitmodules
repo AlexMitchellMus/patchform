@@ -43,3 +43,6 @@
 [submodule "external/SignalsmithDSP"]
 	path = external/SignalsmithDSP
 	url = https://github.com/Signalsmith-Audio/dsp
+[submodule "external/choc"]
+	path = external/choc
+	url = https://github.com/Tracktion/choc
