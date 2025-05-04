@@ -5,7 +5,7 @@ Patchform is dual-licensed:
 1. Under the GNU General Public License (GPL) version 3 (or later) for open-source use.
 2. Under a commercial license for proprietary or closed-source use.
 
-To obtain a commercial license, please contact the author directly.
+To get a commercial license, please contact the author directly.
 
 ---
 
@@ -62,9 +62,9 @@ This project includes the following third-party libraries:
   Martin Ankerl - MIT License
   https://github.com/martinus/unordered_dense
 
-- glaze (Fast JSON and interface library)
-  Stephen Berry - MIT License
-  https://github.com/stephenberry/glaze
+- choc (C++ utility library)
+  Tracktion / Julian Storer - ISC License
+  https://github.com/Tracktion/choc
 
 - RtMidi (Realtime MIDI I/O)
   Gary P. Scavone - MIT License

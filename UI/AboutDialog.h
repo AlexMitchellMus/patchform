@@ -120,6 +120,11 @@ Martin Ankerl
 MIT License
 https://github.com/martinus/unordered_dense)"},
 
+{R"(CHOC (C++ Utility Library)
+Tracktion / Julian Storer
+ISC License
+https://github.com/Tracktion/choc)"},
+
 // We are not using glaze yet
 //{R"(glaze (Extremely fast, in-memory, JSON and interface library for modern C++)
 //Stephen Berry
