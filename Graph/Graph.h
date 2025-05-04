@@ -24,6 +24,7 @@ using json = nlohmann::json;
 #include "unordered_dense.h"
 #include "NodeContext.h"
 #include "AdjacencyMap.h"
+#include "ActiveNodeBitfields.h"
 
 #undef max
 
@@ -125,10 +126,8 @@ public:
 
 
     // Topological sort using the provided adjacency list
-void topologicalSort(std::vector<AudioNode*>& sortedNodes)
+void topologicalSort(std::vector<AudioNode*>& sortedNodes) const
 {
-    std::cout << "SORTING, adjacnecy map size: " << adjacencyMap.getForward().size() << std::endl;
-
     sortedNodes.clear();
     const size_t nodeCount = objectsListCopy.size();
     if (nodeCount == 0) return;
@@ -231,11 +230,11 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
         if (!allFeedbackOK)
         {
             sortedNodes.clear();
-            std::cout << "Unresolvable cycle — graph cleared\n";
+            std::cout << "Unresolvable cycle - graph cleared\n";
         }
         else
         {
-            std::cout << "All cycles involve feedback — graph valid\n";
+            std::cout << "All cycles involve feedback - graph valid\n";
         }
     }
     else
@@ -256,10 +255,10 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
         objectsListCopy.reserve(objectList.size());
         objectsListCopy.clear();
 
-        for (size_t i = 0; i < objectList.size(); ++i)
+        for (const auto& node : objectList)
         {
-            if (objectList[i])
-                objectsListCopy.push_back(objectList[i].get());
+            if (node)
+                objectsListCopy.push_back(node.get());
         }
 
         // Perform topological sort on the nodes
@@ -269,12 +268,7 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
         // of all the nodes that need to be processed without skipping
         // We use this so we can completely skip nodes that don't need to be processed,
         // instead of testing each one in the process loop.
-        activeAudioNodes.clear();
-        activeAudioNodes.assign((objectsSorted.size() + 63) / 64, 0);
-
-        // clear and assign an empty event node bitfield word vector
-        activeEventNodes.clear();
-        activeEventNodes.assign((objectsSorted.size() + 63) / 64, 0);
+        bitfields.reset(objectsSorted.size());
 
         for (unsigned i = 0; i < objectsSorted.size(); ++i)
         {
@@ -284,7 +278,7 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
             // These objects will always process regardless if they have events or not
             if (obj->alwaysProcess())
             {
-                activeAudioNodes[i >> 6] |= (1ULL << (i & 63)); // i / 64, i % 64
+                bitfields.setAudioBit(i);
             }
 
             // Check if the object needs to process once on load (used for LoadEvent currently)
@@ -292,7 +286,7 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
             // this runs after all nodes are constructed on the same UI thread.
             if (obj->eventOnLoad)
             {
-                activeEventNodes[i >> 6] |= (1ULL << (i & 63)); // i / 64, i % 64
+                bitfields.setEventBit(i);
                 obj->eventOnLoad = false;
             }
         }
@@ -314,7 +308,7 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
         << elapsedNs << " ns" << std::endl;
 #endif
 
-#define DEBUG_SORT
+//#define DEBUG_SORT
 #ifdef DEBUG_SORT
         std::cout << "======== presort =======" << std::endl;
         int pos = 0;
@@ -343,33 +337,10 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
 
     void process(const float* inBuffer, float* buffer, unsigned long frameCount, std::vector<MidiMessage>& midiMessage)
     {
-        const size_t total = objectsSorted.size();
-        unsigned i = 0;
-
-        while (i < total)
-        {
-            const size_t word = i >> 6;
-            const uint64_t combined = (activeEventNodes[word] | activeAudioNodes[word]) >> (i & 63);
-
-            if (!combined)
-            {
-                i = (word + 1) << 6;
-                continue;
-            }
-
-            const unsigned offset = std::countr_zero(combined);
-            i += offset;
-
-            if (i >= total)
-                break;
-
+        bitfields.forEachActiveIndex(objectsSorted.size(), [&](const size_t i) {
             objectsSorted[i]->process(inBuffer, buffer, midiMessage, frameCount, *this, i);
-
-            activeEventNodes[i >> 6] &= ~(1ULL << (i & 63));
-            ++i;
-        }
+        });
     }
-
 
     bool flagForDeletion = false;
 
@@ -385,8 +356,7 @@ void topologicalSort(std::vector<AudioNode*>& sortedNodes)
     // bit field vector to hold which nodes are active for optimized processing
     // We have a static list (that doesn't change per cycle) of all nodes that are audio
     // And an event list that is updated during processing
-    std::vector<uint64_t> activeAudioNodes;
-    std::vector<uint64_t> activeEventNodes;
+    ActiveNodeBitfields bitfields;
 
     // Only for sorting
     std::vector<unsigned int> zeroInDegreeNodes;

@@ -45,7 +45,7 @@ public:
         std::cout << "adding object" << std::endl;
         if (!activeGraph)
         {
-            activeGraph = std::make_shared<GraphHolder>(ctx, this);
+            activeGraph = std::make_shared<GraphHolder>(this);
         }
 
         // TODO: Lock the graph, or communicate via a queue
@@ -64,7 +64,7 @@ public:
         return newNode;
     }
 
-    std::vector<Edge*> removeObject(int id)
+    std::vector<Edge*> removeObject(const int id)
     {
         if (!activeGraph)
             return {};
@@ -85,7 +85,7 @@ public:
         return connectionState;
     }
 
-    std::vector<Edge*> removeObjects(std::vector<int>& ids, std::vector<uint64_t>& edgeHashes)
+    std::vector<Edge*> removeObjects(const std::vector<int>& ids, const std::vector<uint64_t>& edgeHashes)
     {
         if (!activeGraph)
             return {};
@@ -97,7 +97,7 @@ public:
             transitioningGraph->removeObject(id);
         }
 
-        for (auto edgeHash : edgeHashes)
+        for (const auto edgeHash : edgeHashes)
         {
             transitioningGraph->removeEdge(edgeHash);
         }
@@ -232,6 +232,7 @@ public:
 
     void updateAndFinalizeGraph()
     {
+        // TODO: Check this order
         prepareObjectsToCleanup();
         transitioningGraph->updateConnections();
         transitioningGraph->sortNodes();
@@ -249,7 +250,7 @@ public:
         }
     }
 
-    void printAdjacencyList()
+    void printAdjacencyList() const
     {
         if (!activeGraph)
         {
@@ -260,7 +261,7 @@ public:
         activeGraph->printAdjacencyList();
     }
 
-    void printGraph()
+    void printGraph() const
     {
         if (!activeGraph)
         {
@@ -272,7 +273,7 @@ public:
     }
 
     std::tuple<std::vector<Object*>, std::vector<Edge*>> loadGraph(const std::string& patchPath, const json& patch,
-                                                                        const bool logVerbose, std::function<void(std::shared_ptr<GraphHolder>&)> populateInletOutlets = [](std::shared_ptr<GraphHolder>&){})
+                                                                        const bool logVerbose, const std::function<void(std::shared_ptr<GraphHolder>&)>& populateInletOutlets = [](std::shared_ptr<GraphHolder>&){})
     {
         patchLoadSuccess = false;
 
@@ -286,7 +287,7 @@ public:
 
         filePath = patchPath;
 
-        transitioningGraph = std::make_shared<GraphHolder>(ctx, this);
+        transitioningGraph = std::make_shared<GraphHolder>(this);
 
         if (!transitioningGraph->loadPatch(patch, logVerbose))
         {
@@ -317,12 +318,12 @@ public:
         return {loadedObjects, connections};
     }
 
-    bool wasPatchLoadSuccessful()
+    bool wasPatchLoadSuccessful() const
     {
         return patchLoadSuccess;
     }
 
-    std::vector<Object*> getObjects()
+    std::vector<Object*> getObjects() const
     {
         std::vector<Object*> objects;
         if (!transitioningGraph)
@@ -337,7 +338,7 @@ public:
         return objects;
     }
 
-    std::vector<Object*> getActiveObjects()
+    std::vector<Object*> getActiveObjects() const
     {
         std::vector<Object*> objects;
         for (auto* aNode : activeGraph->getObjects())
@@ -350,7 +351,7 @@ public:
         return objects;
     }
 
-    GraphHolder* getActiveGraph()
+    GraphHolder* getActiveGraph() const
     {
         return activeGraph.get();
     }
@@ -371,7 +372,7 @@ public:
         return activeGraph->graphToJSON();
     }
 
-    json copySelected(const std::vector<uint32_t>& selectedNodeIDs)
+    json copySelected(const std::vector<uint32_t>& selectedNodeIDs) const
     {
         if (activeGraph)
         {
@@ -387,7 +388,7 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
     // Ensure we have an active graph.
     if (!activeGraph)
     {
-        activeGraph = std::make_shared<GraphHolder>(ctx, this);
+        activeGraph = std::make_shared<GraphHolder>(this);
     }
 
     // Create a transitioning graph from the active graph.
@@ -416,11 +417,10 @@ std::tuple<std::vector<Object*>, std::vector<Object*>, std::vector<Edge*>> paste
             }
 
             // Create a new node via the transitioning graph.
-            AudioNode* newAudioNode = transitioningGraph->createObject(nodeJson);
-            if (newAudioNode)
+            if (AudioNode* newAudioNode = transitioningGraph->createObject(nodeJson))
             {
                 // Get or create the UI for this node.
-                Object* newObj = reinterpret_cast<Object*>(newAudioNode->getOrCreateUI());
+                auto newObj = reinterpret_cast<Object*>(newAudioNode->getOrCreateUI());
                 pastedObjects.push_back(newObj);
 
                 // Save the mapping: the pasted id maps to the new node's id.
@@ -690,8 +690,8 @@ protected:
 
     bool isGraphDirty = false;
 
-    std::set<uint32_t> usedGlobalIDs;
-    std::set<uint32_t> pendingDeletedIDs;
+    ankerl::unordered_dense::set<uint32_t> usedGlobalIDs;
+    ankerl::unordered_dense::set<uint32_t> pendingDeletedIDs;
 
     std::shared_ptr<NodeContext> ctx;
 

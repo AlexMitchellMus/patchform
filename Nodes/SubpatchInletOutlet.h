@@ -32,7 +32,7 @@ public:
         addInputPort("in", AudioPort::Signal);
     }
 
-    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, int index) override
+    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, const size_t index) override
     {
         // We bypass all processing for outlet
         // This is because we only use the input port and copy it to the subpatch output, which means we can't clear it after it has processed
@@ -71,7 +71,7 @@ public:
         addInputPort("in", AudioPort::Data);
     }
 
-    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, int index) override
+    void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, const size_t index) override
     {
         // Totally bypass clearing events from the input as we forward them inside the subpatch
     }

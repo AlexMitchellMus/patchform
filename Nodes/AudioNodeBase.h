@@ -294,7 +294,7 @@ private:
 
     bool hasEvents = false;
 
-    virtual void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, int index)
+    virtual void process(const float* inBuffer, float* buffer, std::vector<MidiMessage>& midiMessage, unsigned long frameCount, Graph& g, const size_t index)
     {
         if (!shouldProcess(frameCount))
             return;

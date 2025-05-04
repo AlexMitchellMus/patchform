@@ -21,7 +21,7 @@ public:
     void setupSubgraph(const json& subpatchJson);
     void rebuildPortsFromGraph(GraphHolder& graph);
 
-    void process(const float* inBuffer, float* outBuffer, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index) override;
+    void process(const float* inBuffer, float* outBuffer, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, size_t index) override;
 
     json getSerializedNode() override;
 

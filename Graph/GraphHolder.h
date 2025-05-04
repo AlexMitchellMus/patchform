@@ -30,32 +30,18 @@ using json = nlohmann::json;
 
 #include "Graph.h"
 
-class GraphHolder
-{
-
+class GraphHolder {
 public:
-    GraphHolder(std::shared_ptr<NodeContext> ctx, GraphManager* parent)
-        : parentGraph(parent)
-        , context(ctx)
-    {
-        graph = std::make_unique<Graph>(context);
-    };
+    explicit GraphHolder(GraphManager* parent);
 
-    GraphHolder(const GraphHolder& other)
-    : graph(std::make_unique<Graph>(other.context))
-    , parentGraph(other.parentGraph)
-    , connections(other.connections)
-    , objects(other.objects)
-    , objectIDMap(other.objectIDMap)
-    , context(other.context)
-    {}
+    GraphHolder(const GraphHolder& other);
 
-    Graph* getGraph() const
+    [[nodiscard]] Graph* getGraph() const
     {
         return graph.get();
     }
 
-    std::vector<AudioNode*> getObjects() const
+    [[nodiscard]] std::vector<AudioNode*> getObjects() const
     {
         std::vector<AudioNode*> nodes;
         for (auto& node : objects)
@@ -65,7 +51,7 @@ public:
         return nodes;
     }
 
-    const json graphToJSON() const
+    [[nodiscard]] json graphToJSON() const
     {
         std::vector<uint32_t> activeNodes;
         for (auto& node : objects)
@@ -144,17 +130,23 @@ public:
     bool loadPatch(const json& patch, bool logVerbose)
     {
         // Create nodes
+
+        // Allow empty patch nodes
+        if (!patch.contains("nodes"))
+            return false;
+
         for (const auto& node : patch["nodes"])
         {
-            auto nodePtr = createObject(node);
-
-            if (nodePtr)
+            if (const auto* nodePtr = createObject(node))
                 objectIDMap[node["id"].get<std::string>()] = nodePtr->nodeID;
-
-            std::cerr << "Creating: " << node["id"] << " (" << node["obj"] << ")\n";
         }
 
         // Create connections
+
+        // Allow empty patch connections
+        if (!patch.contains("connections"))
+            return false;
+
         for (const auto& connection : patch["connections"])
         {
             std::string srcKey = connection["sourceNode"];
@@ -165,18 +157,17 @@ public:
                 continue;
             }
 
-            uint32_t srcID = objectIDMap[srcKey];
-            uint32_t dstID = objectIDMap[dstKey];
+            const uint32_t srcID = objectIDMap[srcKey];
+            const uint32_t dstID = objectIDMap[dstKey];
 
             connectObjIndex(srcID, connection["sourcePort"], dstID, connection["targetPort"]);
-            std::cerr << "Connecting: " << srcKey << ":" << connection["sourcePort"] << " ->" << dstKey << ":" << connection["targetPort"] << "\n";
         }
         return true;
     }
 
     void updateOutputInputPortMap();
 
-    void printConnectionTable()
+    void printConnectionTable() const
     {
         std::cerr << "=== Connection Table ===\n";
         for (const auto& conn : connections)
@@ -212,7 +203,7 @@ public:
         return connectionCopy;
     }
 
-    void updateConnections()
+    void updateConnections() const
     {
         graph->objectIDtoIndex.clear();
         for (size_t i = 0; i < objects.size(); ++i)
@@ -251,19 +242,21 @@ public:
 
     bool connect(int oNode, int oPort, int iNode, int iPort)
     {
-        connectObjIndex(oNode, oPort, iNode, iPort);
-        return true;
+        return connectObjIndex(oNode, oPort, iNode, iPort);
     }
 
     // Create connections with the object index
-    void connectObjIndex(uint32_t oNode, uint32_t oPort, uint32_t iNode, uint32_t iPort)
+    bool connectObjIndex(uint32_t oNode, uint32_t oPort, uint32_t iNode, uint32_t iPort)
     {
-        uint64_t hash = Edge::encodeHash(oNode, oPort, iNode, iPort);
+        const uint64_t hash = Edge::encodeHash(oNode, oPort, iNode, iPort);
         for (const auto& conn : connections)
-            if (conn->getHash() == hash) return;
+        {
+            if (conn->getHash() == hash)
+                return false;
+        }
 
         connections.push_back(std::make_shared<Edge>(oNode, oPort, iNode, iPort));
-        std::cerr << "Adding connection: " << oNode << ":" << oPort << " -> " << iNode << ":" << iPort << "\n";
+        return true;
     }
 
     // Remove connections from idString:port pairs
@@ -324,10 +317,9 @@ public:
         });
     }
 
-    AudioNode* getNodeByID(uint32_t id) const
+    [[nodiscard]] AudioNode* getNodeByID(const uint32_t id) const
     {
-        auto it = graph->objectIDtoIndex.find(id);
-        if (it != graph->objectIDtoIndex.end())
+        if (const auto it = graph->objectIDtoIndex.find(id); it != graph->objectIDtoIndex.end())
             return objects[it->second].get();
 
         return nullptr;
@@ -335,7 +327,6 @@ public:
 
     void removeObject(unsigned int nodeID)
     {
-        std::cout << "removing an object: " << nodeID << std::endl;
         // 1) Remove the object from the objects vector and move it to removedObjects.
         auto removeResult = std::ranges::remove_if(objects,
                                                    [nodeID](const std::shared_ptr<AudioNode>& obj)
@@ -353,7 +344,7 @@ public:
         objects.erase(newEnd, objects.end());
 
         // 2) Find and remove the entry from objectIDMap by matching the value.
-        auto mapIt = std::find_if(objectIDMap.begin(), objectIDMap.end(),
+        const auto mapIt = std::find_if(objectIDMap.begin(), objectIDMap.end(),
                                   [nodeID](const auto& entry) { return entry.second == nodeID; }
         );
         if (mapIt != objectIDMap.end())
@@ -366,9 +357,6 @@ public:
         {
             if (con->getiNode() == nodeID || con->getoNode() == nodeID)
             {
-                std::cout << "Removing connection due to node removal: "
-                          << con->getoNode() << ":" << con->getoPort()
-                          << " -> " << con->getiNode() << ":" << con->getiPort() << "\n";
                 return true;
             }
             return false;
@@ -437,7 +425,7 @@ public:
     }
 
 
-    void printAdjacencyList()
+    void printAdjacencyList() const
     {
         graph->printAdjacencyList();
     }
@@ -457,14 +445,15 @@ public:
             );
         }
 
-        uint32_t nodeID = generateGlobalID();
+        const uint32_t nodeID = generateGlobalID();
+        const auto stringID = finalID.empty() ? std::to_string(nodeID) : finalID;
         node->nodeID = nodeID;
-        node->nodeIDString = finalID;
+        node->nodeIDString = stringID;
 
-        objectIDMap[finalID] = nodeID;
+        objectIDMap[stringID] = nodeID;
 
-        auto index = static_cast<uint32_t>(objects.size());
-        graph->objectIDtoIndex[nodeID] = index; // ✅ <<< THIS is required
+        const auto index = static_cast<uint32_t>(objects.size());
+        graph->objectIDtoIndex[nodeID] = index;
 
         setSummingFunctionForNode(node);
         objects.push_back(std::unique_ptr<AudioNode>(node));
@@ -472,29 +461,7 @@ public:
         return node;
     }
 
-    void removeGlobalID(uint32_t id);
-
-
-    uint32_t generateGlobalID() const;
-
-    // Generate a unique node ID (integer)
-    uint32_t generateID() const
-    {
-        std::set<unsigned int> usedIDs;
-        for (const auto& obj : objects)
-        {
-            usedIDs.insert(obj->nodeID);
-        }
-
-        // Find the lowest unused ID starting from 0
-        unsigned int idCounter = 0;
-        while (usedIDs.find(idCounter) != usedIDs.end())
-        {
-            idCounter++; // Increment until an unused ID is found
-        }
-
-        return idCounter;
-    }
+    [[nodiscard]] uint32_t generateGlobalID() const;
 
     AudioNode* createObject(json node)
     {
@@ -518,7 +485,7 @@ public:
         }
         else
         {
-            idString = std::to_string(generateID()); // Assign new ID if missing
+            idString = "";
         }
 
         // Ensure the ID is unique
@@ -574,7 +541,7 @@ public:
         return addNode(idString, nodePtr);
     };
 
-    void printGraph()
+    void printGraph() const
     {
         for (const auto& obj : objects)
         {
@@ -586,9 +553,9 @@ public:
 
     GraphManager* parentGraph = nullptr;
 
+    // Used for sub-patches
     std::vector<AudioPort*> subInputs;
     std::vector<AudioPort*> subOutputs;
-
     std::vector<AudioPort*> subInputOuterPorts;
     std::vector<AudioPort*> subOutputOuterPorts;
     std::vector<int> subInputSortedIndices;
@@ -597,10 +564,11 @@ public:
 private:
     std::vector<std::shared_ptr<Edge>> connections;
     std::vector<std::shared_ptr<AudioNode>> objects;
+    std::vector<std::shared_ptr<AudioNode>> removedObjects;
 
     ankerl::unordered_dense::map<std::string, uint32_t> objectIDMap;
 
     std::shared_ptr<NodeContext> context;
 
-    std::vector<std::shared_ptr<AudioNode>> removedObjects;
+
 };

@@ -115,7 +115,7 @@ void Subpatch::ensureOutputPort(int index, AudioPort::PortType type)
     getOutputPort(index)->changePortType(type);
 }
 
-void Subpatch::process(const float* mainAudioIn, float* mainAudioOut, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, int index)
+void Subpatch::process(const float* mainAudioIn, float* mainAudioOut, std::vector<MidiMessage>& midi, unsigned long frames, Graph& g, const size_t index)
 {
     if (!subManager)
         return;
@@ -155,7 +155,7 @@ void Subpatch::process(const float* mainAudioIn, float* mainAudioOut, std::vecto
         {
             subInputs[i]->addEvent(ev);
             const int sortedIndex = subGraph->subInputSortedIndices[i];
-            subGraph->getGraph()->activeEventNodes[sortedIndex >> 6] |= (1ULL << (sortedIndex & 63));
+            subGraph->getGraph()->bitfields.setEventBit(sortedIndex);
         }
 
         outerBuf->clearEvents();

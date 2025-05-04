@@ -1,8 +1,28 @@
-//
-// Created by alexw on 2/05/2025.
-//
+/*
+// Copyright (c) 2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #include "GraphHolder.h"
 #include "GraphManager.h"
+
+GraphHolder::GraphHolder(GraphManager* parent)
+    : parentGraph(parent)
+      , context(parent->ctx)
+{
+    graph = std::make_unique<Graph>(context);
+};
+
+GraphHolder::GraphHolder(const GraphHolder& other)
+    : graph(std::make_unique<Graph>(other.context))
+      , parentGraph(other.parentGraph)
+      , connections(other.connections)
+      , objects(other.objects)
+      , objectIDMap(other.objectIDMap)
+      , context(other.context)
+{
+}
 
 uint32_t GraphHolder::generateGlobalID() const
 {
@@ -14,8 +34,6 @@ uint32_t GraphHolder::generateGlobalID() const
     while (root->usedGlobalIDs.contains(id)) ++id;
 
     root->usedGlobalIDs.insert(id);
-
-    std::cout << "parent graph: " << root << " new ID is: " << id << std::endl;
 
     return id;
 }
@@ -150,7 +168,7 @@ void GraphHolder::updateOutputInputPortMap()
                 graph->downstreamPortMap[sortedIndex].push_back(std::move(group));
         }
     }
-#define INTEGRITY_CHECK
+//#define INTEGRITY_CHECK
 #ifdef INTEGRITY_CHECK
     for (size_t i = 0; i < graph->downstreamPortMap.size(); ++i)
     {
@@ -264,7 +282,7 @@ void GraphHolder::setSummingFunctionForNode(AudioNode* node)
                 assert(runningGraph.objectsSorted[index] == nodePtr); // <- pointer match
 
                 // activeEventNodes are index from the sorted graph
-                runningGraph.activeEventNodes[index >> 6] |= (1ULL << (index & 63));
+                runningGraph.bitfields.setEventBit(index);
             });
     };
 
@@ -299,7 +317,7 @@ void GraphHolder::setSummingFunctionForNode(AudioNode* node)
                     {
                         conn.inputPort->addEvent(ev);
                     }
-                    graph.activeEventNodes[conn.targetIndex >> 6] |= (1ULL << (conn.targetIndex & 63));
+                    graph.bitfields.setEventBit(conn.targetIndex);
                 }
             }
         }
@@ -335,7 +353,7 @@ void GraphHolder::setSummingFunctionForNode(AudioNode* node)
                 for (Event* event : events)
                     conn.node->pushEvent(conn.inputPortIndex, event);
 
-                graph.activeEventNodes[conn.targetIndex >> 6] |= (1ULL << (conn.targetIndex & 63));
+                graph.bitfields.setEventBit(conn.targetIndex);
             }
         }
     };

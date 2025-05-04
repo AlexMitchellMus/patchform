@@ -1,3 +1,9 @@
+/*
+// Copyright (c) 2025 Alex Mitchell
+// For information on usage and redistribution, and for a DISCLAIMER OF ALL
+// WARRANTIES, see the file, "LICENSE.txt," in this distribution.
+*/
+
 #pragma once
 
 #include "GraphManager.h"
@@ -24,7 +30,7 @@ public:
     {
         cleanupDeletedGraphs();
 
-        auto manager = std::make_shared<GraphManager>(sampleRate, frameCount);
+        const auto manager = std::make_shared<GraphManager>(sampleRate, frameCount);
         auto* ptr = manager.get();
 
         const auto [objects, conns] = ptr->loadGraph(path, patch, logVerbose);
@@ -149,18 +155,17 @@ public:
 
     GraphManager* getActiveGraph() const { return activeGraph; }
 
-    GraphManager* getActiveRootGraph()
+    GraphManager* getActiveRootGraph() const
     {
-        auto graphMananger = activeGraph;
+        auto graphManager = activeGraph;
 
-        while (graphMananger->parentGraph)
-            graphMananger = graphMananger->parentGraph;
+        while (graphManager->parentGraph)
+            graphManager = graphManager->parentGraph;
 
-        return graphMananger;
-
+        return graphManager;
     }
 
-    std::tuple<std::vector<Object*>, std::vector<Edge*>> getGraphDump(const std::string& path)
+    std::tuple<std::vector<Object*>, std::vector<Edge*>> getGraphDump(const std::string& path) const
     {
         for (auto& mgr : graphManagersUI)
         {
