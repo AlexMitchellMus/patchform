@@ -422,15 +422,21 @@ void Canvas::setMultiObjectPosition(pptk::Point pos)
 
     for (const auto& cnvItem : selected)
     {
-        auto newPosition = cnvItem->getPosition() + pos;
-        cnvItem->setPosition(newPosition);
-
-        if (const auto activeGraph = graphSystem->getActiveGraph())
-            activeGraph->setDirty(true);
-
-        if (const auto* objObject = dynamic_cast<Object*>(cnvItem))
+        // Oof - we need to use dynamic_cast here even though 100% all selected items will inherit Component
+        // This is because we don't want CanvasItem to have a diamond inheritance with Component
+        // Only dynamic_cast handles multiple-inheritance pointer adjustment safely
+        if (auto* cnvItemComp = dynamic_cast<pptk::Component*>(cnvItem))
         {
-            objObject->audioNode->canvasPos = newPosition - pptk::Point(canvasOrigin, canvasOrigin);
+            auto newPosition = cnvItemComp->getPosition() + pos;
+            cnvItemComp->setPosition(newPosition);
+
+            if (const auto activeGraph = graphSystem->getActiveGraph())
+                activeGraph->setDirty(true);
+
+            if (const auto* objObject = dynamic_cast<Object*>(cnvItem))
+            {
+                objObject->audioNode->canvasPos = newPosition - pptk::Point(canvasOrigin, canvasOrigin);
+            }
         }
     }
 

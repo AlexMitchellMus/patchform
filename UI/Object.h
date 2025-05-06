@@ -15,7 +15,7 @@
 
 class AudioNode;
 class Canvas;
-class Object : public CanvasItem {
+class Object : public pptk::Component, public CanvasItem {
 public:
     explicit Object(AudioNode* node);
 

@@ -253,9 +253,9 @@ void Connection::render(NVGcontext* nvg, const pptk::Theme& theme)
     if (connectionBeingCreated)
         nvgStrokePaint(nvg, nvgDoubleStroke(nvg, highlightCol, bgCol, bgCol, 0, false, false, 0.0f));
     else if (cableType == CableType::Signal)
-        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, isHovered || isSelected ? highlightCol : conCol, bgCol, bgCol, 0, false, false, 0.0f));
+        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, isHovered || getIsSelected() ? highlightCol : conCol, bgCol, bgCol, 0, false, false, 0.0f));
     else
-        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, bgCol, bgCol, isHovered || isSelected ? highlightCol : conCol, 3, false, false, 0.0f));
+        nvgStrokePaint(nvg, nvgDoubleStroke(nvg, bgCol, bgCol, isHovered || getIsSelected() ? highlightCol : conCol, 3, false, false, 0.0f));
     nvgStroke(nvg);
 
 //#define DEBUG_PATH_HIT_TEST

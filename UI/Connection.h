@@ -19,7 +19,7 @@
 #    define NANOVG_GL_IMPLEMENTATION 1
 #endif
 
-class Connection : public CanvasItem {
+class Connection : public pptk::Component, public CanvasItem {
 public:
     Connection(Port* origin, Port* destPos = nullptr, uint64_t edgeHash = 0);
 

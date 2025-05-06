@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "../UI_Toolkit/Component.h"
+class CanvasItem {
 
-class CanvasItem : public pptk::Component {
+    bool isSelected = false;
+
 public:
 
-    friend class Object;
-    friend class Connection;
+    virtual ~CanvasItem() = default;
 
     void setSelected(bool shouldBeSelected)
     {
@@ -21,8 +21,4 @@ public:
     }
 
     [[nodiscard]] bool getIsSelected() const { return isSelected; }
-
-private:
-
-    bool isSelected = false;
 };
