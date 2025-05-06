@@ -93,6 +93,41 @@ Object::Object(AudioNode* node)
         addComponent(outPorts.back().get());
     }
 
+    objectResizer = std::make_unique<ObjectResizer>();
+    objectResizer->onResize = [this](int dx, int dy, ObjectResizer::Edge edge)
+    {
+        auto r = objectResizer->getStartBounds();
+        int e = static_cast<int>(edge);
+
+        if (e & static_cast<int>(ObjectResizer::Edge::Left)) {
+            r.x = r.x + dx;
+            r.w = r.w - dx;
+        }
+        if (e & static_cast<int>(ObjectResizer::Edge::Right)) {
+            r.w = r.w + dx;
+        }
+        if (e & static_cast<int>(ObjectResizer::Edge::Top)) {
+            r.y = r.y + dy;
+            r.h = r.h - dy;
+        }
+        if (e & static_cast<int>(ObjectResizer::Edge::Bottom)) {
+            r.h = r.h + dy;
+        }
+
+        if (r.w < 20) {
+            if (e & static_cast<int>(ObjectResizer::Edge::Left)) r.x = r.x + (r.w - 20);
+            r.w = 20;
+        }
+        if (r.h < 20) {
+            if (e & static_cast<int>(ObjectResizer::Edge::Top)) r.y = r.y + (r.h - 20);
+            r.h = 20;
+        }
+
+        setBounds(r);
+    };
+
+    addComponent(objectResizer.get());
+
     Object::resized();
 }
 
@@ -144,6 +179,9 @@ void Object::resized()
     {
         outPorts[i]->setBounds(i * (outputSpacing + portDiam) + 1, getHeight() - portDiam - 1, portDiam, portDiam);
     }
+
+    if (objectResizer && objectResizer->getResizingActive())
+        objectResizer->setBounds(getLocalBounds());
 
     repaint();
 }

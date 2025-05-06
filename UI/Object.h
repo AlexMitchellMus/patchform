@@ -10,6 +10,7 @@
 
 #include "Editor.h"
 #include "Port.h"
+#include "ObjectResizer.h"
 
 #include "../Glad/gl.h"
 
@@ -79,6 +80,8 @@ public:
     void updateCanvasMode(Canvas::DisplayMode newMode);
 
 private:
+    std::unique_ptr<ObjectResizer> objectResizer;
+
     bool useDefaultUI = true;
     std::string shortName;
     std::string name;
