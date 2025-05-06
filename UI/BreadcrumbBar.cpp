@@ -1,8 +1,6 @@
 #include "BreadcrumbBar.h"
 #include <filesystem>
 #include "../Graph/GraphManager.h"
-#include "../UI_ToolKit/FontMetrics.h"
-#include <ranges>
 
 void BreadcrumbBar::setViewedGraph(GraphManager* g) {
     currentGraph = g;

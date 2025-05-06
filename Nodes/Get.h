@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AudioNodeBase.h"
+#include "JsonHelpers.h"
 
 // AddNode that sums two signals
 class Get : public AudioNode

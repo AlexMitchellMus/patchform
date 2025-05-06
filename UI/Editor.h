@@ -7,19 +7,16 @@
 #pragma once
 
 #include "../UI_ToolKit/RootComponent.h"
-#include "../UI_ToolKit/ToggleButton.h"
 
 #include <memory>
 #include <vector>
 #include <string>
 #include <iostream>
-#include <atomic>
 
 #include "Canvas.h"
 #include "ToolDock.h"
 #include "LeftPanel.h"
 #include "RightPanel.h"
-#include "Object.h"
 #include "TopBar.h"
 
 #ifdef max

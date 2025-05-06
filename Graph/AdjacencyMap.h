@@ -7,7 +7,6 @@
 #pragma once
 
 #include <vector>
-
 #include "unordered_dense.h"
 
 class AdjacencyMap

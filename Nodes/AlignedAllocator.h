@@ -1,7 +1,6 @@
 #pragma once
+
 #include <cstdlib>
-#include <cstddef>
-#include <memory>
 #include <new>
 
 template<typename T, std::size_t Alignment = 32>

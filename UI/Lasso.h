@@ -7,8 +7,6 @@
 #pragma once
 
 #include "../UI_ToolKit/Component.h"
-#include <vector>
-#include <utility>
 
 class Lasso : public pptk::Component
 {

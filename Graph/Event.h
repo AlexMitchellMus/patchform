@@ -6,13 +6,8 @@
 
 #pragma once
 
-#include <vector>
-#include <iostream>
-#include <stdexcept>
 #include "../Utility/Hash.h"
 #include "bitset"
-#include "PersistentAtomFlags.h"
-#include "OwnershipBlockPool.h"
 #include "DataAtom.h"
 
 class Tag

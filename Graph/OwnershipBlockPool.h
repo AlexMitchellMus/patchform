@@ -9,7 +9,6 @@
 #include <vector>
 #include <stdexcept>
 #include <cstdint>
-#include <cstring> // for std::memset
 
 struct alignas(64) OwnershipBlock {
     int blockIndex;                 // Represents owner IDs from blockIndex * 320 to (blockIndex + 1) * 320 - 1

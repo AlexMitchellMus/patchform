@@ -5,7 +5,6 @@
 #pragma once
 
 #include "AudioNodeBase.h"
-#include <cmath>
 #include <algorithm>
 
 #ifndef M_PI

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <vector>
 #include <string>
 #include "../UI_ToolKit/Component.h"

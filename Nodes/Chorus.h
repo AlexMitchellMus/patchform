@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AudioNodeBase.h"
+
 class Chorus : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Chorus", "chorus", true);
     DEFINE_NODE_ALIASES("chorus");

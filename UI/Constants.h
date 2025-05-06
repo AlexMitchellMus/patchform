@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <string>
-
 namespace ICONS
 {
     static constexpr std::string_view Metro = "A";

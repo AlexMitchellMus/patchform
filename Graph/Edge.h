@@ -6,13 +6,6 @@
 
 #pragma once
 
-#include <vector>
-#include <limits>
-#include <iostream>
-#include <iomanip>
-#include <stack>
-#include <chrono>
-
 #include "AdjacencyMap.h"
 
 class Edge

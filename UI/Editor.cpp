@@ -7,9 +7,7 @@
 #include "Editor.h"
 
 #include "FilesystemHelpers.h"
-#include <filesystem>
 #include "../Graph/GraphSystem.h"
-#include "../UI_ToolKit/WindowPeer.h"
 #include "CommandManagerCommands.h"
 
 Editor::Editor(WindowPeer* peer) : windowPeer(peer) {};

@@ -6,17 +6,17 @@
 
 #pragma once
 
-#include "../Utility/Hash.h"
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <cassert>
+#include <iostream>
 
+#include "../Utility/Hash.h"
 #include "PersistentAtomFlags.h"
 #include "OwnershipBlockPool.h"
-
 #include "SampleHandle.h"
 
-#include <cassert>
 
 class alignas(32) DataAtom
 {

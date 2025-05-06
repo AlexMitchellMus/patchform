@@ -4,7 +4,6 @@
 
 #include <SDL3/SDL.h>
 #include <cstdint>
-#include <cstring>
 
 enum class CursorType {
     GrabWhite,

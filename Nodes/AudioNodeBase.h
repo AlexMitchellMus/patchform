@@ -14,7 +14,6 @@
 #include "glaze/glaze.hpp"
 #include "Parameter.h"
 #include "NodeRegistry.h"
-#include "JsonHelpers.h"
 
 #ifdef PATCHFORM_WITH_GUI
 #include "../UI/Object.h"
