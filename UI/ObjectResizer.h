@@ -137,75 +137,13 @@ public:
 
         deltaPos.x /= canvasScale;
         deltaPos.y /= canvasScale;
-/*
-        if (aspectRatio > 0.0f)
-        {
-            float w = static_cast<float>(startBounds.w);
-            float h = static_cast<float>(startBounds.h);
 
-            // Apply delta to width/height based on hovered edge
-            if (hoveredEdge == Edge::Left || hoveredEdge == Edge::Right)
-            {
-                float newW = w + (hoveredEdge == Edge::Left ? -deltaPos.x : deltaPos.x);
-                float newH = newW / aspectRatio;
-                deltaPos.y = newH - h;
-                if (hoveredEdge == Edge::Left) deltaPos.x = w - newW;
-            }
-            else if (hoveredEdge == Edge::Top || hoveredEdge == Edge::Bottom)
-            {
-                float newH = h + (hoveredEdge == Edge::Top ? -deltaPos.y : deltaPos.y);
-                float newW = newH * aspectRatio;
-                deltaPos.x = newW - w;
-                if (hoveredEdge == Edge::Top) deltaPos.y = h - newH;
-            }
-            else if (hoveredEdge != Edge::None)
-            {
-                // Diagonal corner
-                float newW = w + ((static_cast<int>(hoveredEdge) & static_cast<int>(Edge::Left)) ? -deltaPos.x : deltaPos.x);
-                float newH = h + ((static_cast<int>(hoveredEdge) & static_cast<int>(Edge::Top)) ? -deltaPos.y : deltaPos.y);
-
-                if (newW / newH > aspectRatio)
-                    newW = newH * aspectRatio;
-                else
-                    newH = newW / aspectRatio;
-
-                deltaPos.x = ((static_cast<int>(hoveredEdge) & static_cast<int>(Edge::Left)) ? w - newW : newW - w);
-                deltaPos.y = ((static_cast<int>(hoveredEdge) & static_cast<int>(Edge::Top)) ? h - newH : newH - h);
-            }*/
-
-            auto hasEdge = [](Edge e, Edge test)
-            {
-                return (static_cast<int>(e) & static_cast<int>(test)) != 0;
-            };
-
-            if (aspectRatio > 0.0f)
-            {
-                // Get current size
-                float w = static_cast<float>(startBounds.w);
-                float h = static_cast<float>(startBounds.h);
-
-                // Modify delta based on edge(s)
-                if (hasEdge(hoveredEdge, Edge::Left) || hasEdge(hoveredEdge, Edge::Right))
-                {
-                    float newW = w + (hasEdge(hoveredEdge, Edge::Right) ? deltaPos.x : -deltaPos.x);
-                    float newH = newW / aspectRatio;
-                    deltaPos.y = hasEdge(hoveredEdge, Edge::Top) ? - (newH - h) : (newH - h);
-                }
-                else if (hasEdge(hoveredEdge, Edge::Top) || hasEdge(hoveredEdge, Edge::Bottom))
-                {
-                    float newH = h + (hasEdge(hoveredEdge, Edge::Bottom) ? deltaPos.y : -deltaPos.y);
-                    float newW = newH * aspectRatio;
-                    deltaPos.x = hasEdge(hoveredEdge, Edge::Left) ? - (newW - w) : (newW - w);
-                }
-        }
-
-
+        // Pass the delta to the resize handler
         if (hoveredEdge != Edge::None && onResize)
             onResize(static_cast<int>(deltaPos.x), static_cast<int>(deltaPos.y), hoveredEdge);
 
         resizingActive = false;
     }
-
     pptk::Rect getStartBounds() const
     {
         return startBounds;

@@ -106,34 +106,114 @@ Object::Object(AudioNode* node)
         auto r = objectResizer->getStartBounds();
         int e = static_cast<int>(edge);
 
-        if (e & static_cast<int>(ObjectResizer::Edge::Left)) {
+        // Store original dimensions for aspect ratio calculations
+        float originalWidth = static_cast<float>(r.w);
+        float originalHeight = static_cast<float>(r.h);
+        float currentAspectRatio = originalWidth / originalHeight;
+
+        // Apply deltas based on edge
+        bool modifyLeft = (e & static_cast<int>(ObjectResizer::Edge::Left)) != 0;
+        bool modifyRight = (e & static_cast<int>(ObjectResizer::Edge::Right)) != 0;
+        bool modifyTop = (e & static_cast<int>(ObjectResizer::Edge::Top)) != 0;
+        bool modifyBottom = (e & static_cast<int>(ObjectResizer::Edge::Bottom)) != 0;
+
+        // Calculate new dimensions based on which edges are being dragged
+        if (modifyLeft)
+        {
             r.x = r.x + dx;
             r.w = r.w - dx;
         }
-        if (e & static_cast<int>(ObjectResizer::Edge::Right)) {
+        if (modifyRight)
+        {
             r.w = r.w + dx;
         }
-        if (e & static_cast<int>(ObjectResizer::Edge::Top)) {
+        if (modifyTop)
+        {
             r.y = r.y + dy;
             r.h = r.h - dy;
         }
-        if (e & static_cast<int>(ObjectResizer::Edge::Bottom)) {
+        if (modifyBottom)
+        {
             r.h = r.h + dy;
         }
 
-        if (r.w < 20) {
-            if (e & static_cast<int>(ObjectResizer::Edge::Left)) r.x = r.x + (r.w - 20);
+        // Maintain aspect ratio if desired
+        if (aspectRatio > 0.0f)
+        {
+            // Handle corners - maintain aspect ratio when dragging corners
+            bool isCorner = (modifyLeft || modifyRight) && (modifyTop || modifyBottom);
+
+            if (isCorner)
+            {
+                // Use the larger change to drive the aspect ratio
+                float widthChange = static_cast<float>(r.w) / originalWidth;
+                float heightChange = static_cast<float>(r.h) / originalHeight;
+
+                // Determine which dimension should drive the change
+                bool useWidth = std::abs(widthChange - 1.0f) > std::abs(heightChange - 1.0f);
+
+                if (useWidth)
+                {
+                    // Width drives, calculate height from width
+                    int newHeight = static_cast<int>(r.w / currentAspectRatio);
+                    int heightDelta = newHeight - r.h;
+
+                    if (modifyTop)
+                    {
+                        r.y -= heightDelta;
+                    }
+                    r.h = newHeight;
+                }
+                else
+                {
+                    // Height drives, calculate width from height
+                    int newWidth = static_cast<int>(r.h * currentAspectRatio);
+                    int widthDelta = newWidth - r.w;
+
+                    if (modifyLeft)
+                    {
+                        r.x -= widthDelta;
+                    }
+                    r.w = newWidth;
+                }
+            }
+            // Handle edges - maintain aspect ratio when dragging a single edge
+            else if (modifyLeft || modifyRight)
+            {
+                // Horizontal edge being dragged - adjust height based on width
+                int newHeight = static_cast<int>(r.w / currentAspectRatio);
+                int heightDelta = newHeight - r.h;
+
+                // Distribute height change equally on both sides
+                r.y -= heightDelta / 2;
+                r.h = newHeight;
+            }
+            else if (modifyTop || modifyBottom)
+            {
+                // Vertical edge being dragged - adjust width based on height
+                int newWidth = static_cast<int>(r.h * currentAspectRatio);
+                int widthDelta = newWidth - r.w;
+
+                // Distribute width change equally on both sides
+                r.x -= widthDelta / 2;
+                r.w = newWidth;
+            }
+        }
+
+        // Enforce minimum dimensions
+        if (r.w < 20)
+        {
+            if (modifyLeft) r.x = r.x + (r.w - 20);
             r.w = 20;
         }
-        if (r.h < 20) {
-            if (e & static_cast<int>(ObjectResizer::Edge::Top)) r.y = r.y + (r.h - 20);
+        if (r.h < 20)
+        {
+            if (modifyTop) r.y = r.y + (r.h - 20);
             r.h = 20;
         }
 
         setBounds(r);
     };
-
-    Object::resized();
 }
 
 Object::~Object()
