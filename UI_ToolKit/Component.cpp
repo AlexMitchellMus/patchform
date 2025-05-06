@@ -22,7 +22,7 @@ Component::~Component()
 
 void Component::handleMouseMove(CompEvent& e)
 {
-    if (getBounds().contains(e.sdlEvent.button.x, e.sdlEvent.button.y))
+    if (getLocalBounds().contains(e.sdlEvent.button.x, e.sdlEvent.button.y))
     {
         mouseMove(Point(e.sdlEvent.button.x, e.sdlEvent.button.y));
     }
@@ -278,7 +278,7 @@ void Component::setPosition(const Point& point)
     setPosition(point.x, point.y);
 }
 
-void Component::startFrameTimer(std::function<void(uint32_t, uint32_t)> callback, int timerID)
+void Component::startFrameTimer(std::function<void(uint32_t time, uint32_t deltaTime)> callback, int timerID)
 {
     if (auto* root = dynamic_cast<RootComponent*>(getRootComponent()))
         root->registerTimerCallback(this, std::move(callback), timerID);

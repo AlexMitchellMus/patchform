@@ -54,17 +54,13 @@ public:
                     if (verticalLayout != newVertical)
                     {
                         verticalLayout = newVertical;
-                        if (verticalLayout)
-                            setSize(keyHeight, getKeyboardWidth(baseMidiNote, totalKeys, keyWidth));
-                        else
-                            setSize(getKeyboardWidth(baseMidiNote, totalKeys, keyWidth), keyHeight);
+
+                        // Update layout logic, but don't call setSize.
+                        // Instead, get current bounds and just repaint/redraw.
+                        repaint();
 
                         if (const auto cnv = findParentOfClass<Canvas>())
-                        {
                             cnv->updateConnectionsPosition();
-                        }
-
-                        repaint();
                     }
                 }
             };
@@ -108,70 +104,68 @@ public:
         {
             if (auto cnv = findParentOfClass<Canvas>())
             {
-                if (cnv->isInLockedMode())
+                if (!cnv->isInLockedMode())
                 {
-                    int mouseX = e.sdlEvent.button.x;
-                    int mouseY = e.sdlEvent.button.y;
+                    AudioNode::UI::mouseButtonDown(e);
+                    return;
+                }
 
-                    int note = -1;
-                    int whiteIndex = 0;
+                float mouseX = static_cast<float>(e.sdlEvent.button.x);
+                float mouseY = static_cast<float>(e.sdlEvent.button.y);
+                int whiteCount = getWhiteKeyCount();
+                float scaledKeyWidth = getWidth() / static_cast<float>(whiteCount);
+                float scaledKeyHeight = static_cast<float>(getHeight());
 
-                    // First pass: check black keys
+                int note = -1;
+                int whiteIndex = 0;
+
+                // First pass: black keys
+                for (int i = 0; i < totalKeys; ++i)
+                {
+                    int midiNote = baseMidiNote + i;
+                    if (!isBlackKey(midiNote))
+                    {
+                        whiteIndex++;
+                        continue;
+                    }
+
+                    float x = whiteIndex * scaledKeyWidth - (scaledKeyWidth * 0.25f);
+                    if (mouseX >= x && mouseX < x + scaledKeyWidth * 0.5f && mouseY < scaledKeyHeight * 0.6f)
+                    {
+                        note = midiNote;
+                        break;
+                    }
+                }
+
+                // Second pass: white keys
+                if (note == -1)
+                {
+                    whiteIndex = 0;
                     for (int i = 0; i < totalKeys; ++i)
                     {
                         int midiNote = baseMidiNote + i;
-                        int noteInOctave = midiNote % 12;
-                        bool isBlack = noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8
-                            || noteInOctave == 10;
-                        if (!isBlack)
-                        {
-                            whiteIndex++;
-                            continue;
-                        }
+                        if (isBlackKey(midiNote)) continue;
 
-                        int x = whiteIndex * keyWidth - (keyWidth / 4);
-                        if (mouseX >= x && mouseX < x + keyWidth / 2 && mouseY < keyHeight * 0.6f)
+                        float x = whiteIndex * scaledKeyWidth;
+                        if (mouseX >= x && mouseX < x + scaledKeyWidth)
                         {
                             note = midiNote;
                             break;
                         }
+                        whiteIndex++;
                     }
-
-                    // Second pass: fallback to white keys
-                    if (note == -1)
-                    {
-                        whiteIndex = 0;
-                        for (int i = 0; i < totalKeys; ++i)
-                        {
-                            int midiNote = baseMidiNote + i;
-                            int noteInOctave = midiNote % 12;
-                            bool isBlack = noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave
-                                == 8 || noteInOctave == 10;
-                            if (isBlack) continue;
-
-                            int x = whiteIndex * keyWidth;
-                            if (mouseX >= x && mouseX < x + keyWidth)
-                            {
-                                note = midiNote;
-                                break;
-                            }
-                            whiteIndex++;
-                        }
-                    }
-
-                    auto* kb = reinterpret_cast<Keyboard*>(audioNode);
-                    if (holdModeVal && kb->selectedNote != note)
-                    {
-                        kb->eventQueue.enqueue(-kb->selectedNote.load());
-                    }
-                    kb->selectedNote.store(note);
-                    lastNotePressed = note;
-                    kb->eventQueue.enqueue(note);
-                    kb->setNodeDirty();
-                    repaint();
                 }
+
+                auto* kb = reinterpret_cast<Keyboard*>(audioNode);
+                if (holdModeVal && kb->selectedNote != note)
+                    kb->eventQueue.enqueue(-kb->selectedNote.load());
+
+                kb->selectedNote.store(note);
+                lastNotePressed = note;
+                kb->eventQueue.enqueue(note);
+                kb->setNodeDirty();
+                repaint();
             }
-            AudioNode::UI::mouseButtonDown(e);
         }
 
         void mouseButtonUp(pptk::CompEvent& e) override
@@ -179,7 +173,7 @@ public:
             auto* kb = reinterpret_cast<Keyboard*>(audioNode);
             if (!holdModeVal && lastNotePressed >= 0)
             {
-                kb->eventQueue.enqueue(-lastNotePressed); // negative = note-off
+                kb->eventQueue.enqueue(-lastNotePressed);
                 kb->setNodeDirty();
                 repaint();
                 lastNotePressed = -1;
@@ -188,75 +182,76 @@ public:
             AudioNode::UI::mouseButtonUp(e);
         }
 
-
-        void mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button) override
+        void mouseDrag(const pptk::Point& position, const pptk::Point& point, pptk::Button button) override
         {
             if (auto cnv = findParentOfClass<Canvas>())
             {
-                if (cnv->isInLockedMode()) {
+                if (!cnv->isInLockedMode())
+                {
+                    AudioNode::UI::mouseDrag(position, point, button);
+                    return;
+                }
 
-                    auto* kb = reinterpret_cast<Keyboard*>(audioNode);
-                    if (!kb) return;
+                auto* kb = reinterpret_cast<Keyboard*>(audioNode);
+                if (!kb) return;
 
-                    int hoveredNote = -1;
+                float mouseX = position.x;
+                float mouseY = position.y;
+                int whiteCount = getWhiteKeyCount();
+                float scaledKeyWidth = getWidth() / static_cast<float>(whiteCount);
+                float scaledKeyHeight = static_cast<float>(getHeight());
 
-                    // Same logic as mouseDown: find note under cursor
-                    int whiteIndex = 0;
+                int hoveredNote = -1;
+                int whiteIndex = 0;
+
+                // First pass: black keys
+                for (int i = 0; i < totalKeys; ++i)
+                {
+                    int midiNote = baseMidiNote + i;
+                    if (!isBlackKey(midiNote))
+                    {
+                        whiteIndex++;
+                        continue;
+                    }
+
+                    float x = whiteIndex * scaledKeyWidth - (scaledKeyWidth * 0.25f);
+                    if (mouseX >= x && mouseX < x + scaledKeyWidth * 0.5f && mouseY < scaledKeyHeight * 0.6f)
+                    {
+                        hoveredNote = midiNote;
+                        break;
+                    }
+                }
+
+                // Second pass: white keys
+                if (hoveredNote == -1)
+                {
+                    whiteIndex = 0;
                     for (int i = 0; i < totalKeys; ++i)
                     {
                         int midiNote = baseMidiNote + i;
-                        int noteInOctave = midiNote % 12;
-                        bool isBlack = noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8 ||
-                            noteInOctave == 10;
-                        if (!isBlack)
-                        {
-                            whiteIndex++;
-                            continue;
-                        }
+                        if (isBlackKey(midiNote)) continue;
 
-                        int x = whiteIndex * keyWidth - (keyWidth / 4);
-                        if (position.x >= x && position.x < x + keyWidth / 2 && position.y < keyHeight * 0.6f)
+                        float x = whiteIndex * scaledKeyWidth;
+                        if (mouseX >= x && mouseX < x + scaledKeyWidth)
                         {
                             hoveredNote = midiNote;
                             break;
                         }
-                    }
-
-                    if (hoveredNote == -1)
-                    {
-                        whiteIndex = 0;
-                        for (int i = 0; i < totalKeys; ++i)
-                        {
-                            int midiNote = baseMidiNote + i;
-                            if (isBlackKey(midiNote)) continue;
-
-                            int x = whiteIndex * keyWidth;
-                            if (position.x >= x && position.x < x + keyWidth)
-                            {
-                                hoveredNote = midiNote;
-                                break;
-                            }
-                            whiteIndex++;
-                        }
-                    }
-
-                    if (hoveredNote >= 0 && hoveredNote != lastNotePressed)
-                    {
-                        // send note-off for old note
-                        if (lastNotePressed >= 0)
-                            kb->eventQueue.enqueue(-lastNotePressed);
-
-                        // send note-on for new one
-                        kb->eventQueue.enqueue(hoveredNote);
-                        kb->setNodeDirty();
-                        repaint();
-
-                        lastNotePressed = hoveredNote;
+                        whiteIndex++;
                     }
                 }
-            }
 
-            AudioNode::UI::mouseDrag(position, delta, button);
+                if (hoveredNote >= 0 && hoveredNote != lastNotePressed)
+                {
+                    if (lastNotePressed >= 0)
+                        kb->eventQueue.enqueue(-lastNotePressed);
+
+                    kb->eventQueue.enqueue(hoveredNote);
+                    kb->setNodeDirty();
+                    repaint();
+                    lastNotePressed = hoveredNote;
+                }
+            }
         }
 
 
@@ -359,6 +354,10 @@ public:
 
         void drawHorizontal(NVGcontext* vg) const
         {
+            int whiteKeyCount = getWhiteKeyCount();
+            float scaledKeyWidth = getWidth() / whiteKeyCount;
+            float scaledKeyHeight = getHeight();
+
             int whiteIndex = 0;
 
             const auto white = nvgRGB(200, 200, 200);
@@ -377,23 +376,23 @@ public:
                     noteInOctave == 10;
                 if (isBlack) continue;
 
-                int x = whiteIndex * keyWidth;
+                int x = whiteIndex * scaledKeyWidth;
                 if (noteState[midiNote])
                 {
                     nvgBeginPath(vg);
                     if (whiteIndex == 0)
                     {
                         // Leftmost key: round left corners
-                        nvgRoundedRectVarying(vg, x + 1, 1, keyWidth, keyHeight - 2, 5, 0, 0, 5);
+                        nvgRoundedRectVarying(vg, x + 1, 1, scaledKeyWidth, scaledKeyHeight - 2, 5, 0, 0, 5);
                     }
                     else if (i == totalKeys - 1 || whiteIndex == getWhiteKeyCount())
                     {
                         // Rightmost key: round right corners
-                        nvgRoundedRectVarying(vg, x, 1, keyWidth - 1, keyHeight - 2, 0, 5, 5, 0);
+                        nvgRoundedRectVarying(vg, x, 1, scaledKeyWidth - 1, scaledKeyHeight - 2, 0, 5, 5, 0);
                     }
                     else
                     {
-                        nvgRect(vg, x, 1, keyWidth, keyHeight - 2);
+                        nvgRect(vg, x, 1, scaledKeyWidth, scaledKeyHeight - 2);
                     }
                     nvgFillColor(vg, whiteSelCol);
                     nvgFill(vg);
@@ -410,11 +409,11 @@ public:
                 int midiNote = baseMidiNote + i;
                 if (isBlackKey(midiNote)) continue;
 
-                int x = whiteIndex * keyWidth;
+                const auto x = whiteIndex * scaledKeyWidth;
                 if (whiteIndex > 0)
                 {
-                    nvgMoveTo(vg, x, isWhiteKeyAdjacent(midiNote) ? 1 : keyHeight * 0.6f);
-                    nvgLineTo(vg, x, keyHeight - 1);
+                    nvgMoveTo(vg, x, isWhiteKeyAdjacent(midiNote) ? 1 : scaledKeyHeight * 0.6f);
+                    nvgLineTo(vg, x, scaledKeyHeight - 1);
                 }
                 whiteIndex++;
             }
@@ -434,17 +433,18 @@ public:
                     continue;
                 }
 
-                int x = whiteIndex * keyWidth - (keyWidth / 4);
+                const auto x = whiteIndex * scaledKeyWidth - (scaledKeyWidth / 4);
                 const auto blackCol = nvgRGB(0, 0, 0);
                 const auto col = noteState[midiNote] ? blackSelCol : nvgRGB(0, 0, 0);
-                nvgDrawRoundedRect(vg, x, 1, keyWidth * 0.5f, keyHeight * 0.6f, col, blackCol, 0);
+                nvgDrawRoundedRect(vg, x, 1, scaledKeyWidth * 0.5f, scaledKeyHeight * 0.6f, col, blackCol, 0);
             }
         }
 
         static bool isBlackKey(const int midiNote)
         {
             int noteInOctave = midiNote % 12;
-            return noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8 || noteInOctave == 10;
+            return noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8 || noteInOctave ==
+                10;
         }
 
         static bool isWhiteKeyAdjacent(const int midiNote)

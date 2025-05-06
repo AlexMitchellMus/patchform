@@ -79,6 +79,16 @@ public:
 
     void updateCanvasMode(Canvas::DisplayMode newMode);
 
+    void setAspectRatio(float ratio)
+    {
+        aspectRatio = ratio;
+        if (objectResizer)
+        {
+            objectResizer->setAspectRatio(aspectRatio);
+        }
+        repaint();
+    }
+
 private:
     std::unique_ptr<ObjectResizer> objectResizer;
 
@@ -103,5 +113,7 @@ private:
     bool isGuiTransparent = false;
 
     bool isInLockedMode = false;
+
+    float aspectRatio = 0.0f;
 };
 

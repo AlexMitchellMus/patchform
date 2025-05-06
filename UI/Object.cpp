@@ -93,7 +93,14 @@ Object::Object(AudioNode* node)
         addComponent(outPorts.back().get());
     }
 
+    setExternalMargin(6);
+
     objectResizer = std::make_unique<ObjectResizer>();
+    addComponent(objectResizer.get());
+    objectResizer->setMargin(6);
+    objectResizer->setAspectRatio(aspectRatio);
+    objectResizer->setBounds(getLocalBounds().expanded(objectResizer->getMargin()));
+    std::cout << "objectResizer bounds: " << objectResizer->getBounds().toString() << std::endl;
     objectResizer->onResize = [this](int dx, int dy, ObjectResizer::Edge edge)
     {
         auto r = objectResizer->getStartBounds();
@@ -125,8 +132,6 @@ Object::Object(AudioNode* node)
 
         setBounds(r);
     };
-
-    addComponent(objectResizer.get());
 
     Object::resized();
 }
@@ -180,8 +185,10 @@ void Object::resized()
         outPorts[i]->setBounds(i * (outputSpacing + portDiam) + 1, getHeight() - portDiam - 1, portDiam, portDiam);
     }
 
-    if (objectResizer && objectResizer->getResizingActive())
-        objectResizer->setBounds(getLocalBounds());
+    if (objectResizer)
+    {
+        objectResizer->setBounds(getLocalBounds().expanded(objectResizer->getMargin()));
+    }
 
     repaint();
 }

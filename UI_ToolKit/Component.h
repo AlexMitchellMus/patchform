@@ -52,6 +52,10 @@ struct Point {
         return Point(x + other.x, y + other.y);
     }
 
+    Point operator+(const float other) const {
+        return Point(x + other, y + other);
+    }
+
     Point operator-(const Point& other) const {
         return Point(x - other.x, y - other.y);
     }
@@ -162,7 +166,8 @@ struct Rect {
 };
 
 class PopupComponent;
-class Component : public SafeObject {
+class Component : public SafeObject
+{
 public:
     std::function<void()> onVisibilityChanged = [](){};
 
@@ -267,8 +272,8 @@ public:
         if (!interceptsMouseClicks())
             return false;
 
-        return px >= 0 && px <= width &&
-               py >= 0 && py <= height;
+        Rect expandedBounds = Rect(0, 0, width, height).expanded(externalMargin);
+        return expandedBounds.contains(px, py);
     }
 
     virtual bool consumeEvent(CompEvent& e) { return false; };
@@ -325,7 +330,7 @@ public:
     }
 
     // Gets the local bounds (origin {0,0} )
-    Rect getLocalBounds() const
+    [[nodiscard]] virtual Rect getLocalBounds() const
     {
         return Rect{ 0, 0, width, height };
     }
@@ -375,7 +380,18 @@ public:
         return Point(x, y);
     }
 
-    void startFrameTimer(std::function<void(uint32_t, uint32_t)> callback, int timerID = 0);
+    /**
+     * @brief Starts a per-frame timer callback tied to this component.
+     *
+     * The callback will be invoked once per frame by the RootComponent's timer system.
+     * This is useful for animations or deferred updates that need to occur over time.
+     *
+     * @param callback A function taking (uint32_t time, uint32_t deltaTime), where:
+     *        - time: the current time in milliseconds since the application started.
+     *        - deltaTime: the time in milliseconds since the last frame.
+     * @param timerID Optional ID to allow multiple timers per component. Default is 0.
+     */
+    void startFrameTimer(std::function<void(uint32_t time, uint32_t deltaTime)> callback, int timerID = 0);
 
     void stopFrameTimer(int timerID = 0);
 
@@ -461,6 +477,11 @@ public:
     // It's up to the class to save the theme colours it needs
     virtual void themeChanged(const Theme& theme) {};
 
+    void setExternalMargin(float newMargin)
+    {
+        externalMargin = newMargin;
+    }
+
 private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);
 
@@ -504,6 +525,8 @@ protected:
     bool visible = true;
 
     bool wantsFocus = false;
+
+    float externalMargin = 0.0f;
 
     std::vector<Component*> children;
     bool isDragging = false;

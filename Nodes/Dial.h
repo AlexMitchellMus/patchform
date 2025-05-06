@@ -30,9 +30,11 @@ public:
 
     class UI final : public AudioNode::UI {
     public:
-        explicit UI(AudioNode* node) : AudioNode::UI(node) {
+        explicit UI(AudioNode* node) : AudioNode::UI(node)
+        {
             setSize(100, 100);
             setGuiIsTransparent(true);
+            setAspectRatio(1.0f);
 
             auto dial = reinterpret_cast<Dial*>(audioNode);
 
