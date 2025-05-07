@@ -17,42 +17,38 @@ Project Goals
 
 [ V 0.1 ] Core Application & Basic Editor:
 * Platform:
-      * SDL3 standalone application for MS Windows
+    * [x] SDL3 standalone application for MS Windows
 * Engine:
-    * Event's with data pool (linked list of data atoms for RT safe transmutation)
-    * Feedback loops (audio buffer sent to next cycle of graph)
-    * Type in object names in canvas editor
+    * [x] Event's with data pool (linked list of data atoms for RT safe transmutation)
+    * [x] Feedback loops (audio buffer sent to next cycle of graph)
+    * [ ] Type in object names in canvas editor
+    * [x] Sub-patches
+    * [ ] Patch Abstractions (load JSON patch as node)
+    * [ ] Compiled Abstractions (plugins) - Full SDK
 * Basic Functionality:
-    * Save, Load, and Save-as for patches
-    * Basic undo/redo support
+    * [x] Save, Load, and Save-as for patches
+    * [ ] Basic undo/redo support
 * Editing Essentials:
-    * Simple set of objects
-    * Copy/Paste functionality (using JSON as the interchange format)
-    * DnD to make new objects
-    * All object params to be saved in patch
+    * [x] Simple set of objects
+    * [x] Copy/Paste functionality (using JSON as the interchange format)
+    * [x] DnD to make new objects
+    * [x] All object params to be saved in patch
 * User Interface:
-    * Central nested popup window for settings / about
-    * Theme support
-    * Initial Plugin View
-    * Non-modal open/save system dialog
-    * Tabbed editor (Load multiple patches) - not split-view
+    * [ ] Central nested popup window for settings / about
+    * [ ] Theme support
+    * [ ] Initial Plugin View
+    * [ ] Non-modal open/save system dialog
+    * [x] Tabbed editor (Load multiple patches) - not split-view
 * I/O Capabilities:
-    * MIDI in/out
-    * Audio in/out
-    * Multichannel Audio in/out
+    * [ ] MIDI in/out
+    * [x] Audio in/out
+    * [ ] Multichannel Audio in/out
 
 [ V 0.2 ]
 * Make cross-platform: macOS, Linux, Windows
 
 [ V 0.3 ]
 * CLAP plugin port
-
-[ v 0.4 ]
-* Sub-patches
-* Patch Abstractions
-
-[ V 0.5 ]
-* Compiled Abstractions
         
 [ V 0.6 ]
 * Per-patch state (sample-rate & buffer-size)
@@ -74,7 +70,7 @@ Project Goals
 * [ ] scrollbars - needed for canavs and side panels etc
 * [x] Icons - simple icons to start with
 * [x] Load patch etc
-* [ ] Subpatches (in main JSON file - single use)
+* [x] Subpatches (in main JSON file - single use)
 * [ ] Subpatches (from external files - abstractions)
 * [ ] Desktop scale etc
 * [ ] Text entry (for object/nodes mainly)

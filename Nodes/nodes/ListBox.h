@@ -70,11 +70,13 @@ public:
 
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
+            setSize(150, getHeight());
+
             auto listBox = reinterpret_cast<ListBox*>(audioNode);
 
             listBox->updateUI = [this]()
             {
-                shouldRepaint.store(true);;
+                shouldRepaint.store(true);
             };
 
             textEditor = std::make_unique<pptk::TextEditor>(false);
@@ -192,7 +194,10 @@ public:
 
         void resized() override
         {
-            textEditor->setBounds(0, 0, getWidth(), getHeight());
+            if (textEditor)
+                textEditor->setBounds(0, 0, getWidth(), getHeight());
+
+            AudioNode::UI::resized();
         }
 
         // In updateGraphValues, we check for DSP events that update the list.
