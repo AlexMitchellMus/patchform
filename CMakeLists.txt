@@ -141,6 +141,8 @@ target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/Glad")
 # Collect common source files
 file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp" "${CMAKE_SOURCE_DIR}/Utility/*.cpp" "${CMAKE_SOURCE_DIR}/Nodes/*.cpp")
 
+file(GLOB_RECURSE NODE_SOURCES "${CMAKE_SOURCE_DIR}/Nodes/nodes/*.cpp")
+
 # PlugPatchCLI target
 add_executable(PlugPatchCLI PlugPatchCLI.cpp ${GRAPH_SOURCES})
 
@@ -171,7 +173,7 @@ target_compile_options(linenoise PRIVATE
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
-add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
+add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${NODE_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
 
 set_target_properties(PatchformStandalone PROPERTIES
         INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
