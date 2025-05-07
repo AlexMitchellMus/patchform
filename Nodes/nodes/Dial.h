@@ -147,6 +147,7 @@ public:
         float maxV = maxValue.load();
         float actualValue = dialValue * (maxV - minV) + minV;
 
+        // TODO: We don't want this here, but we need to set a resize mode for nodes to decide what we use (width or height)
         nodeCreationData["height"] = canvasSize.y;
         nodeCreationData["width"] = canvasSize.x;
 
