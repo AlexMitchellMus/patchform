@@ -98,6 +98,7 @@ public:
                                      ? invertedMap.at(nodePtr->nodeID)
                                      : std::to_string(nodePtr->nodeID);
                 nodeJson["pos"] = {nodePtr->canvasPos.x, nodePtr->canvasPos.y};
+                //nodeJson["size"] = {nodePtr->getUI()->, nodePtr->canvasPos.h};
                 nodes.push_back(nodeJson);
             }
         }

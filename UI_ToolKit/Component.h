@@ -90,6 +90,16 @@ struct Rect {
     float w = 0.0f;
     float h = 0.0f;
 
+    Point getPosition() const
+    {
+        return Point(x, y);
+    }
+
+    Point getSize() const
+    {
+        return Point(w, h);
+    }
+
     bool contains(const Point& point) const
     {
         return (point.x >= x && point.x <= x + w && point.y >= y && point.y <= y + h);

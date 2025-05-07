@@ -92,6 +92,7 @@ class AudioNode {
 public:
 
     pptk::Point canvasPos;
+    pptk::Point canvasSize;
 
 #ifdef PATCHFORM_WITH_GUI
     class UI : public Object

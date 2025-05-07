@@ -211,13 +211,21 @@ Object::Object(AudioNode* node)
             r.h = 20;
         }
 
-        setBounds(r);
+        updateObjectBounds(r);
     };
 }
 
 Object::~Object()
 {
     //std::cout << "object deleting: " << std::endl;
+}
+
+void Object::updateObjectBounds(pptk::Rect newBounds)
+{
+    audioNode->canvasPos = newBounds.getPosition() - pptk::Point(Canvas::canvasOrigin, Canvas::canvasOrigin);
+    audioNode->canvasSize = newBounds.getSize();
+
+    setBounds(newBounds);
 }
 
 void Object::resized()

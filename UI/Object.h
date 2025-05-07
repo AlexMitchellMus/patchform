@@ -90,6 +90,8 @@ public:
     }
 
 private:
+    void updateObjectBounds(pptk::Rect newBounds);
+
     std::unique_ptr<ObjectResizer> objectResizer;
 
     bool useDefaultUI = true;

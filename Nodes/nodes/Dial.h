@@ -32,11 +32,11 @@ public:
     public:
         explicit UI(AudioNode* node) : AudioNode::UI(node)
         {
-            setSize(100, 100);
+            auto dial = reinterpret_cast<Dial*>(audioNode);
+
+            setSize(dial->canvasSize.x, dial->canvasSize.y);
             setGuiIsTransparent(true);
             setAspectRatio(1.0f);
-
-            auto dial = reinterpret_cast<Dial*>(audioNode);
 
             float minV = dial->minValue;
             float maxV = dial->maxValue;
@@ -107,6 +107,9 @@ public:
 
     Dial(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
+        canvasSize.x = objParams.value("height", 100);
+        canvasSize.y = objParams.value("height", 100);
+
         float minV = objParams.value("min", 0.0f);
         float maxV = objParams.value("max", 1.0f);
         float value = objParams.value("default", minV); // actual value
@@ -143,6 +146,9 @@ public:
         float minV = minValue.load();
         float maxV = maxValue.load();
         float actualValue = dialValue * (maxV - minV) + minV;
+
+        nodeCreationData["height"] = canvasSize.y;
+        nodeCreationData["width"] = canvasSize.x;
 
         nodeCreationData["min"] = minV;
         nodeCreationData["max"] = maxV;
