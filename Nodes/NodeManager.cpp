@@ -1,10 +1,7 @@
 #include "NodeManager.h"
 #include <iostream>
+#include "NodeRegistry.h"
 
-NodeManager::~NodeManager()
-{
-    unloadAll();
-}
 
 void NodeManager::loadAll(const std::filesystem::path& objectDir)
 {
@@ -35,10 +32,10 @@ void NodeManager::loadAll(const std::filesystem::path& objectDir)
             continue;
         }
 
-        using RegisterFunc = void(*)();
+        using RegisterFunc = void(*)(NodeRegistry&);
         if (auto reg = lib->findFunction("registerPatchformNodes"))
         {
-            reinterpret_cast<RegisterFunc>(reg)();
+            reinterpret_cast<RegisterFunc>(reg)(NodeRegistry::getInstance());
             std::cout << "Registered node object: " << entry.path().filename() << std::endl;
             loadedObjects.push_back(std::move(lib)); // keep handle alive
         }
@@ -47,9 +44,4 @@ void NodeManager::loadAll(const std::filesystem::path& objectDir)
             std::cerr << "Missing registerPatchformNodes() in: " << entry.path() << std::endl;
         }
     }
-}
-
-void NodeManager::unloadAll()
-{
-    loadedObjects.clear();
 }

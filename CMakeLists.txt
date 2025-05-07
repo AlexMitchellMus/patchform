@@ -291,6 +291,16 @@ set(SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Assets/Icons/IconFontPlugPatch_google.ttf"
 )
 
+# Copy compiled object's into Patchform/Objects directory
+add_custom_target(copy_objects ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_BINARY_DIR}/objects"
+        "$<TARGET_FILE_DIR:PatchformStandalone>/Objects"
+        COMMENT "Copying plugin objects to output directory"
+)
+# Make sure copy_objects runs AFTER metronome object is built!
+add_dependencies(copy_objects Metronome)
+
 # Define a custom target to copy the Patches directory
 add_custom_target(copy_patches
         COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -309,7 +319,16 @@ add_custom_target(copy_fonts
 
 # Add dependencies to ensure the directory is copied whenever these targets are built
 add_dependencies(PlugPatchCLI copy_patches)
-add_dependencies(PatchformStandalone copy_patches copy_fonts update_git_version copy_icon)
+add_dependencies(PatchformStandalone
+    copy_patches
+    copy_fonts
+    update_git_version
+    copy_icon
+
+    # Plugin system
+    #Metronome
+    #copy_objects
+    )
 
 # Installer configuration for CLI
 #TODO NOT WORKING ONLY FOR RELEASE for some reason! :-(

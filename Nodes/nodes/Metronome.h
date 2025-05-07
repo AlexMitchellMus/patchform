@@ -4,13 +4,15 @@
 // WARRANTIES, see the file, "LICENSE.txt," in this distribution.
 */
 
-#include "../../AudioNodeBase.h"
+#pragma once
+
+#include "../AudioNodeBase.h"
 #include "unordered_dense.h"
 #include <atomic>
 
 // Sample accurate metronome implementation
 
-class PATCHFORM_API Metronome final : public AudioNode
+class Metronome final : public AudioNode
 {
     DEFINE_NODE_ALIASES("metronome", "metro");
     DEFINE_AND_REGISTER_NODE("Metronome", "metro", true);
@@ -129,4 +131,4 @@ public:
     }
 };
 
-REGISTER_PLUGIN(Metronome);
+REGISTER(Metronome);

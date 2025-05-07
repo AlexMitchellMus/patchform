@@ -34,7 +34,7 @@ namespace ObjectMenuDefs
 
     // Control
     static constexpr ObjectDef ControlItems[] = {
-        {R"({"obj": "Metro"})", ICONS::Metro, "Metronome"},
+        {R"({"obj": "metro"})", ICONS::Metro, "Metronome"},
         {R"({"obj": "count"})", ICONS::Count, "Counter"},
         {R"({"obj": "tag"})", "", "Tag"},
         {R"({"obj": "filtertag"})", "", "Filter by Tag"},

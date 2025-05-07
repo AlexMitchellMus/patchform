@@ -15,6 +15,7 @@
 //#include "Iterator.h"
 
 // Data
+#include "nodes/Metronome.h"
 #include "nodes/nodes/Print.h"
 #include "nodes/Count.h"
 #include "nodes/If.h"

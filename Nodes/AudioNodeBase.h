@@ -9,6 +9,7 @@
 #include <vector>
 #include <functional>
 
+#include "UI_ToolKit/Component.h"
 #include "AudioPort.h"
 #include "../Graph/NodeContext.h"
 #include "glaze/glaze.hpp"
@@ -21,6 +22,16 @@
 
 #include "json.hpp"
 using json = nlohmann::json;
+
+#ifdef _WIN32
+#ifdef PATCHFORM_PLUGIN_BUILD
+#define PATCHFORM_API __declspec(dllexport)
+#else
+#define PATCHFORM_API __declspec(dllimport)
+#endif
+#else
+#define PATCHFORM_API
+#endif
 
 // Helper macro to name and register node (used in derived node class)
 // <Fullname> <ShortName> <should constantly process>
@@ -47,14 +58,23 @@ public:                                                                         
         return true;                                                                                                        \
     }();
 
-#define REGISTER_PLUGIN(className)																			                \
-    static AudioNode* create_##className(std::shared_ptr<NodeContext> ctx, const json& j) {									\
-        return new className(std::move(ctx), j);																		    \
-    }																										                \
-    extern "C" __declspec(dllexport) void registerPatchformNodes() {										                \
-        NodeRegistry::getInstance().registerNode(className::name);											                \
-        NodeRegistry::getInstance().registerAlias(className::aliases, create_##className);					                \
-    }										                                                                                \
+#define REGISTER_PLUGIN(className)                                                                                  \
+    extern "C" __declspec(dllexport) void registerPatchformNodes(NodeRegistry& registry) {                          \
+        registry.registerNode(className::name);                                                                     \
+        registry.registerAlias(className::aliases, [](std::shared_ptr<NodeContext> ctx, const json& j) {            \
+            if (!ctx) {                                                                                             \
+                std::cerr << "[ERROR] Node factory received null context!\n";                                       \
+                return static_cast<className*>(nullptr);                                                            \
+            }                                                                                                       \
+            std::cout << "returning a new: " << className::name << std::endl;                                       \
+            std::cout << "[Metronome] ctx: " << ctx.get() << ", sampleRate: " << ctx->sampleRate << "\n";           \
+            std::cout << "[Metronome] eventPool size: " << ctx->eventPool.eventPoolSize() << std::endl;             \
+            auto rtr = new className(ctx, j);                                                                       \
+            std::cout << "[Metronome] ptr: " << rtr << std::endl;                                                   \
+            std::cout << "[From Metronome] name: " << rtr->getShortName()  << std::endl;                                                   \
+            return rtr;                                                                                             \
+        });                                                                                                         \
+    }			                                                                                                	\
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
