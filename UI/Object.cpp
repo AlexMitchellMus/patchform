@@ -100,7 +100,6 @@ Object::Object(AudioNode* node)
     objectResizer->setMargin(6);
     objectResizer->setAspectRatio(aspectRatio);
     objectResizer->setBounds(getLocalBounds().expanded(objectResizer->getMargin()));
-    std::cout << "objectResizer bounds: " << objectResizer->getBounds().toString() << std::endl;
     objectResizer->onResize = [this](int dx, int dy, ObjectResizer::Edge edge)
     {
         auto r = objectResizer->getStartBounds();
