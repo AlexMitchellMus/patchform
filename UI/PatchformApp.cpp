@@ -33,6 +33,8 @@ PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     , frameCount(frameCount)
 {
     instance = this;
+
+    nodeManager.loadAll("Objects");
 }
 
 PatchformApp::~PatchformApp()

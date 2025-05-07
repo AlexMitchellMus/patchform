@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "../AudioNodeBase.h"
+#include "../../AudioNodeBase.h"
 #include <atomic>
 
 // Sample accurate metronome implementation

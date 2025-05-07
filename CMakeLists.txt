@@ -44,6 +44,7 @@ add_custom_command(
 
 add_custom_target(update_git_version ALL DEPENDS ${BUILDINFO_CPP})
 
+# Check GitVersion.txt if it exists
 if (EXISTS "${CMAKE_BINARY_DIR}/GitVersion.txt")
     file(READ "${CMAKE_BINARY_DIR}/GitVersion.txt" PATCHFORM_VERSION_STRING)
     string(STRIP "${PATCHFORM_VERSION_STRING}" PATCHFORM_VERSION_STRING)
@@ -51,14 +52,7 @@ else()
     set(PATCHFORM_VERSION_STRING "dev")
 endif()
 
-message(STATUS "Detected version: ${PATCHFORM_VERSION_STRING}")
-
-if (EXISTS "${GIT_VERSION_FILE}")
-    file(READ "${GIT_VERSION_FILE}" PATCHFORM_VERSION_STRING)
-    string(STRIP "${PATCHFORM_VERSION_STRING}" PATCHFORM_VERSION_STRING)
-else()
-    set(PATCHFORM_VERSION_STRING "dev")
-endif()
+message(STATUS "Detected Patchform version: ${PATCHFORM_VERSION_STRING}")
 
 # Strip leading 'v' and extra stuff (e.g., "-alpha-17")
 string(REGEX REPLACE "^v([0-9]+)\\.([0-9]+)\\.([0-9]+).*" "\\1,\\2,\\3,0" PATCHFORM_VERSION_COMMA "${PATCHFORM_VERSION_STRING}")
@@ -112,6 +106,8 @@ add_subdirectory(external/nanovg)
 add_subdirectory(external/rtmidi)
 add_subdirectory(external/libsamplerate)
 
+add_subdirectory(Nodes/nodes/Metronome)
+
 if (ENABLE_ASAN AND MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(nanovg PRIVATE /fsanitize=address)
     target_compile_options(rtmidi PRIVATE /fsanitize=address)
@@ -139,9 +135,9 @@ add_library(glad STATIC Glad/glad.cpp)
 target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/Glad")
 
 # Collect common source files
-file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp" "${CMAKE_SOURCE_DIR}/Utility/*.cpp" "${CMAKE_SOURCE_DIR}/Nodes/*.cpp")
+file(GLOB_RECURSE GRAPH_SOURCES "${CMAKE_SOURCE_DIR}/Graph/*.cpp" "${CMAKE_SOURCE_DIR}/Utility/*.cpp")
 
-file(GLOB_RECURSE NODE_SOURCES "${CMAKE_SOURCE_DIR}/Nodes/nodes/*.cpp")
+file(GLOB NODE_SHARED_SOURCES "${CMAKE_SOURCE_DIR}/Nodes/*.cpp")
 
 # PlugPatchCLI target
 add_executable(PlugPatchCLI PlugPatchCLI.cpp ${GRAPH_SOURCES})
@@ -173,7 +169,7 @@ target_compile_options(linenoise PRIVATE
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
 # PlugPatchStandalone target - use WIN32 to hide terminal
-add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${NODE_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
+add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${NODE_SHARED_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
 
 set_target_properties(PatchformStandalone PROPERTIES
         INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE

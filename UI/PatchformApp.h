@@ -7,6 +7,8 @@
 #include "rtmidi.h"
 
 #include "../Graph/GraphSystem.h"
+#include "../Nodes/NodeManager.h"
+
 #include "Editor.h"
 #include "../UI_ToolKit/EventManager.h"
 #include "Settings.h"
@@ -69,6 +71,8 @@ private:
     std::unique_ptr<RtMidiIn> midiIn;
     moodycamel::ConcurrentQueue<MidiMessage> midiQueue;
 
+    // Graph system is destroyed before Node Manager (which holds all the node shared libs)
+    NodeManager nodeManager;
     GraphSystem graphSystem;
 
     std::unique_ptr<Editor> editor;

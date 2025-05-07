@@ -9,13 +9,12 @@
 #include "AudioNodeBase.h"
 
 // Subpatch
-#include "nodes/SubpatchInletOutlet.h"
+#include "SubpatchInletOutlet.h"
 #include "Subpatch.h"
 //#include "Poly.h"
 //#include "Iterator.h"
 
 // Data
-#include "nodes/Metronome.h"
 #include "nodes/nodes/Print.h"
 #include "nodes/Count.h"
 #include "nodes/If.h"

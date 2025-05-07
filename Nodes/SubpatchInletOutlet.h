@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../AudioNodeBase.h"
+#include "AudioNodeBase.h"
 
 // ====================================
 // Inlet Node
