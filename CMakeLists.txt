@@ -107,7 +107,8 @@ add_subdirectory(external/libsamplerate)
 
 add_subdirectory(Nodes/nodes/Metronome)
 
-#==== nanovg shared wrapper =====
+#==== nanovg static wrapper =====
+# We use a wrapper to easily include nanovg without having to worry about ifdef/undef framebuffer stuff
 
 add_library(NanoVGWrapper STATIC
         ${CMAKE_SOURCE_DIR}/Glad/NanoVGWrapper.cpp
@@ -116,11 +117,7 @@ add_library(NanoVGWrapper STATIC
 
 set_target_properties(NanoVGWrapper PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
-        LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
 )
 
 target_include_directories(NanoVGWrapper PUBLIC
@@ -134,7 +131,7 @@ add_dependencies(NanoVGWrapper glad)
 
 target_compile_definitions(NanoVGWrapper PRIVATE NANOVG_GL3_IMPLEMENTATION)
 
-#==== nanovg shared wrapper end =====
+#==== nanovg static wrapper end =====
 
 if (ENABLE_ASAN AND MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(nanovg PRIVATE /fsanitize=address)

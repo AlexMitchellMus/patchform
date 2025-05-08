@@ -5,6 +5,16 @@
 */
 
 #pragma once
+
+#include <cstdint>
+#include <cstddef>
+#include <cstring>
+#include <cmath>
+#include <tuple>
+#include <string>
+#include <sstream>
+#include <unordered_map>
+
 #include "nanovg.h"
 
 #if defined(_WIN32)
