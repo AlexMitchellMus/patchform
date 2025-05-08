@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <nanovg.h>
+#include <NanoVGWrapper.h>
 #include <unordered_dense.h>
 
 namespace pptk

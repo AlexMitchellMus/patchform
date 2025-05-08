@@ -9,7 +9,7 @@
 #include "../AudioNodeBase.h"
 #include <array>
 #include <iostream>         // For debugging output
-#include "nanovg.h"         // NanoVG drawing API header.
+#include <NanoVGWrapper.h>        // NanoVG drawing API header.
 #include "readerwriterqueue.h"// Moodycamel's lock-free queue header.
 #include <utility>          // For std::move
 #include <algorithm>        // For std::copy

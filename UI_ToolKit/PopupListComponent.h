@@ -2,7 +2,7 @@
 
 #include "PopupComponent.h"
 #include "CompEvent.h"
-#include "nanovg.h"
+#include "NanoVGWrapper.h"
 
 #include <string>
 #include <vector>

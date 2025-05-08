@@ -9,12 +9,6 @@
 
 #include "SDL3/SDL.h"
 
-#include <nanovg.h>
-#ifdef NANOVG_GL_IMPLEMENTATION
-#    include <nanovg_gl.h>
-#    include <nanovg_gl_utils.h>
-#endif
-
 #ifdef max
 #undef max
 #endif
@@ -80,14 +74,14 @@ void PatchformApp::shutdown()
     shutdownAudio();
 
     if (invalidFB) {
-        nvgDeleteFramebuffer(invalidFB);
+        nanoVGDeleteFramebuffer(invalidFB);
         invalidFB = nullptr;
     }
 
     regularFont = semiBoldFont = iconFont = objectIconFont = -1;
 
     if (nvg) {
-        nvgDeleteContext(nvg);
+        destroyNanoVGContext(nvg);
         nvg = nullptr;
     }
 
@@ -195,11 +189,11 @@ void PatchformApp::run()
 
             if (invalidFB)
             {
-                nvgDeleteFramebuffer(invalidFB);
+                nanoVGDeleteFramebuffer(invalidFB);
                 invalidFB = nullptr;
             }
 
-            invalidFB = nvgCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+            invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
         }
 
         render();
@@ -520,7 +514,7 @@ bool PatchformApp::initUI()
     window = std::make_unique<WindowPeer>("Patchform", windowWidth, windowHeight, isFullscreen);
     if (!window) return false;
 
-    nvg = nvgCreateContext(0);
+    nvg = createNanoVGContext(0);
     if (!nvg) return false;
 
     if (!loadFonts()) {
@@ -538,7 +532,7 @@ bool PatchformApp::initUI()
 
     eventManager = std::make_unique<pptk::EventManager>(editor.get());
 
-    invalidFB = nvgCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+    invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
 
     editor->setBounds(0, 0, windowWidth, windowHeight);
 
@@ -546,7 +540,7 @@ bool PatchformApp::initUI()
 }
 
 void PatchformApp::render() {
-    nvgBindFramebuffer(invalidFB);
+    nanoVGBindFramebuffer(invalidFB);
 
     nvgViewport(0, 0, windowWidth, windowHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -557,8 +551,8 @@ void PatchformApp::render() {
     nvgGlobalScissor(nvg, 0, 0, windowWidth, windowHeight);
     nvgEndFrame(nvg);
 
-    nvgBindFramebuffer(nullptr);
-    nvgBlitFramebuffer(nvg, invalidFB, 0, 0, windowWidth, windowHeight);
+    nanoVGBindFramebuffer(nullptr);
+    nanoVGBlitFramebuffer(nvg, invalidFB, 0, 0, windowWidth, windowHeight);
 
     window->swapBuffers();
 }

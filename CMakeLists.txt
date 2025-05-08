@@ -102,11 +102,39 @@ set(SDL_POWER OFF CACHE BOOL "Disable SDL power support" FORCE)
 set(SDL_RENDER OFF CACHE BOOL "Disable SDL renderer support" FORCE)
 set(SDL_RENDER_GPU OFF CACHE BOOL "Disable GPU rendering support" FORCE)
 add_subdirectory(external/SDL2)
-add_subdirectory(external/nanovg)
 add_subdirectory(external/rtmidi)
 add_subdirectory(external/libsamplerate)
 
 add_subdirectory(Nodes/nodes/Metronome)
+
+#==== nanovg shared wrapper =====
+
+add_library(NanoVGWrapper STATIC
+        ${CMAKE_SOURCE_DIR}/Glad/NanoVGWrapper.cpp
+        ${CMAKE_SOURCE_DIR}/external/nanovg/src/nanovg.cpp
+)
+
+set_target_properties(NanoVGWrapper PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
+        LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
+)
+
+target_include_directories(NanoVGWrapper PUBLIC
+        ${CMAKE_SOURCE_DIR}/external/nanovg/src
+        ${CMAKE_SOURCE_DIR}/Glad/
+)
+
+target_link_libraries(NanoVGWrapper PRIVATE glad)
+
+add_dependencies(NanoVGWrapper glad)
+
+target_compile_definitions(NanoVGWrapper PRIVATE NANOVG_GL3_IMPLEMENTATION)
+
+#==== nanovg shared wrapper end =====
 
 if (ENABLE_ASAN AND MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(nanovg PRIVATE /fsanitize=address)
@@ -201,11 +229,15 @@ target_link_libraries(PatchformStandalone PRIVATE
         moodycamel_readerwriterqueue
         unordered_dense
         glaze::glaze
-        glad
-        nanovg
+        NanoVGWrapper
         pffft
         rtmidi
+        glad
         samplerate
+)
+
+target_link_directories(PatchformStandalone PRIVATE
+        "${CMAKE_BINARY_DIR}/bin/Debug"
 )
 
 target_compile_definitions(PatchformStandalone PRIVATE
@@ -324,6 +356,7 @@ add_dependencies(PatchformStandalone
     copy_fonts
     update_git_version
     copy_icon
+    NanoVGWrapper
 
     # Plugin system
     #Metronome

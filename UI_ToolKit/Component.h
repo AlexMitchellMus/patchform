@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "nanovg.h"
+#include <NanoVGWrapper.h>
 
 #include <functional>
 #include <iostream>

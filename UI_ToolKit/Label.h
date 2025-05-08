@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Component.h"
-#include "nanovg.h"
+#include "NanoVGWrapper.h"
 
 namespace pptk {
 

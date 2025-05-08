@@ -12,6 +12,8 @@
 #include "../Glad/gl.h"
 #endif
 
+#include <NanoVGWrapper.h>
+
 #include "Canvas.h"
 
 #include <glaze/core/common.hpp>
@@ -509,7 +511,7 @@ void Canvas::render(NVGcontext* nvg, const pptk::Theme& theme)
     if (mode == Canvas::DisplayMode::Edit)
     {
         // Offset by canvasOrigin so the texture starts at canvas 0,0 point
-        NVGpaint paint = nvgImagePattern(nvg, canvasOrigin, canvasOrigin, 512, 512, 0, tileFB->image, 1.0f);
+        NVGpaint paint = nvgImagePattern(nvg, canvasOrigin, canvasOrigin, 512, 512, 0, nanoVGGetFramebufferImage(tileFB), 1.0f);
         nvgBeginPath(nvg);
         nvgRect(nvg, 0, 0, width, height);
         nvgFillPaint(nvg, paint);
@@ -542,14 +544,14 @@ void Canvas::updateFrameBuffer(NVGcontext* nvg)
     // TODO: We need to recreate when the opengl context is re-created
     if (tileFB == nullptr)
     {
-        tileFB = nvgCreateFramebuffer(nvg, tileSize, tileSize, NVG_IMAGE_PREMULTIPLIED | NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+        tileFB = nanoVGCreateFramebuffer(nvg, tileSize, tileSize, NVG_IMAGE_PREMULTIPLIED | NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
     }
 
     if (frameBufferRepaint)
     {
         frameBufferRepaint = false;
 
-        nvgBindFramebuffer(tileFB); // Render to the tile framebuffer
+        nanoVGBindFramebuffer(tileFB); // Render to the tile framebuffer
         nvgViewport(0, 0, tileSize, tileSize);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -600,7 +602,7 @@ void Canvas::updateFrameBuffer(NVGcontext* nvg)
 
         nvgGlobalScissor(nvg, 0, 0, tileSize, tileSize);
         nvgEndFrame(nvg);
-        nvgBindFramebuffer(nullptr);
+        nanoVGBindFramebuffer(nullptr);
     }
 }
 

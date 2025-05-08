@@ -10,12 +10,7 @@
 
 #include "Connection.h"
 
-#include <nanovg.h>
-#ifdef NANOVG_GL_IMPLEMENTATION
-#    undef NANOVG_GL_IMPLEMENTATION
-#    include <nanovg_gl_utils.h>
-#    define NANOVG_GL_IMPLEMENTATION 1
-#endif
+#include <NanoVGWrapper.h>
 
 class Lasso;
 class Object;
@@ -144,7 +139,7 @@ private:
 
     std::string patchName;
 
-    NVGframebuffer* tileFB = nullptr;
+    NVGLUframebuffer* tileFB = nullptr;
     bool frameBufferRepaint = true;
 
     void clearSelection();

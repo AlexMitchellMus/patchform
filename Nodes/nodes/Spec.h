@@ -9,7 +9,7 @@
 #include "../AudioNodeBase.h"
 #include <array>
 #include <iostream>         // Debugging output
-#include "nanovg.h"         // NanoVG drawing API
+#include <NanoVGWrapper.h>   // NanoVG drawing API
 #include "concurrentqueue.h"// Moodycamel's queue
 #include "pffft.h"          // PFFFT for fast FFT
 #include <algorithm>

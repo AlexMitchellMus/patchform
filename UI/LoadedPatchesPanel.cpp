@@ -1,6 +1,6 @@
 #include "LoadedPatchesPanel.h"
 #include "Editor.h"
-#include <nanovg.h>
+#include <NanoVGWrapper.h>
 
 PatchItem::PatchItem(const PatchInfo& info)
     : patchInfo(info)
