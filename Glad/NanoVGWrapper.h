@@ -6,6 +6,8 @@
 
 #pragma once
 
+// Includes needed for nanovg to compile
+
 #include <cstdint>
 #include <cstddef>
 #include <cstring>
