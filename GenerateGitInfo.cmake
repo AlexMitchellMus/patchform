@@ -26,6 +26,10 @@ file(WRITE "${GIT_VERSION_FILE}" "${GIT_VERSION}\n")
 
 # Write the generated file.
 file(WRITE "${OUTPUT_FILE}" "#include \"GitInfo.h\"\n")
-file(APPEND "${OUTPUT_FILE}" "const char* const patchform_git_version = \"${GIT_VERSION}\";\n")
-file(APPEND "${OUTPUT_FILE}" "const char* const patchform_git_hash = \"${GIT_HASH}\";\n")
+file(APPEND "${OUTPUT_FILE}" "extern \"C\" {\n")
+file(APPEND "${OUTPUT_FILE}" "static const char _patchform_git_version[] = \"${GIT_VERSION}\";\n")
+file(APPEND "${OUTPUT_FILE}" "static const char _patchform_git_hash[] = \"${GIT_HASH}\";\n")
+file(APPEND "${OUTPUT_FILE}" "const char* const patchform_git_version = _patchform_git_version;\n")
+file(APPEND "${OUTPUT_FILE}" "const char* const patchform_git_hash = _patchform_git_hash;\n")
+file(APPEND "${OUTPUT_FILE}" "}\n")
 

@@ -5,5 +5,5 @@
 
 // See GenerateGitInfo.cmake to see how the cpp is generated
 
-extern const char* const patchform_git_version;
-extern const char* const patchform_git_hash;
+extern "C" const char* const patchform_git_version;
+extern "C" const char* const patchform_git_hash;

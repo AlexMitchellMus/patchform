@@ -8,6 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
+
 if (ENABLE_ASAN AND MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL" CACHE STRING "" FORCE)
 else()
@@ -30,6 +31,17 @@ else()
 endif()
 
 set(GIT_VERSION_FILE "${CMAKE_BINARY_DIR}/GitVersion.txt")
+
+add_custom_command(
+        OUTPUT ${BUILDINFO_CPP}
+        COMMAND ${CMAKE_COMMAND}
+        -DOUTPUT_FILE=${BUILDINFO_CPP}
+        -DGIT_VERSION_FILE=${GIT_VERSION_FILE}
+        -P ${CMAKE_SOURCE_DIR}/GenerateGitInfo.cmake
+        DEPENDS ${CMAKE_SOURCE_DIR}/.git/HEAD ${GIT_REF_FILE}
+        COMMENT "Generating buildinfo.cpp with updated Git info"
+        VERBATIM
+)
 
 add_custom_command(
         OUTPUT ${BUILDINFO_CPP}
@@ -110,7 +122,7 @@ add_subdirectory(Nodes/nodes/Metronome)
 #==== nanovg static wrapper =====
 # We use a wrapper to easily include nanovg without having to worry about ifdef/undef framebuffer stuff
 
-add_library(NanoVGWrapper STATIC
+add_library(NanoVGWrapper OBJECT
         ${CMAKE_SOURCE_DIR}/Glad/NanoVGWrapper.cpp
         ${CMAKE_SOURCE_DIR}/external/nanovg/src/nanovg.cpp
 )
@@ -146,7 +158,7 @@ target_include_directories(moodycamel_concurrentqueue INTERFACE "${CMAKE_SOURCE_
 add_library(moodycamel_readerwriterqueue INTERFACE)
 target_include_directories(moodycamel_readerwriterqueue INTERFACE "${CMAKE_SOURCE_DIR}/external/readerwriterqueue")
 
-add_library(pffft STATIC external/pffft/pffft.c)
+add_library(pffft OBJECT external/pffft/pffft.c)
 target_include_directories(pffft PUBLIC external/pffft)
 
 target_compile_options(pffft PRIVATE
@@ -193,14 +205,94 @@ target_compile_options(linenoise PRIVATE
 # Collect common source files
 file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}/UI_ToolKit/*.cpp")
 
+#======= Patchform lib ==========
+
+add_library(PatchformSDK SHARED
+        ${GRAPH_SOURCES}
+        ${UI_SOURCES}
+        ${NODE_SHARED_SOURCES}
+        ${BUILDINFO_CPP}
+)
+
+target_compile_options(PatchformSDK PRIVATE
+        /Od
+        /Zi
+        /bigobj
+        /Zc:__cplusplus)
+
+target_compile_definitions(PatchformSDK PRIVATE
+        PATCHFORM_WITH_GUI
+        PATCHFORM_SDK_BUILD
+        NANOVG_GL3_IMPLEMENTATION=1
+)
+
+target_include_directories(PatchformSDK PUBLIC
+        "${CMAKE_SOURCE_DIR}"
+        "${CMAKE_SOURCE_DIR}/external"
+        "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
+        "${CMAKE_SOURCE_DIR}/external/readerwriterqueue"
+        "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
+        "${CMAKE_SOURCE_DIR}/external/unordered_dense/include/ankerl"
+        "${CMAKE_SOURCE_DIR}/external/glaze/include/"
+        "${CMAKE_SOURCE_DIR}/external/portaudio/include"
+        "${CMAKE_SOURCE_DIR}/Glad/"
+        "${CMAKE_SOURCE_DIR}/external/nanovg/src/"
+        "${CMAKE_SOURCE_DIR}/external/SDL2/include"
+        "${CMAKE_SOURCE_DIR}/external/pffft"
+        "${CMAKE_SOURCE_DIR}/external/rtmidi"
+        "${CMAKE_SOURCE_DIR}/external/simde"
+        "${CMAKE_SOURCE_DIR}/external/libsamplerate/include"
+        "${CMAKE_SOURCE_DIR}/external/SignalsmithDSP/include"
+)
+
+target_link_libraries(PatchformSDK PRIVATE
+        SDL3::SDL3-static
+        portaudio
+        moodycamel_concurrentqueue
+        moodycamel_readerwriterqueue
+        unordered_dense
+        glaze::glaze
+        rtmidi
+        glad
+        samplerate
+)
+
+target_sources(PatchformSDK PRIVATE
+        $<TARGET_OBJECTS:NanoVGWrapper>
+        $<TARGET_OBJECTS:pffft>
+        ${BUILDINFO_CPP}
+)
+
+set_target_properties(PatchformSDK PROPERTIES
+        LINK_FLAGS "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/patchform.def"
+)
+
+add_custom_target(generate_gitinfo
+        COMMAND ${CMAKE_COMMAND}
+        -DOUTPUT_FILE=${BUILDINFO_CPP}
+        -DGIT_VERSION_FILE=${GIT_VERSION_FILE}
+        -P ${CMAKE_SOURCE_DIR}/GenerateGitInfo.cmake
+        BYPRODUCTS ${BUILDINFO_CPP}
+        COMMENT "Generating GitInfo.cpp"
+)
+
+add_dependencies(PatchformSDK
+        NanoVGWrapper
+        generate_gitinfo
+)
+
 # PlugPatchStandalone target - use WIN32 to hide terminal
-add_executable(PatchformStandalone PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${NODE_SHARED_SOURCES} ${UI_SOURCES} ${BUILDINFO_CPP})
+add_executable(PatchformStandalone PatchformStandalone.cpp)
 
 set_target_properties(PatchformStandalone PROPERTIES
         INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
 )
 
-target_compile_definitions(PatchformStandalone PRIVATE PATCHFORM_WITH_GUI NANOVG_GL3_IMPLEMENTATION=1)
+target_compile_definitions(PatchformStandalone PRIVATE
+        PATCHFORM_WITH_GUI
+        PATCHFORM_STANDALONE
+)
+
 target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"
         "${CMAKE_SOURCE_DIR}/external"
@@ -219,19 +311,7 @@ target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}/external/libsamplerate/include"
         "${CMAKE_SOURCE_DIR}/external/SignalsmithDSP/include"
 )
-target_link_libraries(PatchformStandalone PRIVATE
-        SDL3::SDL3-static
-        portaudio
-        moodycamel_concurrentqueue
-        moodycamel_readerwriterqueue
-        unordered_dense
-        glaze::glaze
-        NanoVGWrapper
-        pffft
-        rtmidi
-        glad
-        samplerate
-)
+target_link_libraries(PatchformStandalone PRIVATE PatchformSDK)
 
 target_link_directories(PatchformStandalone PRIVATE
         "${CMAKE_BINARY_DIR}/bin/Debug"
@@ -351,9 +431,8 @@ add_dependencies(PlugPatchCLI copy_patches)
 add_dependencies(PatchformStandalone
     copy_patches
     copy_fonts
-    update_git_version
     copy_icon
-    NanoVGWrapper
+    PatchformSDK
 
     # Plugin system
     #Metronome

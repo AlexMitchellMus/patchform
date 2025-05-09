@@ -19,6 +19,7 @@
 
 #include "PatchformApp.h"
 #include "../UI_ToolKit/WindowPeer.h"
+#include "../GitInfo.h"
 
 PatchformApp* PatchformApp::instance = nullptr;
 
@@ -37,6 +38,8 @@ PatchformApp::~PatchformApp()
 
 bool PatchformApp::initialize()
 {
+    std::cout << "Patchform version: " << patchform_git_version  << " hash: " << patchform_git_hash << std::endl;
+
     settings.load();
 
     selectedApiIndex = settings.selectedApiIndex;

@@ -90,7 +90,7 @@ private:
 
     bool loadFonts();
 
-    NVGframebuffer* invalidFB = nullptr;
+    NVGLUframebuffer* invalidFB = nullptr;
 
     // Capping to 60fps reduces CPU time by a factor of 10 (for now before invalidation)
     // But even with invalidation - there will still be a worst case (when everything is updating on canvas drag)

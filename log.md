@@ -112,7 +112,7 @@ https://fluenticons.co/outlined/
 
 adding WIN32 will make the app build without terminal (for debugging)
 # PlugPatchStandalone target - use WIN32 to hide terminal (this is an SDL3 thing)
-add_executable(PlugPatchStandalone WIN32 PlugPatchStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
+add_executable(PlugPatchStandalone WIN32 PatchformStandalone.cpp ${GRAPH_SOURCES} ${UI_SOURCES})
 
 
 
