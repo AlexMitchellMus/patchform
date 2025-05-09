@@ -218,10 +218,10 @@ add_library(PatchformSDK SHARED
 )
 
 target_compile_options(PatchformSDK PRIVATE
-        /Od
-        /Zi
-        /bigobj
-        /Zc:__cplusplus)
+        $<$<CONFIG:Debug>:/Od /Zi /bigobj /Zc:__cplusplus>
+        $<$<CONFIG:Release>:/Ox /arch:AVX2 /GL /GS- /Ob3 /fp:fast /bigobj /DNDEBUG>
+        $<$<CONFIG:RelWithDebInfo>:/Ox /Z7 /GL /bigobj>
+)
 
 target_compile_definitions(PatchformSDK PRIVATE
         PATCHFORM_WITH_GUI
