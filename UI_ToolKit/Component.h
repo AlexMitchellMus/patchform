@@ -176,7 +176,7 @@ struct Rect {
 };
 
 class PopupComponent;
-class Component : public SafeObject
+class SDK_EXPORT Component : public SafeObject
 {
 public:
     std::function<void()> onVisibilityChanged = [](){};
@@ -187,7 +187,7 @@ public:
 
     void setVisible(bool shouldBeVisible);
 
-    bool isVisible() const { return visible; };
+    [[nodiscard]] bool isVisible() const { return visible; };
 
     void setSize(float newWidth, float newHeight)
     {

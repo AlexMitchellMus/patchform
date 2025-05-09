@@ -5,7 +5,7 @@
 
 class GraphManager;
 class GraphHolder;
-class Subpatch final : public AudioNode
+class SDK_EXPORT Subpatch final : public AudioNode
 {
 
 public:

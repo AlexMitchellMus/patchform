@@ -229,6 +229,8 @@ public:
             if (mgr->getPatchFile() == path)
             {
                 activeGraph = mgr.get();
+                graphManagersPending = std::make_shared<Graphs>(graphManagersUI);
+                graphListNeedsSwap.store(true, std::memory_order_release);
                 return;
             }
         }
