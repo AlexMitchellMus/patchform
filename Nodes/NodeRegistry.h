@@ -34,6 +34,11 @@ public:
         return nodeNames;
     }
 
+    void clearAll() {
+        nodeNames.clear();
+        factories.clear();
+    }
+
     AudioNode* createNode(const std::string& alias, std::shared_ptr<NodeContext> ctx, const json& j) const {
         auto it = factories.find(alias);
         if (it != factories.end())

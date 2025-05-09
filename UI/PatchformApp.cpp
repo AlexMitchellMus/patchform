@@ -74,7 +74,17 @@ void PatchformApp::shutdown()
     settings.windowIsMaximized = window->isMaximized();
     window->getUserSize(settings.windowWidth, settings.windowHeight);
 
+    graphSystem.closeAll();
+
+    editor.reset();
+    eventManager.reset();
+    window.reset();
+
     shutdownAudio();
+
+    // Clear node factories BEFORE unloading the DLLs
+    NodeRegistry::getInstance().clearAll();
+    nodeManager.unloadAll();
 
     if (invalidFB) {
         nanoVGDeleteFramebuffer(invalidFB);
@@ -86,10 +96,6 @@ void PatchformApp::shutdown()
     if (nvg) {
         destroyNanoVGContext(nvg);
         nvg = nullptr;
-    }
-
-    if (window) {
-        window.reset();
     }
 
     SDL_Quit();

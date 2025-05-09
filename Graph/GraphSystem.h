@@ -25,6 +25,10 @@ public:
         setSampleRateAndBlockSize(44100, 64);
     }
 
+    void clear()
+    {
+    }
+
     std::tuple<std::vector<Object*>, std::vector<Edge*>> loadPatch(const std::string& path, const json& patch, bool logVerbose)
     {
         cleanupDeletedGraphs();
@@ -39,10 +43,33 @@ public:
         graphManagersUI.push_back(manager);
         activeGraph = ptr;
 
+        graphManagersPending = std::make_shared<Graphs>(graphManagersUI);
         graphListNeedsSwap.store(true, std::memory_order_release);
         onPatchLoaded(graphManagersUI);
 
         return {objects, conns};
+    }
+
+    void closeAll()
+    {
+        // Flag all for deletion
+        for (auto& mgr : graphManagersUI)
+            mgr->flaggedForDeletion.store(true);
+
+        // Replace with empty list
+        graphManagersPending = std::make_shared<Graphs>();
+        graphListNeedsSwap.store(true, std::memory_order_release);
+
+        // Wait for audio thread to acknowledge the swap
+        while (graphListNeedsSwap.load(std::memory_order_acquire)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        cleanupDeletedGraphs();
+
+        graphManagersPending.reset();
+
+        activeGraph = nullptr;
     }
 
     bool unloadActivePatch()
@@ -108,7 +135,7 @@ public:
     {
         if (graphListNeedsSwap.load(std::memory_order_acquire))
         {
-            graphManagersAudio = std::make_shared<Graphs>(graphManagersUI);
+            std::swap(graphManagersAudio, graphManagersPending);
             graphListNeedsSwap.store(false, std::memory_order_release);
         }
 
@@ -244,6 +271,7 @@ private:
 
     Graphs graphManagersUI;
     std::shared_ptr<const Graphs> graphManagersAudio = std::make_shared<Graphs>();
+    std::shared_ptr<const Graphs> graphManagersPending;
     std::atomic<bool> graphListNeedsSwap = false;
 
     GraphManager* activeGraph = nullptr;

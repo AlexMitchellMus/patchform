@@ -135,7 +135,17 @@ public:
 
     virtual ~AudioNode()
     {
-        //std::cout << "destorying audio node: " << nodeID << std::endl;
+        std::cout << "destorying audio node: " << nodeID << std::endl;
+        for (auto& param : parameters)
+        {
+            if (param)
+            {
+                std::cout << "resetting parameters" << std::endl;
+                param->onParameterChanged = []() {};
+                param->informNodeOfChange = []() {};
+                param->updateNodeUI = [](std::variant<int, float, std::string>) {};
+            }
+        }
     }
 
     virtual void postCreate() { };
@@ -172,7 +182,8 @@ public:
 
     void destroyUI()
     {
-        ui.reset();
+        if (ui)
+            ui.reset();
     }
 #endif
 

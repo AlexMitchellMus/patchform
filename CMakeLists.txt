@@ -119,6 +119,8 @@ add_subdirectory(external/libsamplerate)
 
 add_subdirectory(Nodes/nodes/Metronome)
 
+add_dependencies(Metronome PatchformSDK)
+
 #==== nanovg static wrapper =====
 # We use a wrapper to easily include nanovg without having to worry about ifdef/undef framebuffer stuff
 
@@ -128,6 +130,7 @@ add_library(NanoVGWrapper OBJECT
 )
 
 set_target_properties(NanoVGWrapper PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
 )
@@ -264,6 +267,7 @@ target_sources(PatchformSDK PRIVATE
 )
 
 set_target_properties(PatchformSDK PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
         LINK_FLAGS "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/patchform.def"
 )
 
@@ -285,6 +289,7 @@ add_dependencies(PatchformSDK
 add_executable(PatchformStandalone PatchformStandalone.cpp)
 
 set_target_properties(PatchformStandalone PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
         INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
 )
 
@@ -322,6 +327,11 @@ target_compile_definitions(PatchformStandalone PRIVATE
         SAMPLERATE_STATIC
 )
 if (MSVC)
+    # Force all static libs to match runtime (important!)
+    set_target_properties(rtmidi PROPERTIES     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    set_target_properties(portaudio PROPERTIES  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    set_target_properties(pffft PROPERTIES      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
     if (ENABLE_ASAN AND CMAKE_BUILD_TYPE STREQUAL "Debug")
         message(STATUS "Building with MSVC ASAN")
 
@@ -331,12 +341,6 @@ if (MSVC)
 
         target_compile_options(PatchformStandalone PRIVATE /fsanitize=address /Od /Zi /bigobj /Zc:__cplusplus)
         target_link_options(PatchformStandalone PRIVATE /INFERASANLIBS)
-
-        # Force all static libs to match runtime (important!)
-        set_target_properties(nanovg PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
-        set_target_properties(rtmidi PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
-        set_target_properties(portaudio PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
-        set_target_properties(pffft PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
     else()
         target_compile_options(PatchformStandalone PRIVATE
                 /std:c++latest
@@ -435,8 +439,8 @@ add_dependencies(PatchformStandalone
     PatchformSDK
 
     # Plugin system
-    #Metronome
-    #copy_objects
+    Metronome
+    copy_objects
     )
 
 # Installer configuration for CLI

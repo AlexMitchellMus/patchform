@@ -33,17 +33,13 @@ target_include_directories(Metronome PRIVATE
 )
 
 target_link_libraries(Metronome PRIVATE
-        nanovg
-        SDL3::SDL3-static
-        rtmidi
-        portaudio
-        pffft
-        samplerate
+        PatchformSDK
 )
 
 target_compile_definitions(Metronome PRIVATE PATCHFORM_WITH_GUI PATCHFORM_PLUGIN_BUILD NANOVG_GL3_IMPLEMENTATION=1)
 
 set_target_properties(Metronome PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
         RUNTIME_OUTPUT_DIRECTORY_DEBUG         ${CMAKE_BINARY_DIR}/objects
         RUNTIME_OUTPUT_DIRECTORY_RELEASE       ${CMAKE_BINARY_DIR}/objects
         RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/objects

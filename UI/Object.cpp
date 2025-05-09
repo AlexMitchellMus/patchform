@@ -15,12 +15,17 @@
 class Object::InsetParameter : public Component
 {
     public:
-    InsetParameter(Parameter* linkedParam)
+    InsetParameter(Parameter* param)
     {
+        linkedParam = param;
+
         paramDisplayText = linkedParam->getName() + " : " + linkedParam->getAsString();
 
-        linkedParam->onParameterChanged = [this, linkedParam]()
+        linkedParam->onParameterChanged = [this]()
         {
+            if (!linkedParam)
+                return;
+
             auto newText = linkedParam->getName() + " : " + linkedParam->getAsString();
             if (paramDisplayText != newText)
             {
@@ -28,7 +33,6 @@ class Object::InsetParameter : public Component
                 getParent()->resized();
             }
         };
-
     };
 
     bool hitTest(float x, float y) override
@@ -50,6 +54,9 @@ class Object::InsetParameter : public Component
     }
 
     std::string paramDisplayText;
+
+private:
+    Parameter* linkedParam;
 };
 
 Object::Object(AudioNode* node)

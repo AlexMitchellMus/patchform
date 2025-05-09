@@ -23,6 +23,7 @@ public:
     const std::string& getName() { return name; }
 
     virtual void setFromString(const std::string& value) = 0;
+
     virtual std::string getAsString() const = 0;
 
 #ifdef PATCHFORM_WITH_GUI
@@ -33,8 +34,6 @@ public:
             c->setBounds(parentWidth * 0.5f, 4, parentWidth * 0.5f, 22);
     }
 #endif
-
-    virtual ~Parameter() = default;
 };
 
 class FloatParameter : public Parameter {
@@ -47,7 +46,8 @@ public:
         if (std::fabs(newValue - value) > std::numeric_limits<float>::epsilon()) {
             value = newValue;
             queue.enqueue(newValue);
-            onParameterChanged();
+            if (onParameterChanged)
+                onParameterChanged();
             informNodeOfChange();
             updateNodeUI(value);
         }
@@ -109,7 +109,8 @@ public:
             value = newValue;
             queue.enqueue(newValue);
             informNodeOfChange();
-            onParameterChanged();
+            if (onParameterChanged)
+                onParameterChanged();
             updateNodeUI(value);
         }
     }
@@ -156,7 +157,8 @@ public:
 
     void setValue(bool newValue) {
         value.store(newValue, std::memory_order_release);
-        onParameterChanged();
+        if (onParameterChanged)
+            onParameterChanged();
         informNodeOfChange();
         updateNodeUI(value);
     }
@@ -202,7 +204,8 @@ public:
     void setValue(const std::string& newValue) {
         value = newValue;
         queue.enqueue(newValue);
-        onParameterChanged();
+        if (onParameterChanged)
+            onParameterChanged();
         informNodeOfChange();
         updateNodeUI(value);
     }
@@ -248,7 +251,8 @@ public:
         if (selectedValue != newValue && std::find(choices.begin(), choices.end(), newValue) != choices.end()) {
             selectedValue = newValue;
             queue.enqueue(newValue);
-            onParameterChanged();
+            if (onParameterChanged)
+                onParameterChanged();
             informNodeOfChange();
             updateNodeUI(selectedValue);
         }
