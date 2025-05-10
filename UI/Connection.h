@@ -18,7 +18,7 @@ class Connection : public pptk::Component, public CanvasItem {
 public:
     Connection(Port* origin, Port* destPos = nullptr, uint64_t edgeHash = 0);
 
-    ~Connection();
+    ~Connection() override;
 
     void updateConnectionGeometry();
 

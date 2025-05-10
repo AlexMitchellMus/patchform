@@ -5,7 +5,9 @@
 
 #include "../Glad/gl.h"
 
+#if __WIN32__
 #include <Windows.h>
+#endif
 
 #include "SDL3/SDL.h"
 

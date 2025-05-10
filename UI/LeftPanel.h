@@ -10,15 +10,17 @@
 #include <string>
 #include "../UI_ToolKit/Component.h"
 #include "../UI_ToolKit/Resizer.h"
+#include "ObjectsListViewport.h"
 
-class LoadedPatchesPanel;
-class ObjectsListViewport;
 class Editor;
 class Canvas;
+class LoadedPatchesPanel;
 class LeftPanel : public pptk::ResizableComponent
 {
 public:
     explicit LeftPanel(Editor* ed);
+
+    ~LeftPanel();
 
     void render(NVGcontext* nvg, const pptk::Theme& theme) override;
 

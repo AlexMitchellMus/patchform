@@ -54,7 +54,9 @@ class GraphSystem;
 class WindowPeer;
 class Editor : public pptk::RootComponent {
 public:
-    Editor(WindowPeer* peer);
+    explicit Editor(WindowPeer* peer);
+
+    ~Editor();
 
     void init(GraphSystem* gm);
 

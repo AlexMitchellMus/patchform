@@ -58,6 +58,8 @@ class LoadedPatchesPanel : public pptk::Component {
 public:
     explicit LoadedPatchesPanel(Editor* ed);
 
+    ~LoadedPatchesPanel() override = default;
+
     void updateTabs(const std::vector<std::tuple<std::string, bool>>& tabs);
 
     void setPatches(const std::vector<PatchInfo>& patches);

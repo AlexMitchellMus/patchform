@@ -15,7 +15,7 @@
 //#include "Iterator.h"
 
 // Data
-//#include "nodes/Metronome.h"
+#include "nodes/Metronome.h"
 #include "nodes/nodes/Print.h"
 #include "nodes/Count.h"
 #include "nodes/If.h"
@@ -63,8 +63,8 @@
 
 // Oscillators
 #include "nodes/Oscillator.h"
-#include "nodes/TableOsc.h"
-#include "nodes/TableIndexOsc.h"
+//#include "nodes/TableOsc.h"
+//#include "nodes/TableIndexOsc.h"
 
 // Mixed
 #include "nodes/Zerox.h"
@@ -89,9 +89,9 @@
 #include "nodes/Slider.h"
 
 // Wavetable
-#include "nodes/TableXFade.h"
-#include "nodes/TableXPhase.h"
-#include "nodes/TableXSpectral.h"
+//#include "nodes/TableXFade.h"
+//#include "nodes/TableXPhase.h"
+//#include "nodes/TableXSpectral.h"
 
 // MIDI
 #include "nodes/MidiNoteIn.h"

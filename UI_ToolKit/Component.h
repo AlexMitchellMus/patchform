@@ -183,7 +183,7 @@ public:
 
     explicit Component() = default;
 
-    virtual ~Component();
+    ~Component() override;
 
     void setVisible(bool shouldBeVisible);
 

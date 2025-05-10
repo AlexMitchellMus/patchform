@@ -73,6 +73,7 @@ public:
                 return true;
             }
             break;
+        default:
         case ResizerMode::Right:
             if (x > getWidth() - 8 && x < getWidth())
             {

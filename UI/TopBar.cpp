@@ -7,7 +7,7 @@
 #include "TopBar.h"
 #include "Editor.h"
 #include "../Graph/GraphSystem.h"
-#include "../UI_ToolKit/PlatformHelpers.h"
+#include "../PlatformHelpers/PlatformHelpers.h"
 #include "FilesystemHelpers.h"
 #include "BreadcrumbBar.h"
 

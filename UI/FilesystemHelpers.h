@@ -1,20 +1,33 @@
 #pragma once
 
+#include <filesystem>
+#include <string>
+
 #ifdef _WIN32
-#include <windows.h>
+    #include <direct.h> // for _fullpath
+    #define PATH_MAX MAX_PATH
+#else
+    #include <limits.h> // for PATH_MAX
+    #include <unistd.h> // for realpath
 #endif
 
 namespace FilesystemHelpers
 {
     inline std::string normalizePath(const std::string& in)
     {
-        char out[MAX_PATH];
-        return _fullpath(out, in.c_str(), MAX_PATH) ? std::string(out) : in;
+        char out[PATH_MAX];
+
+#ifdef _WIN32
+        return _fullpath(out, in.c_str(), PATH_MAX) ? std::string(out) : in;
+#else
+        return realpath(in.c_str(), out) ? std::string(out) : in;
+#endif
     }
 
     inline std::string getStem(const std::string& path)
     {
-        std::filesystem::path p(path);
-        return p.stem().string();
+        return std::filesystem::path(path).stem().string();
     }
 }
+
+

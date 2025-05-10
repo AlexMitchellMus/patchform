@@ -35,6 +35,8 @@ class Object::InsetParameter : public Component
         };
     };
 
+    ~InsetParameter() = default;
+
     bool hitTest(float x, float y) override
     {
         return false;
@@ -222,10 +224,7 @@ Object::Object(AudioNode* node)
     };
 }
 
-Object::~Object()
-{
-    //std::cout << "object deleting: " << std::endl;
-}
+Object::~Object() {}
 
 void Object::updateObjectBounds(pptk::Rect newBounds)
 {

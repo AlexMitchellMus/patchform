@@ -20,7 +20,7 @@ class SDK_EXPORT Object : public pptk::Component, public CanvasItem {
 public:
     explicit Object(AudioNode* node);
 
-    ~Object() override;
+    ~Object();
 
     void mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button) override;
     void mouseButtonDown(pptk::CompEvent& e) override;
@@ -118,4 +118,6 @@ private:
 
     float aspectRatio = 0.0f;
 };
+
+
 

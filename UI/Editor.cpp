@@ -9,8 +9,11 @@
 #include "FilesystemHelpers.h"
 #include "../Graph/GraphSystem.h"
 #include "CommandManagerCommands.h"
+#include "Lasso.h"
 
 Editor::Editor(WindowPeer* peer) : windowPeer(peer) {};
+
+Editor::~Editor() {}
 
 void Editor::init(GraphSystem* gm)
 {
@@ -161,12 +164,7 @@ void Editor::loadFile(const std::string& fileName) const
     if (fileName.empty())
         return;
 
-    auto normalizePath = [](const std::string& in) -> std::string {
-        char out[MAX_PATH];
-        return _fullpath(out, in.c_str(), MAX_PATH) ? std::string(out) : in;
-    };
-
-    std::string absPath = normalizePath(fileName);
+    std::string absPath = FilesystemHelpers::normalizePath(fileName);
 
     // If the patch is already loaded, load it into the canvas, and make it active
     for (const auto& [ path , isDirty ]: graphSystem->getLoadedPatches()) {
