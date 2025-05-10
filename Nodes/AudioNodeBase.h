@@ -135,6 +135,7 @@ public:
 
     virtual ~AudioNode()
     {
+        return;
         std::cout << "destorying audio node: " << nodeID << std::endl;
         for (auto& param : parameters)
         {

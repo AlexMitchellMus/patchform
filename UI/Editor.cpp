@@ -96,26 +96,31 @@ void Editor::init(GraphSystem* gm)
 
 void Editor::initCommands()
 {
+#ifdef __APPLE__
+    constexpr SDL_Keymod modKey = SDL_KMOD_GUI;  // ⌘ on macOS
+#else
+    constexpr SDL_Keymod modKey = SDL_KMOD_CTRL; // Ctrl on Win/Linux
+#endif
     commandIDManager.registerCommand("NewPatch", std::make_unique<NewPatchCommand>(this));
-    commandIDManager.bindKey(SDLK_N, SDL_KMOD_CTRL, "NewPatch");
+    commandIDManager.bindKey(SDLK_N, modKey, "NewPatch");
 
     commandIDManager.registerCommand("OpenPatch", std::make_unique<OpenCommand>(this));
-    commandIDManager.bindKey(SDLK_O, SDL_KMOD_CTRL, "OpenPatch");
+    commandIDManager.bindKey(SDLK_O, modKey, "OpenPatch");
 
     commandIDManager.registerCommand("SavePatch", std::make_unique<SaveCommand>(this));
-    commandIDManager.bindKey(SDLK_S, SDL_KMOD_CTRL, "SavePatch", true);
+    commandIDManager.bindKey(SDLK_S, modKey, "SavePatch", true);
 
     commandIDManager.registerCommand("SavePatchAs", std::make_unique<SaveAsCommand>(this));
-    commandIDManager.bindKey(SDLK_S, SDL_KMOD_CTRL | SDL_KMOD_SHIFT, "SavePatchAs", true);
+    commandIDManager.bindKey(SDLK_S, modKey | SDL_KMOD_SHIFT, "SavePatchAs", true);
 
     commandIDManager.registerCommand("ClosePatch", std::make_unique<ClosePatchCommand>(this));
-    commandIDManager.bindKey(SDLK_W, SDL_KMOD_CTRL, "ClosePatch");
+    commandIDManager.bindKey(SDLK_W, modKey, "ClosePatch");
 
     commandIDManager.registerCommand("ShowSettingsDialog", std::make_unique<ShowSettingsCommand>(this));
-    commandIDManager.bindKey(SDLK_COMMA, SDL_KMOD_CTRL, "ShowSettingsDialog");
+    commandIDManager.bindKey(SDLK_COMMA, modKey, "ShowSettingsDialog");
 
     commandIDManager.registerCommand("ShowAboutDialog", std::make_unique<ShowAboutCommand>(this));
-    commandIDManager.bindKey(SDLK_F1, SDL_KMOD_NONE, "ShowAboutDialog");
+    commandIDManager.bindKey(SDLK_F1, modKey, "ShowAboutDialog");
 }
 
 

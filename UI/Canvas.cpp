@@ -241,7 +241,11 @@ void Canvas::resetScale()
 void Canvas::keyPressed(pptk::CompEvent& e)
 {
     const auto modKey = e.sdlEvent.key.mod;
-    if ((modKey & SDL_KMOD_CTRL) != 0)
+#ifdef __APPLE__
+    if ((modKey & SDL_KMOD_GUI) != 0) // ⌘ Command on macOS
+#else
+    if ((modKey & SDL_KMOD_CTRL) != 0) // Ctrl on Windows/Linux
+#endif
     {
         switch (e.sdlEvent.key.scancode)
         {

@@ -156,6 +156,7 @@ void PatchformApp::run()
                     {
                         newWidth = event.window.data1;
                         newHeight = event.window.data2;
+
                         editor->setBounds(0, 0, newWidth, newHeight);
                         Uint32 flags = SDL_GetWindowFlags(window->getSDLWindow());
                         if ((flags & SDL_WINDOW_MAXIMIZED) == 0 && !window->getIsProgrammaticResize()) {
@@ -192,17 +193,15 @@ void PatchformApp::run()
 
         //static int c = 0;
         //std::cout << c++ << " repainting" << std::endl;
+        int drawableW, drawableH;
+        SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
 
-        if (!invalidFB || newWidth != windowWidth || newHeight != windowHeight)
-        {
-            windowWidth = newWidth;
-            windowHeight = newHeight;
+        if (!invalidFB || drawableW != windowWidth || drawableH != windowHeight) {
+            windowWidth = drawableW;
+            windowHeight = drawableH;
 
             if (invalidFB)
-            {
                 nanoVGDeleteFramebuffer(invalidFB);
-                invalidFB = nullptr;
-            }
 
             invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
         }
@@ -543,32 +542,40 @@ bool PatchformApp::initUI()
 
     eventManager = std::make_unique<pptk::EventManager>(editor.get());
 
-    invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
-
     editor->setBounds(0, 0, windowWidth, windowHeight);
+    SDL_GetWindowSizeInPixels(window->getSDLWindow(), &windowWidth, &windowHeight);
+    invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
 
     return true;
 }
 
-void PatchformApp::render() {
+void PatchformApp::render()
+{
+    int drawableW, drawableH;
+    int windowW, windowH;
+    SDL_GetWindowSize(window->getSDLWindow(), &windowW, &windowH);
+    SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
+    float pixelRatio = (float)drawableW / (float)windowW;
+
     nanoVGBindFramebuffer(invalidFB);
 
-    nvgViewport(0, 0, windowWidth, windowHeight);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    nvgViewport(0, 0, drawableW, drawableH);
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    nvgBeginFrame(nvg, windowWidth, windowHeight, 1.0f);
+    nvgBeginFrame(nvg, windowW, windowH, pixelRatio);  // correct scaling
     editor->renderFrame(nvg);
-    nvgGlobalScissor(nvg, 0, 0, windowWidth, windowHeight);
+    nvgGlobalScissor(nvg, 0, 0, drawableW, drawableH);
     nvgEndFrame(nvg);
 
     nanoVGBindFramebuffer(nullptr);
-    nanoVGBlitFramebuffer(nvg, invalidFB, 0, 0, windowWidth, windowHeight);
+    nanoVGBlitFramebuffer(nvg, invalidFB, 0, 0, drawableW, drawableH);
 
     window->swapBuffers();
 }
 
-bool PatchformApp::loadFonts() {
+bool PatchformApp::loadFonts()
+{
     regularFont = nvgCreateFont(nvg, "Regular", "Assets/Fonts/Inter_18pt-Regular.ttf");
     if (regularFont == -1) {
         std::cerr << "Failed to load Regular font!" << std::endl;

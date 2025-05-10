@@ -12,6 +12,8 @@
 
 class Parameter {
 public:
+    virtual ~Parameter() = default;
+
     std::string name;
 
     std::function<void()> onParameterChanged = [](){};
@@ -36,7 +38,7 @@ public:
 #endif
 };
 
-class FloatParameter : public Parameter {
+class FloatParameter final : public Parameter {
 public:
     FloatParameter(const std::string& name, float defaultValue, float minVal, float maxVal)
         : Parameter(name), value(defaultValue), minValue(minVal), maxValue(maxVal) {}
@@ -98,7 +100,7 @@ private:
     moodycamel::ConcurrentQueue<float> queue;
 };
 
-class IntParameter : public Parameter {
+class IntParameter final : public Parameter {
 public:
     IntParameter(const std::string& name, int defaultValue, int minVal, int maxVal)
         : Parameter(name), value(defaultValue), minValue(minVal), maxValue(maxVal) {}
@@ -150,7 +152,7 @@ private:
     moodycamel::ConcurrentQueue<int> queue;
 };
 
-class BoolParameter : public Parameter {
+class BoolParameter final : public Parameter {
 public:
     BoolParameter(const std::string& name, bool defaultValue)
         : Parameter(name), value(defaultValue) {}
@@ -196,7 +198,7 @@ private:
     std::atomic<bool> value;
 };
 
-class StringParameter : public Parameter {
+class StringParameter final : public Parameter {
 public:
     StringParameter(const std::string& name, const std::string& defaultValue)
         : Parameter(name), value(defaultValue) {}
@@ -242,7 +244,7 @@ private:
     moodycamel::ConcurrentQueue<std::string> queue;
 };
 
-class ListParameter : public Parameter {
+class ListParameter final : public Parameter {
 public:
     ListParameter(const std::string& name, const std::vector<std::string>& options, const std::string& defaultValue)
         : Parameter(name), choices(options), selectedValue(defaultValue) {}

@@ -18,13 +18,14 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | (isWindowMaximized ? SDL_WINDOW_MAXIMIZED : 0));
+    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | (isWindowMaximized ? SDL_WINDOW_MAXIMIZED : 0));
     if (!window) {
         throw std::runtime_error(SDL_GetError());
     }
 
     SDL_SetWindowMinimumSize(window, 800, 600);
 
+    SDL_GetWindowSizeInPixels(window, &width, &height);
     setUserSize(width, height);
 
     glContext = SDL_GL_CreateContext(window);
@@ -74,7 +75,9 @@ void WindowPeer::setTitle(const std::string &title) {
 
 void WindowPeer::setSize(const int width, const int height) {
     SDL_SetWindowSize(window, width, height);
-    setUserSize(width, height);
+    int w, h;
+    SDL_GetWindowSizeInPixels(window, &w, &h);
+    setUserSize(w, h);
 }
 
 void WindowPeer::setUserSize(const int width, const int height)
