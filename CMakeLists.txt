@@ -130,11 +130,7 @@ file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}
 if(APPLE)
     set(PLATFORM_HELPERS ${CMAKE_SOURCE_DIR}/PlatformHelpers/PlatformHelpers.mm)
 else()
-    set(PLATFORM_HELPERS ${CMAKE_SOURCE_DIR}/PlatformHelpers/PlatformHelpers.cpp
-            UI/ObjectsListViewport.h
-            UI/ObjectsListViewport.cpp
-            UI/ObjectsList.h
-            UI/ObjectItem.h)
+    set(PLATFORM_HELPERS ${CMAKE_SOURCE_DIR}/PlatformHelpers/PlatformHelpers.cpp)
 endif()
 
 add_library(PatchformSDK SHARED

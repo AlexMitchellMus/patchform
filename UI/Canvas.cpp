@@ -163,61 +163,105 @@ void Canvas::focusLost()
 {
 }
 
-void Canvas::mouseWheel(pptk::CompEvent& e)
+void Canvas::gesture(GestureEvent &e)
 {
-    // Get current mouse position
-    SDL_GetMouseState(&zoomMouseX, &zoomMouseY);
+    // Get modifier keys
+    const bool ctrlDown = (SDL_GetModState() & SDL_KMOD_CTRL) != 0;
+#ifdef __APPLE__
+    const bool cmdDown = (SDL_GetModState() & SDL_KMOD_GUI) != 0;
+#else
+    const bool cmdDown = false;
+#endif
 
-    // Update logTarget cumulatively for smooth zoom steps
-    float logDelta = e.sdlEvent.wheel.y * 0.3f;
-    logTarget += logDelta;
+    if (ctrlDown || cmdDown)
+        return;
 
-    // Clamp log scale to avoid zoom extremes
-    logTarget = std::clamp(logTarget, std::log(0.1f), std::log(3.0f));
+    if (e.kind == GestureKind::Pinch)
+    {
+        std::cout << "canvas got pinch: " << e.value1 << std::endl;
+    } else if (e.kind == GestureKind::Scroll) {
+        // --- PAN behavior ---
+        const float panSpeed = 1000.0f; // adjust as needed
+        x += e.value1 * panSpeed;
+        y += e.value2 * panSpeed;
 
-    float currentScale = std::exp(logTarget - logDelta); // previous target before this scroll
-    float newScale = std::exp(logTarget);
+        canvasOffset.x = x + canvasOrigin * scale;
+        canvasOffset.y = y + canvasOrigin * scale;
 
-    // If we crossed 1.0 in either direction and the difference is small, snap
-    if ((currentScale < 1.0f && newScale > 1.0f) || (currentScale > 1.0f && newScale < 1.0f)) {
-        if (std::abs(newScale - 1.0f) < 0.2f)
-            logTarget = 0.0f;
-    }
-
-    // Set anchor based on current scale
-    zoomAnchor = {(zoomMouseX - x) / scale, (zoomMouseY - y) / scale};
-
-    zooming = true;
-
-    if (!frameTimerRunning) {
-        frameTimerRunning = true;
-        startFrameTimer([this](uint32_t, uint32_t) {
-            if (!zooming) return;
-
-            float target = std::exp(logTarget);
-            float delta = target - scale;
-
-            scale += delta * 0.25f;
-
-            if (std::abs(delta) < 0.001f) {
-                scale = target;
-                zooming = false;
-                frameTimerRunning = false;
-                stopFrameTimer();
-            }
-
-            x = zoomMouseX - zoomAnchor.x * scale;
-            y = zoomMouseY - zoomAnchor.y * scale;
-
-            canvasOffset.x = x + canvasOrigin * scale;
-            canvasOffset.y = y + canvasOrigin * scale;
-
-            onScaleChange(scale);
-            repaint();
-            frameBufferRepaint = true;
-        });
+        repaint();
+        //std::cout << "canvas got scroll: " << e.value1 << ", " << e.value2 << std::endl;
     }
 }
+
+void Canvas::mouseWheel(pptk::CompEvent& e)
+{
+    SDL_GetMouseState(&zoomMouseX, &zoomMouseY);
+
+    // Get modifier keys
+#if defined(__APPLE__)
+    const bool zoomModifierDown = (SDL_GetModState() & SDL_KMOD_GUI) != 0; // Cmd
+#else
+    const bool zoomModifierDown = (SDL_GetModState() & SDL_KMOD_CTRL) != 0; // Ctrl
+#endif
+
+    if (zoomModifierDown) {
+        // --- ZOOM behavior on Y axis ---
+        float logDelta = e.sdlEvent.wheel.y * 0.3f;
+        logTarget += logDelta;
+        logTarget = std::clamp(logTarget, std::log(0.1f), std::log(3.0f));
+
+        float currentScale = std::exp(logTarget - logDelta);
+        float newScale = std::exp(logTarget);
+
+        if ((currentScale < 1.0f && newScale > 1.0f) || (currentScale > 1.0f && newScale < 1.0f)) {
+            if (std::abs(newScale - 1.0f) < 0.2f)
+                logTarget = 0.0f;
+        }
+
+        zoomAnchor = {(zoomMouseX - x) / scale, (zoomMouseY - y) / scale};
+        zooming = true;
+
+        if (!frameTimerRunning) {
+            frameTimerRunning = true;
+            startFrameTimer([this](uint32_t, uint32_t) {
+                if (!zooming) return;
+
+                float target = std::exp(logTarget);
+                float delta = target - scale;
+
+                scale += delta * 0.25f;
+
+                if (std::abs(delta) < 0.001f) {
+                    scale = target;
+                    zooming = false;
+                    frameTimerRunning = false;
+                    stopFrameTimer();
+                }
+
+                x = zoomMouseX - zoomAnchor.x * scale;
+                y = zoomMouseY - zoomAnchor.y * scale;
+
+                canvasOffset.x = x + canvasOrigin * scale;
+                canvasOffset.y = y + canvasOrigin * scale;
+
+                onScaleChange(scale);
+                repaint();
+                frameBufferRepaint = true;
+            });
+        }
+    } else {
+        // --- PAN behavior ---
+        const float panSpeed = 20.0f; // adjust as needed
+        x -= e.sdlEvent.wheel.x * panSpeed;
+        y += e.sdlEvent.wheel.y * panSpeed;
+
+        canvasOffset.x = x + canvasOrigin * scale;
+        canvasOffset.y = y + canvasOrigin * scale;
+
+        repaint();
+    }
+}
+
 
 void Canvas::setScale(float offset)
 {

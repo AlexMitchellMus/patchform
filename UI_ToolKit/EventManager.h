@@ -12,14 +12,43 @@
 #include "CompEvent.h"
 #include "RootComponent.h"
 #include "ComponentViewport.h"
+#include "GestureManager.h"
 
 namespace pptk {
 
 class EventManager {
 public:
-    EventManager(Component* rootComp) : rootComponent(reinterpret_cast<RootComponent*>(rootComp)) {}
+    explicit EventManager(Component* rootComp) : rootComponent(reinterpret_cast<RootComponent*>(rootComp))
+    {
+        //TODO: More work to be done to isolate gesture system away from onWheel as there is overlap
+        //      in functionality, and for focused - vs - hovered components getting events.
+        /*
+        gestureManager.onPinch = [this](float delta) {
+            if (auto* c = getGestureTarget()) {
+                GestureEvent e = GestureEvent::pinch(delta);
+                c->gesture(e);
+            }
+        };
 
-    void handleMouseButtonDown(SDL_Event& e) {
+        gestureManager.onScroll = [this](float dx, float dy) {
+            // Leave the currently hovered component
+            // But keep it hovered still (otherwise we cant zoom i
+            if (auto* h = rootComponent->getHoveredComponent()) {
+                auto noEvent = CompEvent();
+                h->mouseLeave(noEvent);
+            }
+            if (auto* c = getGestureTarget()) {
+                GestureEvent e = GestureEvent::scroll(dx, dy);
+                c->gesture(e);
+            }
+        };
+        */
+    }
+
+    void handleMouseButtonDown(SDL_Event& e)
+    {
+        gestureManager.disableGestures();
+
         rootComponent->setDraggingComponent(nullptr); // Reset dragging state
         CompEvent wrappedEvent(e, rootComponent);
         if (const auto comp = findDeepestHitComponent(rootComponent, wrappedEvent))
@@ -40,7 +69,10 @@ public:
         }
     }
 
-    void handleMouseButtonUp(SDL_Event& e) {
+    void handleMouseButtonUp(SDL_Event& e)
+    {
+        gestureManager.enableGestures();
+
         if (auto draggedComp = rootComponent->getDraggingComponent()) {
             auto wrappedEvent = CompEvent(e, draggedComp);
             draggedComp->mouseButtonUp(wrappedEvent);
@@ -116,7 +148,24 @@ public:
     {
     }
 
+    void handleFingerDown(const SDL_TouchFingerEvent& tf) {
+        gestureManager.onTouchDown(tf);
+    }
+
+    void handleFingerUp(const SDL_TouchFingerEvent& tf) {
+        gestureManager.onTouchUp(tf);
+    }
+
+    void handleFingerMotion(const SDL_TouchFingerEvent& tf) {
+        gestureManager.onTouchMotion(tf);
+    }
+
 private:
+
+    Component* getGestureTarget()
+    {
+        return rootComponent->getFocusedComponent();
+    }
     // This will find the fist ancestor of the current component that wants focus.
     // It WILL NOT set the focused component
     Component* getFocusableComponent(Component* current)
@@ -258,6 +307,7 @@ private:
 
 protected:
     RootComponent* rootComponent;
+    GestureManager gestureManager;
 };
 
 } // namespace pptk

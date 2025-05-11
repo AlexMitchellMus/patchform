@@ -20,6 +20,7 @@
 
 #include "SafePointer.h"
 #include "Theme.h"
+#include "InputEvents.h"
 
 #ifdef min
 #undef min
@@ -325,6 +326,7 @@ public:
     virtual void mouseDrag(const Point& position, const Point& delta, Button button) { }
     virtual void mouseWheel(CompEvent& e) { }
     virtual void keyPressed(CompEvent& e) { }
+    virtual void gesture(GestureEvent& e) { }
     virtual void focusGained() { }
     virtual void focusLost() { }
 

@@ -23,6 +23,9 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
         throw std::runtime_error(SDL_GetError());
     }
 
+    SDL_SetHint("SDL_TOUCH_MOUSE_EVENTS", "1");
+    SDL_SetHint("SDL_MOUSE_TOUCH_EVENTS", "1");
+
     SDL_SetWindowMinimumSize(window, 800, 600);
 
     SDL_GetWindowSizeInPixels(window, &width, &height);

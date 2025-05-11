@@ -152,6 +152,16 @@ void PatchformApp::run()
                 case SDL_EVENT_KEY_UP:
                     eventManager->handleKeyUp(event);
                     break;
+                // Touch events go only to gesture layer
+                case SDL_EVENT_FINGER_DOWN:
+                    eventManager->handleFingerDown(event.tfinger);
+                    break;
+                case SDL_EVENT_FINGER_UP:
+                    eventManager->handleFingerUp(event.tfinger);
+                    break;
+                case SDL_EVENT_FINGER_MOTION:
+                    eventManager->handleFingerMotion(event.tfinger);
+                    break;
                 case SDL_EVENT_WINDOW_RESIZED:
                     {
                         newWidth = event.window.data1;
