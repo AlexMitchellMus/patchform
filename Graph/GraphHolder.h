@@ -138,8 +138,14 @@ public:
 
         for (const auto& node : patch["nodes"])
         {
+            auto toStr = [](const json& j) {
+                return j.is_string() ? j.get<std::string>() : j.is_number() ? j.dump() : "";
+            };
+            if (!node.contains("id")) continue;
+            std::string idStr = toStr(node["id"]);
+            if (idStr.empty()) continue;
             if (const auto* nodePtr = createObject(node))
-                objectIDMap[node["id"].get<std::string>()] = nodePtr->nodeID;
+                objectIDMap[idStr] = nodePtr->nodeID;
         }
 
         // Create connections
@@ -150,8 +156,11 @@ public:
 
         for (const auto& connection : patch["connections"])
         {
-            std::string srcKey = connection["sourceNode"];
-            std::string dstKey = connection["targetNode"];
+            auto toStr = [](const json& j) {
+                return j.is_string() ? j.get<std::string>() : j.dump();
+            };
+            std::string srcKey = toStr(connection["sourceNode"]);
+            std::string dstKey = toStr(connection["targetNode"]);
 
             if (!objectIDMap.contains(srcKey) || !objectIDMap.contains(dstKey)) {
                 std::cerr << "Missing ID: " << srcKey << " -> " << dstKey << "\n";

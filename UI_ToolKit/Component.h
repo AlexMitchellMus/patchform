@@ -264,11 +264,6 @@ public:
         return pptk::Rect{absolutePosition.x, absolutePosition.y, width, height};
     }
 
-    void removeComponent(Component* child)
-    {
-        children.erase(std::remove(children.begin(), children.end(), child), children.end());
-    }
-
     void setInterceptsMouseClicks(bool allowClicksOnThisComponent, bool allowClicksOnChildComponents) noexcept {
         m_allowClicksOnThisComponent = allowClicksOnThisComponent;
         m_allowClicksOnChildComponents = allowClicksOnChildComponents;

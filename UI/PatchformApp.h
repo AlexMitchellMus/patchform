@@ -32,6 +32,7 @@ public:
 
     bool initialize();
     void shutdown();
+    bool step();
     void run();
 
     std::vector<std::string> getAvailableAudioApis();
@@ -55,6 +56,8 @@ public:
     int getSelectedApiIndex() const { return selectedApiIndex; }
     int getSelectedInputDeviceIndex() const { return selectedInputDeviceIndex; }
     int getSelectedOutputDeviceIndex() const { return selectedOutputDeviceIndex; }
+
+    moodycamel::ConcurrentQueue<SDL_Event> pendingEvents;
 
 private:
     Settings settings;

@@ -105,6 +105,113 @@ void PatchformApp::shutdown()
     settings.save();
 }
 
+bool PatchformApp::step()
+{
+       // Check if audio device was disconnected
+        static bool restarting = false;
+        if (!restarting && (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream))) {
+            restarting = true;
+            std::cerr << "Audio stream stopped unexpectedly. Restarting..." << std::endl;
+            reinitAudio();
+            restarting = false;
+        }
+
+        Uint32 currentFrameTime = SDL_GetTicks();
+        Uint32 elapsedTime = currentFrameTime - lastFrameTime;
+        Uint32 waitTime = (elapsedTime < targetFrameTime) ? (targetFrameTime - elapsedTime) : 0;
+
+        SDL_Event event;
+        while (pendingEvents.try_dequeue(event)) {
+                switch (event.type)
+                {
+                case SDL_EVENT_QUIT:
+                    return false;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    eventManager->handleMouseButtonDown(event);
+                    break;
+                case SDL_EVENT_MOUSE_BUTTON_UP:
+                    eventManager->handleMouseButtonUp(event);
+                    break;
+                case SDL_EVENT_MOUSE_MOTION:
+                    eventManager->handleMouseMove(event);
+                    break;
+                case SDL_EVENT_MOUSE_WHEEL:
+                    eventManager->handleMouseWheel(event);
+                    break;
+                case SDL_EVENT_KEY_DOWN:
+                    eventManager->handleKeyDown(event);
+                    break;
+                case SDL_EVENT_KEY_UP:
+                    eventManager->handleKeyUp(event);
+                    break;
+                // Touch events go only to gesture layer
+                case SDL_EVENT_FINGER_DOWN:
+                    eventManager->handleFingerDown(event.tfinger);
+                    break;
+                case SDL_EVENT_FINGER_UP:
+                    eventManager->handleFingerUp(event.tfinger);
+                    break;
+                case SDL_EVENT_FINGER_MOTION:
+                    eventManager->handleFingerMotion(event.tfinger);
+                    break;
+                case SDL_EVENT_WINDOW_RESIZED:
+                    {
+                        newWidth = event.window.data1;
+                        newHeight = event.window.data2;
+
+                        editor->setBounds(0, 0, newWidth, newHeight);
+                        Uint32 flags = SDL_GetWindowFlags(window->getSDLWindow());
+                        if ((flags & SDL_WINDOW_MAXIMIZED) == 0 && !window->getIsProgrammaticResize()) {
+                            window->setUserSize(newWidth, newHeight); // user resize only
+                        }
+                    }
+                    break;
+                case SDL_EVENT_WINDOW_MAXIMIZED:
+                    window->setMaximized(true);
+                    break;
+                case SDL_EVENT_WINDOW_RESTORED:
+                    window->setMaximized(false);
+                    break;
+                case SDL_EVENT_WINDOW_MOVED:
+                    // If editor was moved from outside screen bound the framebuffer will not repaint
+                    // the out of bounds region, so force a repaint when moved has finished
+                    editor->repaint();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        editor->updateObjectsFromDSP();
+        editor->handleTime(currentFrameTime, std::min(elapsedTime, targetFrameTime));
+        editor->updateFrameBuffers(nvg);
+
+        if (!editor->needsRepaint())
+        {
+            return true;
+        }
+
+        //static int c = 0;
+        //std::cout << c++ << " repainting" << std::endl;
+        int drawableW, drawableH;
+        SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
+
+        if (!invalidFB || drawableW != windowWidth || drawableH != windowHeight) {
+            windowWidth = drawableW;
+            windowHeight = drawableH;
+
+            if (invalidFB)
+                nanoVGDeleteFramebuffer(invalidFB);
+
+            invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+        }
+
+        render();
+
+        lastFrameTime = currentFrameTime;
+        return true;
+}
+
 void PatchformApp::run()
 {
     bool running = true;
@@ -555,6 +662,9 @@ bool PatchformApp::initUI()
     editor->setBounds(0, 0, windowWidth, windowHeight);
     SDL_GetWindowSizeInPixels(window->getSDLWindow(), &windowWidth, &windowHeight);
     invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+
+    // Sets SDL_appIterate to 60fps (works on macOS - could work on others? test!)
+    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "90");
 
     return true;
 }

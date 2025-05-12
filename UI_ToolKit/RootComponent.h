@@ -160,8 +160,15 @@ namespace pptk
 
         CommandIDManager commandIDManager;
 
+        void setStructureDirty()
+        {
+            structureDirty = true;
+        }
+
     private:
         FontMetricsCache fontMetricsCache;
+
+        bool structureDirty = true;
 
     protected:
         SafePointer<Component> draggingComponent;

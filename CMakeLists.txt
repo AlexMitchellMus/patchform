@@ -206,6 +206,7 @@ target_include_directories(PatchformStandalone PRIVATE
 target_link_libraries(PatchformStandalone PRIVATE PatchformSDK)
 
 target_compile_definitions(PatchformStandalone PRIVATE
+        SDL_MAIN_USE_CALLBACKS=1
         PATCHFORM_WITH_GUI
         PATCHFORM_STANDALONE
 )

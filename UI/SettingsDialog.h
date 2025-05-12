@@ -191,8 +191,6 @@ public:
         auto& labelList = isOutput ? outputChannelLabels : inputChannelLabels;
         auto& toggleList = isOutput ? outputChannelToggles : inputChannelToggles;
 
-        for (auto& label : labelList) removeComponent(label.get());
-        for (auto& toggle : toggleList) removeComponent(toggle.get());
         labelList.clear();
         toggleList.clear();
 
