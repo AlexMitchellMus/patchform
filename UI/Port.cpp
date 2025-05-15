@@ -126,18 +126,18 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
 
 void Port::render(NVGcontext* nvg, const pptk::Theme& theme)
 {
-    auto radius = getWidth() / 2;
+    float fullWidth = getWidth();
+    auto width = !canvasLocked ? fullWidth : 5.0f;
+    auto radius = width / 2;
     auto size = radius * 2;
+    float offset = (fullWidth - width) / 2.0f;
 
     auto orange = nvgRGB(120, 74, 28);
     auto blue = nvgRGB(28, 73, 119);
     auto portCol = portType == PortType::Event ? blue : orange;
 
-    if (canvasLocked)
-        portCol.a *= 0.3f;
-
     // Draw main port as rounded rect (circle)
-    nvgDrawRoundedRect(nvg, 0, 0, size, size, portCol, portCol, radius);
+    nvgDrawRoundedRect(nvg, offset, offset, size, size, portCol, portCol, radius);
 
     // Hover effect
     if (isHovered || isHoveredFromCable)
