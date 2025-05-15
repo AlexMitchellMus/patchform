@@ -40,10 +40,10 @@ public:
     static constexpr size_t DOUBLE_BUFFER_SIZE = 2 * DSP_BUFFER_SIZE;
     // Define BufferType as a fixed-size std::array of DSP_BUFFER_SIZE samples.
     using BufferType = std::array<float, DSP_BUFFER_SIZE>;
-    using BufferTypeInt = std::array<int16_t, 512>;
+    using BufferTypeUI = std::array<int16_t, 512>;
 
     // Enqueue fixed–size buffers.
-    moodycamel::ReaderWriterQueue<BufferTypeInt> eventQueue = moodycamel::ReaderWriterQueue<BufferTypeInt>(6);
+    moodycamel::ReaderWriterQueue<BufferTypeUI> eventQueue = moodycamel::ReaderWriterQueue<BufferTypeUI>(6);
 
     class UI final : public AudioNode::UI
     {
@@ -68,7 +68,7 @@ public:
             auto scope = reinterpret_cast<Scope*>(audioNode);
             scope->requestBuffer.store(true, std::memory_order_release);
 
-            BufferTypeInt newBuffer;
+            BufferTypeUI newBuffer;
             bool gotNewBuffer = false;
 
             // Drain any new fixed-size buffers from the queue.
@@ -77,19 +77,11 @@ public:
                 gotNewBuffer = true;
             };
 
-            if (!freeze && gotNewBuffer)
-            {
-                // Compare the current waveform data to the new data.
-                // We can do this because the waveform data is in int (as the resolution of display is much less than float precision)
-                if (waveformData != newBuffer)
-                {
-                    waveformData = newBuffer;
-                    waveformValid = true;
-                    newData = true;
-                    for (int i = 0; i < waveformData.size(); i++)
-                    {
-                        waveform[i] = waveformData[i] / static_cast<float>(DATA_BUFFER_QUANT_RES);
-                    }
+            if (!freeze && gotNewBuffer) {
+                waveformValid = true;
+                newData = true;
+                for (int i = 0; i < waveform.size(); i++) {
+                    waveform[i] = newBuffer[i] / static_cast<float>(DATA_BUFFER_QUANT_RES);
                 }
             }
 
@@ -203,7 +195,6 @@ public:
 
     private:
         // Buffer holding the most recent DSP_BUFFER_SIZE samples.
-        BufferTypeInt waveformData;
         BufferType waveform;
         bool waveformValid = false;
         bool freeze = false;
@@ -273,15 +264,14 @@ public:
 
         // Now output a 512-sample window starting at the trigger - down sampled from 1024
         static constexpr size_t UI_BUFFER_SIZE = 512;
-        BufferTypeInt buffer;
+        BufferTypeUI buffer;
         for (size_t j = 0; j < UI_BUFFER_SIZE; ++j)
         {
             float a = dspBuffer[detectedTrigger + j * 2];
             float b = dspBuffer[detectedTrigger + j * 2 + 1];
             float avg = (a + b) * 0.5f;
 
-            // Convert float to fixed-point with shift
-            buffer[j] = static_cast<int16_t>(avg * DATA_BUFFER_QUANT_RES);
+            buffer[j] = avg;
         }
 
         // Enqueue for UI
