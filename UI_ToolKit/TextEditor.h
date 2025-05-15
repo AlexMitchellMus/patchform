@@ -176,20 +176,18 @@ public:
 
             if (isNumber)
             {
-                // Allow only digits and a single '.'
-                if (!((character >= '0' && character <= '9') || character == '.'))
-                {
-                    validChar = false;
-                }
-                // Prevent entering more than one '.'
+                constexpr char allowed[] = "0123456789.-";
+                validChar = std::strchr(allowed, character) != nullptr;
+
                 if (character == '.' && text.find('.') != std::string::npos)
-                {
                     validChar = false;
-                }
+
+                if (character == '-' && !text.empty())
+                    validChar = false;
             }
             else if (modState & SDL_KMOD_SHIFT)
             {
-                // Handle letters and symbols when shift is pressed.
+                // Handle letters and symbols when shift is pressed. (as in a or shift-a = A)
                 if (character >= 'a' && character <= 'z') {
                     character = character - ('a' - 'A');
                 } else {
@@ -299,31 +297,13 @@ private:
 
     bool isInteractable = true;
 
-    static char getShiftedSymbol(const char c) {
-        switch(c) {
-        case '1': return '!';
-        case '2': return '@';
-        case '3': return '#';
-        case '4': return '$';
-        case '5': return '%';
-        case '6': return '^';
-        case '7': return '&';
-        case '8': return '*';
-        case '9': return '(';
-        case '0': return ')';
-        case '-': return '_';
-        case '=': return '+';
-        case '[': return '{';
-        case ']': return '}';
-        case ';': return ':';
-        case '\'': return '"';
-        case ',': return '<';
-        case '.': return '>';
-        case '/': return '?';
-        case '\\': return '|';
-        case '`': return '~';
-        default: return c;
-        }
+    static constexpr char getShiftedSymbol(const char c)
+    {
+        constexpr auto normal = "1234567890-=[]\\;',./`";
+        constexpr auto shifted = "!@#$%^&*()_+{}|:\"<>?~";
+
+        const char *found = std::strchr(normal, c);
+        return found ? shifted[found - normal] : c;
     }
 
     void convertArrowsToChar()
