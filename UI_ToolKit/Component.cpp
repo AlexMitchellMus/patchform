@@ -218,22 +218,41 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
     nvgRestore(vg);
 }
 
-void Component::repaint()
-{
+void Component::repaint() {
     isDirty = true;
 
-    // Set all parents dirty in this branch
+    /*
+    auto *root = getRootComponent();
+    if (!root || root->tilesX == 0 || root->tilesY == 0)
+        return;
+
+    if (tileBits.empty())
+        tileBits.resize((root->tilesX * root->tilesY + 63) / 64, 0);
+    else
+        std::fill(tileBits.begin(), tileBits.end(), 0);
+
+    pptk::Rect gb = getGlobalBounds();
+    int minX = gb.x / tileSize;
+    int maxX = (gb.x + gb.width) / tileSize;
+    int minY = gb.y / tileSize;
+    int maxY = (gb.y + gb.height) / tileSize;
+
+    for (int y = minY; y <= maxY; ++y)
+        for (int x = minX; x <= maxX; ++x) {
+            int index = y * root->tilesX + x;
+            tileBits[index / 64] |= 1ULL << (index % 64);
+            root->dirtyTiles[index / 64] |= 1ULL << (index % 64);
+        }
+*/
     if (parent)
-    {
         parent->repaint();
-    }
 }
+
 
 bool Component::needsRepaint()
 {
     auto root = getRootComponent();
-    if (root->isDirty)
-    {
+    if (root->isDirty) {
         root->isDirty = false;
         return true;
     }
@@ -389,6 +408,37 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
         return root->getTextWidth(fontName, size, text);
 
     return -3.0f;
+}
+
+Rect Component::getGlobalBounds() const {
+    float sx = scale;
+    float sy = scale;
+    float tx = x;
+    float ty = y;
+
+    const Component *p = parent.get();
+    const Component *c = this;
+
+    while (p) {
+        tx *= p->scale;
+        ty *= p->scale;
+
+        tx += p->x;
+        ty += p->y;
+
+        sx *= p->scale;
+        sy *= p->scale;
+
+        if (p->shouldApplyViewportOffset()) {
+            tx -= p->viewportX;
+            ty -= p->viewportY;
+        }
+
+        c = p;
+        p = p->parent.get();
+    }
+
+    return {tx, ty, getWidth() * sx, getHeight() * sy};
 }
 
 }

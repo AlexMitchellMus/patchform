@@ -258,6 +258,8 @@ public:
         return relativePosition;
     }
 
+    Rect getGlobalBounds() const;
+
 
     Rect getAbsoluteBounds() const {
         Point absolutePosition = getAbsolutePosition();

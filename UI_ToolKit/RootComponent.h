@@ -105,6 +105,14 @@ namespace pptk
             }
         }
 
+        void resized() override
+        {
+            tilesX = (getWidth() + tileSize - 1) / tileSize;
+            tilesY = (getHeight() + tileSize - 1) / tileSize;
+            dirtyTiles.resize((tilesX * tilesY + 63) / 64);
+            std::fill(dirtyTiles.begin(), dirtyTiles.end(), 0);
+        }
+
         void callGlobalMouseHandlersOn(Component* comp)
         {
             std::erase_if(globalMouseHandlers, [](auto& tup) {
@@ -176,6 +184,11 @@ namespace pptk
         SafePointer<Component> clickedComponent;
         SafePointer<Component> focusedComponent;
         SafePointer<Component> lastFocusedComponent;
+
+        int tilesX = -1;
+        int tilesY = -1;
+        static constexpr int tileSize = 64;
+        std::vector<uint64_t> dirtyTiles;
 
         Theme theme;
 

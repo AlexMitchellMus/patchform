@@ -118,6 +118,8 @@ public:
                 dialogWindowModalBackground->setBounds(getBounds());
             dialogWindow->setBounds(getWidth() * 0.5f - 400, getHeight() * 0.5f - 300, 800, 600);
         }
+
+        RootComponent::resized();
     }
 
     void updateFrameBuffers(NVGcontext* nvg)
