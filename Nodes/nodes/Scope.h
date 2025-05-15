@@ -40,18 +40,22 @@ public:
     static constexpr size_t DOUBLE_BUFFER_SIZE = 2 * DSP_BUFFER_SIZE;
     // Define BufferType as a fixed-size std::array of DSP_BUFFER_SIZE samples.
     using BufferType = std::array<float, DSP_BUFFER_SIZE>;
-    using BufferTypeUI = std::array<int16_t, 512>;
+
+    static constexpr size_t UI_BUFFER_SIZE = 512;
+    using BufferTypeUI = std::array<float, UI_BUFFER_SIZE>;
 
     // Enqueue fixed–size buffers.
     moodycamel::ReaderWriterQueue<BufferTypeUI> eventQueue = moodycamel::ReaderWriterQueue<BufferTypeUI>(6);
 
     class UI final : public AudioNode::UI
     {
-    public:
-        // Define the fixed DSP buffer size.
-        static constexpr size_t UI_BUFFER_SIZE = 512;
-        using BufferType = std::array<float, UI_BUFFER_SIZE>;
+        // Buffer holding the most recent DSP_BUFFER_SIZE samples.
+        BufferTypeUI waveform;
+        bool waveformValid = false;
+        bool freeze = false;
+        bool newData = true;
 
+    public:
         float negRange;
         float posRange;
 
@@ -81,7 +85,7 @@ public:
                 waveformValid = true;
                 newData = true;
                 for (int i = 0; i < waveform.size(); i++) {
-                    waveform[i] = newBuffer[i] / static_cast<float>(DATA_BUFFER_QUANT_RES);
+                    waveform[i] = newBuffer[i];
                 }
             }
 
@@ -192,13 +196,6 @@ public:
             const auto scope = reinterpret_cast<Scope*>(audioNode);
             scope->hasUI.store(false, std::memory_order_relaxed);
         }
-
-    private:
-        // Buffer holding the most recent DSP_BUFFER_SIZE samples.
-        BufferType waveform;
-        bool waveformValid = false;
-        bool freeze = false;
-        bool newData = true;
     };
 
     std::unique_ptr<AudioNode::UI> makeUI() override
