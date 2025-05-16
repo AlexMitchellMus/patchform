@@ -32,7 +32,7 @@ public:
 
     bool initialize();
     void shutdown();
-    bool step();
+    bool nextFrame();
     void run();
 
     std::vector<std::string> getAvailableAudioApis();

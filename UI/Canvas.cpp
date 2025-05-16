@@ -108,6 +108,7 @@ void Canvas::mouseButtonUp(pptk::CompEvent& e)
 {
     SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
     lasso.reset();
+    repaint();
 }
 
 void Canvas::mouseDrag(const pptk::Point& position, const pptk::Point& delta, pptk::Button button)

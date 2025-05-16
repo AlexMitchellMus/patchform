@@ -16,7 +16,7 @@ extern "C" SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 
 extern "C" SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* app = static_cast<PatchformApp*>(appstate);
-    return app->step() ? SDL_APP_CONTINUE : SDL_APP_SUCCESS;
+    return app->nextFrame() ? SDL_APP_CONTINUE : SDL_APP_SUCCESS;
 }
 
 extern "C" void SDL_AppQuit(void* appstate, SDL_AppResult) {

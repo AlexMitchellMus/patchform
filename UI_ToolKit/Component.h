@@ -463,8 +463,6 @@ public:
         return accumulatedScale;
     }
 
-    bool needsRepaint();
-
     void repaint();
 
     float getTextWidthForFont(const std::string& fontName, float size, const std::string& text);
@@ -519,6 +517,8 @@ protected:
     std::string name;
 
     bool isDirty = true;
+
+    std::vector<uint64_t> tileBits;
 
     float x = 0.0f;
     float y = 0.0f;

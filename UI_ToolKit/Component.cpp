@@ -12,6 +12,7 @@
 #include "CompEvent.h"
 #include "Resizer.h"
 #include "ComponentViewport.h"
+#include "glaze/beve/skip.hpp"
 
 namespace pptk {
 
@@ -193,6 +194,27 @@ void Component::removeAllChildren()
 
 void Component::renderAll(NVGcontext* vg, const Theme& theme)
 {
+    //if (!(parent && parent->isDirty))
+    //{
+        auto* root = dynamic_cast<RootComponent*>(getRootComponent());
+        if (!root || root->tilesX == 0 || root->tilesY == 0)
+            return;
+
+        bool intersectsDirty = false;
+        for (size_t i = 0; i < tileBits.size(); ++i) {
+            if (tileBits[i] & root->dirtyTiles[i])
+            {
+                intersectsDirty = true;
+                break;
+            }
+        }
+
+        if (!intersectsDirty)
+            return;
+    //}
+
+    //std::cout << "rendering: " << getName() << std::endl;
+
     nvgSave(vg);
 
     // Apply translation for this component's position
@@ -218,47 +240,16 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
     nvgRestore(vg);
 }
 
-void Component::repaint() {
-    isDirty = true;
-
-    /*
-    auto *root = getRootComponent();
-    if (!root || root->tilesX == 0 || root->tilesY == 0)
-        return;
-
-    if (tileBits.empty())
-        tileBits.resize((root->tilesX * root->tilesY + 63) / 64, 0);
-    else
-        std::fill(tileBits.begin(), tileBits.end(), 0);
-
-    pptk::Rect gb = getGlobalBounds();
-    int minX = gb.x / tileSize;
-    int maxX = (gb.x + gb.width) / tileSize;
-    int minY = gb.y / tileSize;
-    int maxY = (gb.y + gb.height) / tileSize;
-
-    for (int y = minY; y <= maxY; ++y)
-        for (int x = minX; x <= maxX; ++x) {
-            int index = y * root->tilesX + x;
-            tileBits[index / 64] |= 1ULL << (index % 64);
-            root->dirtyTiles[index / 64] |= 1ULL << (index % 64);
-        }
-*/
-    if (parent)
-        parent->repaint();
-}
-
-
-bool Component::needsRepaint()
+void Component::repaint()
 {
-    auto root = getRootComponent();
-    if (root->isDirty) {
-        root->isDirty = false;
-        return true;
-    }
-    return false;
-}
+    auto *root = dynamic_cast<RootComponent*>(getRootComponent());
 
+    if (root)
+    {
+        isDirty = true;
+        root->repaintQueue.enqueue(makeSafePointer(this));
+    }
+}
 void Component::setBounds(const float newX, const float newY, const float newW, const float newH)
 {
     float clampedW = newW;

@@ -16,9 +16,7 @@ Lasso::Lasso(pptk::Point canvasPos)
 
 Lasso::~Lasso()
 {
-    repaint();
 }
-
 
 void Lasso::update(const pptk::Point& currentPoint)
 {

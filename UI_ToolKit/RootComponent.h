@@ -14,6 +14,7 @@
 #include "Theme.h"
 #include "../UI_ToolKit/FontMetrics.h"
 #include "../UI_ToolKit/CommandIDManager.h"
+#include "concurrentqueue.h"
 
 namespace pptk
 {
@@ -50,6 +51,7 @@ namespace pptk
         void renderFrame(NVGcontext* nvg)
         {
             Component::renderAll(nvg, theme);
+            drawDebugTiles(nvg);
         }
 
         void registerTimerCallback(Component* c, const std::function<void(uint32_t, uint32_t)>& callback, int timerID = 0)
@@ -173,6 +175,105 @@ namespace pptk
             structureDirty = true;
         }
 
+        // Process all pending repaints
+        // This marks the root components tile map as dirty where it intersects the component
+        bool processRepaintQueue()
+        {
+            bool didRepaint = false;
+            SafePointer<Component> repaintComponent;
+
+            std::ranges::fill(dirtyTiles, 0);
+
+            while (repaintQueue.try_dequeue(repaintComponent)) {
+                if (!repaintComponent)
+                    continue;
+
+                repaintComponent->isDirty = true;
+                didRepaint = true;
+
+                auto* root = dynamic_cast<RootComponent*>(repaintComponent->getRootComponent());
+                if (!root || root->tilesX == 0 || root->tilesY == 0)
+                    continue;
+
+                constexpr auto tileSize = RootComponent::tileSize;
+                const int tileCount = root->tilesX * root->tilesY;
+                if (tileCount <= 1)
+                    continue;
+
+                if (repaintComponent->tileBits.size() * 64 < tileCount)
+                    repaintComponent->tileBits.resize((tileCount + 63) / 64, 0);
+                else
+                    std::ranges::fill(repaintComponent->tileBits, 0);
+
+                const Rect gb = repaintComponent->getGlobalBounds();
+                int minX = gb.x / tileSize;
+                int maxX = (gb.x + gb.w) / tileSize;
+                int minY = gb.y / tileSize;
+                int maxY = (gb.y + gb.h) / tileSize;
+
+                for (int y = minY; y <= maxY; ++y)
+                {
+                    for (int x = minX; x <= maxX; ++x)
+                    {
+                        if (x < 0 || x >= root->tilesX || y < 0 || y >= root->tilesY)
+                            continue;
+
+                        int index = y * root->tilesX + x;
+                        repaintComponent->tileBits[index / 64] |= 1ULL << (index % 64);
+                        root->dirtyTiles[index / 64] |= 1ULL << (index % 64);
+                    }
+                }
+//#define DEBUG_DIRTY_BITS
+#ifdef DEBUG_DIRTY_BITS
+                std::cout << "--------- before render all ----------" << std::endl;
+                for (int y = 0; y < root->tilesY; ++y) {
+                    for (int x = 0; x < root->tilesX; ++x) {
+                        int index = y * root->tilesX + x;
+                        bool bitSet = (root->dirtyTiles[index / 64] >> (index % 64)) & 1ULL;
+                        std::cout << (bitSet ? "#" : ".");
+                    }
+                    std::cout << "\n";
+                }
+#endif
+            }
+
+            return didRepaint;
+        }
+
+        void drawDebugTiles(NVGcontext* vg)
+        {
+            constexpr int tileSize = RootComponent::tileSize;
+
+            for (int y = 0; y < tilesY; ++y) {
+                for (int x = 0; x < tilesX; ++x) {
+                    int index = y * tilesX + x;
+                    bool isDirty = (dirtyTiles[index / 64] >> (index % 64)) & 1ULL;
+
+                    int px = x * tileSize;
+                    int py = y * tileSize;
+
+                    nvgBeginPath(vg);
+                    nvgRect(vg, px, py, tileSize, tileSize);
+                    nvgStrokeColor(vg, isDirty ? nvgRGB(255, 0, 0) : nvgRGB(80, 80, 80));
+                    nvgStrokeWidth(vg, 1.0f);
+                    nvgStroke(vg);
+
+                    if (isDirty) {
+                        nvgFillColor(vg, nvgRGBA(255, 0, 0, 40));
+                        nvgFill(vg);
+                    }
+                }
+            }
+        }
+
+
+        int tilesX = -1;
+        int tilesY = -1;
+        static constexpr int tileSize = 32;
+        std::vector<uint64_t> dirtyTiles;
+
+        moodycamel::ConcurrentQueue<SafePointer<Component>> repaintQueue;
+
     private:
         FontMetricsCache fontMetricsCache;
 
@@ -184,11 +285,6 @@ namespace pptk
         SafePointer<Component> clickedComponent;
         SafePointer<Component> focusedComponent;
         SafePointer<Component> lastFocusedComponent;
-
-        int tilesX = -1;
-        int tilesY = -1;
-        static constexpr int tileSize = 64;
-        std::vector<uint64_t> dirtyTiles;
 
         Theme theme;
 
