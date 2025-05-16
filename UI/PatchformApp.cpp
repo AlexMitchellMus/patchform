@@ -10,6 +10,7 @@
 #endif
 
 #include "SDL3/SDL.h"
+#define GL_STENCIL_BITS 0x0D57
 
 #ifdef max
 #undef max
@@ -562,22 +563,38 @@ void PatchformApp::render()
     SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
     float pixelRatio = (float)drawableW / (float)windowW;
 
+    // 1. Bind framebuffer
     nanoVGBindFramebuffer(invalidFB);
 
-    nvgViewport(0, 0, drawableW, drawableH);
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    GLint stencilBits = 0;
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &stencilBits);
+    std::cout << "Actual stencil bits: " << stencilBits << std::endl;
 
-    nvgBeginFrame(nvg, windowW, windowH, pixelRatio);  // correct scaling
+    nvgViewport(0, 0, drawableW, drawableH);
+
+    // 2. Clear stencil and color buffer
+    glEnable(GL_STENCIL_TEST);
+
+    // 3. Set stencil mask using dirty tiles
+    nanoVGStencilMaskTiles(drawableW, drawableH, 64, editor->dirtyTiles);
+
+    // 5. Render NanoVG scene
+    nvgBeginFrame(nvg, windowW, windowH, pixelRatio);
+
+    glEnable(GL_STENCIL_TEST);
+
     editor->renderFrame(nvg);
     nvgGlobalScissor(nvg, 0, 0, drawableW, drawableH);
     nvgEndFrame(nvg);
 
+    // 6. Blit framebuffer to screen (will respect stencil)
     nanoVGBindFramebuffer(nullptr);
     nanoVGBlitFramebuffer(nvg, invalidFB, 0, 0, drawableW, drawableH);
 
+    // 7. Present
     window->swapBuffers();
 }
+
 
 bool PatchformApp::loadFonts()
 {

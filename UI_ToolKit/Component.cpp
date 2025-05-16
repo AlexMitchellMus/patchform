@@ -194,24 +194,22 @@ void Component::removeAllChildren()
 
 void Component::renderAll(NVGcontext* vg, const Theme& theme)
 {
-    //if (!(parent && parent->isDirty))
-    //{
-        auto* root = dynamic_cast<RootComponent*>(getRootComponent());
-        if (!root || root->tilesX == 0 || root->tilesY == 0)
-            return;
+    auto *root = dynamic_cast<RootComponent *>(getRootComponent());
+    if (!root || root->tilesX == 0 || root->tilesY == 0)
+        return;
 
-        bool intersectsDirty = false;
-        for (size_t i = 0; i < tileBits.size(); ++i) {
-            if (tileBits[i] & root->dirtyTiles[i])
-            {
-                intersectsDirty = true;
-                break;
-            }
+    bool intersectsDirty = false;
+    for (size_t i = 0; i < tileBits.size(); ++i)
+    {
+        if (tileBits[i] & root->dirtyTiles[i]) {
+            intersectsDirty = true;
+            break;
         }
+    }
 
-        if (!intersectsDirty)
-            return;
-    //}
+    if (!intersectsDirty) {
+        return;
+    }
 
     //std::cout << "rendering: " << getName() << std::endl;
 
@@ -401,22 +399,18 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     return -3.0f;
 }
 
-Rect Component::getGlobalBounds() const {
+Rect Component::getGlobalBounds() const
+{
     float sx = scale;
     float sy = scale;
     float tx = x;
     float ty = y;
 
     const Component *p = parent.get();
-    const Component *c = this;
 
     while (p) {
-        tx *= p->scale;
-        ty *= p->scale;
-
-        tx += p->x;
-        ty += p->y;
-
+        tx = tx * p->scale + p->x;
+        ty = ty * p->scale + p->y;
         sx *= p->scale;
         sy *= p->scale;
 
@@ -425,7 +419,6 @@ Rect Component::getGlobalBounds() const {
             ty -= p->viewportY;
         }
 
-        c = p;
         p = p->parent.get();
     }
 

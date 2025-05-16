@@ -489,6 +489,8 @@ public:
         externalMargin = newMargin;
     }
 
+    std::vector<uint64_t> tileBits;
+
 private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);
 
@@ -517,8 +519,6 @@ protected:
     std::string name;
 
     bool isDirty = true;
-
-    std::vector<uint64_t> tileBits;
 
     float x = 0.0f;
     float y = 0.0f;

@@ -240,36 +240,52 @@ namespace pptk
             return didRepaint;
         }
 
-        void drawDebugTiles(NVGcontext* vg)
-        {
+        void drawDebugTiles(NVGcontext* vg) {
             constexpr int tileSize = RootComponent::tileSize;
 
+            // First pass: non-active tiles (light grid)
             for (int y = 0; y < tilesY; ++y) {
                 for (int x = 0; x < tilesX; ++x) {
                     int index = y * tilesX + x;
                     bool isDirty = (dirtyTiles[index / 64] >> (index % 64)) & 1ULL;
+                    if (isDirty) continue;
 
                     int px = x * tileSize;
                     int py = y * tileSize;
 
                     nvgBeginPath(vg);
                     nvgRect(vg, px, py, tileSize, tileSize);
-                    nvgStrokeColor(vg, isDirty ? nvgRGB(255, 0, 0) : nvgRGB(80, 80, 80));
+                    nvgStrokeColor(vg, nvgRGB(80, 80, 80));
                     nvgStrokeWidth(vg, 1.0f);
                     nvgStroke(vg);
+                }
+            }
 
-                    if (isDirty) {
-                        nvgFillColor(vg, nvgRGBA(255, 0, 0, 40));
-                        nvgFill(vg);
-                    }
+            // Second pass: active (dirty) tiles
+            for (int y = 0; y < tilesY; ++y) {
+                for (int x = 0; x < tilesX; ++x) {
+                    int index = y * tilesX + x;
+                    bool isDirty = (dirtyTiles[index / 64] >> (index % 64)) & 1ULL;
+                    if (!isDirty) continue;
+
+                    int px = x * tileSize;
+                    int py = y * tileSize;
+
+                    nvgBeginPath(vg);
+                    nvgRect(vg, px, py, tileSize, tileSize);
+                    nvgFillColor(vg, nvgRGBA(255, 0, 0, 40));
+                    nvgFill(vg);
+
+                    nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+                    nvgStrokeWidth(vg, 1.0f);
+                    nvgStroke(vg);
                 }
             }
         }
 
-
         int tilesX = -1;
         int tilesY = -1;
-        static constexpr int tileSize = 32;
+        static constexpr int tileSize = 64;
         std::vector<uint64_t> dirtyTiles;
 
         moodycamel::ConcurrentQueue<SafePointer<Component>> repaintQueue;

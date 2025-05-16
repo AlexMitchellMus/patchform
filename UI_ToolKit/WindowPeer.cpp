@@ -17,6 +17,8 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | (isWindowMaximized ? SDL_WINDOW_MAXIMIZED : 0));
     if (!window) {
@@ -37,12 +39,23 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
         throw std::runtime_error(SDL_GetError());
     }
 
+    int stencilBits = 0;
+    int depthBits = 0;
+    SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencilBits);
+    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depthBits);
+    std::cout << "SDL_GL_STENCIL_SIZE: " << stencilBits << "\n";
+    std::cout << "SDL_GL_DEPTH_SIZE: " << depthBits << "\n";
+
     SDL_GL_MakeCurrent(window, glContext);
 
     if (!gladLoadGL(SDL_GL_GetProcAddress))
     {
         throw std::runtime_error("Failed to load GLAD GL");
     }
+
+    std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "GL_RENDERER: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "GL_VENDOR: " << glGetString(GL_VENDOR) << std::endl;
 
     SDL_GL_SetSwapInterval(0);
 }

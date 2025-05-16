@@ -716,8 +716,24 @@ void Canvas::renderAllObjects(NVGcontext* nvg, const pptk::Theme& theme)
 
 void Canvas::renderAllConnections(NVGcontext* nvg, const pptk::Theme& theme)
 {
-    for (auto const& con : connections)
+    for (auto& con : connections)
     {
+        auto *root = dynamic_cast<pptk::RootComponent*>(getRootComponent());
+        if (!root || root->tilesX == 0 || root->tilesY == 0)
+            return;
+
+        bool intersectsDirty = false;
+        for (size_t i = 0; i < con->tileBits.size(); ++i)
+        {
+            if (con->tileBits[i] & root->dirtyTiles[i]) {
+                intersectsDirty = true;
+                break;
+            }
+        }
+
+        if (!intersectsDirty) {
+            return;
+        }
         // Connections have no child components
         nvgSave(nvg);
         nvgTranslate(nvg, con->getX(), con->getY());
