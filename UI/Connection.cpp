@@ -40,12 +40,11 @@ void Connection::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::
         tileBits.resize(wordCount, 0);
     else
         std::ranges::fill(tileBits, 0);
-
-    // Use global bounds to extract offset and approximate uniform scale
-    const auto global = getGlobalBounds();
-    const float offsetX = global.x;
-    const float offsetY = global.y;
-    const float scale = getWidth() > 0 ? global.w / getWidth() : 1.0f;
+    
+    const auto globalPos = localToGlobal(0, 0);
+    const float offsetX = globalPos.x;
+    const float offsetY = globalPos.y;
+    const float scale = getAccumulatedScale();
 
     constexpr int segments = 32;
     const float halfThickness = 12.0f * scale;
