@@ -399,6 +399,36 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     return -3.0f;
 }
 
+void Component::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::vector<uint64_t> &outBits)
+{
+    // Resize component tile bits if there isn't enough
+    // Otherwise clear them
+    auto const tileCount = tilesX * tilesY;
+    if (tileBits.size() * 64 < tileCount)
+        tileBits.resize((tileCount + 63) / 64, 0);
+    else
+        std::ranges::fill(tileBits, 0);
+
+    const Rect gb = getGlobalBounds();
+
+    int minX = gb.x / tileSize;
+    int maxX = (gb.x + gb.w) / tileSize;
+    int minY = gb.y / tileSize;
+    int maxY = (gb.y + gb.h) / tileSize;
+
+    for (int y = minY; y <= maxY; ++y) {
+        for (int x = minX; x <= maxX; ++x) {
+            if (x < 0 || x >= tilesX || y < 0 || y >= tilesY)
+                continue;
+            int index = y * tilesX + x;
+            int wordIndex = index >> 6;           // index / 64
+            uint64_t bit = 1ULL << (index & 63);  // index % 64
+            tileBits[wordIndex] |= bit;
+            outBits[wordIndex] |= bit;
+        }
+    }
+}
+
 Rect Component::getGlobalBounds() const
 {
     float sx = scale;

@@ -28,6 +28,8 @@ public:
     void keyPressed(pptk::CompEvent& e) override;
     bool hitTest(float px, float py) override;
 
+    void computeTileCoverage(int tilesX, int tilesY, int tileSize, std::vector<uint64_t> &outBits) override;
+
     // Update the position of the destination when dragging a new connection around
     void setConnectionDest(const pptk::Point& globalPos);
 

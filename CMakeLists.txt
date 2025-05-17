@@ -180,6 +180,7 @@ target_compile_definitions(PatchformSDK PRIVATE
         PATCHFORM_WITH_GUI
         PATCHFORM_SDK_BUILD
         NANOVG_GL3_IMPLEMENTATION=1
+        DEBUG_TILE_REPAINT
 )
 
 add_dependencies(PatchformSDK update_git_version)

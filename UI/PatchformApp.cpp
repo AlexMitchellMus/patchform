@@ -599,15 +599,15 @@ void PatchformApp::render()
     // Render content
     editor->renderFrame(nvg);
 
+#ifdef DEBUG_TILE_REPAINT
     float r = (rand() % 100) / 300.0f;
     float g = (rand() % 100) / 300.0f;
     float b = (rand() % 100) / 300.0f;
     float a = 0.2f;
 
-    nvgBeginPath(nvg);
-    nvgRect(nvg, 0, 0, drawableW, drawableH);
-    nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
-    nvgFill(nvg);
+    auto col = nvgRGBAf(r, g, b, a);
+    nvgDrawRoundedRect(nvg, 0, 0, drawableW, drawableH, col, col, 0);
+#endif
 
     nvgEndFrame(nvg);
 

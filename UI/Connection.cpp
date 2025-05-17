@@ -31,6 +31,62 @@ Connection::~Connection()
     repaint();
 }
 
+void Connection::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::vector<uint64_t>& outBits)
+{
+    const int tileCount = tilesX * tilesY;
+    const int wordCount = (tileCount + 63) / 64;
+
+    if (tileBits.size() < static_cast<size_t>(wordCount))
+        tileBits.resize(wordCount, 0);
+    else
+        std::ranges::fill(tileBits, 0);
+
+    // Use global bounds to extract offset and approximate uniform scale
+    const auto global = getGlobalBounds();
+    const float offsetX = global.x;
+    const float offsetY = global.y;
+    const float scale = getWidth() > 0 ? global.w / getWidth() : 1.0f;
+
+    constexpr int segments = 32;
+    const float halfThickness = 12.0f * scale;
+
+    for (int i = 0; i <= segments; ++i)
+    {
+        float t = static_cast<float>(i) / segments;
+        float u = 1.0f - t;
+        float tt = t * t, uu = u * u;
+        float uuu = uu * u, ttt = tt * t;
+
+        // Local Bezier point
+        pptk::Point pt = {
+            uuu * startPoint.x + 3 * uu * t * controlPoint2.x + 3 * u * tt * controlPoint1.x + ttt * endPoint.x,
+            uuu * startPoint.y + 3 * uu * t * controlPoint2.y + 3 * u * tt * controlPoint1.y + ttt * endPoint.y
+        };
+
+        // Apply global offset and scale
+        pt.x = offsetX + pt.x * scale;
+        pt.y = offsetY + pt.y * scale;
+
+        int minX = static_cast<int>((pt.x - halfThickness) / tileSize);
+        int maxX = static_cast<int>((pt.x + halfThickness) / tileSize);
+        int minY = static_cast<int>((pt.y - halfThickness) / tileSize);
+        int maxY = static_cast<int>((pt.y + halfThickness) / tileSize);
+
+        for (int y = minY; y <= maxY; ++y) {
+            if (y < 0 || y >= tilesY) continue;
+            for (int x = minX; x <= maxX; ++x) {
+                if (x < 0 || x >= tilesX) continue;
+                int index = y * tilesX + x;
+                int wordIndex = index >> 6;
+                uint64_t bit = 1ULL << (index & 63);
+                tileBits[wordIndex] |= bit;
+                outBits[wordIndex] |= bit;
+            }
+        }
+    }
+}
+
+
 float Connection::pointToSegmentDistance(const pptk::Point& p,
                              const pptk::Point& a,
                              const pptk::Point& b)

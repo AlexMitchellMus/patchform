@@ -51,7 +51,9 @@ namespace pptk
         void renderFrame(NVGcontext* nvg)
         {
             Component::renderAll(nvg, theme);
-            //drawDebugTiles(nvg);
+#ifdef DEBUG_TILE_REPAINT
+            drawDebugTileGrid(nvg);
+#endif
         }
 
         void registerTimerCallback(Component* c, const std::function<void(uint32_t, uint32_t)>& callback, int timerID = 0)
@@ -208,37 +210,17 @@ namespace pptk
                 didRepaint = true;
 
                 auto* root = dynamic_cast<RootComponent*>(repaintComponent->getRootComponent());
-                if (!root || root->tilesX == 0 || root->tilesY == 0)
+                auto const tilesX = root->tilesX;
+                auto const tilesY = root->tilesY;
+
+                if (!root || tilesX == 0 || tilesY == 0)
                     continue;
 
-                constexpr auto tileSize = RootComponent::tileSize;
-                const int tileCount = root->tilesX * root->tilesY;
+                const int tileCount = tilesX * tilesY;
                 if (tileCount <= 1)
                     continue;
 
-                if (repaintComponent->tileBits.size() * 64 < tileCount)
-                    repaintComponent->tileBits.resize((tileCount + 63) / 64, 0);
-                else
-                    std::ranges::fill(repaintComponent->tileBits, 0);
-
-                const Rect gb = repaintComponent->getGlobalBounds();
-                int minX = gb.x / tileSize;
-                int maxX = (gb.x + gb.w) / tileSize;
-                int minY = gb.y / tileSize;
-                int maxY = (gb.y + gb.h) / tileSize;
-
-                for (int y = minY; y <= maxY; ++y)
-                {
-                    for (int x = minX; x <= maxX; ++x)
-                    {
-                        if (x < 0 || x >= root->tilesX || y < 0 || y >= root->tilesY)
-                            continue;
-
-                        int index = y * root->tilesX + x;
-                        repaintComponent->tileBits[index / 64] |= 1ULL << (index % 64);
-                        root->currentDirtyTiles[index / 64] |= 1ULL << (index % 64);
-                    }
-                }
+                repaintComponent->computeTileCoverage(tilesX, tilesY, tileSize, root->currentDirtyTiles);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;
@@ -252,7 +234,7 @@ namespace pptk
                 }
 #endif
             }
-
+            // Update the dirty tiles by taking both previous and current dirty tiles
             for (size_t i = 0; i < currentDirtyTiles.size(); ++i)
                 dirtyTiles[i] = currentDirtyTiles[i] | previousDirtyTiles[i];
 
@@ -261,7 +243,7 @@ namespace pptk
             return didRepaint;
         }
 
-        void drawDebugTiles(NVGcontext* vg) {
+        void drawDebugTileGrid(NVGcontext* vg) {
             constexpr int tileSize = RootComponent::tileSize;
 
             // First pass: non-active tiles (light grid)
@@ -277,27 +259,6 @@ namespace pptk
                     nvgBeginPath(vg);
                     nvgRect(vg, px, py, tileSize, tileSize);
                     nvgStrokeColor(vg, nvgRGB(80, 80, 80));
-                    nvgStrokeWidth(vg, 1.0f);
-                    nvgStroke(vg);
-                }
-            }
-
-            // Second pass: active (dirty) tiles
-            for (int y = 0; y < tilesY; ++y) {
-                for (int x = 0; x < tilesX; ++x) {
-                    int index = y * tilesX + x;
-                    bool isDirty = (dirtyTiles[index / 64] >> (index % 64)) & 1ULL;
-                    if (!isDirty) continue;
-
-                    int px = x * tileSize;
-                    int py = y * tileSize;
-
-                    nvgBeginPath(vg);
-                    nvgRect(vg, px, py, tileSize, tileSize);
-                    nvgFillColor(vg, nvgRGBA(255, 0, 0, 40));
-                    nvgFill(vg);
-
-                    nvgStrokeColor(vg, nvgRGB(255, 0, 0));
                     nvgStrokeWidth(vg, 1.0f);
                     nvgStroke(vg);
                 }
