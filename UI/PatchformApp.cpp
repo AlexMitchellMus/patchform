@@ -563,38 +563,70 @@ void PatchformApp::render()
     SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
     float pixelRatio = (float)drawableW / (float)windowW;
 
-    // 1. Bind framebuffer
+    // 1. Bind framebuffer for invalid regions only
     nanoVGBindFramebuffer(invalidFB);
 
-    GLint stencilBits = 0;
-    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &stencilBits);
-    std::cout << "Actual stencil bits: " << stencilBits << std::endl;
-
+    // 2. Clear the framebuffer
     nvgViewport(0, 0, drawableW, drawableH);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear( GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // 2. Clear stencil and color buffer
-    glEnable(GL_STENCIL_TEST);
+    // 3. Set up stencil mask for dirty tiles
+    nanoVGStencilMaskTiles(drawableW, drawableH, 32 * 2, editor->dirtyTiles);
 
-    // 3. Set stencil mask using dirty tiles
-    nanoVGStencilMaskTiles(drawableW, drawableH, 64, editor->dirtyTiles);
+    // NanoVG will override OpenGL state in nvgBeginFrame, so we need to set up
+    // stencil test AFTER beginning the NanoVG frame
 
-    // 5. Render NanoVG scene
+    // 5. Start NanoVG rendering
     nvgBeginFrame(nvg, windowW, windowH, pixelRatio);
 
+    // IMPORTANT: Configure stencil test after nvgBeginFrame
     glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    //glStencilMask(0x00); // Lock stencil buffer from modifications
 
-    editor->renderFrame(nvg);
+    // Optional: For debugging
+    GLboolean stencilEnabled;
+    glGetBooleanv(GL_STENCIL_TEST, &stencilEnabled);
+    if (!stencilEnabled) {
+        std::cerr << "Failed to enable stencil test after nvgBeginFrame!" << std::endl;
+    }
+
+    // Ensure global scissor is set (this might be important for NanoVG)
     nvgGlobalScissor(nvg, 0, 0, drawableW, drawableH);
+
+    // Render content
+    editor->renderFrame(nvg);
+
+    float r = (rand() % 100) / 300.0f;
+    float g = (rand() % 100) / 300.0f;
+    float b = (rand() % 100) / 300.0f;
+    float a = 0.2f;
+
+    nvgBeginPath(nvg);
+    nvgRect(nvg, 0, 0, drawableW, drawableH);
+    nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
+    nvgFill(nvg);
+
     nvgEndFrame(nvg);
 
-    // 6. Blit framebuffer to screen (will respect stencil)
+    // 6. Disable stencil test
+    glDisable(GL_STENCIL_TEST);
+
+    // 7. Blit invalidFB to the screen
     nanoVGBindFramebuffer(nullptr);
     nanoVGBlitFramebuffer(nvg, invalidFB, 0, 0, drawableW, drawableH);
 
-    // 7. Present
+    // 8. Present
     window->swapBuffers();
-}
 
+    // For debugging: Print any OpenGL errors
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cerr << "OpenGL error in render(): 0x" << std::hex << err << std::dec << std::endl;
+    }
+}
 
 bool PatchformApp::loadFonts()
 {
