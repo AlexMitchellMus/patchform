@@ -66,6 +66,15 @@ void Port::mouseButtonUp(pptk::CompEvent& e)
                 cnv->addMultipleConnections(portCons);
             }
         }
+        // Directly inject the invalid tile coverage of the temp connection that will be deleted
+        if (auto* root = dynamic_cast<pptk::RootComponent*>(getRootComponent()))
+        {
+            for (const auto& conn : cnv->newConnections)
+            {
+                std::cout << "removing connection tile coverage" << std::endl;
+                conn->computeTileCoverage(root->tileMaskBuffer);
+            }
+        }
         cnv->newConnections.clear();
         foundPort.reset();
 

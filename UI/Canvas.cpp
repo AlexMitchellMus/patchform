@@ -952,6 +952,7 @@ void Canvas::reloadConnections(const std::vector<Edge*>& edges)
 
             connectionsLayer.addComponent(connection.get());
             connection->updateConnectionGeometry();
+            connection->repaint();
 
             connections.push_back(std::move(connection));
         }
