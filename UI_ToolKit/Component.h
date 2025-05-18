@@ -21,6 +21,7 @@
 #include "SafePointer.h"
 #include "Theme.h"
 #include "InputEvents.h"
+#include "TileMask.h"
 
 #ifdef min
 #undef min
@@ -329,7 +330,7 @@ public:
 
     virtual void resized() { }
 
-    virtual void computeTileCoverage(int tilesX, int tilesY, int tileSize, std::vector<uint64_t>& outBits);
+    virtual void computeTileCoverage(TileMaskBuffer& tileMask);
 
     virtual void render(NVGcontext* vg, const Theme& theme) { }
     virtual void renderAll(NVGcontext* vg, const Theme& theme);

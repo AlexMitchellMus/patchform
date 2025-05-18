@@ -17,6 +17,7 @@
 #include "../UI_ToolKit/FontMetrics.h"
 #include "../UI_ToolKit/CommandIDManager.h"
 #include "concurrentqueue.h"
+#include "TileMask.h"
 
 namespace pptk
 {
@@ -113,17 +114,7 @@ namespace pptk
 
         void resized() override
         {
-            tilesX = (getWidth() + tileSize - 1) / tileSize;
-            tilesY = (getHeight() + tileSize - 1) / tileSize;
-
-            std::cout << "tile count: " << tilesX * tilesY << std::endl;
-
-            dirtyTiles.resize((tilesX * tilesY + 63) / 64);
-            currentDirtyTiles.resize((tilesX * tilesY + 63) / 64);
-            previousDirtyTiles.resize((tilesX * tilesY + 63) / 64);
-            std::ranges::fill(dirtyTiles, 0);
-            std::ranges::fill(currentDirtyTiles, 0);
-            std::ranges::fill(previousDirtyTiles, 0);
+            tileMask.resize(getWidth(), getHeight());
         }
 
         void callGlobalMouseHandlersOn(Component* comp)
@@ -190,19 +181,8 @@ namespace pptk
         // This marks the root components tile map as dirty where it intersects the component
         bool processRepaintQueue()
         {
-            if (tilesX <= 0 || tilesY <= 0)
+            if (!tileMaskBuffer.isInit())
                 return false;
-
-            const int tileCount = tilesX * tilesY;
-            const size_t vecSize = (tileCount + 63) / 64;
-
-            if (currentDirtyTiles.size() != vecSize) {
-                currentDirtyTiles.resize(vecSize, 0);
-                previousDirtyTiles.resize(vecSize, 0);
-                dirtyTiles.resize(vecSize, 0);
-            } else {
-                std::ranges::fill(currentDirtyTiles, 0);
-            }
 
             bool didRepaint = false;
 
@@ -224,10 +204,10 @@ namespace pptk
                 didRepaint = true;
 
                 auto* root = dynamic_cast<RootComponent*>(repaintComponent->getRootComponent());
-                if (!root || root->tilesX * root->tilesY <= 1)
+                if (!root || !tileMaskBuffer.isInit())
                     continue;
 
-                repaintComponent->computeTileCoverage(tilesX, tilesY, tileSize, root->currentDirtyTiles);
+                repaintComponent->computeTileCoverage(tileMaskBuffer);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;
@@ -241,24 +221,21 @@ namespace pptk
                 }
 #endif
             }
-            // Update the dirty tiles by taking both previous and current dirty tiles
-            for (size_t i = 0; i < currentDirtyTiles.size(); ++i)
-                dirtyTiles[i] = currentDirtyTiles[i] | previousDirtyTiles[i];
-
-            previousDirtyTiles = std::move(currentDirtyTiles);
+            tileMaskBuffer.mergePrevious();
 
             return didRepaint;
         }
 
         void drawDebugTileGrid(NVGcontext* vg) {
-            constexpr int tileSize = RootComponent::tileSize;
+            constexpr int tileSize = TileMask::tileSize;
+
+            const auto tileX = tileMaskBuffer.getX();
+            const auto tileY = tileMaskBuffer.getY();
 
             // First pass: non-active tiles (light grid)
-            for (int y = 0; y < tilesY; ++y) {
-                for (int x = 0; x < tilesX; ++x) {
-                    int index = y * tilesX + x;
-                    bool isDirty = (dirtyTiles[index / 64] >> (index % 64)) & 1ULL;
-                    if (isDirty) continue;
+            for (int y = 0; y < tileX; ++y) {
+                for (int x = 0; x < tileY; ++x) {
+                    if (tileMaskBuffer.testTile(x, y)) continue;
 
                     int px = x * tileSize;
                     int py = y * tileSize;
@@ -272,12 +249,7 @@ namespace pptk
             }
         }
 
-        int tilesX = -1;
-        int tilesY = -1;
-        static constexpr int tileSize = 32;
-        std::vector<uint64_t> currentDirtyTiles;
-        std::vector<uint64_t> previousDirtyTiles;
-        std::vector<uint64_t> dirtyTiles;
+        TileMaskBuffer tileMaskBuffer;
 
         moodycamel::ConcurrentQueue<SafePointer<Component>> repaintQueue;
 

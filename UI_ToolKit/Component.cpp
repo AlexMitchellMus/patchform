@@ -195,13 +195,13 @@ void Component::removeAllChildren()
 void Component::renderAll(NVGcontext* vg, const Theme& theme)
 {
     auto *root = dynamic_cast<RootComponent *>(getRootComponent());
-    if (!root || root->tilesX == 0 || root->tilesY == 0)
+    if (!root || !root->tileMaskBuffer.isInit())
         return;
 
     bool intersectsDirty = false;
     for (size_t i = 0; i < tileBits.size(); ++i)
     {
-        if (tileBits[i] & root->dirtyTiles[i]) {
+        if (tileBits[i] & root->tileMaskBuffer.[i]) {
             intersectsDirty = true;
             break;
         }
@@ -399,10 +399,12 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     return -3.0f;
 }
 
-void Component::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::vector<uint64_t> &outBits)
+void Component::computeTileCoverage(TileMaskBuffer& tileMaskBuffer)
 {
     // Resize component tile bits if there isn't enough
     // Otherwise clear them
+    auto const tilesX = tileMaskBuffer.getX();
+    auto const tilesY = tileMaskBuffer.getY();
     auto const tileCount = tilesX * tilesY;
     if (tileBits.size() * 64 < tileCount)
         tileBits.resize((tileCount + 63) / 64, 0);
@@ -411,20 +413,16 @@ void Component::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::v
 
     const Rect gb = getGlobalBounds();
 
-    int minX = gb.x / tileSize;
-    int maxX = (gb.x + gb.w) / tileSize;
-    int minY = gb.y / tileSize;
-    int maxY = (gb.y + gb.h) / tileSize;
+    int minX = gb.x / TileMaskBuffer::tileSize;
+    int maxX = (gb.x + gb.w) / TileMaskBuffer::tileSize;
+    int minY = gb.y / TileMaskBuffer::tileSize;
+    int maxY = (gb.y + gb.h) / TileMask::tileSize;
 
     for (int y = minY; y <= maxY; ++y) {
         for (int x = minX; x <= maxX; ++x) {
-            if (x < 0 || x >= tilesX || y < 0 || y >= tilesY)
-                continue;
-            int index = y * tilesX + x;
-            int wordIndex = index >> 6;           // index / 64
-            uint64_t bit = 1ULL << (index & 63);  // index % 64
-            tileBits[wordIndex] |= bit;
-            outBits[wordIndex] |= bit;
+            const int index = y * tilesX + x;
+            tileBits[index >> 6] |= 1ULL << (index & 63);  // localMask
+            tileMaskBuffer.current.setIndex(index); // mainMask
         }
     }
 }
