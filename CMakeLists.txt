@@ -130,7 +130,8 @@ file(GLOB_RECURSE UI_SOURCES "${CMAKE_SOURCE_DIR}/UI/*.cpp" "${CMAKE_SOURCE_DIR}
 if(APPLE)
     set(PLATFORM_HELPERS ${CMAKE_SOURCE_DIR}/PlatformHelpers/PlatformHelpers.mm)
 else()
-    set(PLATFORM_HELPERS ${CMAKE_SOURCE_DIR}/PlatformHelpers/PlatformHelpers.cpp)
+    set(PLATFORM_HELPERS ${CMAKE_SOURCE_DIR}/PlatformHelpers/PlatformHelpers.cpp
+            UI_ToolKit/TileMask.h)
 endif()
 
 add_library(PatchformSDK SHARED

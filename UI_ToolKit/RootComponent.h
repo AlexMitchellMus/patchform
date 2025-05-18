@@ -115,6 +115,9 @@ namespace pptk
         {
             tilesX = (getWidth() + tileSize - 1) / tileSize;
             tilesY = (getHeight() + tileSize - 1) / tileSize;
+
+            std::cout << "tile count: " << tilesX * tilesY << std::endl;
+
             dirtyTiles.resize((tilesX * tilesY + 63) / 64);
             currentDirtyTiles.resize((tilesX * tilesY + 63) / 64);
             previousDirtyTiles.resize((tilesX * tilesY + 63) / 64);

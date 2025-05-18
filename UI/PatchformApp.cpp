@@ -584,7 +584,6 @@ void PatchformApp::render()
     glEnable(GL_STENCIL_TEST);
     glStencilFunc(GL_EQUAL, 1, 0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    //glStencilMask(0x00); // Lock stencil buffer from modifications
 
     // Optional: For debugging
     GLboolean stencilEnabled;
@@ -603,7 +602,7 @@ void PatchformApp::render()
     float r = (rand() % 100) / 300.0f;
     float g = (rand() % 100) / 300.0f;
     float b = (rand() % 100) / 300.0f;
-    float a = 0.2f;
+    float a = 0.1f;
 
     auto col = nvgRGBAf(r, g, b, a);
     nvgDrawRoundedRect(nvg, 0, 0, drawableW, drawableH, col, col, 0);

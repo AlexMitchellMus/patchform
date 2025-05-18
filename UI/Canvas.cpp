@@ -152,8 +152,7 @@ void Canvas::dragCanvas(const pptk::Point& delta)
     y += delta.y * scale;
 
     canvasOffset += delta * scale;
-
-    repaint();
+    repaintWholeCanvas();
 }
 
 void Canvas::focusGained()
@@ -246,7 +245,7 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
                 canvasOffset.y = y + canvasOrigin * scale;
 
                 onScaleChange(scale);
-                repaint();
+                repaintWholeCanvas();
                 frameBufferRepaint = true;
             });
         }
@@ -259,9 +258,25 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
         canvasOffset.x = x + canvasOrigin * scale;
         canvasOffset.y = y + canvasOrigin * scale;
 
-        repaint();
+    }
+    repaintWholeCanvas();
+}
+
+void Canvas::repaintWholeCanvas()
+{
+    repaint();
+
+    for (auto* obj : objects) {
+        obj->repaint();
+        std::cout << "repaint obj: " << obj->getName() << std::endl;
+    }
+
+    for (const auto& conn : connections) {
+        std::cout << "repaint conn from: " << conn->getOriginPort()->getParent()->getName() << std::endl;
+        conn->repaint();
     }
 }
+
 
 
 void Canvas::setScale(float offset)
