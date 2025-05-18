@@ -114,7 +114,7 @@ namespace pptk
 
         void resized() override
         {
-            tileMask.resize(getWidth(), getHeight());
+            tileMaskBuffer.resize(getWidth(), getHeight());
         }
 
         void callGlobalMouseHandlersOn(Component* comp)
@@ -184,6 +184,8 @@ namespace pptk
             if (!tileMaskBuffer.isInit())
                 return false;
 
+            tileMaskBuffer.clearCurrent();
+
             bool didRepaint = false;
 
             std::vector<SafePointer<Component>> collected;
@@ -194,8 +196,19 @@ namespace pptk
                 if (ptr) collected.push_back(ptr);
 
             // Remove duplicates
-            std::sort(collected.begin(), collected.end());
-            collected.erase(std::unique(collected.begin(), collected.end()), collected.end());
+            std::vector<SafePointer<Component>> unique;
+            ankerl::unordered_dense::set<Component*> seen;
+            unique.reserve(collected.size());
+
+            for (const auto& ptr : collected) {
+                Component* raw = ptr.get();
+                if (!raw)
+                    continue;
+                if (seen.insert(raw).second)
+                    unique.push_back(ptr);
+            }
+
+            collected = std::move(unique);
 
             // Process remaining
             for (const auto& repaintComponent : collected)
@@ -233,8 +246,8 @@ namespace pptk
             const auto tileY = tileMaskBuffer.getY();
 
             // First pass: non-active tiles (light grid)
-            for (int y = 0; y < tileX; ++y) {
-                for (int x = 0; x < tileY; ++x) {
+            for (int y = 0; y < tileY; ++y) {
+                for (int x = 0; x < tileX; ++x) {
                     if (tileMaskBuffer.testTile(x, y)) continue;
 
                     int px = x * tileSize;

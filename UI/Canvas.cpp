@@ -152,7 +152,7 @@ void Canvas::dragCanvas(const pptk::Point& delta)
     y += delta.y * scale;
 
     canvasOffset += delta * scale;
-    repaintWholeCanvas();
+    repaint();
 }
 
 void Canvas::focusGained()
@@ -245,7 +245,7 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
                 canvasOffset.y = y + canvasOrigin * scale;
 
                 onScaleChange(scale);
-                repaintWholeCanvas();
+                repaint();
                 frameBufferRepaint = true;
             });
         }
@@ -259,25 +259,8 @@ void Canvas::mouseWheel(pptk::CompEvent& e)
         canvasOffset.y = y + canvasOrigin * scale;
 
     }
-    repaintWholeCanvas();
-}
-
-void Canvas::repaintWholeCanvas()
-{
     repaint();
-
-    for (auto* obj : objects) {
-        obj->repaint();
-        std::cout << "repaint obj: " << obj->getName() << std::endl;
-    }
-
-    for (const auto& conn : connections) {
-        std::cout << "repaint conn from: " << conn->getOriginPort()->getParent()->getName() << std::endl;
-        conn->repaint();
-    }
 }
-
-
 
 void Canvas::setScale(float offset)
 {
@@ -745,13 +728,17 @@ void Canvas::renderAllConnections(NVGcontext* nvg, const pptk::Theme& theme)
     for (auto& con : connections)
     {
         auto *root = dynamic_cast<pptk::RootComponent*>(getRootComponent());
-        if (!root || root->tilesX == 0 || root->tilesY == 0)
+        if (!root || !root->tileMaskBuffer.isInit())
             return;
 
         bool intersectsDirty = false;
-        for (size_t i = 0; i < con->tileBits.size(); ++i)
+
+        const auto& localBits = tileBits.raw();
+        const auto& globalBits = root->tileMaskBuffer.merged.raw();
+
+        for (size_t i = 0; i < localBits.size(); ++i)
         {
-            if (con->tileBits[i] & root->dirtyTiles[i]) {
+            if (localBits[i] & globalBits[i]) {
                 intersectsDirty = true;
                 break;
             }

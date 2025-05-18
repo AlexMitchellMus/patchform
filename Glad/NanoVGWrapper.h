@@ -17,6 +17,7 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include <span>
 
 #include "nanovg.h"
 
@@ -40,7 +41,7 @@ extern "C" {
     SDK_EXPORT void nanoVGBindFramebuffer(NVGLUframebuffer* fb);
     SDK_EXPORT void nanoVGDeleteFramebuffer(NVGLUframebuffer* fb);
     SDK_EXPORT int nanoVGGetFramebufferImage(NVGLUframebuffer* fb);
-    SDK_EXPORT void nanoVGStencilMaskTiles(int drawableW, int drawableH, int tileSize, const std::vector<uint64_t>& dirtyTiles);
+    SDK_EXPORT void nanoVGStencilMaskTiles(int drawableW, int drawableH, int tileSize, std::span<const uint64_t> dirtyTiles);
     SDK_EXPORT void nanoVGForceStencilFill(NVGLUframebuffer* framebuffer, int width, int height);
 #ifdef __cplusplus
 }

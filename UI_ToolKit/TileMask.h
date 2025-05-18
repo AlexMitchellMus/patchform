@@ -3,16 +3,27 @@
 #include <choc/containers/choc_SmallVector.h>
 #include <algorithm>
 #include <functional>
+#include <span>
 
 class TileMask {
 public:
     static constexpr int tileSize = 32;
 
-    void resize(int width, int height)
+    void resize(int pixelWidth, int pixelHeight)
     {
-        tilesX = (width + tileSize - 1) / tileSize;
-        tilesY = (height + tileSize - 1) / tileSize;
-        int wordCount = ((tilesX * tilesY) + 63) / 64;
+        const int numTilesX = (pixelWidth + tileSize - 1) / tileSize;
+        const int numTilesY = (pixelHeight + tileSize - 1) / tileSize;
+        resizeTiles(numTilesX, numTilesY);
+    }
+
+    void resizeTiles(int numTilesX, int numTilesY)
+    {
+        tilesX = numTilesX;
+        tilesY = numTilesY;
+
+        const size_t tileCount = static_cast<size_t>(tilesX) * tilesY;
+        const size_t wordCount = (tileCount + 63) / 64;
+
         bits.resize(wordCount);
         std::ranges::fill(bits, 0);
     }
@@ -41,6 +52,14 @@ public:
 
     [[nodiscard]] int getX() const { return tilesX; }
     [[nodiscard]] int getY() const { return tilesY; }
+
+    std::span<uint64_t> getSpan() {
+        return std::span<uint64_t>(bits.data(), bits.size());
+    }
+
+    std::span<const uint64_t> getSpan() const {
+        return std::span<const uint64_t>(bits.data(), bits.size());
+    }
 
     choc::SmallVector<uint64_t, 64>& raw() { return bits; }
     const choc::SmallVector<uint64_t, 64>& raw() const { return bits; }

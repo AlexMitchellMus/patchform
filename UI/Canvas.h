@@ -131,9 +131,7 @@ private:
     std::vector<Object*> objects;
     std::vector<std::unique_ptr<Connection>> connections;
     std::vector<CanvasItem*> selected;
-
-    void repaintWholeCanvas();
-
+    
     ObjectChangedListeners objectChangedListeners;
 
     std::unique_ptr<Lasso> lasso;

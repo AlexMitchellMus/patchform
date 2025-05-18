@@ -66,7 +66,7 @@ extern "C" int nanoVGGetFramebufferImage(NVGLUframebuffer* fb)
     return fb->image;
 }
 
-extern "C" void nanoVGStencilMaskTiles(int drawableW, int drawableH, int tileSize, const std::vector<uint64_t>& dirtyTiles)
+extern "C" void nanoVGStencilMaskTiles(int drawableW, int drawableH, int tileSize, std::span<const uint64_t> dirtyTiles)
 {
     nvgluStencilMaskTiles(drawableW, drawableH, tileSize, dirtyTiles);
 }

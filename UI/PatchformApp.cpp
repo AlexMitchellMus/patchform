@@ -572,7 +572,7 @@ void PatchformApp::render()
     glClear( GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // 3. Set up stencil mask for dirty tiles
-    nanoVGStencilMaskTiles(drawableW, drawableH, 32 * 2, editor->dirtyTiles);
+    nanoVGStencilMaskTiles(drawableW, drawableH, 32 * 2, editor->tileMaskBuffer.merged.getSpan());
 
     // NanoVG will override OpenGL state in nvgBeginFrame, so we need to set up
     // stencil test AFTER beginning the NanoVG frame
@@ -602,7 +602,7 @@ void PatchformApp::render()
     float r = (rand() % 100) / 300.0f;
     float g = (rand() % 100) / 300.0f;
     float b = (rand() % 100) / 300.0f;
-    float a = 0.1f;
+    float a = 0.2f;
 
     auto col = nvgRGBAf(r, g, b, a);
     nvgDrawRoundedRect(nvg, 0, 0, drawableW, drawableH, col, col, 0);

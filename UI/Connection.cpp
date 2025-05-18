@@ -31,15 +31,14 @@ Connection::~Connection()
     repaint();
 }
 
-void Connection::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::vector<uint64_t>& outBits)
+void Connection::computeTileCoverage(TileMaskBuffer& tileMaskBuffer)
 {
-    const int tileCount = tilesX * tilesY;
-    const int wordCount = (tileCount + 63) / 64;
+    const auto tilesX = tileMaskBuffer.getX();
+    const auto tilesY = tileMaskBuffer.getY();
 
-    if (tileBits.size() < static_cast<size_t>(wordCount))
-        tileBits.resize(wordCount, 0);
-    else
-        std::ranges::fill(tileBits, 0);
+    tileBits.resizeTiles(tilesX, tilesY);
+
+    auto tileSize = TileMaskBuffer::tileSize;
 
     const auto globalPos = localToGlobal(0, 0);
     const float offsetX = globalPos.x;
@@ -85,10 +84,8 @@ void Connection::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::
                 {
                     if (x < 0 || x >= tilesX) continue;
                     int index = y * tilesX + x;
-                    int wordIndex = index >> 6;
-                    uint64_t bit = 1ULL << (index & 63);
-                    tileBits[wordIndex] |= bit;
-                    outBits[wordIndex] |= bit;
+                    tileBits.setIndex(index);
+                    tileMaskBuffer.current.setIndex(index);
                 }
             }
         }

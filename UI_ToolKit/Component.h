@@ -178,6 +178,7 @@ struct Rect {
 };
 
 class PopupComponent;
+class RootComponent;
 class SDK_EXPORT Component : public SafeObject
 {
 public:
@@ -467,6 +468,7 @@ public:
     }
 
     void repaint();
+    void repaintSubtree(RootComponent *root);
 
     float getTextWidthForFont(const std::string& fontName, float size, const std::string& text);
 
@@ -492,7 +494,7 @@ public:
         externalMargin = newMargin;
     }
 
-    std::vector<uint64_t> tileBits;
+    TileMask tileBits;
 
 private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);

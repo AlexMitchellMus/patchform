@@ -199,9 +199,13 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
         return;
 
     bool intersectsDirty = false;
-    for (size_t i = 0; i < tileBits.size(); ++i)
+
+    const auto& localBits = tileBits.raw();
+    const auto& globalBits = root->tileMaskBuffer.merged.raw();
+
+    for (size_t i = 0; i < localBits.size(); ++i)
     {
-        if (tileBits[i] & root->tileMaskBuffer.[i]) {
+        if (localBits[i] & globalBits[i]) {
             intersectsDirty = true;
             break;
         }
@@ -240,14 +244,24 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
 
 void Component::repaint()
 {
-    auto *root = dynamic_cast<RootComponent*>(getRootComponent());
+    auto *root = dynamic_cast<RootComponent *>(getRootComponent());
+    if (!root)
+        return;
 
-    if (root)
-    {
-        isDirty = true;
-        root->repaintQueue.enqueue(makeSafePointer(this));
+    repaintSubtree(root);
+}
+
+void Component::repaintSubtree(RootComponent *root)
+{
+    isDirty = true;
+    root->repaintQueue.enqueue(makeSafePointer(this));
+
+    for (auto *child: getChildren()) {
+        if (child)
+            child->repaintSubtree(root);
     }
 }
+
 void Component::setBounds(const float newX, const float newY, const float newW, const float newH)
 {
     float clampedW = newW;
@@ -405,24 +419,20 @@ void Component::computeTileCoverage(TileMaskBuffer& tileMaskBuffer)
     // Otherwise clear them
     auto const tilesX = tileMaskBuffer.getX();
     auto const tilesY = tileMaskBuffer.getY();
-    auto const tileCount = tilesX * tilesY;
-    if (tileBits.size() * 64 < tileCount)
-        tileBits.resize((tileCount + 63) / 64, 0);
-    else
-        std::ranges::fill(tileBits, 0);
+
+    tileBits.resizeTiles(tilesX, tilesY);
 
     const Rect gb = getGlobalBounds();
 
-    int minX = gb.x / TileMaskBuffer::tileSize;
-    int maxX = (gb.x + gb.w) / TileMaskBuffer::tileSize;
-    int minY = gb.y / TileMaskBuffer::tileSize;
-    int maxY = (gb.y + gb.h) / TileMask::tileSize;
+    int minX = std::max(0, static_cast<int>(gb.x / TileMask::tileSize));
+    int maxX = std::min(tilesX - 1, static_cast<int>((gb.x + gb.w) / TileMask::tileSize));
+    int minY = std::max(0, static_cast<int>(gb.y / TileMask::tileSize));
+    int maxY = std::min(tilesY - 1, static_cast<int>((gb.y + gb.h) / TileMask::tileSize));
 
     for (int y = minY; y <= maxY; ++y) {
         for (int x = minX; x <= maxX; ++x) {
-            const int index = y * tilesX + x;
-            tileBits[index >> 6] |= 1ULL << (index & 63);  // localMask
-            tileMaskBuffer.current.setIndex(index); // mainMask
+            tileBits.set(x, y);
+            tileMaskBuffer.current.set(x, y); // mainMask
         }
     }
 }
