@@ -441,9 +441,9 @@ void Canvas::addToSelection(Object* obj)
         selected.push_back(obj);
 
         callObjectChangedListeners();
-    }
 
-    repaint();
+        repaint();
+    }
 }
 
 void Canvas::removeFromSelection(Object* obj)
@@ -454,9 +454,9 @@ void Canvas::removeFromSelection(Object* obj)
         obj->setSelected(false);
         selected.erase(it);
         callObjectChangedListeners();
-    }
 
-    repaint();
+        repaint();
+    }
 }
 
 bool Canvas::areMultiObjectsSelected()
