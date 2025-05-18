@@ -331,7 +331,7 @@ public:
 
     virtual void resized() { }
 
-    virtual void computeTileCoverage(TileMaskBuffer& tileMask);
+    virtual void computeTileCoverage(TileMask& tileMask);
 
     virtual void render(NVGcontext* vg, const Theme& theme) { }
     virtual void renderAll(NVGcontext* vg, const Theme& theme);

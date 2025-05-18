@@ -413,7 +413,7 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     return -3.0f;
 }
 
-void Component::computeTileCoverage(TileMaskBuffer& tileMaskBuffer)
+void Component::computeTileCoverage(TileMask& tileMaskBuffer)
 {
     // Resize component tile bits if there isn't enough
     // Otherwise clear them
@@ -432,7 +432,7 @@ void Component::computeTileCoverage(TileMaskBuffer& tileMaskBuffer)
     for (int y = minY; y <= maxY; ++y) {
         for (int x = minX; x <= maxX; ++x) {
             tileBits.set(x, y);
-            tileMaskBuffer.current.set(x, y); // mainMask
+            tileMaskBuffer.set(x, y); // mainMask
         }
     }
 }

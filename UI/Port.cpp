@@ -71,8 +71,7 @@ void Port::mouseButtonUp(pptk::CompEvent& e)
         {
             for (const auto& conn : cnv->newConnections)
             {
-                std::cout << "removing connection tile coverage" << std::endl;
-                conn->computeTileCoverage(root->tileMaskBuffer);
+                conn->computeTileCoverage(root->tileMaskBuffer.previous);
             }
         }
         cnv->newConnections.clear();

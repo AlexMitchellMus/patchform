@@ -220,7 +220,7 @@ namespace pptk
                 if (!root || !tileMaskBuffer.isInit())
                     continue;
 
-                repaintComponent->computeTileCoverage(tileMaskBuffer);
+                repaintComponent->computeTileCoverage(tileMaskBuffer.current);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;

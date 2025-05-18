@@ -31,7 +31,7 @@ Connection::~Connection()
     repaint();
 }
 
-void Connection::computeTileCoverage(TileMaskBuffer& tileMaskBuffer)
+void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
 {
     const auto tilesX = tileMaskBuffer.getX();
     const auto tilesY = tileMaskBuffer.getY();
@@ -85,7 +85,7 @@ void Connection::computeTileCoverage(TileMaskBuffer& tileMaskBuffer)
                     if (x < 0 || x >= tilesX) continue;
                     int index = y * tilesX + x;
                     tileBits.setIndex(index);
-                    tileMaskBuffer.current.setIndex(index);
+                    tileMaskBuffer.setIndex(index);
                 }
             }
         }
