@@ -391,7 +391,6 @@ void Object::render(NVGcontext* nvg, const pptk::Theme& theme)
 
 void Object::drawBackground(NVGcontext* nvg)
 {
-    nvgBeginPath(nvg);
     auto bgCol = isHovered ? nvgRGB(34, 34, 34) : nvgRGB(33, 33, 33);
 
     if (isGuiTransparent)

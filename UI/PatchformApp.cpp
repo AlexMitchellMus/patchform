@@ -563,21 +563,17 @@ void PatchformApp::render()
     SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
     float pixelRatio = (float)drawableW / (float)windowW;
 
-    // 1. Bind framebuffer for invalid regions only
+    //  Bind framebuffer for invalid regions only
     nanoVGBindFramebuffer(invalidFB);
 
-    // 2. Clear the framebuffer
+    // Clear the stencil buffer
     nvgViewport(0, 0, drawableW, drawableH);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear( GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // 3. Set up stencil mask for dirty tiles
+    // Set up stencil mask for dirty tiles
     nanoVGStencilMaskTiles(drawableW, drawableH, 32 * 2, editor->tileMaskBuffer.merged.getSpan());
 
-    // NanoVG will override OpenGL state in nvgBeginFrame, so we need to set up
-    // stencil test AFTER beginning the NanoVG frame
-
-    // 5. Start NanoVG rendering
+    // Start NanoVG rendering
     nvgBeginFrame(nvg, windowW, windowH, pixelRatio);
 
     // IMPORTANT: Configure stencil test after nvgBeginFrame
@@ -592,7 +588,7 @@ void PatchformApp::render()
         std::cerr << "Failed to enable stencil test after nvgBeginFrame!" << std::endl;
     }
 
-    // Ensure global scissor is set (this might be important for NanoVG)
+    // Ensure global scissor is set
     nvgGlobalScissor(nvg, 0, 0, drawableW, drawableH);
 
     // Render content
@@ -610,14 +606,14 @@ void PatchformApp::render()
 
     nvgEndFrame(nvg);
 
-    // 6. Disable stencil test
+    // Disable stencil test
     glDisable(GL_STENCIL_TEST);
 
-    // 7. Blit invalidFB to the screen
+    // Blit invalidFB to the screen
     nanoVGBindFramebuffer(nullptr);
     nanoVGBlitFramebuffer(nvg, invalidFB, 0, 0, drawableW, drawableH);
 
-    // 8. Present
+    // Present
     window->swapBuffers();
 
     // For debugging: Print any OpenGL errors

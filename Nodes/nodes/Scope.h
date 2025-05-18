@@ -70,7 +70,8 @@ public:
         void updateGraphValues() override
         {
             auto scope = reinterpret_cast<Scope*>(audioNode);
-            scope->requestBuffer.store(true, std::memory_order_release);
+            if (scope->eventQueue.size_approx() == 0)
+                scope->requestBuffer.store(true, std::memory_order_release);
 
             BufferTypeUI newBuffer;
             bool gotNewBuffer = false;
@@ -143,7 +144,7 @@ public:
             //return;
 
             // Calculate the full range width.
-            float rangeWidth = posRange - negRange;
+            const float rangeWidth = posRange - negRange;
             if (rangeWidth == 0.0f) {
                 // Avoid division by zero.
                 return;
@@ -153,7 +154,6 @@ public:
             constexpr size_t DISPLAY_SIZE = UI_BUFFER_SIZE;
             float xStep = static_cast<float>(w) / (DISPLAY_SIZE - 1);
 
-            nvgBeginPath(nvg);
             float x = 0.0f;
 
             // For the first sample, map it from [negRange, posRange] into [0, 1]
@@ -162,7 +162,9 @@ public:
             // normalized value 1 gives y = 0 (top)
             float prevY = h * (1.0f - normalized);
             // Before visible waveform
-            nvgMoveTo(nvg, -100.0f, height * 0.5f);
+
+            nvgBeginPath(nvg);
+            nvgMoveTo(nvg, -100.0f, h * 0.5f);
 
             // Main waveform
             for (size_t i = 0; i < DISPLAY_SIZE; ++i)
@@ -174,18 +176,18 @@ public:
             }
 
             // After visible waveform
-            nvgLineTo(nvg, width + 100.0f, height * 0.5f);
+            nvgLineTo(nvg, w + 100.0f, h * 0.5f);
 
             // Scissor the waveform only
             nvgSave(nvg);
-            nvgScissor(nvg, 0, 1, width, height - 2);
+            nvgScissor(nvg, 0, 1, w, h - 2);
 
             nvgLineStyle(nvg, NVG_SOLID);
             nvgLineJoin(nvg, NVG_ROUND);
             nvgStrokeColor(nvg, nvgRGBA(200, 200, 200, 255));
             nvgStrokeWidth(nvg, 1.0f);
-            nvgFillColor(nvg, fg);
-            nvgFill(nvg);
+            //nvgFillColor(nvg, fg);
+            //nvgFill(nvg);
             nvgStroke(nvg);
 
             nvgRestore(nvg);
