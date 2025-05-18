@@ -40,7 +40,7 @@ void Connection::computeTileCoverage(int tilesX, int tilesY, int tileSize, std::
         tileBits.resize(wordCount, 0);
     else
         std::ranges::fill(tileBits, 0);
-    
+
     const auto globalPos = localToGlobal(0, 0);
     const float offsetX = globalPos.x;
     const float offsetY = globalPos.y;

@@ -173,6 +173,20 @@ namespace pptk
         std::shared_ptr<SafeControlBlock> block;
     };
 
+    // For Sort and Unique
+    template <typename T>
+    bool operator<(const SafePointer<T>& a, const SafePointer<T>& b)
+    {
+        return a.get() < b.get();
+    }
+
+    // For Sort and Unique
+    template <typename T>
+    bool operator==(const SafePointer<T>& a, const SafePointer<T>& b)
+    {
+        return a.get() == b.get();
+    }
+
     template <typename T>
     SafePointer<T> makeSafePointer(T* ptr)
     {

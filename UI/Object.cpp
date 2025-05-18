@@ -366,8 +366,7 @@ void Object::keyPressed(pptk::CompEvent& e)
     }
 }
 
-void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button button)
-{
+void Object::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delta, pptk::Button button) {
     if (button == pptk::Button::LEFT)
     {
         if (auto cnv = findParentOfClass<Canvas>())

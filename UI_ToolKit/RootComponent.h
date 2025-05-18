@@ -8,6 +8,8 @@
 
 #include <chrono>
 #include <iostream>
+#include <vector>
+#include "functional"
 #include <memory>
 
 #include "PopupComponent.h"
@@ -200,24 +202,26 @@ namespace pptk
             }
 
             bool didRepaint = false;
-            SafePointer<Component> repaintComponent;
 
-            while (repaintQueue.try_dequeue(repaintComponent)) {
-                if (!repaintComponent)
-                    continue;
+            std::vector<SafePointer<Component>> collected;
+            SafePointer<Component> ptr;
 
+            // Drain queue
+            while (repaintQueue.try_dequeue(ptr))
+                if (ptr) collected.push_back(ptr);
+
+            // Remove duplicates
+            std::sort(collected.begin(), collected.end());
+            collected.erase(std::unique(collected.begin(), collected.end()), collected.end());
+
+            // Process remaining
+            for (const auto& repaintComponent : collected)
+            {
                 repaintComponent->isDirty = true;
                 didRepaint = true;
 
                 auto* root = dynamic_cast<RootComponent*>(repaintComponent->getRootComponent());
-                auto const tilesX = root->tilesX;
-                auto const tilesY = root->tilesY;
-
-                if (!root || tilesX == 0 || tilesY == 0)
-                    continue;
-
-                const int tileCount = tilesX * tilesY;
-                if (tileCount <= 1)
+                if (!root || root->tilesX * root->tilesY <= 1)
                     continue;
 
                 repaintComponent->computeTileCoverage(tilesX, tilesY, tileSize, root->currentDirtyTiles);
