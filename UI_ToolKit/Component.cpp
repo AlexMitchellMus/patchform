@@ -201,7 +201,7 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
     bool intersectsDirty = false;
 
     const auto& localBits = tileBits.raw();
-    const auto& globalBits = root->tileMaskBuffer.merged.raw();
+    const auto& globalBits = root->tileMaskBuffer.mergedTileMask.raw();
 
     for (size_t i = 0; i < localBits.size(); ++i)
     {
@@ -232,7 +232,6 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
     {
         if (child->isVisible())
         {
-
             child->renderAll(vg, theme);
         }
     }
@@ -254,8 +253,8 @@ void Component::repaintSubtree(RootComponent *root)
 {
     isDirty = true;
 
-    computeTileCoverage(root->tileMaskBuffer.previous);
-
+    //tileBits.copyTo(root->tileMaskBuffer.previous);
+    computeTileCoverage(root->tileMaskBuffer.previousTileMask);
     root->repaintQueue.enqueue(makeSafePointer(this));
 
     for (auto *child : getChildren())
@@ -430,13 +429,17 @@ void Component::computeTileCoverage(TileMask& tileMaskBuffer)
     const int minY = std::max(0, static_cast<int>(gb.y / TileMask::tileSize));
     const int maxY = std::min(tilesY - 1, static_cast<int>((gb.y + gb.h) / TileMask::tileSize));
 
+    // Tile out of window bounds
+    if (minX > maxX || minY > maxY)
+        return;
+
     for (int y = minY; y <= maxY; ++y)
     {
-        int start = y * tilesX + minX;
-        int end   = y * tilesX + maxX;
+        const int start = y * tilesX + minX;
+        const int end   = y * tilesX + maxX;
 
-        int wordStart = start / 64;
-        int wordEnd   = end / 64;
+        const int wordStart = start / 64;
+        const int wordEnd   = end / 64;
 
         if (wordStart == wordEnd)
         {
@@ -461,7 +464,6 @@ void Component::computeTileCoverage(TileMask& tileMaskBuffer)
             tileMaskBuffer.setWord(wordEnd, lastMask);
         }
     }
-    //tileBits.printDebug();
 }
 
 Rect Component::getGlobalBounds() const

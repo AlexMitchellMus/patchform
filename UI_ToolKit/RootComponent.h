@@ -192,29 +192,16 @@ namespace pptk
                 if (ptr) collected.push_back(ptr);
 
             // Remove duplicates
-            std::vector<SafePointer<Component>> unique;
-            ankerl::unordered_dense::set<Component*> seen;
-            unique.reserve(collected.size());
-
-            for (const auto& ptr : collected) {
-                Component* raw = ptr.get();
-                if (!raw)
-                    continue;
-                if (seen.insert(raw).second)
-                    unique.push_back(ptr);
-            }
-
-            collected = std::move(unique);
+            std::sort(collected.begin(), collected.end());
+            collected.erase(std::ranges::unique(collected).begin(), collected.end());
 
             // Process remaining
             for (const auto& repaintComponent : collected)
             {
                 repaintComponent->isDirty = true;
 
-                if (!tileMaskBuffer.isInit())
-                    continue;
-
-                repaintComponent->computeTileCoverage(tileMaskBuffer.current);
+                //repaintComponent->tileBits.copyTo(tileMaskBuffer.previous);
+                repaintComponent->computeTileCoverage(tileMaskBuffer.currentTileMask);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;

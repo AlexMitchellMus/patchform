@@ -102,64 +102,53 @@ public:
 
     void resize(int width, int height)
     {
-        current.resize(width, height);
-        previous.resize(width, height);
-        merged.resize(width, height);
+        currentTileMask.resize(width, height);
+        previousTileMask.resize(width, height);
+        mergedTileMask.resize(width, height);
     }
 
     [[nodiscard]] bool isInit() const
     {
-        return current.getX() > 0 && current.getY() > 0;
+        return currentTileMask.getX() > 0 && currentTileMask.getY() > 0;
     }
 
     [[nodiscard]] bool testTile(const int x, const int y) const
     {
-        return merged.test(x, y);
+        return mergedTileMask.test(x, y);
     }
 
     [[nodiscard]] int getX() const
     {
-        return current.getX();
+        return currentTileMask.getX();
     }
 
     [[nodiscard]] int getY() const
     {
-        return current.getY();
+        return currentTileMask.getY();
     }
 
     bool mergePrevious()
     {
-        auto& a = current.raw();
-        auto& b = previous.raw();
-        auto& out = merged.raw();
+        auto& c = currentTileMask.raw();
+        auto& p = previousTileMask.raw();
+        auto& m = mergedTileMask.raw();
 
-        if (b.size() != a.size()) {
-            b.resize(a.size());
-            std::ranges::fill(b, 0); // clear new space
-        }
-
-        if (out.size() != a.size()) {
-            out.resize(a.size());
-            std::ranges::fill(out, 0);
-        }
+        assert(b.size() == a.size() && "Previous tile mask size missmatch");
+        assert(out.size() == a.size() && "Merged tile mask size missmatch");
 
         bool hasBits = false;
 
-        for (size_t i = 0; i < a.size(); ++i) {
-            out[i] = a[i] | b[i];
-            b[i] = a[i];
-            hasBits |= (out[i] != 0);
+        for (size_t i = 0; i < c.size(); ++i) {
+            m[i] = c[i] | p[i];
+            p[i] = c[i];
+            hasBits |= (m[i] != 0);
         }
 
-        //if (hasBits)
-        //    merged.printDebug("merged");
-
-        current.clear();
+        currentTileMask.clear();
         return hasBits;
     }
 
-
-    TileMask current;
-    TileMask previous;
-    TileMask merged;
+    TileMask currentTileMask;
+    TileMask previousTileMask;
+    TileMask mergedTileMask;
 };
