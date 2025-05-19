@@ -58,9 +58,6 @@ public:
     void removeFromSelection(Object* obj);
 
     void render(NVGcontext* nvg, const pptk::Theme& theme) override;
-    void renderAll(NVGcontext* nvg, const pptk::Theme& theme) override;
-    void renderAllObjects(NVGcontext* nvg, const pptk::Theme& theme);
-    void renderAllConnections(NVGcontext* nvg, const pptk::Theme& theme);
 
     void loadGraph(GraphManager* newGraph);
 
