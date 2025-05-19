@@ -469,40 +469,33 @@ void Canvas::setMultiObjectPosition(pptk::Point pos)
     if (isInLockedMode())
         return;
 
+    if (const auto activeGraph = graphSystem->getActiveGraph())
+        activeGraph->setDirty(true);
+
     for (const auto& cnvItem : selected)
     {
-        // Oof - we need to use dynamic_cast here even though 100% all selected items will inherit Component
-        // This is because we don't want CanvasItem to have a diamond inheritance with Component
-        // Only dynamic_cast handles multiple-inheritance pointer adjustment safely
-        if (auto* cnvObject = dynamic_cast<Object*>(cnvItem))
+        auto* cnvObject = dynamic_cast<Object*>(cnvItem);
+        if (!cnvObject)
+            continue;
+
+        const pptk::Point newPosition = cnvObject->getPosition() + pos;
+        cnvObject->setPosition(newPosition);
+        cnvObject->audioNode->canvasPos = newPosition - pptk::Point(canvasOrigin, canvasOrigin);
+
+        for (const auto& conn : connections)
         {
-            auto newPosition = cnvObject->getPosition() + pos;
-            cnvObject->setPosition(newPosition);
+            auto* origin = conn->getOriginPort();
+            auto* dest = conn->getDestPort();
 
-            for (const auto& conn : connections)
+            if ((origin && origin->getParent() == cnvObject) || (dest && dest->getParent() == cnvObject))
             {
-                auto* origin = conn->getOriginPort();
-                auto* dest = conn->getDestPort();
-
-                if ((origin && origin->getParent() == cnvObject) || (dest && dest->getParent() == cnvObject))
-                {
-                    conn->repaint();
-                }
-            }
-
-            if (const auto activeGraph = graphSystem->getActiveGraph())
-                activeGraph->setDirty(true);
-
-            if (const auto* objObject = dynamic_cast<Object*>(cnvItem))
-            {
-                objObject->audioNode->canvasPos = newPosition - pptk::Point(canvasOrigin, canvasOrigin);
+                conn->updateConnectionGeometry();
             }
         }
     }
-
-    updateConnectionsPosition();
 }
-
+// Brute force update all connections
+// TODO: maybe only update what we need to
 void Canvas::updateConnectionsPosition() const
 {
     for (auto& con : connections)

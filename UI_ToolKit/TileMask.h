@@ -41,41 +41,53 @@ public:
         bits[index >> 6] |= 1ULL << (index & 63);
     }
 
-    bool test(int x, int y) const {
+    void setWord(const int wordIndex, const uint64_t mask)
+    {
+        if (wordIndex >= 0 && wordIndex < static_cast<int>(bits.size()))
+            bits[wordIndex] |= mask;
+    }
+
+    void copyTo(TileMask& dest)
+    {
+        dest.resizeTiles(getX(), getY());
+        std::ranges::copy(bits, dest.bits.begin());
+    }
+
+    [[nodiscard]] bool test(int x, int y) const {
         int index = y * tilesX + x;
         return (bits[index >> 6] >> (index & 63)) & 1ULL;
     }
 
-    bool testIndex(int index) const {
+    [[nodiscard]] bool testIndex(int index) const {
         return (bits[index >> 6] >> (index & 63)) & 1ULL;
     }
 
     [[nodiscard]] int getX() const { return tilesX; }
     [[nodiscard]] int getY() const { return tilesY; }
 
-    std::span<uint64_t> getSpan() {
-        return std::span<uint64_t>(bits.data(), bits.size());
+    std::span<uint64_t> getSpan()
+    {
+        return {bits.data(), bits.size()};
     }
 
-    std::span<const uint64_t> getSpan() const {
-        return std::span<const uint64_t>(bits.data(), bits.size());
+    [[nodiscard]] std::span<const uint64_t> getSpan() const
+    {
+        return {bits.data(), bits.size()};
     }
 
     choc::SmallVector<uint64_t, 64>& raw() { return bits; }
-    const choc::SmallVector<uint64_t, 64>& raw() const { return bits; }
+    [[nodiscard]] const choc::SmallVector<uint64_t, 64>& raw() const { return bits; }
 
-    void forEachSetRun(std::function<void(int xStart, int xEnd, int y)> fn) const {
+    void printDebug(const char* label = nullptr) const {
+        if (label)
+            std::cout << "=== " << label << " ===\n";
+        else
+            std::cout << "=== " << "tile bits"  << " ===\n";
+
         for (int y = 0; y < tilesY; ++y) {
-            int x = 0;
-            while (x < tilesX) {
-                int idx = y * tilesX + x;
-                if (!testIndex(idx)) { ++x; continue; }
-
-                int startX = x;
-                while (x < tilesX && testIndex(y * tilesX + x)) ++x;
-
-                fn(startX, x, y);
-            }
+            for (int x = 0; x < tilesX; ++x)
+                std::cout << (test(x, y) ? "█ " : "░ ");
+            std::cout << "\n";
         }
     }
 
@@ -105,11 +117,6 @@ public:
         return merged.test(x, y);
     }
 
-    void clearCurrent()
-    {
-        current.clear();
-    }
-
     [[nodiscard]] int getX() const
     {
         return current.getX();
@@ -120,17 +127,37 @@ public:
         return current.getY();
     }
 
-    void mergePrevious()
+    bool mergePrevious()
     {
         auto& a = current.raw();
         auto& b = previous.raw();
         auto& out = merged.raw();
 
-        for (size_t i = 0; i < a.size(); ++i)
-            out[i] = a[i] | b[i];
+        if (b.size() != a.size()) {
+            b.resize(a.size());
+            std::ranges::fill(b, 0); // clear new space
+        }
 
-        b = a;
+        if (out.size() != a.size()) {
+            out.resize(a.size());
+            std::ranges::fill(out, 0);
+        }
+
+        bool hasBits = false;
+
+        for (size_t i = 0; i < a.size(); ++i) {
+            out[i] = a[i] | b[i];
+            b[i] = a[i];
+            hasBits |= (out[i] != 0);
+        }
+
+        //if (hasBits)
+        //    merged.printDebug("merged");
+
+        current.clear();
+        return hasBits;
     }
+
 
     TileMask current;
     TileMask previous;

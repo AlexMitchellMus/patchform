@@ -92,6 +92,7 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
 
         prevPt = pt;
     }
+    //tileBits.printDebug("Connection tile bits");
 }
 
 float Connection::pointToSegmentDistance(const pptk::Point& p,
@@ -233,6 +234,7 @@ void Connection::updateConnectionGeometry()
             controlPoint2 = {startPoint.x, (endPoint.y + startPoint.y) / 2};
         }
     }
+    repaint();
 }
 
 void Connection::setConnectionDest(const pptk::Point& globalPos)

@@ -4,6 +4,7 @@ project(Patchform LANGUAGES C CXX)
 option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 option(RUN_TESTS "Build and run tests" OFF)
 
+set(CMAKE_POLICY_VERSION 3.5)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -180,7 +181,7 @@ target_compile_definitions(PatchformSDK PRIVATE
         PATCHFORM_WITH_GUI
         PATCHFORM_SDK_BUILD
         NANOVG_GL3_IMPLEMENTATION=1
-        #DEBUG_TILE_REPAINT
+        DEBUG_TILE_REPAINT
 )
 
 add_dependencies(PatchformSDK update_git_version)

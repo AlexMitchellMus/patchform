@@ -595,12 +595,12 @@ void PatchformApp::render()
     editor->renderFrame(nvg);
 
 #ifdef DEBUG_TILE_REPAINT
-    float r = (rand() % 100) / 300.0f;
-    float g = (rand() % 100) / 300.0f;
-    float b = (rand() % 100) / 300.0f;
-    float a = 0.2f;
+    int r = rand() & 0xFF;
+    int g = rand() & 0xFF;
+    int b = rand() & 0xFF;
+    int a = 255 * 0.2f;
 
-    auto col = nvgRGBAf(r, g, b, a);
+    auto col = nvgRGBA(r, g, b, a);
     nvgDrawRoundedRect(nvg, 0, 0, drawableW, drawableH, col, col, 0);
 #endif
 

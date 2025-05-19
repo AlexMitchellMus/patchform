@@ -215,8 +215,6 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
         return;
     }
 
-    //std::cout << "rendering: " << getName() << std::endl;
-
     nvgSave(vg);
 
     // Apply translation for this component's position
@@ -242,11 +240,12 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
     nvgRestore(vg);
 }
 
-void Component::repaint()
-{
-    auto *root = dynamic_cast<RootComponent *>(getRootComponent());
-    if (!root)
+void Component::repaint() {
+    auto *root = dynamic_cast<RootComponent*>(getRootComponent());
+
+    if (!root) {
         return;
+    }
 
     repaintSubtree(root);
 }
@@ -254,9 +253,13 @@ void Component::repaint()
 void Component::repaintSubtree(RootComponent *root)
 {
     isDirty = true;
+
+    computeTileCoverage(root->tileMaskBuffer.previous);
+
     root->repaintQueue.enqueue(makeSafePointer(this));
 
-    for (auto *child: getChildren()) {
+    for (auto *child : getChildren())
+    {
         if (child)
             child->repaintSubtree(root);
     }
@@ -290,7 +293,6 @@ void Component::setPosition(float newX, float newY)
     {
         x = newX;
         y = newY;
-
         repaint();
     }
 }
@@ -415,26 +417,51 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
 
 void Component::computeTileCoverage(TileMask& tileMaskBuffer)
 {
-    // Resize component tile bits if there isn't enough
-    // Otherwise clear them
-    auto const tilesX = tileMaskBuffer.getX();
-    auto const tilesY = tileMaskBuffer.getY();
+    const int tilesX = tileMaskBuffer.getX();
+    const int tilesY = tileMaskBuffer.getY();
 
+    // resize will also clear old bits
     tileBits.resizeTiles(tilesX, tilesY);
 
     const Rect gb = getGlobalBounds();
 
-    int minX = std::max(0, static_cast<int>(gb.x / TileMask::tileSize));
-    int maxX = std::min(tilesX - 1, static_cast<int>((gb.x + gb.w) / TileMask::tileSize));
-    int minY = std::max(0, static_cast<int>(gb.y / TileMask::tileSize));
-    int maxY = std::min(tilesY - 1, static_cast<int>((gb.y + gb.h) / TileMask::tileSize));
+    const int minX = std::max(0, static_cast<int>(gb.x / TileMask::tileSize));
+    const int maxX = std::min(tilesX - 1, static_cast<int>((gb.x + gb.w) / TileMask::tileSize));
+    const int minY = std::max(0, static_cast<int>(gb.y / TileMask::tileSize));
+    const int maxY = std::min(tilesY - 1, static_cast<int>((gb.y + gb.h) / TileMask::tileSize));
 
-    for (int y = minY; y <= maxY; ++y) {
-        for (int x = minX; x <= maxX; ++x) {
-            tileBits.set(x, y);
-            tileMaskBuffer.set(x, y); // mainMask
+    for (int y = minY; y <= maxY; ++y)
+    {
+        int start = y * tilesX + minX;
+        int end   = y * tilesX + maxX;
+
+        int wordStart = start / 64;
+        int wordEnd   = end / 64;
+
+        if (wordStart == wordEnd)
+        {
+            uint64_t mask = ((~0ULL) >> (63 - (end % 64))) & ((~0ULL) << (start % 64));
+            tileBits.setWord(wordStart, mask);
+            tileMaskBuffer.setWord(wordStart, mask);
+        }
+        else
+        {
+            uint64_t firstMask = (~0ULL) << (start % 64);
+            tileBits.setWord(wordStart, firstMask);
+            tileMaskBuffer.setWord(wordStart, firstMask);
+
+            for (int w = wordStart + 1; w < wordEnd; ++w)
+            {
+                tileBits.setWord(w, ~0ULL);
+                tileMaskBuffer.setWord(w, ~0ULL);
+            }
+
+            uint64_t lastMask = (~0ULL) >> (63 - (end % 64));
+            tileBits.setWord(wordEnd, lastMask);
+            tileMaskBuffer.setWord(wordEnd, lastMask);
         }
     }
+    //tileBits.printDebug();
 }
 
 Rect Component::getGlobalBounds() const

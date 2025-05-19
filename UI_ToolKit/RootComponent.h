@@ -55,7 +55,7 @@ namespace pptk
         {
             Component::renderAll(nvg, theme);
 #ifdef DEBUG_TILE_REPAINT
-            drawDebugTileGrid(nvg);
+            //drawDebugTileGrid(nvg);
 #endif
         }
 
@@ -184,10 +184,6 @@ namespace pptk
             if (!tileMaskBuffer.isInit())
                 return false;
 
-            tileMaskBuffer.clearCurrent();
-
-            bool didRepaint = false;
-
             std::vector<SafePointer<Component>> collected;
             SafePointer<Component> ptr;
 
@@ -214,29 +210,25 @@ namespace pptk
             for (const auto& repaintComponent : collected)
             {
                 repaintComponent->isDirty = true;
-                didRepaint = true;
 
-                auto* root = dynamic_cast<RootComponent*>(repaintComponent->getRootComponent());
-                if (!root || !tileMaskBuffer.isInit())
+                if (!tileMaskBuffer.isInit())
                     continue;
 
                 repaintComponent->computeTileCoverage(tileMaskBuffer.current);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;
-                for (int y = 0; y < root->tilesY; ++y) {
-                    for (int x = 0; x < root->tilesX; ++x) {
-                        int index = y * root->tilesX + x;
-                        bool bitSet = (root->dirtyTiles[index / 64] >> (index % 64)) & 1ULL;
+                for (int y = 0; y < tileMaskBuffer.getY(); ++y) {
+                    for (int x = 0; x < tileMaskBuffer.getX(); ++x) {
+                        bool bitSet = tileMaskBuffer.current.test(x, y);
                         std::cout << (bitSet ? "#" : ".");
                     }
                     std::cout << "\n";
                 }
 #endif
             }
-            tileMaskBuffer.mergePrevious();
 
-            return didRepaint;
+            return tileMaskBuffer.mergePrevious();
         }
 
         void drawDebugTileGrid(NVGcontext* vg) {
