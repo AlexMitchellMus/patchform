@@ -195,13 +195,13 @@ void Component::removeAllChildren()
 void Component::renderAll(NVGcontext* vg, const Theme& theme)
 {
     auto *root = dynamic_cast<RootComponent *>(getRootComponent());
-    if (!root || !root->tileMaskBuffer.isInit())
+    if (!root)
         return;
 
     bool intersectsDirty = false;
 
-    const auto& localBits = tileBits.raw();
-    const auto& globalBits = root->tileMaskBuffer.mergedTileMask.raw();
+    const auto& localBits = tileBits.mergedTileMask.raw();
+    const auto& globalBits = root->tileMaskBuffer.raw();
 
     for (size_t i = 0; i < localBits.size(); ++i)
     {
@@ -254,7 +254,7 @@ void Component::repaintSubtree(RootComponent *root)
     isDirty = true;
 
     //tileBits.copyTo(root->tileMaskBuffer.previous);
-    computeTileCoverage(root->tileMaskBuffer.previousTileMask);
+    //computeTileCoverage(root->tileMaskBuffer);
     root->repaintQueue.enqueue(makeSafePointer(this));
 
     for (auto *child : getChildren())
@@ -419,52 +419,66 @@ void Component::computeTileCoverage(TileMask& tileMaskBuffer)
     const int tilesX = tileMaskBuffer.getX();
     const int tilesY = tileMaskBuffer.getY();
 
-    // resize will also clear old bits
-    tileBits.resizeTiles(tilesX, tilesY);
-
     const Rect gb = getGlobalBounds();
+
+    tileMaskBuffer.printDebug();
 
     const int minX = std::max(0, static_cast<int>(gb.x / TileMask::tileSize));
     const int maxX = std::min(tilesX - 1, static_cast<int>((gb.x + gb.w) / TileMask::tileSize));
     const int minY = std::max(0, static_cast<int>(gb.y / TileMask::tileSize));
     const int maxY = std::min(tilesY - 1, static_cast<int>((gb.y + gb.h) / TileMask::tileSize));
 
-    // Tile out of window bounds
     if (minX > maxX || minY > maxY)
         return;
+
+    auto& cur = tileBits.currentTileMask;
+    cur.resizeTiles(tilesX, tilesY);
 
     for (int y = minY; y <= maxY; ++y)
     {
         const int start = y * tilesX + minX;
         const int end   = y * tilesX + maxX;
-
         const int wordStart = start / 64;
         const int wordEnd   = end / 64;
 
         if (wordStart == wordEnd)
         {
             uint64_t mask = ((~0ULL) >> (63 - (end % 64))) & ((~0ULL) << (start % 64));
-            tileBits.setWord(wordStart, mask);
-            tileMaskBuffer.setWord(wordStart, mask);
+            cur.setWord(wordStart, mask);
         }
         else
         {
             uint64_t firstMask = (~0ULL) << (start % 64);
-            tileBits.setWord(wordStart, firstMask);
-            tileMaskBuffer.setWord(wordStart, firstMask);
+            cur.setWord(wordStart, firstMask);
 
             for (int w = wordStart + 1; w < wordEnd; ++w)
-            {
-                tileBits.setWord(w, ~0ULL);
-                tileMaskBuffer.setWord(w, ~0ULL);
-            }
+                cur.setWord(w, ~0ULL);
 
             uint64_t lastMask = (~0ULL) >> (63 - (end % 64));
-            tileBits.setWord(wordEnd, lastMask);
-            tileMaskBuffer.setWord(wordEnd, lastMask);
+            cur.setWord(wordEnd, lastMask);
         }
     }
+
+    // Finalize per-component merge and write to global buffer
+    auto& prev = tileBits.previousTileMask.raw();
+    auto& merged = tileBits.mergedTileMask.raw();
+    auto& current = tileBits.currentTileMask.raw();
+    auto& out = tileMaskBuffer.raw();
+
+    assert(current.size() == prev.size() && current.size() == merged.size() && current.size() == out.size());
+
+    for (size_t i = 0; i < current.size(); ++i)
+    {
+        merged[i] = current[i] | prev[i];
+        out[i] |= merged[i];
+        prev[i] = current[i];
+    }
+
+    tileBits.mergedTileMask.printDebug();
+
+    tileBits.currentTileMask.clear();
 }
+
 
 Rect Component::getGlobalBounds() const
 {

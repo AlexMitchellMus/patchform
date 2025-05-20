@@ -36,10 +36,12 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
     const auto tilesX = tileMaskBuffer.getX();
     const auto tilesY = tileMaskBuffer.getY();
 
-    tileBits.resizeTiles(tilesX, tilesY);
+    tileBits.currentTileMask.resizeTiles(tilesX, tilesY);
 
-    auto tileSize = TileMaskBuffer::tileSize;
+    auto& cur = tileBits.currentTileMask;
+    cur.resize(tilesX, tilesY);
 
+    const auto tileSize = TileMaskBuffer::tileSize;
     const auto globalPos = localToGlobal(0, 0);
     const float offsetX = globalPos.x;
     const float offsetY = globalPos.y;
@@ -84,15 +86,30 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
                 {
                     if (x < 0 || x >= tilesX) continue;
                     int index = y * tilesX + x;
-                    tileBits.setIndex(index);
-                    tileMaskBuffer.setIndex(index);
+                    cur.setIndex(index);
                 }
             }
         }
 
         prevPt = pt;
     }
-    //tileBits.printDebug("Connection tile bits");
+
+    // Merge and write to global buffer
+    auto& current = tileBits.currentTileMask.raw();
+    auto& previous = tileBits.previousTileMask.raw();
+    auto& merged = tileBits.mergedTileMask.raw();
+    auto& out = tileMaskBuffer.raw();
+
+    assert(current.size() == previous.size() && current.size() == merged.size() && current.size() == out.size());
+
+    for (size_t i = 0; i < current.size(); ++i)
+    {
+        merged[i] = current[i] | previous[i];
+        out[i] |= merged[i];
+        previous[i] = current[i];
+    }
+
+    tileBits.currentTileMask.clear();
 }
 
 float Connection::pointToSegmentDistance(const pptk::Point& p,

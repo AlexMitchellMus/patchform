@@ -181,9 +181,6 @@ namespace pptk
         // This marks the root components tile map as dirty where it intersects the component
         bool processRepaintQueue()
         {
-            if (!tileMaskBuffer.isInit())
-                return false;
-
             std::vector<SafePointer<Component>> collected;
             SafePointer<Component> ptr;
 
@@ -195,13 +192,17 @@ namespace pptk
             std::sort(collected.begin(), collected.end());
             collected.erase(std::ranges::unique(collected).begin(), collected.end());
 
+            bool needsRepaint = false;
+
             // Process remaining
             for (const auto& repaintComponent : collected)
             {
                 repaintComponent->isDirty = true;
 
+                needsRepaint = true;
+
                 //repaintComponent->tileBits.copyTo(tileMaskBuffer.previous);
-                repaintComponent->computeTileCoverage(tileMaskBuffer.currentTileMask);
+                repaintComponent->computeTileCoverage(tileMaskBuffer);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;
@@ -215,7 +216,7 @@ namespace pptk
 #endif
             }
 
-            return tileMaskBuffer.mergePrevious();
+            return needsRepaint;
         }
 
         void drawDebugTileGrid(NVGcontext* vg) {
@@ -227,7 +228,7 @@ namespace pptk
             // First pass: non-active tiles (light grid)
             for (int y = 0; y < tileY; ++y) {
                 for (int x = 0; x < tileX; ++x) {
-                    if (tileMaskBuffer.testTile(x, y)) continue;
+                    if (tileMaskBuffer.test(x, y)) continue;
 
                     int px = x * tileSize;
                     int py = y * tileSize;
@@ -241,7 +242,7 @@ namespace pptk
             }
         }
 
-        TileMaskBuffer tileMaskBuffer;
+        TileMask tileMaskBuffer;
 
         moodycamel::ConcurrentQueue<SafePointer<Component>> repaintQueue;
 

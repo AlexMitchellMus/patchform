@@ -571,7 +571,7 @@ void PatchformApp::render()
     glClear( GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // Set up stencil mask for dirty tiles
-    nanoVGStencilMaskTiles(drawableW, drawableH, 32 * 2, editor->tileMaskBuffer.mergedTileMask.getSpan());
+    nanoVGStencilMaskTiles(drawableW, drawableH, 32 * 2, editor->tileMaskBuffer.getSpan());
 
     // Start NanoVG rendering
     nvgBeginFrame(nvg, windowW, windowH, pixelRatio);

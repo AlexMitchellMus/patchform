@@ -494,7 +494,7 @@ public:
         externalMargin = newMargin;
     }
 
-    TileMask tileBits;
+    TileMaskBuffer tileBits;
 
 private:
     Component* findComponentAt(int globalX, int globalY, Component* selfComponent);
