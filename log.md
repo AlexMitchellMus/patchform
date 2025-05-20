@@ -39,6 +39,7 @@ Project Goals
     * [ ] Initial Plugin View
     * [ ] Non-modal open/save system dialog
     * [x] Tabbed editor (Load multiple patches) - not split-view
+    * [x] Invalidation system using tiles to track dirty regions - repaint components only if they intersect dirty tiles
 * I/O Capabilities:
     * [ ] MIDI in/out
     * [x] Audio in/out
