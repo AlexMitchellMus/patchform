@@ -49,7 +49,8 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
     const float scale = getAccumulatedScale();
 
     constexpr int segments = 32;
-    const float halfThickness = 8.0f * scale;
+    const float halfThickness = 2.0f * scale;
+
 
     pptk::Point prevPt;
 
@@ -89,8 +90,25 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
                 }
             }
         }
-
         prevPt = pt;
+    }
+
+    // Calculate the tile region covering the ball at the end of the curve
+    const float ballRadius = 6.0f * scale;
+    const float ballMinX = prevPt.x - ballRadius;
+    const float ballMaxX = prevPt.x + ballRadius;
+    const float ballMinY = prevPt.y - ballRadius;
+    const float ballMaxY = prevPt.y + ballRadius;
+
+    int ballTileMinX = std::max(0, static_cast<int>(ballMinX / tileSize));
+    int ballTileMaxX = std::min(tilesX - 1, static_cast<int>(ballMaxX / tileSize));
+    int ballTileMinY = std::max(0, static_cast<int>(ballMinY / tileSize));
+    int ballTileMaxY = std::min(tilesY - 1, static_cast<int>(ballMaxY / tileSize));
+
+    for (int y = ballTileMinY; y <= ballTileMaxY; ++y)
+    {
+        for (int x = ballTileMinX; x <= ballTileMaxX; ++x)
+            cur.setIndex(y * tilesX + x);
     }
 
     auto& current = tileBits.currentTileMask.raw();

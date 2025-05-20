@@ -53,12 +53,14 @@ public:
         std::ranges::copy(bits, dest.bits.begin());
     }
 
-    [[nodiscard]] bool test(int x, int y) const {
+    [[nodiscard]] bool test(int x, int y) const
+    {
         int index = y * tilesX + x;
         return (bits[index >> 6] >> (index & 63)) & 1ULL;
     }
 
-    [[nodiscard]] bool testIndex(int index) const {
+    [[nodiscard]] bool testIndex(int index) const
+    {
         return (bits[index >> 6] >> (index & 63)) & 1ULL;
     }
 

@@ -552,9 +552,6 @@ bool PatchformApp::initUI()
     SDL_GetWindowSizeInPixels(window->getSDLWindow(), &windowWidth, &windowHeight);
     invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
 
-    // Sets SDL_appIterate to 60fps (works on macOS - could work on others? test!)
-    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "90");
-
     return true;
 }
 
