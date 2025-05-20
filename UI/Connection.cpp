@@ -36,12 +36,13 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
     const auto tilesX = tileMaskBuffer.getX();
     const auto tilesY = tileMaskBuffer.getY();
 
-    tileBits.currentTileMask.resizeTiles(tilesX, tilesY);
+    if (tileBits.getX() != tilesX || tileBits.getY() != tilesY)
+        tileBits.resize(tilesX, tilesY);
+    else
+        tileBits.currentTileMask.clear();
 
     auto& cur = tileBits.currentTileMask;
-    cur.resize(tilesX, tilesY);
-
-    const auto tileSize = TileMaskBuffer::tileSize;
+    const auto tileSize = TileMask::tileSize;
     const auto globalPos = localToGlobal(0, 0);
     const float offsetX = globalPos.x;
     const float offsetY = globalPos.y;
@@ -74,17 +75,15 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
             float minYf = std::min(pt.y, prevPt.y) - halfThickness;
             float maxYf = std::max(pt.y, prevPt.y) + halfThickness;
 
-            int minX = static_cast<int>(minXf / tileSize);
-            int maxX = static_cast<int>(maxXf / tileSize);
-            int minY = static_cast<int>(minYf / tileSize);
-            int maxY = static_cast<int>(maxYf / tileSize);
+            int minX = std::max(0, static_cast<int>(minXf / tileSize));
+            int maxX = std::min(tilesX - 1, static_cast<int>(maxXf / tileSize));
+            int minY = std::max(0, static_cast<int>(minYf / tileSize));
+            int maxY = std::min(tilesY - 1, static_cast<int>(maxYf / tileSize));
 
             for (int y = minY; y <= maxY; ++y)
             {
-                if (y < 0 || y >= tilesY) continue;
                 for (int x = minX; x <= maxX; ++x)
                 {
-                    if (x < 0 || x >= tilesX) continue;
                     int index = y * tilesX + x;
                     cur.setIndex(index);
                 }
@@ -94,7 +93,6 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
         prevPt = pt;
     }
 
-    // Merge and write to global buffer
     auto& current = tileBits.currentTileMask.raw();
     auto& previous = tileBits.previousTileMask.raw();
     auto& merged = tileBits.mergedTileMask.raw();
@@ -108,9 +106,8 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
         out[i] |= merged[i];
         previous[i] = current[i];
     }
-
-    tileBits.currentTileMask.clear();
 }
+
 
 float Connection::pointToSegmentDistance(const pptk::Point& p,
                              const pptk::Point& a,

@@ -192,14 +192,10 @@ namespace pptk
             std::sort(collected.begin(), collected.end());
             collected.erase(std::ranges::unique(collected).begin(), collected.end());
 
-            bool needsRepaint = false;
-
             // Process remaining
             for (const auto& repaintComponent : collected)
             {
                 repaintComponent->isDirty = true;
-
-                needsRepaint = true;
 
                 //repaintComponent->tileBits.copyTo(tileMaskBuffer.previous);
                 repaintComponent->computeTileCoverage(tileMaskBuffer);
@@ -216,7 +212,7 @@ namespace pptk
 #endif
             }
 
-            return needsRepaint;
+            return tileMaskBuffer.hasDirtyBits();
         }
 
         void drawDebugTileGrid(NVGcontext* vg) {

@@ -414,71 +414,57 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     return -3.0f;
 }
 
-void Component::computeTileCoverage(TileMask& tileMaskBuffer)
+    void Component::computeTileCoverage(TileMask& tileMaskBuffer)
 {
     const int tilesX = tileMaskBuffer.getX();
     const int tilesY = tileMaskBuffer.getY();
-
     const Rect gb = getGlobalBounds();
 
-    tileMaskBuffer.printDebug();
+    if (tileBits.getX() != tilesX || tileBits.getY() != tilesY)
+        tileBits.resize(tilesX, tilesY);
+    else
+        tileBits.currentTileMask.clear();
 
-    const int minX = std::max(0, static_cast<int>(gb.x / TileMask::tileSize));
-    const int maxX = std::min(tilesX - 1, static_cast<int>((gb.x + gb.w) / TileMask::tileSize));
-    const int minY = std::max(0, static_cast<int>(gb.y / TileMask::tileSize));
-    const int maxY = std::min(tilesY - 1, static_cast<int>((gb.y + gb.h) / TileMask::tileSize));
+    int minX = static_cast<int>(gb.x / TileMask::tileSize);
+    int maxX = static_cast<int>((gb.x + gb.w) / TileMask::tileSize);
+    int minY = static_cast<int>(gb.y / TileMask::tileSize);
+    int maxY = static_cast<int>((gb.y + gb.h) / TileMask::tileSize);
 
-    if (minX > maxX || minY > maxY)
+    if (maxX < 0 || minX >= tilesX || maxY < 0 || minY >= tilesY)
+    {
+        tileBits.mergeInto(tileMaskBuffer);
         return;
+    }
 
-    auto& cur = tileBits.currentTileMask;
-    cur.resizeTiles(tilesX, tilesY);
+    minX = std::clamp(minX, 0, tilesX - 1);
+    maxX = std::clamp(maxX, 0, tilesX - 1);
+    minY = std::clamp(minY, 0, tilesY - 1);
+    maxY = std::clamp(maxY, 0, tilesY - 1);
 
+    auto& cur = tileBits.currentTileMask.raw();
     for (int y = minY; y <= maxY; ++y)
     {
-        const int start = y * tilesX + minX;
-        const int end   = y * tilesX + maxX;
-        const int wordStart = start / 64;
-        const int wordEnd   = end / 64;
+        int start = y * tilesX + minX;
+        int end   = y * tilesX + maxX;
+        int startWord = start / 64;
+        int endWord = end / 64;
 
-        if (wordStart == wordEnd)
+        if (startWord == endWord)
         {
             uint64_t mask = ((~0ULL) >> (63 - (end % 64))) & ((~0ULL) << (start % 64));
-            cur.setWord(wordStart, mask);
+            cur[startWord] |= mask;
         }
         else
         {
-            uint64_t firstMask = (~0ULL) << (start % 64);
-            cur.setWord(wordStart, firstMask);
-
-            for (int w = wordStart + 1; w < wordEnd; ++w)
-                cur.setWord(w, ~0ULL);
-
-            uint64_t lastMask = (~0ULL) >> (63 - (end % 64));
-            cur.setWord(wordEnd, lastMask);
+            cur[startWord] |= (~0ULL) << (start % 64);
+            for (int w = startWord + 1; w < endWord; ++w)
+                cur[w] = ~0ULL;
+            cur[endWord] |= (~0ULL) >> (63 - (end % 64));
         }
     }
 
-    // Finalize per-component merge and write to global buffer
-    auto& prev = tileBits.previousTileMask.raw();
-    auto& merged = tileBits.mergedTileMask.raw();
-    auto& current = tileBits.currentTileMask.raw();
-    auto& out = tileMaskBuffer.raw();
-
-    assert(current.size() == prev.size() && current.size() == merged.size() && current.size() == out.size());
-
-    for (size_t i = 0; i < current.size(); ++i)
-    {
-        merged[i] = current[i] | prev[i];
-        out[i] |= merged[i];
-        prev[i] = current[i];
-    }
-
-    tileBits.mergedTileMask.printDebug();
-
-    tileBits.currentTileMask.clear();
+    tileBits.mergeInto(tileMaskBuffer);
 }
-
 
 Rect Component::getGlobalBounds() const
 {

@@ -211,6 +211,9 @@ bool PatchformApp::nextFrame()
         //std::cout << "start render cycle ======" << std::endl;
         render();
 
+        // clear the main tile dirty buffer - everything should be painted now
+        editor->tileMaskBuffer.clear();
+
         lastFrameTime = currentFrameTime;
         return true;
 }

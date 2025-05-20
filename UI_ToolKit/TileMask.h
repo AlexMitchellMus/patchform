@@ -75,6 +75,15 @@ public:
         return {bits.data(), bits.size()};
     }
 
+    [[nodiscard]] bool hasDirtyBits()
+    {
+        for (const auto& word : bits) {
+            if (word != 0)
+                return true;
+        }
+        return false;
+    }
+
     choc::SmallVector<uint64_t, 64>& raw() { return bits; }
     [[nodiscard]] const choc::SmallVector<uint64_t, 64>& raw() const { return bits; }
 
@@ -100,11 +109,18 @@ class TileMaskBuffer {
 public:
     static constexpr int tileSize = 32;
 
-    void resize(int width, int height)
+    void resizeFromWidth(int width, int height)
     {
         currentTileMask.resize(width, height);
         previousTileMask.resize(width, height);
         mergedTileMask.resize(width, height);
+    }
+
+    void resize(int tileX, int tileY)
+    {
+        currentTileMask.resizeTiles(tileX, tileY);
+        previousTileMask.resizeTiles(tileX, tileY);
+        mergedTileMask.resizeTiles(tileX, tileY);
     }
 
     [[nodiscard]] bool isInit() const
@@ -127,25 +143,19 @@ public:
         return currentTileMask.getY();
     }
 
-    bool mergePrevious()
+    void mergeInto(TileMask& mask)
     {
-        auto& c = currentTileMask.raw();
-        auto& p = previousTileMask.raw();
-        auto& m = mergedTileMask.raw();
+        auto& cur = currentTileMask.raw();
+        auto& prev = previousTileMask.raw();
+        auto& merged = mergedTileMask.raw();
+        auto& out = mask.raw();
 
-        assert(b.size() == a.size() && "Previous tile mask size missmatch");
-        assert(out.size() == a.size() && "Merged tile mask size missmatch");
-
-        bool hasBits = false;
-
-        for (size_t i = 0; i < c.size(); ++i) {
-            m[i] = c[i] | p[i];
-            p[i] = c[i];
-            hasBits |= (m[i] != 0);
+        for (size_t i = 0; i < cur.size(); ++i)
+        {
+            merged[i] = cur[i] | prev[i];
+            prev[i] = cur[i];
+            out[i] |= merged[i];
         }
-
-        currentTileMask.clear();
-        return hasBits;
     }
 
     TileMask currentTileMask;
