@@ -54,7 +54,7 @@ namespace pptk
         void renderFrame(NVGcontext* nvg)
         {
             Component::renderAll(nvg, theme);
-#ifdef DEBUG_TILE_REPAINT
+#ifdef PATCHFORM_DEBUG_TILE_REPAINT
             //drawDebugTileGrid(nvg);
 #endif
         }

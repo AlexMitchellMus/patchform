@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.30)
+
+if(APPLE)
+    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
+endif()
+
 project(Patchform LANGUAGES C CXX)
 
 option(ENABLE_ASAN "Enable Address Sanitizer" ON)
@@ -181,12 +186,29 @@ target_compile_definitions(PatchformSDK PRIVATE
         PATCHFORM_WITH_GUI
         PATCHFORM_SDK_BUILD
         NANOVG_GL3_IMPLEMENTATION=1
-        DEBUG_TILE_REPAINT
+        #PATCHFORM_DEBUG_TILE_REPAINT
 )
 
 add_dependencies(PatchformSDK update_git_version)
 
 add_executable(PatchformStandalone PatchformStandalone.cpp)
+
+if(APPLE)
+    set(MACOSX_BUNDLE TRUE)
+    set(MACOSX_BUNDLE_ICON_FILE patchformicon.icns)
+
+    set_source_files_properties(${CMAKE_SOURCE_DIR}/installer/macOS/patchformicon.icns
+            PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+    set_target_properties(PatchformStandalone PROPERTIES
+            MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/installer/macOS/Info.plist"
+    )
+
+    target_sources(PatchformStandalone PRIVATE
+            ${CMAKE_SOURCE_DIR}/installer/macOS/patchformicon.icns
+    )
+endif()
 
 target_include_directories(PatchformStandalone PRIVATE
         "${CMAKE_SOURCE_DIR}"
@@ -238,15 +260,29 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     add_dependencies(PackageInstallerStandalone PatchformStandalone)
 else()
     message(STATUS "Skipping Windows installer packaging on non-Windows platform or non-Release build.")
-endif()
+endif ()
 
-add_custom_command(TARGET PatchformStandalone POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:PatchformStandalone>/Assets"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/Assets/Fonts"
-        "$<TARGET_FILE_DIR:PatchformStandalone>/Assets/Fonts"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/Assets/Icons"
-        "$<TARGET_FILE_DIR:PatchformStandalone>/Assets/Icons"
-        COMMENT "Copying Fonts and Icons to bin/Assets"
-)
+if (APPLE)
+    add_custom_command(TARGET PatchformStandalone POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Fonts"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Icons"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Assets/Fonts"
+            "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Fonts"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Assets/Icons"
+            "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Icons"
+            COMMENT "Copying Fonts and Icons to .app Resources/Assets"
+    )
+else ()
+    add_custom_command(TARGET PatchformStandalone POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:PatchformStandalone>/Assets"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Assets/Fonts"
+            "$<TARGET_FILE_DIR:PatchformStandalone>/Assets/Fonts"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Assets/Icons"
+            "$<TARGET_FILE_DIR:PatchformStandalone>/Assets/Icons"
+            COMMENT "Copying Fonts and Icons to bin/Assets"
+    )
+endif ()

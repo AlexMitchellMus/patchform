@@ -48,67 +48,113 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
     const float offsetY = globalPos.y;
     const float scale = getAccumulatedScale();
 
-    constexpr int segments = 32;
-    const float halfThickness = 2.0f * scale;
+    if (straightConnectionStyle) {
+        const float halfThickness = 4.0f * scale;
+        const float step = std::max(1.0f, tileSize * 0.25f * scale);
+        const float radius = halfThickness;
 
+        pptk::Point pt1 = { offsetX + startPoint.x * scale, offsetY + startPoint.y * scale };
+        pptk::Point pt2 = { offsetX + endPoint.x * scale, offsetY + endPoint.y * scale };
 
-    pptk::Point prevPt;
+        float dx = pt2.x - pt1.x;
+        float dy = pt2.y - pt1.y;
+        float length = std::hypot(dx, dy);
+        if (length < 1e-6f) return;
 
-    for (int i = 0; i <= segments; ++i)
-    {
-        float t = static_cast<float>(i) / segments;
-        float u = 1.0f - t;
-        float tt = t * t, uu = u * u;
-        float uuu = uu * u, ttt = tt * t;
+        float dirX = dx / length;
+        float dirY = dy / length;
 
-        pptk::Point pt = {
-            uuu * startPoint.x + 3 * uu * t * controlPoint2.x + 3 * u * tt * controlPoint1.x + ttt * endPoint.x,
-            uuu * startPoint.y + 3 * uu * t * controlPoint2.y + 3 * u * tt * controlPoint1.y + ttt * endPoint.y
-        };
+        int steps = static_cast<int>(length / step);
 
-        pt.x = offsetX + pt.x * scale;
-        pt.y = offsetY + pt.y * scale;
+        for (int i = 0; i <= steps; ++i) {
+            float px = pt1.x + dirX * i * step;
+            float py = pt1.y + dirY * i * step;
 
-        if (i > 0)
-        {
-            float minXf = std::min(pt.x, prevPt.x) - halfThickness;
-            float maxXf = std::max(pt.x, prevPt.x) + halfThickness;
-            float minYf = std::min(pt.y, prevPt.y) - halfThickness;
-            float maxYf = std::max(pt.y, prevPt.y) + halfThickness;
+            int minX = std::max(0, static_cast<int>((px - radius) / tileSize));
+            int maxX = std::min(tilesX - 1, static_cast<int>((px + radius) / tileSize));
+            int minY = std::max(0, static_cast<int>((py - radius) / tileSize));
+            int maxY = std::min(tilesY - 1, static_cast<int>((py + radius) / tileSize));
 
-            int minX = std::max(0, static_cast<int>(minXf / tileSize));
-            int maxX = std::min(tilesX - 1, static_cast<int>(maxXf / tileSize));
-            int minY = std::max(0, static_cast<int>(minYf / tileSize));
-            int maxY = std::min(tilesY - 1, static_cast<int>(maxYf / tileSize));
-
-            for (int y = minY; y <= maxY; ++y)
-            {
-                for (int x = minX; x <= maxX; ++x)
-                {
-                    int index = y * tilesX + x;
-                    cur.setIndex(index);
+            for (int y = minY; y <= maxY; ++y) {
+                for (int x = minX; x <= maxX; ++x) {
+                    cur.setIndex(y * tilesX + x);
                 }
             }
         }
-        prevPt = pt;
+    } else {
+        constexpr int segments = 32;
+        const float halfThickness = 2.0f * scale;
+
+        pptk::Point prevPt;
+
+        for (int i = 0; i <= segments; ++i)
+        {
+            float t = static_cast<float>(i) / segments;
+            float u = 1.0f - t;
+            float tt = t * t, uu = u * u;
+            float uuu = uu * u, ttt = tt * t;
+
+            pptk::Point pt = {
+                uuu * startPoint.x + 3 * uu * t * controlPoint2.x + 3 * u * tt * controlPoint1.x + ttt * endPoint.x,
+                uuu * startPoint.y + 3 * uu * t * controlPoint2.y + 3 * u * tt * controlPoint1.y + ttt * endPoint.y
+            };
+
+            pt.x = offsetX + pt.x * scale;
+            pt.y = offsetY + pt.y * scale;
+
+            if (i > 0)
+            {
+                float minXf = std::min(pt.x, prevPt.x) - halfThickness;
+                float maxXf = std::max(pt.x, prevPt.x) + halfThickness;
+                float minYf = std::min(pt.y, prevPt.y) - halfThickness;
+                float maxYf = std::max(pt.y, prevPt.y) + halfThickness;
+
+                int minX = std::max(0, static_cast<int>(minXf / tileSize));
+                int maxX = std::min(tilesX - 1, static_cast<int>(maxXf / tileSize));
+                int minY = std::max(0, static_cast<int>(minYf / tileSize));
+                int maxY = std::min(tilesY - 1, static_cast<int>(maxYf / tileSize));
+
+                for (int y = minY; y <= maxY; ++y)
+                {
+                    for (int x = minX; x <= maxX; ++x)
+                    {
+                        int index = y * tilesX + x;
+                        cur.setIndex(index);
+                    }
+                }
+            }
+            prevPt = pt;
+        }
     }
 
     // Calculate the tile region covering the ball at the end of the curve
-    const float ballRadius = 6.0f * scale;
-    const float ballMinX = prevPt.x - ballRadius;
-    const float ballMaxX = prevPt.x + ballRadius;
-    const float ballMinY = prevPt.y - ballRadius;
-    const float ballMaxY = prevPt.y + ballRadius;
-
-    int ballTileMinX = std::max(0, static_cast<int>(ballMinX / tileSize));
-    int ballTileMaxX = std::min(tilesX - 1, static_cast<int>(ballMaxX / tileSize));
-    int ballTileMinY = std::max(0, static_cast<int>(ballMinY / tileSize));
-    int ballTileMaxY = std::min(tilesY - 1, static_cast<int>(ballMaxY / tileSize));
-
-    for (int y = ballTileMinY; y <= ballTileMaxY; ++y)
+    if (!destPort)
     {
-        for (int x = ballTileMinX; x <= ballTileMaxX; ++x)
-            cur.setIndex(y * tilesX + x);
+        const pptk::Point& ballPt = originPort->isOutput() ? endPoint : startPoint;
+
+        pptk::Point ballGlobalPos
+        {
+            offsetX + ballPt.x * scale,
+            offsetY + ballPt.y * scale
+        };
+
+        const float ballRadius = 6.0f * scale;
+
+        const float ballMinX = ballGlobalPos.x - ballRadius;
+        const float ballMaxX = ballGlobalPos.x + ballRadius;
+        const float ballMinY = ballGlobalPos.y - ballRadius;
+        const float ballMaxY = ballGlobalPos.y + ballRadius;
+
+        int ballTileMinX = std::max(0, static_cast<int>(ballMinX / tileSize));
+        int ballTileMaxX = std::min(tilesX - 1, static_cast<int>(ballMaxX / tileSize));
+        int ballTileMinY = std::max(0, static_cast<int>(ballMinY / tileSize));
+        int ballTileMaxY = std::min(tilesY - 1, static_cast<int>(ballMaxY / tileSize));
+
+        for (int y = ballTileMinY; y <= ballTileMaxY; ++y)
+        {
+            for (int x = ballTileMinX; x <= ballTileMaxX; ++x)
+                cur.setIndex(y * tilesX + x);
+        }
     }
 
     auto& current = tileBits.currentTileMask.raw();
@@ -125,7 +171,6 @@ void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
         previous[i] = current[i];
     }
 }
-
 
 float Connection::pointToSegmentDistance(const pptk::Point& p,
                              const pptk::Point& a,
@@ -337,9 +382,7 @@ void Connection::render(NVGcontext* nvg, const pptk::Theme& theme)
     nvgBeginPath(nvg);
     nvgMoveTo(nvg, endPoint.x, endPoint.y);
 
-    const auto straightCon = false;
-
-    if (straightCon)
+    if (straightConnectionStyle)
         nvgLineTo(nvg, startPoint.x, startPoint.y);
     else
         nvgBezierTo(nvg, controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, startPoint.x, startPoint.y);

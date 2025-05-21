@@ -4,8 +4,11 @@
 
 #include <string>
 #include <iostream>
+#include <filesystem>
 
-#if defined(_WIN32)
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#elif defined(_WIN32)
 #include <windows.h>
 #include <commdlg.h>
 #elif defined(__linux__)

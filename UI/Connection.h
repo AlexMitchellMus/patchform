@@ -78,4 +78,6 @@ private:
     };
 
     CableType cableType = CableType::Event;
+
+    bool straightConnectionStyle = true;
 };

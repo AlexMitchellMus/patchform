@@ -1,3 +1,7 @@
+#if defined(__SSE2__)
+#include <emmintrin.h>
+#endif
+
 #include "BreadcrumbBar.h"
 #include <filesystem>
 #include "../Graph/GraphManager.h"

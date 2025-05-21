@@ -594,7 +594,7 @@ void PatchformApp::render()
     // Render content
     editor->renderFrame(nvg);
 
-#ifdef DEBUG_TILE_REPAINT
+#ifdef PATCHFORM_DEBUG_TILE_REPAINT
     int r = rand() & 0xFF;
     int g = rand() & 0xFF;
     int b = rand() & 0xFF;
@@ -625,25 +625,28 @@ void PatchformApp::render()
 
 bool PatchformApp::loadFonts()
 {
-    regularFont = nvgCreateFont(nvg, "Regular", "Assets/Fonts/Inter_18pt-Regular.ttf");
+    std::filesystem::path assetRoot = std::filesystem::path(SDL_GetBasePath());
+    std::cout << "Application Root is: " << assetRoot << std::endl;
+
+    regularFont = nvgCreateFont(nvg, "Regular", (assetRoot / "Assets/Fonts/Inter_18pt-Regular.ttf").c_str() );
     if (regularFont == -1) {
         std::cerr << "Failed to load Regular font!" << std::endl;
         return false;
     }
 
-    semiBoldFont = nvgCreateFont(nvg, "SemiBold", "Assets/Fonts/Inter_18pt-SemiBold.ttf");
+    semiBoldFont = nvgCreateFont(nvg, "SemiBold", (assetRoot / "Assets/Fonts/Inter_18pt-SemiBold.ttf").c_str() );
     if (semiBoldFont == -1) {
         std::cerr << "Failed to load SemiBold font!" << std::endl;
         return false;
     }
 
-    iconFont = nvgCreateFont(nvg, "icons", "Assets/Icons/IconFontPlugPatch.ttf");
+    iconFont = nvgCreateFont(nvg, "icons", (assetRoot / "Assets/Icons/IconFontPlugPatch.ttf").c_str() );
     if (iconFont == -1) {
         std::cerr << "Failed to load Icons font!" << std::endl;
         return false;
     }
 
-    objectIconFont = nvgCreateFont(nvg, "object_icons", "Assets/Icons/ObjectIconFont.ttf");
+    objectIconFont = nvgCreateFont(nvg, "object_icons", (assetRoot / "Assets/Icons/ObjectIconFont.ttf").c_str() );
     if (objectIconFont == -1) {
         std::cerr << "Failed to load Object Icons font!" << std::endl;
         return false;
