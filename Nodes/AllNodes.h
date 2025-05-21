@@ -34,7 +34,7 @@
 #include "nodes/LoadEvent.h"
 
 // Maths
-#include "nodes/Multiply.h"
+#include "nodes/AudioMultiply.h"
 #include "nodes/Divide.h"
 #include "nodes/nodes/Add.h"
 #include "nodes/Subtract.h"

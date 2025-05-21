@@ -260,7 +260,7 @@ public:
         return relativePosition;
     }
 
-    Rect getGlobalBounds() const;
+    Rect getGlobalBounds(const float padding = 0.0f) const;
 
 
     Rect getAbsoluteBounds() const {
@@ -331,7 +331,8 @@ public:
 
     virtual void resized() { }
 
-    virtual void computeTileCoverage(TileMask& tileMask);
+    virtual void getTileCoverage(TileMask& tileMask);
+    void computeTileCoverage(TileMask& tileMask, const Rect& bounds);
 
     virtual void render(NVGcontext* vg, const Theme& theme) { }
     virtual void renderAll(NVGcontext* vg, const Theme& theme);

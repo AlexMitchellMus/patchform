@@ -75,7 +75,8 @@ private:
 
     std::unique_ptr<Editor> editor;
     std::unique_ptr<pptk::EventManager> eventManager;
-    uint32_t lastFrameTime = 0;
+    Uint64 lastFrameTime = 0;
+    Uint64 prevIterTime = 0;
     NVGcontext* nvg = nullptr;
     std::unique_ptr<WindowPeer> window;
 
@@ -98,7 +99,7 @@ private:
     // Capping to 60fps reduces CPU time by a factor of 10 (for now before invalidation)
     // But even with invalidation - there will still be a worst case (when everything is updating on canvas drag)
     const float targetFPS = 60;                       // Desired frame rate
-    const uint32_t targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
+    const Uint64 targetFrameTime = 1000 / targetFPS;   // Time per frame in milliseconds
 
     bool initAudio();
     void reinitAudio();

@@ -2,14 +2,14 @@
 
 #include "../AudioNodeBase.h"
 
-class Multiply : public AudioNode {
+class AudioMultiply : public AudioNode {
     DEFINE_AND_REGISTER_NODE("Multiply", "mul", false);
     DEFINE_NODE_ALIASES("mul");
 
     float coldValue;
 
 public:
-    explicit Multiply(std::shared_ptr<NodeContext> context, const json& objParams)
+    explicit AudioMultiply(std::shared_ptr<NodeContext> context, const json& objParams)
         : AudioNode(context, AudioPort::PortType::Data, objParams)
     {
         addInputPort("A", AudioPort::PortType::Data); // hot
@@ -33,4 +33,4 @@ public:
     }
 };
 
-REGISTER(Multiply);
+REGISTER(AudioMultiply);

@@ -198,22 +198,8 @@ void Component::renderAll(NVGcontext* vg, const Theme& theme)
     if (!root)
         return;
 
-    bool intersectsDirty = false;
-
-    const auto& localBits = tileBits.mergedTileMask.raw();
-    const auto& globalBits = root->tileMaskBuffer.raw();
-
-    for (size_t i = 0; i < localBits.size(); ++i)
-    {
-        if (localBits[i] & globalBits[i]) {
-            intersectsDirty = true;
-            break;
-        }
-    }
-
-    if (!intersectsDirty) {
+    if (!tileBits.intersects(root->tileMaskBuffer))
         return;
-    }
 
     nvgSave(vg);
 
@@ -253,8 +239,6 @@ void Component::repaintSubtree(RootComponent *root)
 {
     isDirty = true;
 
-    //tileBits.copyTo(root->tileMaskBuffer.previous);
-    //computeTileCoverage(root->tileMaskBuffer);
     root->repaintQueue.enqueue(makeSafePointer(this));
 
     for (auto *child : getChildren())
@@ -414,11 +398,15 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     return -3.0f;
 }
 
-    void Component::computeTileCoverage(TileMask& tileMaskBuffer)
+void Component::getTileCoverage(TileMask& tileMaskBuffer)
+{
+    computeTileCoverage(tileMaskBuffer, getGlobalBounds());
+}
+
+void Component::computeTileCoverage(TileMask& tileMaskBuffer, const Rect& gb)
 {
     const int tilesX = tileMaskBuffer.getX();
     const int tilesY = tileMaskBuffer.getY();
-    const Rect gb = getGlobalBounds();
 
     if (tileBits.getX() != tilesX || tileBits.getY() != tilesY)
         tileBits.resize(tilesX, tilesY);
@@ -444,34 +432,37 @@ float Component::getTextWidthForFont(const std::string& fontName, float size, co
     auto& cur = tileBits.currentTileMask.raw();
     for (int y = minY; y <= maxY; ++y)
     {
-        int start = y * tilesX + minX;
-        int end   = y * tilesX + maxX;
-        int startWord = start / 64;
-        int endWord = end / 64;
+        const int start = y * tilesX + minX;
+        const int end   = y * tilesX + maxX;
+        const int startWord = start >> 6; // divide by 64
+        const int endWord   = end >> 6;
+
+        const int startBit = start & 63;
+        const int endBit   = end & 63;
 
         if (startWord == endWord)
         {
-            uint64_t mask = ((~0ULL) >> (63 - (end % 64))) & ((~0ULL) << (start % 64));
+            uint64_t mask = ((~0ULL) >> (63 - endBit)) & ((~0ULL) << startBit);
             cur[startWord] |= mask;
         }
         else
         {
-            cur[startWord] |= (~0ULL) << (start % 64);
+            cur[startWord] |= (~0ULL) << startBit;
             for (int w = startWord + 1; w < endWord; ++w)
                 cur[w] = ~0ULL;
-            cur[endWord] |= (~0ULL) >> (63 - (end % 64));
+            cur[endWord] |= (~0ULL) >> (63 - endBit);
         }
     }
 
     tileBits.mergeInto(tileMaskBuffer);
 }
 
-Rect Component::getGlobalBounds() const
+Rect Component::getGlobalBounds(const float padding) const
 {
     float sx = scale;
     float sy = scale;
-    float tx = x;
-    float ty = y;
+    float tx = x - padding;
+    float ty = y - padding;
 
     const Component *p = parent.get();
 
@@ -489,7 +480,7 @@ Rect Component::getGlobalBounds() const
         p = p->parent.get();
     }
 
-    return {tx, ty, getWidth() * sx, getHeight() * sy};
+    return {tx, ty, (getWidth() + padding * 2) * sx, (getHeight() + padding * 2) * sy};
 }
 
 }

@@ -31,7 +31,7 @@ Connection::~Connection()
     repaint();
 }
 
-void Connection::computeTileCoverage(TileMask& tileMaskBuffer)
+void Connection::getTileCoverage(TileMask& tileMaskBuffer)
 {
     const auto tilesX = tileMaskBuffer.getX();
     const auto tilesY = tileMaskBuffer.getY();

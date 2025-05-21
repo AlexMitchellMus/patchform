@@ -71,7 +71,7 @@ void Port::mouseButtonUp(pptk::CompEvent& e)
         {
             for (const auto& conn : cnv->newConnections)
             {
-                conn->computeTileCoverage(root->tileMaskBuffer);
+                conn->getTileCoverage(root->tileMaskBuffer);
             }
         }
         cnv->newConnections.clear();
@@ -130,6 +130,11 @@ void Port::mouseDrag(const pptk::Point& currentPosition, const pptk::Point& delt
             }
         }
     }
+}
+
+void Port::getTileCoverage(TileMask& tileMaskBuffer)
+{
+    computeTileCoverage(tileMaskBuffer, getGlobalBounds(isHovered ? 3 : 0));
 }
 
 void Port::render(NVGcontext* nvg, const pptk::Theme& theme)

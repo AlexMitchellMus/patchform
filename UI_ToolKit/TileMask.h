@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <functional>
 #include <span>
+#include <mach/mach_time.h>
 
 class TileMask {
 public:
@@ -104,13 +105,11 @@ public:
 
 private:
     int tilesX = -1, tilesY = -1;
-    choc::SmallVector<uint64_t, 64> bits;
+    alignas(64) choc::SmallVector<uint64_t, 64> bits;
 };
 
 class TileMaskBuffer {
 public:
-    static constexpr int tileSize = 32;
-
     void resizeFromWidth(int width, int height)
     {
         currentTileMask.resize(width, height);
@@ -143,6 +142,20 @@ public:
     [[nodiscard]] int getY() const
     {
         return currentTileMask.getY();
+    }
+
+    [[nodiscard]] bool intersects(const TileMask& global) const
+    {
+        const auto* __restrict__ a = mergedTileMask.raw().data();
+        const auto* __restrict__ b = global.raw().data();
+        const size_t count = mergedTileMask.raw().size();
+
+        for (size_t i = 0; i < count; ++i) {
+            if ((a[i] & b[i]) != 0)
+                return true;
+        }
+
+        return false;
     }
 
     void mergeInto(TileMask& mask)

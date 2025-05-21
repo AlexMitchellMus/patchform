@@ -18,6 +18,6 @@
     <key>NSMainNibFile</key>
     <string>MainMenu</string>
     <key>CFBundleIconFile</key>
-    <string>patchformicon</string>
+    <string>patchformicon.icns</string>
 </dict>
 </plist>

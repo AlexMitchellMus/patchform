@@ -188,7 +188,7 @@ namespace pptk
             while (repaintQueue.try_dequeue(ptr))
                 if (ptr) collected.push_back(ptr);
 
-            // Remove duplicates
+            // Remove duplicates - we only need to process each component once
             std::sort(collected.begin(), collected.end());
             collected.erase(std::ranges::unique(collected).begin(), collected.end());
 
@@ -196,9 +196,7 @@ namespace pptk
             for (const auto& repaintComponent : collected)
             {
                 repaintComponent->isDirty = true;
-
-                //repaintComponent->tileBits.copyTo(tileMaskBuffer.previous);
-                repaintComponent->computeTileCoverage(tileMaskBuffer);
+                repaintComponent->getTileCoverage(tileMaskBuffer);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;

@@ -148,8 +148,6 @@ add_library(PatchformSDK SHARED
         $<TARGET_OBJECTS:NanoVGWrapper>
 )
 
-target_compile_definitions(PatchformSDK PRIVATE LIBSAMPLERATE_STATIC)
-
 target_include_directories(PatchformSDK PUBLIC
         "${CMAKE_SOURCE_DIR}"
         "${CMAKE_SOURCE_DIR}/Glad"
@@ -183,9 +181,11 @@ target_link_libraries(PatchformSDK PRIVATE
 )
 
 target_compile_definitions(PatchformSDK PRIVATE
+        LIBSAMPLERATE_STATIC
+        NANOVG_GL3_IMPLEMENTATION=1
+
         PATCHFORM_WITH_GUI
         PATCHFORM_SDK_BUILD
-        NANOVG_GL3_IMPLEMENTATION=1
         #PATCHFORM_DEBUG_TILE_REPAINT
 )
 
@@ -194,6 +194,11 @@ add_dependencies(PatchformSDK update_git_version)
 add_executable(PatchformStandalone PatchformStandalone.cpp)
 
 if(APPLE)
+    if(CMAKE_BUILD_TYPE MATCHES Release)
+        target_compile_options(PatchformSDK PRIVATE -O3 -march=native -ffast-math)
+        target_compile_options(PatchformStandalone PRIVATE -O3 -march=native -ffast-math)
+    endif()
+
     set(MACOSX_BUNDLE TRUE)
     set(MACOSX_BUNDLE_ICON_FILE patchformicon.icns)
 

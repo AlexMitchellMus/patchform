@@ -28,7 +28,7 @@ public:
     void keyPressed(pptk::CompEvent& e) override;
     bool hitTest(float px, float py) override;
 
-    void computeTileCoverage(TileMask& tileMaskBuffer) override;
+    void getTileCoverage(TileMask& tileMaskBuffer) override;
 
     // Update the position of the destination when dragging a new connection around
     void setConnectionDest(const pptk::Point& globalPos);

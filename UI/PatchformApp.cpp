@@ -117,9 +117,8 @@ bool PatchformApp::nextFrame()
             restarting = false;
         }
 
-        Uint32 currentFrameTime = SDL_GetTicks();
-        Uint32 elapsedTime = currentFrameTime - lastFrameTime;
-        Uint32 waitTime = (elapsedTime < targetFrameTime) ? (targetFrameTime - elapsedTime) : 0;
+        Uint64 currentFrameTime = SDL_GetTicks();
+        Uint64 elapsedTime = currentFrameTime - lastFrameTime;
 
         SDL_Event event;
         while (pendingEvents.try_dequeue(event)) {
@@ -185,17 +184,18 @@ bool PatchformApp::nextFrame()
 
         editor->updateObjectsFromDSP();
         editor->handleTime(currentFrameTime, std::min(elapsedTime, targetFrameTime));
-        editor->updateFrameBuffers(nvg);
 
         if (!editor->processRepaintQueue())
         {
-            //std::cout << "skipping repaint" << std::endl;
-            SDL_Delay(1);
+            //static int c = 0;
+            //std::cout << c++ << " skipping repaint, time since last: " << currentFrameTime - prevIterTime  << std::endl;
+            //prevIterTime = currentFrameTime;
+            //SDL_Delay(1);
             return true;
         }
 
-        //static int c = 0;
-        //std::cout << c++ << " repainting" << std::endl;
+        editor->updateFrameBuffers(nvg);
+
         int drawableW, drawableH;
         SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
 
@@ -208,7 +208,6 @@ bool PatchformApp::nextFrame()
 
             invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
         }
-        //std::cout << "start render cycle ======" << std::endl;
         render();
 
         // clear the main tile dirty buffer - everything should be painted now
@@ -571,7 +570,7 @@ void PatchformApp::render()
     glClear( GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // Set up stencil mask for dirty tiles
-    nanoVGStencilMaskTiles(drawableW, drawableH, 32 * 2, editor->tileMaskBuffer.getSpan());
+    nanoVGStencilMaskTiles(drawableW, drawableH, TileMask::tileSize * 2, editor->tileMaskBuffer.getSpan());
 
     // Start NanoVG rendering
     nvgBeginFrame(nvg, windowW, windowH, pixelRatio);

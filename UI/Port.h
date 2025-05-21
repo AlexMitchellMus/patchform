@@ -46,6 +46,8 @@ public:
         repaint();
     };
 
+    void getTileCoverage(TileMask& tileMaskBuffer);
+
     void render(NVGcontext* nvg, const pptk::Theme& theme) override;
 
     [[nodiscard]] bool isOutput() const { return direction == Direction::Output; };

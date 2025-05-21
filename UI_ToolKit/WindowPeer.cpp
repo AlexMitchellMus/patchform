@@ -28,7 +28,7 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     SDL_SetHint("SDL_TOUCH_MOUSE_EVENTS", "1");
     SDL_SetHint("SDL_MOUSE_TOUCH_EVENTS", "1");
 
-    // Sets SDL_appIterate to 60fps (works on macOS - could work on others? test!)
+    // Sets SDL_AppIterate to 60fps (works on macOS - could work on others? test!)
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "90");
 
     SDL_SetWindowMinimumSize(window, 800, 600);
