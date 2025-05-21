@@ -340,7 +340,12 @@ bool Connection::hitTest(float px, float py)
         return false;
     }
 
-    return isPointNearBezier(pptk::Point(px, py), startPoint, controlPoint1, controlPoint2, endPoint);
+    if (straightConnectionStyle)
+    {
+        constexpr float threshold = 4.0f;
+        return pointToSegmentDistance({px, py}, startPoint, endPoint) < threshold;
+    } else
+        return isPointNearBezier(pptk::Point(px, py), startPoint, controlPoint1, controlPoint2, endPoint);
 }
 
 void Connection::mouseEnter(pptk::CompEvent& e)
