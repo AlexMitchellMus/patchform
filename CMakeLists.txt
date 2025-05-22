@@ -93,6 +93,8 @@ add_subdirectory(external/rtmidi)
 
 add_subdirectory(external/libsamplerate)
 
+add_subdirectory(external/clap)
+
 add_subdirectory(Nodes/nodes/Metronome)
 
 # Add moodycamel concurrentqueue
@@ -190,6 +192,85 @@ target_compile_definitions(PatchformSDK PRIVATE
 )
 
 add_dependencies(PatchformSDK update_git_version)
+
+#=== PLUGIN ===
+
+add_library(PatchformCLAP MODULE
+        PatchformCLAP.cpp
+        PatchformClapPlugin.cpp
+)
+
+set_target_properties(PatchformCLAP PROPERTIES
+        BUNDLE True
+        MACOSX_BUNDLE TRUE
+        BUNDLE_EXTENSION "clap"
+        SUFFIX ""  # no .clap
+        MACOSX_BUNDLE_GUI_IDENTIFIER com.my_company.my_plug
+        MACOSX_BUNDLE_BUNDLE_NAME PatchformCLAP
+        MACOSX_BUNDLE_BUNDLE_VERSION "1"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1"
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/installer/macOS/plugin/Info.plist.in"
+        POSITION_INDEPENDENT_CODE TRUE
+)
+
+if(${CMAKE_CXX_COMPILER_ID} MATCHES "AppleClang|Clang|GNU")
+    add_compile_options(-fvisibility=hidden -fvisibility-inlines-hidden
+            -Werror=return-type -Werror=unused-result -Wno-unused-parameter
+            -Wuninitialized -Wvla -Wmultichar -Werror=non-virtual-dtor -Woverloaded-virtual)
+endif()
+
+if(${CMAKE_CXX_COMPILER_ID} MATCHES "AppleClang|Clang")
+    add_compile_options(-Wmost -Wsuper-class-method-mismatch)
+endif()
+
+target_include_directories(PatchformCLAP PRIVATE
+        "${CMAKE_SOURCE_DIR}"
+        "${CMAKE_SOURCE_DIR}/Glad"
+        "${CMAKE_SOURCE_DIR}/external"
+        "${CMAKE_SOURCE_DIR}/external/concurrentqueue"
+        "${CMAKE_SOURCE_DIR}/external/readerwriterqueue"
+        "${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann"
+        "${CMAKE_SOURCE_DIR}/external/unordered_dense/include/ankerl"
+        "${CMAKE_SOURCE_DIR}/external/glaze/include"
+        "${CMAKE_SOURCE_DIR}/external/portaudio/include"
+        "${CMAKE_SOURCE_DIR}/external/nanovg/src"
+        "${CMAKE_SOURCE_DIR}/external/SDL2/include"
+        "${CMAKE_SOURCE_DIR}/external/libsamplerate/include"
+        "${CMAKE_SOURCE_DIR}/external/pffft"
+        "${CMAKE_SOURCE_DIR}/external/simde"
+        "${CMAKE_SOURCE_DIR}/external/SignalsmithDSP/include"
+        "${CMAKE_SOURCE_DIR}/external/clap/include"
+)
+
+target_compile_definitions(PatchformCLAP PRIVATE
+        SDL_MAIN_USE_CALLBACKS=1
+        PATCHFORM_WITH_GUI
+        PATCHFORM_STANDALONE
+)
+
+target_link_libraries(PatchformCLAP PRIVATE PatchformSDK)
+
+add_dependencies(PatchformCLAP PatchformSDK)
+
+configure_file(
+        ${CMAKE_SOURCE_DIR}/installer/macOS/plugin/Info.plist.in
+        ${CMAKE_BINARY_DIR}/GeneratedInfo.plist
+        @ONLY
+)
+
+add_custom_command(TARGET PatchformCLAP POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "Ensuring Info.plist is present in .clap bundle"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformCLAP>/Contents"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/GeneratedInfo.plist"
+        "$<TARGET_BUNDLE_DIR:PatchformCLAP>/Contents/Info.plist"
+)
+
+target_link_options(PatchformCLAP PRIVATE
+        -exported_symbols_list ${CMAKE_SOURCE_DIR}/installer/macOS/plugin/exported_symbols.txt
+)
+
+#===  STANDALONE ===
 
 add_executable(PatchformStandalone PatchformStandalone.cpp)
 

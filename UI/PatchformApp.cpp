@@ -39,6 +39,32 @@ PatchformApp::~PatchformApp()
 {
 }
 
+bool PatchformApp::createFromHost(int sampleRate, int bufferSize, void* nativeWindow, const char* apiType)
+{
+    this->sampleRate = sampleRate;
+    this->frameCount = bufferSize;
+
+    instance = this;
+
+    nodeManager.loadAll("Objects");
+
+    // Skip initMidi / PortAudio
+    // Assume OpenGL context already active
+
+    nvg = createNanoVGContext(0); // uses active GL context
+    if (!nvg) return false;
+
+    //if (!loadFonts()) return false;
+
+    editor = std::make_unique<Editor>(nullptr); // no SDL window
+    editor->cacheFontMetrics(nvg, { "Regular", "SemiBold", "icons", "object_icons" }, { 14.0f, 16.0f, 100.0f });
+    editor->init(&graphSystem);
+    eventManager = std::make_unique<pptk::EventManager>(editor.get());
+
+    // setBounds will need to be called by plugin host once window size is known
+    return true;
+}
+
 bool PatchformApp::initialize()
 {
     std::cout << "Patchform version: " << patchform_git_version  << " hash: " << patchform_git_hash << std::endl;

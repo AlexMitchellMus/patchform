@@ -46,3 +46,6 @@
 [submodule "external/choc"]
 	path = external/choc
 	url = https://github.com/Tracktion/choc
+[submodule "external/clap"]
+	path = external/clap
+	url = https://github.com/free-audio/clap.git
