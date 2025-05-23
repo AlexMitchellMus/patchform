@@ -198,7 +198,14 @@ add_dependencies(PatchformSDK update_git_version)
 add_library(PatchformCLAP MODULE
         PatchformCLAP.cpp
         PatchformClapPlugin.cpp
+        PatchformClapPluginGUI.mm
+        PatchformGLView.mm
 )
+
+if(APPLE)
+    find_library(APPKIT_FRAMEWORK AppKit)
+    target_link_libraries(PatchformCLAP PRIVATE ${APPKIT_FRAMEWORK})
+endif()
 
 set_target_properties(PatchformCLAP PROPERTIES
         BUNDLE True

@@ -1,1 +1,9 @@
 _clap_entry
+_guiExt
+_gui_is_api_supported
+_gui_get_preferred_api
+_gui_create
+_gui_destroy
+_gui_set_parent
+_gui_show
+_gui_hide

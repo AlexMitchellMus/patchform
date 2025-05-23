@@ -1,10 +1,21 @@
 #include "PatchformClapPlugin.h"
 
+#include "PluginLogger.h"
+#include "clap/ext/gui.h"
+#include "PatchformClapPluginGUI.h"
+#include "../UI/PatchformApp.h"
+
 static PatchformClapPlugin* instance = nullptr;
 
 bool init(const clap_plugin* plugin) {
     return true;
 }
+
+PatchformClapPlugin::~PatchformClapPlugin()
+{
+
+}
+
 
 const clap_plugin* PatchformClapPlugin::create(const clap_host* host) {
     instance = new PatchformClapPlugin();
@@ -13,6 +24,7 @@ const clap_plugin* PatchformClapPlugin::create(const clap_host* host) {
     instance->pluginStruct = {
         .desc = &desc,
         .init = &init,
+        .plugin_data = instance,
         .activate = activate,
         .deactivate = deactivate,
         .start_processing = start_processing,
@@ -24,7 +36,7 @@ const clap_plugin* PatchformClapPlugin::create(const clap_host* host) {
         .destroy = destroy
     };
 
-    return &instance->pluginStruct; // defer app creation until GUI init
+    return &instance->pluginStruct;
 }
 
 void PatchformClapPlugin::destroy(const clap_plugin* plugin) {
@@ -32,21 +44,22 @@ void PatchformClapPlugin::destroy(const clap_plugin* plugin) {
     instance = nullptr;
 }
 
-bool PatchformClapPlugin::activate(const clap_plugin* plugin, double sampleRate, uint32_t minFrames, uint32_t maxFrames) {
-    // You can store sampleRate/minFrames if needed
+bool PatchformClapPlugin::activate(const clap_plugin* plugin, double, uint32_t, uint32_t) {
     return true;
 }
 
-void PatchformClapPlugin::deactivate(const clap_plugin* plugin) {
-    // Nothing yet
-}
+void PatchformClapPlugin::deactivate(const clap_plugin* plugin) {}
 
-clap_process_status PatchformClapPlugin::process(const clap_plugin* plugin, const clap_process* process) {
-    // TODO: implement Patchform audio processing using process->audio_inputs/outputs
+clap_process_status PatchformClapPlugin::process(const clap_plugin*, const clap_process*)
+{
     return CLAP_PROCESS_CONTINUE;
 }
 
-const void* PatchformClapPlugin::getExtension(const clap_plugin* plugin, const char* id) {
-    // TODO: return GUI extension here when implemented
+const void* PatchformClapPlugin::getExtension(const clap_plugin* plugin, const char* id)
+{
+    if (strcmp(id, CLAP_EXT_GUI) == 0) {
+        return &guiExt;
+    }
+
     return nullptr;
 }

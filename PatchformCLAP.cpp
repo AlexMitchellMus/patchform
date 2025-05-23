@@ -6,8 +6,10 @@
 #include "clap/include/clap/ext/gui.h"
 #include "clap/ext/log.h"
 #include "PatchformClapPlugin.h"
+#include "PluginLogger.h"
 
 #include <cstring>
+#include <mutex>
 
 extern "C" {
 
@@ -41,6 +43,7 @@ static bool clap_init(const char *plugin_path)
 // ---- Entry Hooks ----
 static bool init(const char *plugin_path)
 {
+    logToFile("Patchform:: init()");
     std::lock_guard<std::mutex> guard(entry_init_guard);
     const int cnt = ++entry_init_counter;
     if (cnt > 1)

@@ -1,9 +1,24 @@
 #pragma once
 
 #include "clap/include/clap/clap.h"
-#include "../UI/PatchformApp.h"
+#include <memory>
 
-struct PatchformClapPlugin {
+#include "PluginLogger.h"
+
+#ifdef __OBJC__
+@class PatchformGLView;
+#else
+class PatchformGLView;
+#endif
+
+class PatchformApp;
+class PatchformClapPlugin {
+    public:
+
+    ~PatchformClapPlugin();
+
+    PatchformGLView* glView = nullptr;
+
     static constexpr clap_plugin_descriptor desc = {
         .clap_version = CLAP_VERSION,
         .id = "dev.patchform",
@@ -16,6 +31,7 @@ struct PatchformClapPlugin {
             CLAP_PLUGIN_FEATURE_INSTRUMENT,
             CLAP_PLUGIN_FEATURE_SYNTHESIZER,
             CLAP_PLUGIN_FEATURE_STEREO,
+            CLAP_PLUGIN_FEATURE_AUDIO_EFFECT,
             nullptr,
         },
     };
