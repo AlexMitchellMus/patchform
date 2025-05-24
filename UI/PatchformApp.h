@@ -28,9 +28,10 @@ public:
     }
 
     PatchformApp(int sampleRate, unsigned long frameCount);
+
     ~PatchformApp();
 
-    bool createFromHost(int sampleRate, int bufferSize, void* nativeWindow, const char* apiType);
+    bool initializePluginGUI(void* nativeWindow, const char* apiType);
     bool initialize();
     void shutdown();
     bool nextFrame();

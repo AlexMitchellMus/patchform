@@ -39,21 +39,12 @@ PatchformApp::~PatchformApp()
 {
 }
 
-bool PatchformApp::createFromHost(int sampleRate, int bufferSize, void* nativeWindow, const char* apiType)
+bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType)
 {
-    this->sampleRate = sampleRate;
-    this->frameCount = bufferSize;
-
-    instance = this;
-
-    nodeManager.loadAll("Objects");
-
-    // Skip initMidi / PortAudio
-    // Assume OpenGL context already active
-
     nvg = createNanoVGContext(0); // uses active GL context
-    if (!nvg) return false;
-
+    if (!nvg) {
+        return false;
+    }
     //if (!loadFonts()) return false;
 
     editor = std::make_unique<Editor>(nullptr); // no SDL window

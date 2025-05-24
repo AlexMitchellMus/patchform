@@ -7,7 +7,8 @@
 
 static PatchformClapPlugin* instance = nullptr;
 
-bool init(const clap_plugin* plugin) {
+bool init(const clap_plugin* plugin)
+{
     return true;
 }
 
@@ -16,10 +17,11 @@ PatchformClapPlugin::~PatchformClapPlugin()
 
 }
 
-
-const clap_plugin* PatchformClapPlugin::create(const clap_host* host) {
+const clap_plugin* PatchformClapPlugin::create(const clap_host* host)
+{
     instance = new PatchformClapPlugin();
     instance->host = host;
+    instance->app = std::make_unique<PatchformApp>(44100, 64);
 
     instance->pluginStruct = {
         .desc = &desc,
@@ -39,12 +41,14 @@ const clap_plugin* PatchformClapPlugin::create(const clap_host* host) {
     return &instance->pluginStruct;
 }
 
-void PatchformClapPlugin::destroy(const clap_plugin* plugin) {
+void PatchformClapPlugin::destroy(const clap_plugin* plugin)
+{
     delete instance;
     instance = nullptr;
 }
 
-bool PatchformClapPlugin::activate(const clap_plugin* plugin, double, uint32_t, uint32_t) {
+bool PatchformClapPlugin::activate(const clap_plugin* plugin, double, uint32_t, uint32_t)
+{
     return true;
 }
 
@@ -60,6 +64,13 @@ const void* PatchformClapPlugin::getExtension(const clap_plugin* plugin, const c
     if (strcmp(id, CLAP_EXT_GUI) == 0) {
         return &guiExt;
     }
-
     return nullptr;
+}
+
+void PatchformClapPlugin::setParentView(void* cocoaView)
+{
+    if (app->initializePluginGUI(cocoaView, CLAP_WINDOW_API_COCOA))
+        logToFile("successfully initialized plugin GUI");
+    else
+        logToFile("failed to initialize plugin GUI");
 }

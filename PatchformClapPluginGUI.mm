@@ -33,9 +33,6 @@ CLAP_EXPORT bool gui_create(const clap_plugin* plugin, const char*, bool) {
 
     NSRect rect = NSMakeRect(0, 0, 800, 600);
     self->glView = [[PatchformGLView alloc] initWithFrame:rect];
-    std::ostringstream os;
-    os << &self->glView;
-    logToFile("gui_create glView: " + os.str());
     return self->glView != nil;
 }
 
@@ -58,6 +55,8 @@ CLAP_EXPORT bool gui_set_parent(const clap_plugin* plugin, const clap_window* wi
     [self->glView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
     [self->glView setFrame:content.bounds];
     [content addSubview:self->glView];
+
+    self->setParentView((__bridge void*)content);
 
     return true;
 }

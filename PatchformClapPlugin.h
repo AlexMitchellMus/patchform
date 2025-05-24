@@ -51,4 +51,6 @@ class PatchformClapPlugin {
     static void stop_processing(const clap_plugin* plugin) {}
     static void reset(const clap_plugin* plugin) {}
     static void on_main_thread(const clap_plugin* plugin) {}
+
+    void setParentView(void* cocoaView);
 };
