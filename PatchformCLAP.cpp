@@ -7,9 +7,11 @@
 #include "clap/ext/log.h"
 #include "PatchformClapPlugin.h"
 #include "PluginLogger.h"
+#include "PatchformBuildMode.h"
 
 #include <cstring>
 #include <mutex>
+#include <cassert>
 
 extern "C" {
 
@@ -44,6 +46,8 @@ static bool clap_init(const char *plugin_path)
 static bool init(const char *plugin_path)
 {
     logToFile("Patchform:: init()");
+    assert(PatchformBuildMode::isPlugin() == true && "Patchform build mode should be plugin!");
+
     std::lock_guard<std::mutex> guard(entry_init_guard);
     const int cnt = ++entry_init_counter;
     if (cnt > 1)

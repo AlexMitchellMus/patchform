@@ -1,7 +1,12 @@
 #include "SDL3/SDL_main.h"
 #include "UI/PatchformApp.h"
+#include "PatchformBuildMode.h"
 
-extern "C" SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
+extern "C" SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
+{
+    // Make sure that we are populating isStandalone() correctly!
+    assert(PatchformBuildMode::isStandalone() == true && "Patchform build mode should be standalone!");
+
     auto* app = new PatchformApp(44100, 64);
     if (!app->initialize()) return SDL_APP_FAILURE;
     *appstate = app;

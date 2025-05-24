@@ -200,6 +200,7 @@ add_library(PatchformCLAP MODULE
         PatchformClapPlugin.cpp
         PatchformClapPluginGUI.mm
         PatchformGLView.mm
+        PatchformBuildMode.cpp
 )
 
 if(APPLE)
@@ -250,6 +251,7 @@ target_include_directories(PatchformCLAP PRIVATE
 )
 
 target_compile_definitions(PatchformCLAP PRIVATE
+        PATCHFORM_PLUGIN
         SDL_MAIN_USE_CALLBACKS=1
         PATCHFORM_WITH_GUI
         PATCHFORM_STANDALONE
@@ -279,7 +281,7 @@ target_link_options(PatchformCLAP PRIVATE
 
 #===  STANDALONE ===
 
-add_executable(PatchformStandalone PatchformStandalone.cpp)
+add_executable(PatchformStandalone PatchformStandalone.cpp PatchformBuildMode.cpp)
 
 if(APPLE)
     if(CMAKE_BUILD_TYPE MATCHES Release)

@@ -55,6 +55,7 @@ class WindowPeer;
 class Editor : public pptk::RootComponent {
 public:
     explicit Editor(WindowPeer* peer);
+    explicit Editor(void* peer, const void* api);
 
     ~Editor();
 

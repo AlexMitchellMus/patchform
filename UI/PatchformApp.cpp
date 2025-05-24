@@ -47,7 +47,7 @@ bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType)
     }
     //if (!loadFonts()) return false;
 
-    editor = std::make_unique<Editor>(nullptr); // no SDL window
+    editor = std::make_unique<Editor>(nativeWindow, apiType); // no SDL window
     editor->cacheFontMetrics(nvg, { "Regular", "SemiBold", "icons", "object_icons" }, { 14.0f, 16.0f, 100.0f });
     editor->init(&graphSystem);
     eventManager = std::make_unique<pptk::EventManager>(editor.get());

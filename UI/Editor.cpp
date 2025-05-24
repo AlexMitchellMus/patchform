@@ -13,6 +13,8 @@
 
 Editor::Editor(WindowPeer* peer) : windowPeer(peer) {};
 
+Editor::Editor(void* peer, const void* api) {};
+
 Editor::~Editor() {}
 
 void Editor::init(GraphSystem* gm)
