@@ -1,17 +1,16 @@
-#include "WindowPeer.h"
-#include "../Glad/gl.h"
+#include "Glad/gl.h"
 #include <iostream>
+#include "SDLWindowPeer.h"
+#include "PluginLogger.h"
 
-WindowPeer::WindowPeer(const std::string &title, int width, int height, const bool isMaximized)
-    : window(nullptr), glContext(nullptr)
+SDLWindowPeer::SDLWindowPeer(const std::string& title, int width, int height, bool isFullScreen)
 {
     if (SDL_Init(SDL_INIT_VIDEO) == 0) {
         throw std::runtime_error(SDL_GetError());
     }
 
-    isWindowMaximized = isMaximized;
+    isWindowMaximized = isFullScreen;
 
-    // Set attributes for an OpenGL context (adjust as needed)
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -20,15 +19,16 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | (isWindowMaximized ? SDL_WINDOW_MAXIMIZED : 0));
+    window = SDL_CreateWindow(title.c_str(), width, height,
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
+                              SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                              (isWindowMaximized ? SDL_WINDOW_MAXIMIZED : 0));
     if (!window) {
         throw std::runtime_error(SDL_GetError());
     }
 
     SDL_SetHint("SDL_TOUCH_MOUSE_EVENTS", "1");
     SDL_SetHint("SDL_MOUSE_TOUCH_EVENTS", "1");
-
-    // Sets SDL_AppIterate to 60fps (works on macOS - could work on others? test!)
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "90");
 
     SDL_SetWindowMinimumSize(window, 800, 600);
@@ -42,6 +42,9 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
         throw std::runtime_error(SDL_GetError());
     }
 
+    if (!SDL_GL_MakeCurrent(window, glContext))
+        throw std::runtime_error("Failed to make OpenGL context current");
+
     int stencilBits = 0;
     int depthBits = 0;
     SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencilBits);
@@ -49,10 +52,7 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     std::cout << "SDL_GL_STENCIL_SIZE: " << stencilBits << "\n";
     std::cout << "SDL_GL_DEPTH_SIZE: " << depthBits << "\n";
 
-    SDL_GL_MakeCurrent(window, glContext);
-
-    if (!gladLoadGL(SDL_GL_GetProcAddress))
-    {
+    if (!gladLoadGL(SDL_GL_GetProcAddress)) {
         throw std::runtime_error("Failed to load GLAD GL");
     }
 
@@ -63,49 +63,62 @@ WindowPeer::WindowPeer(const std::string &title, int width, int height, const bo
     SDL_GL_SetSwapInterval(0);
 }
 
-WindowPeer::~WindowPeer() {
-    if (glContext) {
-        SDL_GL_DestroyContext(glContext);
-        glContext = nullptr;
-    }
-    if (window) {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-    SDL_Quit();
-}
 
-bool WindowPeer::isMaximized() const
+SDLWindowPeer::~SDLWindowPeer()
 {
-    return isWindowMaximized;
+    if (glContext)
+        SDL_GL_DestroyContext(glContext);
+    if (window)
+        SDL_DestroyWindow(window);
 }
 
-SDL_Window* WindowPeer::getSDLWindow() const {
+void* SDLWindowPeer::getNativeHandle() const {
     return window;
 }
 
-void WindowPeer::swapBuffers() {
+void SDLWindowPeer::swapBuffers() {
+    LOG_TO_FILE("sdl flush");
     SDL_GL_SwapWindow(window);
 }
 
-void WindowPeer::setTitle(const std::string &title) {
+void SDLWindowPeer::setTitle(const std::string& title) {
     SDL_SetWindowTitle(window, title.c_str());
 }
 
-void WindowPeer::setSize(const int width, const int height) {
-    SDL_SetWindowSize(window, width, height);
-    int w, h;
-    SDL_GetWindowSizeInPixels(window, &w, &h);
-    setUserSize(w, h);
-}
-
-void WindowPeer::setUserSize(const int width, const int height)
-{
+void SDLWindowPeer::setUserSize(int width, int height) {
     windowUserWidth = width;
     windowUserHeight = height;
 }
-void WindowPeer::getUserSize(int &width, int &height) const
-{
+
+void SDLWindowPeer::getUserSize(int& width, int& height) const {
     width = windowUserWidth;
     height = windowUserHeight;
+}
+
+void SDLWindowPeer::getWindowSize(int& w, int& h) const {
+    SDL_GetWindowSize(window, &w, &h);
+}
+void SDLWindowPeer::getDrawableSize(int& w, int& h) const {
+    SDL_GetWindowSizeInPixels(window, &w, &h);
+}
+
+
+void SDLWindowPeer::setSize(int width, int height) {
+    isHandlingProgrammaticResize = true;
+    SDL_SetWindowSize(window, width, height);
+}
+
+bool SDLWindowPeer::isMaximized() const {
+    return isWindowMaximized;
+}
+
+void SDLWindowPeer::setMaximized(bool isMaximized) {
+    isHandlingProgrammaticResize = true;
+    isWindowMaximized = isMaximized;
+}
+
+bool SDLWindowPeer::getIsProgrammaticResize() {
+    bool wasProgrammatic = isHandlingProgrammaticResize;
+    isHandlingProgrammaticResize = false;
+    return wasProgrammatic;
 }

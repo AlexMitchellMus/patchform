@@ -21,7 +21,11 @@
 #endif
 
 #include "PatchformApp.h"
+
+#include "PluginLogger.h"
 #include "../UI_ToolKit/WindowPeer.h"
+#include "../UI_ToolKit/SDLWindowPeer.h"
+#include "../UI_ToolKit/PluginWindowPeer.h"
 #include "../GitInfo.h"
 
 PatchformApp* PatchformApp::instance = nullptr;
@@ -41,8 +45,12 @@ PatchformApp::~PatchformApp()
 
 bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType)
 {
+    LOG_TO_FILE("================= initializePluginGUI ==================");
+    window = PluginWindowPeer::create(nativeWindow);
+
     nvg = createNanoVGContext(0); // uses active GL context
     if (!nvg) {
+        LOG_TO_FILE("Failed to create NVG context");
         return false;
     }
     //if (!loadFonts()) return false;
@@ -51,6 +59,12 @@ bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType)
     editor->cacheFontMetrics(nvg, { "Regular", "SemiBold", "icons", "object_icons" }, { 14.0f, 16.0f, 100.0f });
     editor->init(&graphSystem);
     eventManager = std::make_unique<pptk::EventManager>(editor.get());
+
+    int windowW, windowH;
+    window->getWindowSize(windowW, windowH);
+    LOG_TO_FILE("setting editor size to: " + std::to_string(windowW) + ", " + std::to_string(windowH));
+    editor->setBounds(0, 0, windowW, windowH);
+    window->getDrawableSize(windowWidth, windowHeight);
 
     // setBounds will need to be called by plugin host once window size is known
     return true;
@@ -177,7 +191,7 @@ bool PatchformApp::nextFrame()
                         newHeight = event.window.data2;
 
                         editor->setBounds(0, 0, newWidth, newHeight);
-                        Uint32 flags = SDL_GetWindowFlags(window->getSDLWindow());
+                        Uint32 flags = SDL_GetWindowFlags(window->getNativeHandleAs<SDL_Window>());
                         if ((flags & SDL_WINDOW_MAXIMIZED) == 0 && !window->getIsProgrammaticResize()) {
                             window->setUserSize(newWidth, newHeight); // user resize only
                         }
@@ -211,20 +225,10 @@ bool PatchformApp::nextFrame()
             return true;
         }
 
+        LOG_TO_FILE("PatchformApp::repainting <<<<<<<<<<<<<<<<<<<<<");
+
         editor->updateFrameBuffers(nvg);
 
-        int drawableW, drawableH;
-        SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
-
-        if (!invalidFB || drawableW != windowWidth || drawableH != windowHeight) {
-            windowWidth = drawableW;
-            windowHeight = drawableH;
-
-            if (invalidFB)
-                nanoVGDeleteFramebuffer(invalidFB);
-
-            invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
-        }
         render();
 
         // clear the main tile dirty buffer - everything should be painted now
@@ -543,7 +547,7 @@ bool PatchformApp::initUI()
         newHeight = windowHeight = 700;
     }
 
-    window = std::make_unique<WindowPeer>("Patchform", windowWidth, windowHeight, isFullscreen);
+    window = std::make_unique<SDLWindowPeer>("Patchform", windowWidth, windowHeight, isFullscreen);
     if (!window) return false;
 
     nvg = createNanoVGContext(0);
@@ -565,7 +569,7 @@ bool PatchformApp::initUI()
     eventManager = std::make_unique<pptk::EventManager>(editor.get());
 
     editor->setBounds(0, 0, windowWidth, windowHeight);
-    SDL_GetWindowSizeInPixels(window->getSDLWindow(), &windowWidth, &windowHeight);
+    window->getDrawableSize(windowWidth, windowHeight);
     invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
 
     return true;
@@ -573,10 +577,23 @@ bool PatchformApp::initUI()
 
 void PatchformApp::render()
 {
+    LOG_TO_FILE("rendering!!!");
+
     int drawableW, drawableH;
     int windowW, windowH;
-    SDL_GetWindowSize(window->getSDLWindow(), &windowW, &windowH);
-    SDL_GetWindowSizeInPixels(window->getSDLWindow(), &drawableW, &drawableH);
+    window->getWindowSize(windowW, windowH);
+    window->getDrawableSize(drawableW, drawableH);
+
+    if (!invalidFB || drawableW != windowWidth || drawableH != windowHeight) {
+        windowWidth = drawableW;
+        windowHeight = drawableH;
+
+        if (invalidFB)
+            nanoVGDeleteFramebuffer(invalidFB);
+
+        invalidFB = nanoVGCreateFramebuffer(nvg, windowWidth, windowHeight, NVG_IMAGE_PREMULTIPLIED);
+    }
+
     float pixelRatio = (float)drawableW / (float)windowW;
 
     //  Bind framebuffer for invalid regions only
@@ -627,6 +644,7 @@ void PatchformApp::render()
 
     // Blit invalidFB to the screen
     nanoVGBindFramebuffer(nullptr);
+
     nanoVGBlitFramebuffer(nvg, invalidFB, 0, 0, drawableW, drawableH);
 
     // Present
@@ -635,6 +653,7 @@ void PatchformApp::render()
     // For debugging: Print any OpenGL errors
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
+        LOG_TO_FILE("OpenGL Error: " + std::to_string(err));
         std::cerr << "OpenGL error in render(): 0x" << std::hex << err << std::dec << std::endl;
     }
 }

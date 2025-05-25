@@ -10,7 +10,7 @@
 #include "../../UI_ToolKit/TextEditor.h"
 
 // Display comment text only (no i/o, no processing)
-class Comment final : public AudioNode
+class NodeComment final : public AudioNode
 {
     DEFINE_AND_REGISTER_NODE("Comment", "com", false);
     DEFINE_NODE_ALIASES("comment");
@@ -20,7 +20,7 @@ class Comment final : public AudioNode
     StringParameter* commentTextParameter;
 
 public:
-    Comment(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
+    NodeComment(std::shared_ptr<NodeContext> context, const json& objParams) : AudioNode(context, AudioPort::PortType::None, objParams)
     {
         commentText = objParams.value("text", "comment");
 
@@ -54,12 +54,12 @@ public:
 
             textEditor->setInteractable(false);
 
-            auto commentNode = reinterpret_cast<Comment*>(audioNode);
+            auto commentNode = reinterpret_cast<NodeComment*>(audioNode);
             textEditor->setText(commentNode->commentText);
 
             textEditor->onTextChanged = [this, ed = textEditor.get()]()
             {
-                auto commentNode = reinterpret_cast<Comment*>(audioNode);
+                auto commentNode = reinterpret_cast<NodeComment*>(audioNode);
                 commentNode->commentText = ed->getText();
                 updateWidth();
             };
@@ -110,7 +110,7 @@ public:
 
         void updateWidth()
         {
-            auto commentNode = reinterpret_cast<Comment*>(audioNode);
+            auto commentNode = reinterpret_cast<NodeComment*>(audioNode);
             auto textWidth = getTextWidthForFont("Regular", 14, commentNode->commentText) + 20;
             setSize(textWidth, getHeight());
         }
@@ -133,4 +133,4 @@ public:
     }
 };
 
-REGISTER(Comment);
+REGISTER(NodeComment);

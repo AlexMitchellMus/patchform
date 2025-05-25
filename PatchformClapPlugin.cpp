@@ -4,6 +4,7 @@
 #include "clap/ext/gui.h"
 #include "PatchformClapPluginGUI.h"
 #include "../UI/PatchformApp.h"
+#include "PatchformGLView.h"
 
 static PatchformClapPlugin* instance = nullptr;
 
@@ -41,6 +42,42 @@ const clap_plugin* PatchformClapPlugin::create(const clap_host* host)
     return &instance->pluginStruct;
 }
 
+void PatchformClapPlugin::on_main_thread(const clap_plugin* plugin)
+{
+    LOG_TO_FILE("calling on-main-thread");
+
+    static double lastTime = getHighResTime(); // high-res timer, e.g. std::chrono
+    double now = getHighResTime();
+
+    constexpr double frameInterval = 1.0 / 60.0; // 60 FPS
+
+    if ((now - lastTime) >= frameInterval) {
+        lastTime = now;
+
+        auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
+        if (self && self->glView)
+            makeGLViewCurrent(self->glView);
+
+        if (self && self->app) {
+            if (self->app->nextFrame())
+                LOG_TO_FILE("rendered ");
+        }
+    }
+
+    // Request next call
+    instance->host->request_callback(instance->host);
+
+    static int c = 0;
+    LOG_TO_FILE(c++ + " finished render");
+}
+
+double PatchformClapPlugin::getHighResTime()
+{
+    using namespace std::chrono;
+    static auto start = steady_clock::now();
+    return duration<double>(steady_clock::now() - start).count();
+}
+
 void PatchformClapPlugin::destroy(const clap_plugin* plugin)
 {
     delete instance;
@@ -70,7 +107,8 @@ const void* PatchformClapPlugin::getExtension(const clap_plugin* plugin, const c
 void PatchformClapPlugin::setParentView(void* cocoaView)
 {
     if (app->initializePluginGUI(cocoaView, CLAP_WINDOW_API_COCOA))
-        logToFile("successfully initialized plugin GUI");
+        LOG_TO_FILE("successfully initialized plugin GUI");
     else
-        logToFile("failed to initialize plugin GUI");
+        LOG_TO_FILE("failed to initialize plugin GUI");
+
 }

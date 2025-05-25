@@ -148,6 +148,8 @@ add_library(PatchformSDK SHARED
         ${BUILDINFO_CPP}
         ${PLATFORM_HELPERS}
         $<TARGET_OBJECTS:NanoVGWrapper>
+        UI_ToolKit/PluginWindowPeer.cpp
+        UI_ToolKit/PluginWindowPeer_mac.mm
 )
 
 target_include_directories(PatchformSDK PUBLIC
@@ -281,7 +283,10 @@ target_link_options(PatchformCLAP PRIVATE
 
 #===  STANDALONE ===
 
-add_executable(PatchformStandalone PatchformStandalone.cpp PatchformBuildMode.cpp)
+add_executable(PatchformStandalone
+        PatchformStandalone.cpp
+        PatchformBuildMode.cpp
+        UI_ToolKit/SDLWindowPeer.cpp)
 
 if(APPLE)
     if(CMAKE_BUILD_TYPE MATCHES Release)

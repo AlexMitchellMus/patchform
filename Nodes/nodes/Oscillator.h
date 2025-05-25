@@ -23,15 +23,15 @@
 constexpr size_t TABLE_SIZE = 4092;
 constexpr size_t FULL_TABLE_SIZE = TABLE_SIZE + 1;
 
-constexpr float pi = 3.14159265358979323846f;
+constexpr float pfpi = 3.14159265358979323846f;
 constexpr float twoPi = 6.28318530717958647692f;
 
 // A constexpr sine approximation.
 static constexpr float constexpr_sin(float x)
 {
     // Normalize x to [-pi, pi]
-    while (x > pi) x -= twoPi;
-    while (x < -pi) x += twoPi;
+    while (x > pfpi) x -= twoPi;
+    while (x < -pfpi) x += twoPi;
 
     float x2 = x * x;
     float term1 = x; // x
@@ -54,7 +54,7 @@ static constexpr std::array<float, FULL_TABLE_SIZE> generateSineWave()
     // Use TABLE_SIZE as the denominator so that the extra sample is computed at 2*pi.
     for (size_t i = 0; i < FULL_TABLE_SIZE; ++i)
     {
-        float angle = 2.0f * pi * static_cast<float>(i) / TABLE_SIZE;
+        float angle = 2.0f * pfpi * static_cast<float>(i) / TABLE_SIZE;
         table[i] = constexpr_sin(angle);
     }
     return table;

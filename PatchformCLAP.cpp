@@ -45,7 +45,7 @@ static bool clap_init(const char *plugin_path)
 // ---- Entry Hooks ----
 static bool init(const char *plugin_path)
 {
-    logToFile("Patchform:: init()");
+    LOG_TO_FILE("Patchform:: init()");
     assert(PatchformBuildMode::isPlugin() == true && "Patchform build mode should be plugin!");
 
     std::lock_guard<std::mutex> guard(entry_init_guard);

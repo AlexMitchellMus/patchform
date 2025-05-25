@@ -1,10 +1,11 @@
+#include "UI/PatchformApp.h"
 #import <AppKit/AppKit.h>
 #include "clap/clap.h"
 #include "clap/ext/gui.h"
 #include "PatchformClapPluginGUI.h"
 #include "PatchformClapPlugin.h"
 #include "PluginLogger.h"
-#import "PatchformGLView.h"
+#import "PatchformGLViewInternal.h"
 #include <sstream>
 
 static NSWindow* parentWindow = nil;
@@ -15,52 +16,64 @@ extern "C" {
 
 CLAP_EXPORT bool gui_is_api_supported(const clap_plugin*, const char* api, bool is_floating)
 {
-    logToFile("gui_is_api_supported: " + std::string(api));
+    LOG_TO_FILE("gui_is_api_supported: " + std::string(api));
     return strcmp(api, CLAP_WINDOW_API_COCOA) == 0;
 }
 
 CLAP_EXPORT bool gui_get_preferred_api(const clap_plugin*, const char** api, bool* is_floating)
 {
-    logToFile("gui_get_preferred_api");
+    LOG_TO_FILE("gui_get_preferred_api");
     *api = CLAP_WINDOW_API_COCOA;
     *is_floating = false;
     return true;
 }
 
-CLAP_EXPORT bool gui_create(const clap_plugin* plugin, const char*, bool) {
-    logToFile("gui_create");
+CLAP_EXPORT bool gui_create(const clap_plugin* plugin, const char*, bool)
+{
+    LOG_TO_FILE("gui_create");
     auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
 
-    NSRect rect = NSMakeRect(0, 0, 800, 600);
-    self->glView = [[PatchformGLView alloc] initWithFrame:rect];
+    if (!self->glView) {
+        NSRect rect = NSMakeRect(0, 0, 800, 600);
+        self->glView = [[PatchformGLView alloc] initWithFrame:rect app:self->app.get()];
+    }
+
     return self->glView != nil;
 }
 
-CLAP_EXPORT bool gui_set_parent(const clap_plugin* plugin, const clap_window* window) {
-    logToFile("gui_set_parent");
+CLAP_EXPORT bool gui_set_parent(const clap_plugin* plugin, const clap_window* window)
+{
+    LOG_TO_FILE("gui_set_parent");
+
     auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
 
-    if (!window || strcmp(window->api, CLAP_WINDOW_API_COCOA) != 0  || !self->glView) {
-        logToFile("gui_set_parent no window!");
+    if (!window || strcmp(window->api, CLAP_WINDOW_API_COCOA) != 0 || !window->cocoa) {
+        LOG_TO_FILE("gui_set_parent no window!");
         return false;
     }
 
-    NSView* content = (__bridge NSView*)window->cocoa;
-
-    if (!content) {
-        logToFile("gui_set_parent contentView is nil!");
+    if (!self->glView) {
+        LOG_TO_FILE("gui_set_parent: glView is null!");
         return false;
     }
+
+    NSView* parent = (__bridge NSView*)window->cocoa;
+
+    self->app->initializePluginGUI(parent, CLAP_WINDOW_API_COCOA);
+
+    NSRect frame = [parent bounds];
 
     [self->glView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-    [self->glView setFrame:content.bounds];
-    [content addSubview:self->glView];
-
-    self->setParentView((__bridge void*)content);
+    [self->glView setFrame:frame];
+    [parent addSubview:self->glView];
+    [self->glView startTimer];
 
     return true;
 }
-CLAP_EXPORT void gui_destroy(const clap_plugin* plugin) {
+
+CLAP_EXPORT void gui_destroy(const clap_plugin* plugin)
+{
+    LOG_TO_FILE("gui_destroy");
     auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
     if (self->glView) {
         [self->glView removeFromSuperview];
@@ -68,57 +81,59 @@ CLAP_EXPORT void gui_destroy(const clap_plugin* plugin) {
     }
 }
 
-CLAP_EXPORT bool gui_show(const clap_plugin*)
+CLAP_EXPORT bool gui_show(const clap_plugin* plugin)
 {
-  logToFile("gui_show");
-    return true;
+      LOG_TO_FILE("gui_show");
+      //auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
+      //self->host->request_callback(self->host);
+      return true;
 }
 
 CLAP_EXPORT bool gui_hide(const clap_plugin*)
 {
-    logToFile("gui_hide");
+    LOG_TO_FILE("gui_hide");
     return true;
 }
 
 CLAP_EXPORT bool gui_set_scale(const clap_plugin*, double scale) {
-    logToFile("gui_set_scale");
+    LOG_TO_FILE("gui_set_scale");
     return true;
 }
 
 CLAP_EXPORT bool gui_get_size(const clap_plugin*, uint32_t* width, uint32_t* height) {
     *width = 800;
     *height = 600;
-    logToFile("gui_get_size");
+    LOG_TO_FILE("gui_get_size");
     return true;
 }
 
 CLAP_EXPORT bool gui_can_resize(const clap_plugin*) {
-    logToFile("gui_can_resize");
+    LOG_TO_FILE("gui_can_resize");
     return false;
 }
 
 CLAP_EXPORT bool gui_get_resize_hints(const clap_plugin*, clap_gui_resize_hints* hints) {
-    logToFile("gui_get_resize_hints");
+    LOG_TO_FILE("gui_get_resize_hints");
     return false;
 }
 
 CLAP_EXPORT bool gui_adjust_size(const clap_plugin*, uint32_t* width, uint32_t* height) {
-    logToFile("gui_adjust_size");
+    LOG_TO_FILE("gui_adjust_size");
     return true;
 }
 
 CLAP_EXPORT bool gui_set_size(const clap_plugin*, uint32_t width, uint32_t height) {
-    logToFile("gui_set_size");
+    LOG_TO_FILE("gui_set_size");
     return true;
 }
 
 CLAP_EXPORT bool gui_set_transient(const clap_plugin*, const clap_window* window) {
-    logToFile("gui_set_transient");
+    LOG_TO_FILE("gui_set_transient");
     return true;
 }
 
 CLAP_EXPORT void gui_suggest_title(const clap_plugin*, const char* title) {
-    logToFile(std::string("gui_suggest_title: ") + title);
+    LOG_TO_FILE(std::string("gui_suggest_title: ") + title);
 }
 
 }

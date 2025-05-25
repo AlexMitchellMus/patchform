@@ -13,6 +13,7 @@
 #include "RootComponent.h"
 #include "ComponentViewport.h"
 #include "GestureManager.h"
+#include "../PluginLogger.h"
 
 namespace pptk {
 
@@ -211,7 +212,7 @@ private:
             Point localMouse = hovered->globalToLocal(globalMouse.x, globalMouse.y);
             e.sdlEvent.motion.x = static_cast<int>(localMouse.x);
             e.sdlEvent.motion.y = static_cast<int>(localMouse.y);
-
+            LOG_TO_FILE("forwarding to hovered comp");
             hovered->handleMouseMove(e);
         }
     }

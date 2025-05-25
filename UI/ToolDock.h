@@ -10,6 +10,7 @@
 
 #include "../UI_ToolKit/ToggleButton.h"
 #include "ObjectMenu.h"
+#include "PluginLogger.h"
 
 class ZoomSlider : public pptk::Component
 {
@@ -28,11 +29,13 @@ public:
     void mouseEnter(pptk::CompEvent& e) override
     {
         isHovered = true;
+        repaint();
     }
 
     void mouseLeave(pptk::CompEvent& e) override
     {
         isHovered = false;
+        repaint();
     }
 
     void mouseButtonDown(pptk::CompEvent& e) override

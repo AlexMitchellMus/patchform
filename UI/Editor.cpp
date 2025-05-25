@@ -10,10 +10,19 @@
 #include "../Graph/GraphSystem.h"
 #include "CommandManagerCommands.h"
 #include "Lasso.h"
+#include "clap/include/clap/ext/gui.h"
+#include "UI_ToolKit/PluginWindowPeer.h"
 
 Editor::Editor(WindowPeer* peer) : windowPeer(peer) {};
 
-Editor::Editor(void* peer, const void* api) {};
+Editor::Editor(void* peer, const void* api)
+{
+#if defined(__APPLE__)
+    if (peer && api && strcmp((const char*)api, CLAP_WINDOW_API_COCOA) == 0) {
+        windowPeer = PluginWindowPeer::create(peer);
+    }
+#endif
+};
 
 Editor::~Editor() {}
 

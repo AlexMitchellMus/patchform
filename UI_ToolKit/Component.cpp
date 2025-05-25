@@ -13,6 +13,7 @@
 #include "Resizer.h"
 #include "ComponentViewport.h"
 #include "glaze/beve/skip.hpp"
+#include "../PluginLogger.h"
 
 namespace pptk {
 
@@ -237,6 +238,7 @@ void Component::repaint() {
 
 void Component::repaintSubtree(RootComponent *root)
 {
+    LOG_TO_FILE("enqueuing paint call");
     isDirty = true;
 
     root->repaintQueue.enqueue(makeSafePointer(this));

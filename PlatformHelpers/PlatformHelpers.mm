@@ -19,7 +19,7 @@ std::string OpenFileChooserDialog(const WindowPeer* peer) {
             result = std::string([[url path] UTF8String]);
         }
 
-        SDL_RaiseWindow(peer->getSDLWindow());
+        SDL_RaiseWindow(peer->getNativeHandleAs<SDL_Window>());
         return result;
     }
 }
@@ -36,7 +36,7 @@ std::string SaveFileChooserDialog(const WindowPeer* peer, const std::string& exi
             result = std::string([[url path] UTF8String]);
         }
 
-        SDL_RaiseWindow(peer->getSDLWindow());
+        SDL_RaiseWindow(peer->getNativeHandleAs<SDL_Window>());
         return result;
     }
 }

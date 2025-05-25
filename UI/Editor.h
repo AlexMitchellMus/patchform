@@ -130,7 +130,7 @@ public:
 
     WindowPeer* getWindowPeer() const
     {
-        return windowPeer;
+        return windowPeer.get();
     }
 
     void openDialogWindow(std::unique_ptr<Component> comp)
@@ -177,7 +177,7 @@ private:
     std::unique_ptr<Component> dialogWindow;
 
     // TODO: Move to Toolkit
-    WindowPeer* windowPeer;
+    std::shared_ptr<WindowPeer> windowPeer;
 
     std::unique_ptr<TopBar> topBar;
     std::unique_ptr<ToolDock> toolDock;

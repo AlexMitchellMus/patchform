@@ -61,6 +61,9 @@ public:
 
     moodycamel::ConcurrentQueue<SDL_Event> pendingEvents;
 
+    //TODO: move this back to private after it's all working in plugin
+    void render();
+
 private:
     Settings settings;
 
@@ -121,7 +124,6 @@ private:
     void shutdownMidi();
 
     bool initUI();
-    void render();
 
     static int audioCallback(const void* input, void* output,
                          unsigned long frameCount,
