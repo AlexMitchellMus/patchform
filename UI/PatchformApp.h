@@ -32,6 +32,7 @@ public:
     ~PatchformApp();
 
     bool initializePluginGUI(void* nativeWindow, const char* apiType);
+    void destroyPluginGUI();
     bool initialize();
     void shutdown();
     bool nextFrame();

@@ -22,6 +22,7 @@
 
 #include "PatchformApp.h"
 
+#include "PatchformBuildMode.h"
 #include "PluginLogger.h"
 #include "../UI_ToolKit/WindowPeer.h"
 #include "../UI_ToolKit/SDLWindowPeer.h"
@@ -68,6 +69,25 @@ bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType)
 
     // setBounds will need to be called by plugin host once window size is known
     return true;
+}
+
+void PatchformApp::destroyPluginGUI()
+{
+    editor.reset();
+    eventManager.reset();
+    window.reset();
+
+    if (invalidFB) {
+        nanoVGDeleteFramebuffer(invalidFB);
+        invalidFB = nullptr;
+    }
+
+    regularFont = semiBoldFont = iconFont = objectIconFont = -1;
+
+    if (nvg) {
+        destroyNanoVGContext(nvg);
+        nvg = nullptr;
+    }
 }
 
 bool PatchformApp::initialize()
@@ -139,13 +159,18 @@ void PatchformApp::shutdown()
 
 bool PatchformApp::nextFrame()
 {
-       // Check if audio device was disconnected
-        static bool restarting = false;
-        if (!restarting && (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream))) {
-            restarting = true;
-            std::cerr << "Audio stream stopped unexpectedly. Restarting..." << std::endl;
-            reinitAudio();
-            restarting = false;
+        LOG_TO_FILE("nextFrame entry");
+        // FIXME: PatchformBuildMode is not resolving in plugin mode??
+        //if (!PatchformBuildMode::isPlugin()) {
+        if (false) {
+            // Check if audio device was disconnected
+            static bool restarting = false;
+            if (!restarting && (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream))) {
+                restarting = true;
+                std::cerr << "Audio stream stopped unexpectedly. Restarting..." << std::endl;
+                reinitAudio();
+                restarting = false;
+            }
         }
 
         Uint64 currentFrameTime = SDL_GetTicks();
@@ -212,6 +237,9 @@ bool PatchformApp::nextFrame()
                     break;
             }
         }
+
+        if (!editor)
+            LOG_TO_FILE("patchformApp::nextFrame: EDITOR DOESNT EXIST!");
 
         editor->updateObjectsFromDSP();
         editor->handleTime(currentFrameTime, std::min(elapsedTime, targetFrameTime));

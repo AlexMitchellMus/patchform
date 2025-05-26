@@ -6,28 +6,22 @@
 #include "../UI/PatchformApp.h"
 #include "PatchformGLView.h"
 
-static PatchformClapPlugin* instance = nullptr;
-
 bool init(const clap_plugin* plugin)
 {
     return true;
 }
 
-PatchformClapPlugin::~PatchformClapPlugin()
-{
-
-}
+PatchformClapPlugin::~PatchformClapPlugin() {}
 
 const clap_plugin* PatchformClapPlugin::create(const clap_host* host)
 {
-    instance = new PatchformClapPlugin();
-    instance->host = host;
-    instance->app = std::make_unique<PatchformApp>(44100, 64);
+    auto* self = new PatchformClapPlugin();
+    self->host = host;
 
-    instance->pluginStruct = {
+    self->pluginStruct = {
         .desc = &desc,
         .init = &init,
-        .plugin_data = instance,
+        .plugin_data = self,
         .activate = activate,
         .deactivate = deactivate,
         .start_processing = start_processing,
@@ -39,36 +33,11 @@ const clap_plugin* PatchformClapPlugin::create(const clap_host* host)
         .destroy = destroy
     };
 
-    return &instance->pluginStruct;
+    return &self->pluginStruct;
 }
 
 void PatchformClapPlugin::on_main_thread(const clap_plugin* plugin)
 {
-    LOG_TO_FILE("calling on-main-thread");
-
-    static double lastTime = getHighResTime(); // high-res timer, e.g. std::chrono
-    double now = getHighResTime();
-
-    constexpr double frameInterval = 1.0 / 60.0; // 60 FPS
-
-    if ((now - lastTime) >= frameInterval) {
-        lastTime = now;
-
-        auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
-        if (self && self->glView)
-            makeGLViewCurrent(self->glView);
-
-        if (self && self->app) {
-            if (self->app->nextFrame())
-                LOG_TO_FILE("rendered ");
-        }
-    }
-
-    // Request next call
-    instance->host->request_callback(instance->host);
-
-    static int c = 0;
-    LOG_TO_FILE(c++ + " finished render");
 }
 
 double PatchformClapPlugin::getHighResTime()
@@ -80,19 +49,26 @@ double PatchformClapPlugin::getHighResTime()
 
 void PatchformClapPlugin::destroy(const clap_plugin* plugin)
 {
-    delete instance;
-    instance = nullptr;
+    auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
+    delete self;
 }
 
-bool PatchformClapPlugin::activate(const clap_plugin* plugin, double, uint32_t, uint32_t)
+bool PatchformClapPlugin::activate(const clap_plugin* plugin, double sampleRate, uint32_t minFrames, uint32_t maxFrames)
 {
+    auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
+    self->app = std::make_unique<PatchformApp>(sampleRate, 64);
     return true;
 }
 
-void PatchformClapPlugin::deactivate(const clap_plugin* plugin) {}
-
-clap_process_status PatchformClapPlugin::process(const clap_plugin*, const clap_process*)
+void PatchformClapPlugin::deactivate(const clap_plugin* plugin)
 {
+    auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
+    self->app.reset();
+}
+
+clap_process_status PatchformClapPlugin::process(const clap_plugin* plugin, const clap_process*)
+{
+    auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
     return CLAP_PROCESS_CONTINUE;
 }
 
@@ -110,5 +86,4 @@ void PatchformClapPlugin::setParentView(void* cocoaView)
         LOG_TO_FILE("successfully initialized plugin GUI");
     else
         LOG_TO_FILE("failed to initialize plugin GUI");
-
 }

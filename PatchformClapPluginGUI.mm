@@ -34,8 +34,11 @@ CLAP_EXPORT bool gui_create(const clap_plugin* plugin, const char*, bool)
     auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
 
     if (!self->glView) {
-        NSRect rect = NSMakeRect(0, 0, 800, 600);
-        self->glView = [[PatchformGLView alloc] initWithFrame:rect app:self->app.get()];
+        // Create with dummy rect for now; real size is set in set_parent
+        NSRect dummy = NSMakeRect(0, 0, 10, 10);
+        self->glView = [[PatchformGLView alloc] initWithFrame:dummy app:self->app.get()];
+        [self->glView setWantsBestResolutionOpenGLSurface:YES];
+        [self->glView setNeedsDisplay:YES];
     }
 
     return self->glView != nil;
@@ -58,23 +61,29 @@ CLAP_EXPORT bool gui_set_parent(const clap_plugin* plugin, const clap_window* wi
     }
 
     NSView* parent = (__bridge NSView*)window->cocoa;
-
-    self->app->initializePluginGUI(parent, CLAP_WINDOW_API_COCOA);
-
     NSRect frame = [parent bounds];
 
     [self->glView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
     [self->glView setFrame:frame];
     [parent addSubview:self->glView];
-    [self->glView startTimer];
+    [self->glView setNeedsDisplay:YES];
+    [self->glView startDisplayLinkIfNeeded];
+
+    self->app->initializePluginGUI(parent, CLAP_WINDOW_API_COCOA);
+
+    LOG_TO_FILE("gui_set_parent: added glView to parent");
 
     return true;
 }
+
 
 CLAP_EXPORT void gui_destroy(const clap_plugin* plugin)
 {
     LOG_TO_FILE("gui_destroy");
     auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
+
+    self->app->destroyPluginGUI();
+
     if (self->glView) {
         [self->glView removeFromSuperview];
         self->glView = nil;
@@ -84,8 +93,6 @@ CLAP_EXPORT void gui_destroy(const clap_plugin* plugin)
 CLAP_EXPORT bool gui_show(const clap_plugin* plugin)
 {
       LOG_TO_FILE("gui_show");
-      //auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
-      //self->host->request_callback(self->host);
       return true;
 }
 

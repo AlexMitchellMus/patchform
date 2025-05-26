@@ -207,7 +207,12 @@ add_library(PatchformCLAP MODULE
 
 if(APPLE)
     find_library(APPKIT_FRAMEWORK AppKit)
-    target_link_libraries(PatchformCLAP PRIVATE ${APPKIT_FRAMEWORK})
+    find_library(COREVIDEO_FRAMEWORK CoreVideo)
+
+    target_link_libraries(PatchformCLAP PRIVATE
+            ${APPKIT_FRAMEWORK}
+            ${COREVIDEO_FRAMEWORK}
+    )
 endif()
 
 set_target_properties(PatchformCLAP PROPERTIES
@@ -292,6 +297,7 @@ if(APPLE)
     if(CMAKE_BUILD_TYPE MATCHES Release)
         target_compile_options(PatchformSDK PRIVATE -O3 -march=native -ffast-math)
         target_compile_options(PatchformStandalone PRIVATE -O3 -march=native -ffast-math)
+        target_compile_options(PatchformCLAP PRIVATE -O3 -march=native -ffast-math)
     endif()
 
     set(MACOSX_BUNDLE TRUE)
