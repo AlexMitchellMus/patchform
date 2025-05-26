@@ -238,14 +238,13 @@ public:
         transitioningGraph->updateOutputInputPortMap();
         transitioningGraph->removeInvalidConnections();
 
-        if (owningSubpatch)
-        {
-            owningSubpatch->rebuildPortsFromGraph(*transitioningGraph);
-        }
-
         if (parentGraph)
         {
             parentGraph->regenerateGraph();
+        }
+        if (owningSubpatch)
+        {
+            owningSubpatch->rebuildPortsFromGraph(*transitioningGraph);
         }
     }
 

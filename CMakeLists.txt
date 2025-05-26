@@ -190,7 +190,7 @@ target_compile_definitions(PatchformSDK PRIVATE
 
         PATCHFORM_WITH_GUI
         PATCHFORM_SDK_BUILD
-        #PATCHFORM_DEBUG_TILE_REPAINT
+        PATCHFORM_DEBUG_TILE_REPAINT
 )
 
 add_dependencies(PatchformSDK update_git_version)

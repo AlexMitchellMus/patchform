@@ -62,10 +62,11 @@ public:
     {
         events.reserve(1024);
 
+        // FIXME!!!! We want these to be dynamic right? buffer size has to be the size of the audio buffer!
         if (type == PortType::Signal)
-            setSize(bufferSize = 64);
+            setSize(bufferSize = 2048);
         else if (type == PortType::Spectral)
-            setSize(bufferSize = 256);
+            setSize(bufferSize = 2048);
         else if (type == PortType::Wavetable)
             setSize(bufferSize = defaultTableSize);
     }

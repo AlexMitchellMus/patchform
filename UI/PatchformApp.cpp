@@ -39,6 +39,10 @@ PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     instance = this;
 
     nodeManager.loadAll("Objects");
+
+    graphSystem = std::make_unique<GraphSystem>(sampleRate, frameCount);
+
+    //graphSystem->setSampleRateAndBlockSize(sampleRate, frameCount);
 }
 
 PatchformApp::~PatchformApp()
@@ -63,7 +67,7 @@ bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType, 
 
     editor = std::make_unique<Editor>(nativeWindow, apiType); // no SDL window
     editor->cacheFontMetrics(nvg, { "Regular", "SemiBold", "icons", "object_icons" }, { 14.0f, 16.0f, 100.0f });
-    editor->init(&graphSystem);
+    editor->init(graphSystem.get());
     eventManager = std::make_unique<pptk::EventManager>(editor.get());
 
     int windowW, windowH;
@@ -133,7 +137,7 @@ void PatchformApp::shutdown()
     settings.windowIsMaximized = window->isMaximized();
     window->getUserSize(settings.windowWidth, settings.windowHeight);
 
-    graphSystem.closeAll();
+    graphSystem->closeAll();
 
     editor.reset();
     eventManager.reset();
@@ -164,7 +168,6 @@ void PatchformApp::shutdown()
 
 bool PatchformApp::nextFrame()
 {
-        LOG_TO_FILE("nextFrame entry");
         // FIXME: PatchformBuildMode is not resolving in plugin mode??
         //if (!PatchformBuildMode::isPlugin()) {
         if (false) {
@@ -316,12 +319,18 @@ int PatchformApp::audioCallback(const void* input, void* output,
     float* outputChannel0 = (out && outputChannels > 0 && out[0] && !bypassMode) ? out[0] : bypassBuffer;
     const float* inputChannel0 = (in && inputChannels > 0 && in[0] && !bypassMode) ? in[0] : bypassBuffer;
 
-    app->graphSystem.processAll(inputChannel0, outputChannel0, frameCount, midiMessages);
+    app->graphSystem->processAll(inputChannel0, outputChannel0, frameCount, midiMessages);
 
     if (statusFlags & (paOutputUnderflow | paInputOverflow))
         std::cerr << "Audio underflow or overflow detected" << std::endl;
 
     return paContinue;
+}
+
+void PatchformApp::pluginProcess(float* in, float* out, unsigned long frameCount)
+{
+    std::vector<MidiMessage> midiMessages;
+    graphSystem->processAll(in, out, frameCount, midiMessages);
 }
 
 bool PatchformApp::initAudio() {
@@ -597,7 +606,7 @@ bool PatchformApp::initUI()
 
     editor->cacheFontMetrics(nvg, fonts, { 14.0f, 16.0f, 100.0f });
 
-    editor->init(&graphSystem);
+    editor->init(graphSystem.get());
 
     eventManager = std::make_unique<pptk::EventManager>(editor.get());
 

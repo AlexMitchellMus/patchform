@@ -19,10 +19,12 @@ class GraphSystem
 public:
     using Graphs = std::vector<std::shared_ptr<GraphManager>>;
 
-    GraphSystem()
+    GraphSystem(int SR, unsigned long FC)
+        : sampleRate(SR)
+        , frameCount(FC)
     {
-        mainGraphVolumeMeter = std::make_unique<VolumeMeter>(44100, 64, 2);
-        setSampleRateAndBlockSize(44100, 64);
+        mainGraphVolumeMeter = std::make_unique<VolumeMeter>(SR, FC, 2);
+        setSampleRateAndBlockSize(SR, FC);
     }
 
     void clear()

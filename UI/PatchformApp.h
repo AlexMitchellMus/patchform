@@ -31,8 +31,12 @@ public:
 
     ~PatchformApp();
 
+    // == Plugin entry points ==
     bool initializePluginGUI(void* nativeWindow, const char* apiType, std::filesystem::path assetRoot);
     void destroyPluginGUI();
+    void pluginProcess(float* in, float* out, unsigned long frameCount);
+    // == Plugin end ==
+
     bool initialize();
     void shutdown();
     bool nextFrame();
@@ -77,7 +81,7 @@ private:
 
     // Graph system is destroyed before Node Manager (which holds all the node shared libs)
     NodeManager nodeManager;
-    GraphSystem graphSystem;
+    std::unique_ptr<GraphSystem> graphSystem;
 
     std::unique_ptr<Editor> editor;
     std::unique_ptr<pptk::EventManager> eventManager;
