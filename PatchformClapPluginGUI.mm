@@ -69,7 +69,21 @@ CLAP_EXPORT bool gui_set_parent(const clap_plugin* plugin, const clap_window* wi
     [self->glView setNeedsDisplay:YES];
     [self->glView startDisplayLinkIfNeeded];
 
-    self->app->initializePluginGUI(parent, CLAP_WINDOW_API_COCOA);
+    Dl_info info;
+    std::filesystem::path bundlePath;
+
+    if (dladdr((void*)gui_set_parent, &info)) {
+        std::filesystem::path path(info.dli_fname);
+        for (int i = 0; i < 10 && !path.empty(); ++i) {
+            if (path.filename() == "Contents") {
+                bundlePath = path / "Resources";
+                break;
+            }
+            path = path.parent_path();
+        }
+    }
+
+    self->app->initializePluginGUI(parent, CLAP_WINDOW_API_COCOA, bundlePath);
 
     LOG_TO_FILE("gui_set_parent: added glView to parent");
 

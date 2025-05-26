@@ -286,6 +286,20 @@ target_link_options(PatchformCLAP PRIVATE
         -exported_symbols_list ${CMAKE_SOURCE_DIR}/installer/macOS/plugin/exported_symbols.txt
 )
 
+if (APPLE)
+    add_custom_command(TARGET PatchformCLAP POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformCLAP>/Contents/Resources/Assets/Fonts"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformCLAP>/Contents/Resources/Assets/Icons"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Assets/Fonts"
+            "$<TARGET_BUNDLE_DIR:PatchformCLAP>/Contents/Resources/Assets/Fonts"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Assets/Icons"
+            "$<TARGET_BUNDLE_DIR:PatchformCLAP>/Contents/Resources/Assets/Icons"
+            COMMENT "Copying Fonts and Icons to .clap bundle Resources/Assets"
+    )
+endif ()
+
 #===  STANDALONE ===
 
 add_executable(PatchformStandalone

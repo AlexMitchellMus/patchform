@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 
 #include "../Glad/gl.h"
 
@@ -44,7 +45,7 @@ PatchformApp::~PatchformApp()
 {
 }
 
-bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType)
+bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType, std::filesystem::path assetRoot)
 {
     LOG_TO_FILE("================= initializePluginGUI ==================");
     window = PluginWindowPeer::create(nativeWindow);
@@ -54,7 +55,11 @@ bool PatchformApp::initializePluginGUI(void* nativeWindow, const char* apiType)
         LOG_TO_FILE("Failed to create NVG context");
         return false;
     }
-    //if (!loadFonts()) return false;
+    if (!loadFonts(std::move(assetRoot))) {
+        LOG_TO_FILE("Failed to load fonts!");
+        std::cerr << "Failed to load fonts!" << std::endl;
+        return false;
+    }
 
     editor = std::make_unique<Editor>(nativeWindow, apiType); // no SDL window
     editor->cacheFontMetrics(nvg, { "Regular", "SemiBold", "icons", "object_icons" }, { 14.0f, 16.0f, 100.0f });
@@ -686,9 +691,12 @@ void PatchformApp::render()
     }
 }
 
-bool PatchformApp::loadFonts()
+bool PatchformApp::loadFonts(std::filesystem::path pluginPath)
 {
-    std::filesystem::path assetRoot = std::filesystem::path(SDL_GetBasePath());
+    std::filesystem::path assetRoot = pluginPath.empty() ?
+                                      std::filesystem::path(SDL_GetBasePath()) : std::move(pluginPath);
+
+    LOG_TO_FILE("Application Root is: " << assetRoot);
     std::cout << "Application Root is: " << assetRoot << std::endl;
 
     regularFont = nvgCreateFont(nvg, "Regular", (assetRoot / "Assets/Fonts/Inter_18pt-Regular.ttf").c_str() );

@@ -82,8 +82,4 @@ const void* PatchformClapPlugin::getExtension(const clap_plugin* plugin, const c
 
 void PatchformClapPlugin::setParentView(void* cocoaView)
 {
-    if (app->initializePluginGUI(cocoaView, CLAP_WINDOW_API_COCOA))
-        LOG_TO_FILE("successfully initialized plugin GUI");
-    else
-        LOG_TO_FILE("failed to initialize plugin GUI");
 }

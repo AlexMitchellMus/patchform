@@ -86,7 +86,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef,
 
     view.lastFrameTime = deltaMs;
 
-    LOG_TO_FILE("Frame time: " + std::to_string(deltaMs) + " ms");
+    //LOG_TO_FILE("Frame time: " + std::to_string(deltaMs) + " ms");
 
     return kCVReturnSuccess;
 }

@@ -31,7 +31,7 @@ public:
 
     ~PatchformApp();
 
-    bool initializePluginGUI(void* nativeWindow, const char* apiType);
+    bool initializePluginGUI(void* nativeWindow, const char* apiType, std::filesystem::path assetRoot);
     void destroyPluginGUI();
     bool initialize();
     void shutdown();
@@ -98,7 +98,7 @@ private:
     int iconFont = -1;
     int objectIconFont = -1;
 
-    bool loadFonts();
+    bool loadFonts(std::filesystem::path pluginPath = std::string());
 
     NVGLUframebuffer* invalidFB = nullptr;
 
