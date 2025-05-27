@@ -29,6 +29,10 @@ public:
         std::ranges::fill(bits, 0);
     }
 
+    void fillAll() {
+        std::ranges::fill(bits, ~0ULL);
+    }
+
     void clear() {
         std::ranges::fill(bits, 0);
     }

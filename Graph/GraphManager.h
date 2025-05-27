@@ -242,6 +242,7 @@ public:
         {
             parentGraph->regenerateGraph();
         }
+
         if (owningSubpatch)
         {
             owningSubpatch->rebuildPortsFromGraph(*transitioningGraph);

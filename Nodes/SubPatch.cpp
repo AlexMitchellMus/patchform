@@ -138,6 +138,9 @@ void Subpatch::process(const float* mainAudioIn, float* mainAudioOut, std::vecto
 
         for (auto* src : group.connectedPorts)
         {
+            if (!src->isSignal())
+                continue;
+
             const float* srcBuf = src->getAudioBuffer();
             for (unsigned s = 0; s < frames; ++s)
                 dst[s] += srcBuf[s];
@@ -175,7 +178,7 @@ void Subpatch::process(const float* mainAudioIn, float* mainAudioOut, std::vecto
     for (const auto& group : downstream)
     {
         uint8_t portIndex = group.outputPortNumber;
-        if (portIndex >= subOutputs.size())
+        if (portIndex >= subOutputs.size() || !subOutputs[portIndex]->isSignal())
             continue;
 
         const float* src = subOutputs[portIndex]->getAudioBuffer();
@@ -183,9 +186,11 @@ void Subpatch::process(const float* mainAudioIn, float* mainAudioOut, std::vecto
         for (const auto& conn : group.downstreamConnections)
         {
             float* dst = conn.dst;
-            size_t n = conn.bufferSize;
 
-            for (size_t s = 0; s < n; ++s)
+            // We cache the size of the buffer, but I made buffers larger so they could work with different
+            // sizes - which is needed for plugin mode
+            // This WILL break FFT buffers. BUT we should make FFT buffers use the event audio data
+            for (size_t s = 0; s < frames; ++s)
                 dst[s] += src[s];
         }
     }

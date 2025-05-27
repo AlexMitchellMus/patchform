@@ -10,7 +10,7 @@
 
 #pragma once
 
-//#define PATCHFORM_ENABLE_LOG
+#define PATCHFORM_ENABLE_LOG
 
 #ifdef PATCHFORM_ENABLE_LOG
     #include <fstream>

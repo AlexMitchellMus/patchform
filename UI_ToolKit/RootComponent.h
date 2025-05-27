@@ -54,9 +54,6 @@ namespace pptk
         void renderFrame(NVGcontext* nvg)
         {
             Component::renderAll(nvg, theme);
-#ifdef PATCHFORM_DEBUG_TILE_REPAINT
-            //drawDebugTileGrid(nvg);
-#endif
         }
 
         void registerTimerCallback(Component* c, const std::function<void(uint32_t, uint32_t)>& callback, int timerID = 0)
@@ -195,8 +192,8 @@ namespace pptk
             // Process remaining
             for (const auto& repaintComponent : collected)
             {
-                repaintComponent->isDirty = true;
-                repaintComponent->getTileCoverage(tileMaskBuffer);
+                 repaintComponent->isDirty = true;
+                 repaintComponent->getTileCoverage(tileMaskBuffer);
 //#define DEBUG_DIRTY_BITS
 #ifdef DEBUG_DIRTY_BITS
                 std::cout << "--------- before render all ----------" << std::endl;
@@ -211,29 +208,6 @@ namespace pptk
             }
 
             return tileMaskBuffer.hasDirtyBits();
-        }
-
-        void drawDebugTileGrid(NVGcontext* vg) {
-            constexpr int tileSize = TileMask::tileSize;
-
-            const auto tileX = tileMaskBuffer.getX();
-            const auto tileY = tileMaskBuffer.getY();
-
-            // First pass: non-active tiles (light grid)
-            for (int y = 0; y < tileY; ++y) {
-                for (int x = 0; x < tileX; ++x) {
-                    if (tileMaskBuffer.test(x, y)) continue;
-
-                    int px = x * tileSize;
-                    int py = y * tileSize;
-
-                    nvgBeginPath(vg);
-                    nvgRect(vg, px, py, tileSize, tileSize);
-                    nvgStrokeColor(vg, nvgRGB(80, 80, 80));
-                    nvgStrokeWidth(vg, 1.0f);
-                    nvgStroke(vg);
-                }
-            }
         }
 
         TileMask tileMaskBuffer;

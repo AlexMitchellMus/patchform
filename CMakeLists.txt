@@ -6,7 +6,7 @@ endif()
 
 project(Patchform LANGUAGES C CXX)
 
-option(ENABLE_ASAN "Enable Address Sanitizer" ON)
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(RUN_TESTS "Build and run tests" OFF)
 
 set(CMAKE_POLICY_VERSION 3.5)
@@ -21,6 +21,11 @@ if (MSVC)
     else()
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
     endif()
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES Debug AND ENABLE_ASAN AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
 endif()
 
 set(BUILDINFO_CPP ${CMAKE_BINARY_DIR}/GitInfo.cpp)
@@ -190,7 +195,7 @@ target_compile_definitions(PatchformSDK PRIVATE
 
         PATCHFORM_WITH_GUI
         PATCHFORM_SDK_BUILD
-        PATCHFORM_DEBUG_TILE_REPAINT
+        #PATCHFORM_DEBUG_TILE_REPAINT
 )
 
 add_dependencies(PatchformSDK update_git_version)

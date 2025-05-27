@@ -247,9 +247,11 @@ void GraphHolder::process(const float* inBuffer, float* buffer, unsigned long fr
 #ifdef DSP_FREE_ATOMS
     std::cout << "--- free atoms: " << context->eventPool.getFreeListSize() << std::endl;
 #endif
-    std::function<void(Graph&)> msg;
-    while (parentGraph->messageQueue.try_dequeue(msg))
-        msg(*graph);
+    std::function<void(Graph&)> msg = nullptr;
+    while (parentGraph->messageQueue.try_dequeue(msg)) {
+        if (msg)
+            msg(*graph);
+    }
 
     graph->process(inBuffer, buffer, frameCount, midiMessage);
 }
