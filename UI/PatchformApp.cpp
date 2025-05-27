@@ -30,6 +30,73 @@
 #include "../UI_ToolKit/PluginWindowPeer.h"
 #include "../GitInfo.h"
 
+void generateStencilMaskTiles(int drawableW, int drawableH, int tileSize, std::span<const uint64_t> dirtyTiles)
+{
+    glStencilMask(0xFF);
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
+    glDisable(GL_SCISSOR_TEST);
+    glClearStencil(0);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glEnable(GL_SCISSOR_TEST);
+
+    const int tilesX = (drawableW + tileSize - 1) / tileSize;
+    const int tilesY = (drawableH + tileSize - 1) / tileSize;
+
+    glClearStencil(1);
+
+    for (int y = 0; y < tilesY; ++y)
+    {
+        int x = 0;
+        while (x < tilesX)
+        {
+            const int idx = y * tilesX + x;
+            const int wordIdx = idx / 64;
+
+            if (wordIdx >= static_cast<int>(dirtyTiles.size()))
+                break;
+
+            const uint64_t word = dirtyTiles[wordIdx];
+
+            // If current tile is clean, skip it
+            if ((word & (1ULL << (idx % 64))) == 0)
+            {
+                ++x;
+                continue;
+            }
+
+            // Dirty run start
+            int startX = x;
+
+            // Find end of dirty run
+            while (x < tilesX)
+            {
+                int curIdx = y * tilesX + x;
+                int curWord = curIdx / 64;
+                int curBit = curIdx % 64;
+
+                if (curWord >= static_cast<int>(dirtyTiles.size()))
+                    break;
+
+                if ((dirtyTiles[curWord] & (1ULL << curBit)) == 0)
+                    break;
+
+                ++x;
+            }
+
+            if (startX < x)
+            {
+                const int px = startX * tileSize;
+                const int width = (x - startX) * tileSize;
+                const int py = drawableH - (y + 1) * tileSize;
+                glScissor(px, py, width, tileSize);
+                glClear(GL_STENCIL_BUFFER_BIT);
+            }
+        }
+    }
+}
+
 PatchformApp* PatchformApp::instance = nullptr;
 
 PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
@@ -646,7 +713,7 @@ void PatchformApp::render()
     glClear( GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // Set up stencil mask for dirty tiles
-    nanoVGStencilMaskTiles(drawableW, drawableH, TileMask::tileSize * 2, editor->tileMaskBuffer.getSpan());
+    generateStencilMaskTiles(drawableW, drawableH, TileMask::tileSize * 2, editor->tileMaskBuffer.getSpan());
 
     // Start NanoVG rendering
     nvgBeginFrame(nvg, windowW, windowH, pixelRatio);
