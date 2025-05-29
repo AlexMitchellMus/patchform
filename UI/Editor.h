@@ -82,8 +82,6 @@ public:
     // Make a new empty file
     void newEmptyFile() const;
 
-    std::string generateUniqueUntitledName() const;
-
     void loadFile(const std::string& file) const;
 
     void resizeToolDock(bool reset)
@@ -168,7 +166,7 @@ public:
         toolDock->setToggleButtonState(state);
     }
 
-    GraphSystem* graphSystem;
+    GraphSystem* graphSystem = nullptr;
 
 private:
     void initCommands();

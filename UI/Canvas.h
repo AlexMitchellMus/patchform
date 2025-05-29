@@ -34,7 +34,7 @@ public:
 
     Canvas(GraphSystem* gm);
 
-    ~Canvas() override = default;
+    ~Canvas() override;
 
     std::vector<Object*> getObjects() const;
     std::vector<Object*> getSelectedObjects() const;

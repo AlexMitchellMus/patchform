@@ -37,6 +37,8 @@ public:
     void pluginProcess(float* in, float* out, unsigned long frameCount);
     // == Plugin end ==
 
+    void loadDefaultPatch();
+
     bool initialize();
     void shutdown();
     bool nextFrame();

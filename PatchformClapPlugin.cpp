@@ -57,6 +57,7 @@ bool PatchformClapPlugin::activate(const clap_plugin* plugin, double sampleRate,
 {
     auto* self = static_cast<PatchformClapPlugin*>(plugin->plugin_data);
     self->app = std::make_unique<PatchformApp>(sampleRate, maxFrames);
+    self->app->loadDefaultPatch();
     LOG_TO_FILE("plugin activate - SR: " << sampleRate << " max frames: " << maxFrames);
     return true;
 }

@@ -17,12 +17,14 @@ Project Goals
 
 [ V 0.1 ] Core Application & Basic Editor:
 * Platform:
-    * [x] SDL3 standalone application for MS Windows
+    * [x] SDL3 standalone application for macOS, Windows
+    * [ ] CLAP plugin for macOS, Windows
 * Engine:
     * [x] Event's with data pool (linked list of data atoms for RT safe transmutation)
     * [x] Feedback loops (audio buffer sent to next cycle of graph)
-    * [ ] Type in object names in canvas editor
+    * [ ] Type object names in canvas editor
     * [x] Sub-patches
+    * [ ] Sub-patches with GUI
     * [ ] Patch Abstractions (load JSON patch as node)
     * [ ] Compiled Abstractions (plugins) - Full SDK
 * Basic Functionality:
@@ -36,7 +38,8 @@ Project Goals
 * User Interface:
     * [ ] Central nested popup window for settings / about
     * [ ] Theme support
-    * [ ] Initial Plugin View
+    * [ ] Plugin View
+    * [ ] Tool tip floating window
     * [ ] Non-modal open/save system dialog
     * [x] Tabbed editor (Load multiple patches) - not split-view
     * [x] Invalidation system using tiles to track dirty regions - repaint components only if they intersect dirty tiles
@@ -46,21 +49,18 @@ Project Goals
     * [ ] Multichannel Audio in/out
 
 [ V 0.2 ]
-* Make cross-platform: macOS, Linux, Windows
+* Linux
 
 [ V 0.3 ]
-* CLAP plugin port
-        
-[ V 0.6 ]
-* Per-patch state (sample-rate & buffer-size)
-
-[ V 0.7 ]
-* Refine plugin support (parameters etc)
-
-[ V 0.8 ]
 * Support more plugin formats via CLAP wrapper
         
-[ V 0.9 ]
+[ V 0.4 ]
+* Per-patch state (sample-rate & buffer-size)
+
+[ V 0.5 ]
+* Refine plugin support (parameters etc)
+        
+[ V 0.6 ]
 * Bug fixes, fix what is needed for release
 
 [UI TODO]

@@ -94,8 +94,12 @@ set(SDL_POWER OFF CACHE BOOL "Disable SDL power support" FORCE)
 set(SDL_RENDER OFF CACHE BOOL "Disable SDL renderer support" FORCE)
 set(SDL_RENDER_GPU OFF CACHE BOOL "Disable GPU rendering support" FORCE)
 add_subdirectory(external/SDL2)
+
+set(RTMIDI_BUILD_SHARED_LIBS OFF CACHE BOOL "Force static RtMidi" FORCE)
 add_subdirectory(external/rtmidi)
 
+set(LIBSAMPLERATE_LIBTYPE "STATIC" CACHE STRING "Build libsamplerate statically" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Really make sure it's static" FORCE)
 add_subdirectory(external/libsamplerate)
 
 add_subdirectory(external/clap)
@@ -207,7 +211,6 @@ add_library(PatchformCLAP MODULE
         PatchformClapPlugin.cpp
         PatchformClapPluginGUI.mm
         PatchformGLView.mm
-        PatchformBuildMode.cpp
 )
 
 if(APPLE)
@@ -263,8 +266,6 @@ target_include_directories(PatchformCLAP PRIVATE
 )
 
 target_compile_definitions(PatchformCLAP PRIVATE
-        PATCHFORM_PLUGIN
-        SDL_MAIN_USE_CALLBACKS=1
         PATCHFORM_WITH_GUI
         PATCHFORM_STANDALONE
 )
@@ -309,7 +310,6 @@ endif ()
 
 add_executable(PatchformStandalone
         PatchformStandalone.cpp
-        PatchformBuildMode.cpp
         UI_ToolKit/SDLWindowPeer.cpp)
 
 if(APPLE)
@@ -328,6 +328,9 @@ if(APPLE)
     set_target_properties(PatchformStandalone PROPERTIES
             MACOSX_BUNDLE TRUE
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/installer/macOS/Info.plist"
+            BUILD_RPATH "@executable_path/../Frameworks"
+            INSTALL_RPATH "@executable_path/../Frameworks"
+            RESOURCE "${CMAKE_SOURCE_DIR}/installer/macOS/patchformicon.icns"
     )
 
     target_sources(PatchformStandalone PRIVATE
@@ -388,17 +391,22 @@ else()
 endif ()
 
 if (APPLE)
-    add_custom_command(TARGET PatchformStandalone POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Fonts"
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Icons"
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/Assets/Fonts"
-            "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Fonts"
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/Assets/Icons"
-            "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Icons"
-            COMMENT "Copying Fonts and Icons to .app Resources/Assets"
-    )
+        add_custom_command(TARGET PatchformStandalone POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Fonts"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Icons"
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/Assets/Fonts"
+                "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Fonts"
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/Assets/Icons"
+                "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Resources/Assets/Icons"
+                COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Frameworks"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<TARGET_FILE:PatchformSDK>"
+                "$<TARGET_BUNDLE_DIR:PatchformStandalone>/Contents/Frameworks/"
+                COMMENT "Copying Fonts, Icons, and libPatchformSDK.dylib into .app bundle"
+        )
 else ()
     add_custom_command(TARGET PatchformStandalone POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:PatchformStandalone>/Assets"

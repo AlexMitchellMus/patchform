@@ -23,7 +23,7 @@
 
 #include "PatchformApp.h"
 
-#include "PatchformBuildMode.h"
+#include "PatchformEnvironment.h"
 #include "PluginLogger.h"
 #include "../UI_ToolKit/WindowPeer.h"
 #include "../UI_ToolKit/SDLWindowPeer.h"
@@ -103,6 +103,7 @@ PatchformApp::PatchformApp(int sampleRate, unsigned long frameCount)
     : sampleRate(sampleRate)
     , frameCount(frameCount)
 {
+
     instance = this;
 
     nodeManager.loadAll("Objects");
@@ -192,8 +193,15 @@ bool PatchformApp::initialize()
         std::cerr << "Failed to initialize UI" << std::endl;
         return false;
     }
+
     return true;
 }
+
+void PatchformApp::loadDefaultPatch()
+{
+    graphSystem->newUntitledPatch();
+}
+
 
 void PatchformApp::shutdown()
 {
@@ -208,7 +216,6 @@ void PatchformApp::shutdown()
 
     editor.reset();
     eventManager.reset();
-    window.reset();
 
     shutdownAudio();
 
@@ -235,9 +242,7 @@ void PatchformApp::shutdown()
 
 bool PatchformApp::nextFrame()
 {
-        // FIXME: PatchformBuildMode is not resolving in plugin mode??
-        //if (!PatchformBuildMode::isPlugin()) {
-        if (false) {
+        if (PatchformEnvironment::isStandalone()) {
             // Check if audio device was disconnected
             static bool restarting = false;
             if (!restarting && (Pa_IsStreamStopped(stream) || !Pa_IsStreamActive(stream))) {

@@ -46,6 +46,14 @@ Canvas::Canvas(GraphSystem* gm) : graphSystem(gm)
     }
 }
 
+Canvas::~Canvas()
+{
+    for (auto* obj : objects)
+    {
+        obj->audioNode->destroyUI();
+    }
+}
+
 std::vector<Object*> Canvas::getObjects() const
 {
     std::vector<Object*> objs;

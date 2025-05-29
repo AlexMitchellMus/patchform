@@ -207,6 +207,27 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef,
     [self addTrackingArea:trackingArea];
 }
 
+- (void)scrollWheel:(NSEvent *)event {
+    if (!app) return;
+
+    float deltaX = -event.scrollingDeltaX;
+    float deltaY = event.scrollingDeltaY;
+
+    if (event.hasPreciseScrollingDeltas) {
+        deltaX *= 0.05f;
+        deltaY *= 0.05f;
+    }
+
+    SDL_Event sdlEvent = {};
+    sdlEvent.type = SDL_EVENT_MOUSE_WHEEL;
+    sdlEvent.wheel.timestamp = SDL_GetTicks();
+    sdlEvent.wheel.which = 0;
+    sdlEvent.wheel.x = deltaX;
+    sdlEvent.wheel.y = deltaY;
+
+    app->pendingEvents.enqueue(sdlEvent);
+}
+
 - (void)keyDown:(NSEvent *)event {
     if (!app) return;
 

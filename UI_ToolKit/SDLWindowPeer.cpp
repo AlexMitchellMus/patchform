@@ -74,6 +74,18 @@ SDLWindowPeer::~SDLWindowPeer()
 
 void* SDLWindowPeer::getNativeHandle() const {
     return window;
+    /*
+#if __APPLE__
+    auto props = SDL_GetWindowProperties(window);
+    auto ret = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
+
+    return nullptr;
+#else
+    auto props = SDL_GetWindowProperties(window);
+    auto ret = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+    return ret;
+#endif
+    */
 }
 
 void SDLWindowPeer::swapBuffers() {

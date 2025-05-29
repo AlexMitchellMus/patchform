@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <iostream>
+#include <functional>
 #include "SDL3/SDL.h"
 class WindowPeer;
 
@@ -42,6 +44,6 @@ namespace PlatformHelpers
 #endif
     }
 
-    std::string OpenFileChooserDialog(const WindowPeer* peer);
+    void OpenFileChooserDialog(const WindowPeer* peer, std::function<void(std::string)> callback);
     std::string SaveFileChooserDialog(const WindowPeer* peer, const std::string& existingPath = {});
 }

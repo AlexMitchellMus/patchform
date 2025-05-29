@@ -19,12 +19,40 @@ class GraphSystem
 public:
     using Graphs = std::vector<std::shared_ptr<GraphManager>>;
 
+    struct PatchData {
+        std::vector<Object*> graphObjects;
+        std::vector<Edge*> connEdges;
+        std::string shortName;
+    };
+
     GraphSystem(int SR, unsigned long FC)
         : sampleRate(SR)
         , frameCount(FC)
     {
         mainGraphVolumeMeter = std::make_unique<VolumeMeter>(SR, FC, 2);
         setSampleRateAndBlockSize(SR, FC);
+    }
+
+    PatchData getActiveGraphContent()
+    {
+        auto patchPath = activeGraph->getPatchFile();
+        auto [graphObjects, connEdges] = getGraphDump(patchPath);
+
+        return { std::move(graphObjects), std::move(connEdges), std::move(patchPath) };
+    }
+
+    void newUntitledPatch()
+    {
+        const nlohmann::json emptyPatch = {
+            { "nodes", nlohmann::json::array() },
+            { "connections", nlohmann::json::array() }
+        };
+
+        std::string virtualPath = generateUniqueUntitledName();
+        auto shortName = virtualPath.substr(virtualPath.find_last_of('/') + 1);
+
+        auto [graphObjects, connEdges] = loadPatch(virtualPath, emptyPatch, false);
+        setActiveGraph(virtualPath);
     }
 
     void clear()
@@ -237,6 +265,27 @@ public:
             }
         }
         std::cerr << "setActiveGraph: No graph found for path: " << path << std::endl;
+    }
+
+    std::string generateUniqueUntitledName() const
+    {
+        int counter = 1;
+        while (true)
+        {
+            std::string name = "Untitled-" + std::to_string(counter);
+            std::string virtualPath = "virtual://" + name;
+
+            const auto& loaded = getLoadedPatches();
+            bool exists = std::any_of(loaded.begin(), loaded.end(),
+                [&](const std::tuple<std::string, bool>& tup) {
+                    return std::get<0>(tup) == virtualPath;
+                });
+
+            if (!exists)
+                return virtualPath;
+
+            ++counter;
+        }
     }
 
     float getDspTiming() const

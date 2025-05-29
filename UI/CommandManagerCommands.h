@@ -154,8 +154,10 @@ public:
     OpenCommand(Editor* editor) : ed(editor) {}
     void invoke() override
     {
-        auto fileToOpen = PlatformHelpers::OpenFileChooserDialog(ed->getWindowPeer());
-        ed->loadFile(fileToOpen);
+        PlatformHelpers::OpenFileChooserDialog(ed->getWindowPeer(), [this](const std::string& path)
+        {
+            ed->loadFile(path);
+        });
     }
 };
 

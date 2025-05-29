@@ -30,8 +30,9 @@ void Editor::init(GraphSystem* gm)
 {
     initCommands();
 
-    std::cout << "reinit editor" << std::endl;
     graphSystem = gm;
+
+    std::cout << "reinit editor" << std::endl;
 
     canvas = std::make_unique<Canvas>(graphSystem);
     canvas->setName("canvas");
@@ -100,7 +101,24 @@ void Editor::init(GraphSystem* gm)
 #endif
     };
 
-    newEmptyFile();
+
+    auto tabs = graphSystem->getLoadedPatches();
+
+    leftPanel->updateTabs(tabs);
+
+    for (const auto& [path, _] : tabs)
+    {
+        if (graphSystem->getActiveGraph() && graphSystem->getActiveGraph()->getPatchFile() == path)
+        {
+            auto [objs, conns] = graphSystem->getGraphDump(path);
+
+            canvas->reloadAllCanvasObjects(objs);
+            canvas->reloadConnections(conns);
+            canvas->setPatchName(FilesystemHelpers::getStem(path));
+            canvas->gainFocus();
+            break;
+        }
+    }
 
     Editor::resized();
 }
@@ -137,42 +155,7 @@ void Editor::initCommands()
 
 void Editor::newEmptyFile() const
 {
-    nlohmann::json emptyPatch = {
-        { "nodes", nlohmann::json::array() },
-        { "connections", nlohmann::json::array() }
-    };
-
-    std::string virtualPath = generateUniqueUntitledName();
-    auto shortName = virtualPath.substr(virtualPath.find_last_of('/') + 1);
-
-    auto [ graphObjects, connEdges ] = graphSystem->loadPatch(virtualPath, emptyPatch, false);
-    graphSystem->setActiveGraph(virtualPath);
-    canvas->setPatchName(shortName);
-    canvas->reloadAllCanvasObjects(graphObjects);
-    canvas->reloadConnections(connEdges);
-    canvas->gainFocus();
-    leftPanel->resetScroll();
-}
-
-std::string Editor::generateUniqueUntitledName() const
-{
-    int counter = 1;
-    while (true)
-    {
-        std::string name = "Untitled-" + std::to_string(counter);
-        std::string virtualPath = "virtual://" + name;
-
-        const auto& loaded = graphSystem->getLoadedPatches();
-        bool exists = std::any_of(loaded.begin(), loaded.end(),
-            [&](const std::tuple<std::string, bool>& tup) {
-                return std::get<0>(tup) == virtualPath;
-            });
-
-        if (!exists)
-            return virtualPath;
-
-        ++counter;
-    }
+    graphSystem->newUntitledPatch();
 }
 
 void Editor::loadFile(const std::string& fileName) const
